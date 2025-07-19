@@ -7,7 +7,7 @@
 	<img src="team.png" width="10%" /> 
 </div>
 
-# FairSplit DApp
+# Split DApp
 A decentralized, trustless Bitcoin escrow and payout system using ICP and modern web technologies.
 
 <div align="center"> 

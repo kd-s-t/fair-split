@@ -4,7 +4,9 @@
 
 <div align="center"> 
 	by:  
-	<img src="team.png" width="10%" /> 
+	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
+		<img src="team.png" width="10%" /> 
+	</a>
 </div>
 
 # Split DApp
@@ -55,8 +57,8 @@ dfx deploy
 
 ## Authors
 
-- [@kenn](https://github.com/kd-s-t)
-- [@ron](https://github.com/kd-s-t)
-- [@don](https://github.com/kd-s-t)
-- [@peter](https://github.com/kd-s-t)
-- [@regie](https://github.com/kd-s-t)
+- [@kenn](https://www.linkedin.com/in/kdst/)
+- [@ron](https://www.linkedin.com/in/rausch-lobiano-276780219/)
+- [@don](https://www.linkedin.com/in/carl-john-don-sebial-882430187/)
+- [@peter](https://www.linkedin.com/in/petertibon/)
+- [@regie](https://www.linkedin.com/in/rigie-tamala-31224718b/)

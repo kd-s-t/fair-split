@@ -21,7 +21,7 @@ A decentralized, trustless Bitcoin escrow and payout system using ICP and modern
 	<img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 	<img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" /> 
-	<img src="https://avatars.githubusercontent.com/u/11744586?s=48&v=4" />
+  <img src="https://avatars.githubusercontent.com/u/11744586?s=48&v=4" alt="Avatar" width="80" />
 </div>
 
 <div align="center"> 

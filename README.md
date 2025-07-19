@@ -1,6 +1,8 @@
 <div align="center"> 
-	<img src="team.png" width="20%" /> 
+	by:  
+	<img src="team.png" width="15%" /> 
 </div>
+
 # FairSplit DApp
 A decentralized, trustless Bitcoin escrow and payout system using ICP and modern web technologies.
 
@@ -21,13 +23,14 @@ A decentralized, trustless Bitcoin escrow and payout system using ICP and modern
 	<img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 	<img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" /> 
+	<img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/PNG/metamask-fox.png" width="40" />
 </div>
 
 ### Run frontend http://localhost:3000
 ```bash
 cd frontend
 nvm use
-npm install
+npm i
 npm run dev
 ```
 
@@ -36,3 +39,11 @@ npm run dev
 cd icp
 dfx deploy
 ```
+
+## Authors
+
+- [@kenn](https://github.com/kd-s-t)
+- [@ron](https://github.com/kd-s-t)
+- [@don](https://github.com/kd-s-t)
+- [@peter](https://github.com/kd-s-t)
+- [@regie](https://github.com/kd-s-t)

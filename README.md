@@ -1,10 +1,10 @@
 <div align="center"> 
-	by:  
-	<img src="team.png" width="15%" /> 
+	<img src="split.png" width="30%" /> 
 </div>
 
 <div align="center"> 
-	<img src="split.png" width="15%" /> 
+	by:  
+	<img src="team.png" width="10%" /> 
 </div>
 
 # FairSplit DApp

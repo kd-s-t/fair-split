@@ -1,4 +1,8 @@
 <div align="center"> 
+	<img src="./event.jpg" width="100%" /> 
+</div>
+
+<div align="center"> 
 	<img src="./frontend/public/split.png" width="30%" /> 
 </div>
 

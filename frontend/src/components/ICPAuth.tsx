@@ -1,16 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/button'
+import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { LogIn, LogOut } from 'lucide-react'
 import { Principal } from '@dfinity/principal'
 import { AuthClient } from '@dfinity/auth-client'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
   const [principal, setPrincipal] = useState<Principal | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     AuthClient.create().then(client => {
@@ -18,7 +20,9 @@ export default function Home() {
       client.isAuthenticated().then(async (authenticated) => {
         if (authenticated) {
           const identity = client.getIdentity()
-          setPrincipal(identity.getPrincipal())
+          const principal = identity.getPrincipal()
+          setPrincipal(principal)
+          router.push('/dashboard')
         }
       })
     })
@@ -30,7 +34,9 @@ export default function Home() {
       identityProvider: process.env.NEXT_PUBLIC_ICP_PROVIDER || 'https://identity.ic0.app/#authorize',
       onSuccess: async () => {
         const identity = authClient.getIdentity()
-        setPrincipal(identity.getPrincipal())
+        const principal = identity.getPrincipal()
+        setPrincipal(principal)
+        router.push('/dashboard')
       },
     })
   }
@@ -62,13 +68,13 @@ export default function Home() {
         {principal ? (
           <>
             <p className="text-center break-all">Principal: {principal.toText()}</p>
-            <Button onClick={logout} variant="destructive" className="w-full">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
+            <Button onClick={logout} variant="default" className="w-full">
+              <LogOut className="cursor-pointer mr-2 h-4 w-4" /> Logout
             </Button>
           </>
         ) : (
           <Button onClick={login} className="w-full">
-            <LogIn className="mr-2 h-4 w-4" /> Login with Internet Identity
+            <LogIn className="cursor-pointer mr-2 h-4 w-4" /> Login with Internet Identity
           </Button>
         )}
       </motion.div>

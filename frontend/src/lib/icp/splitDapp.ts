@@ -1,13 +1,20 @@
-import { HttpAgent, Actor } from '@dfinity/agent'
-import { idlFactory } from '../../declarations/split_dapp.did.js'
+import { Actor, HttpAgent } from '@dfinity/agent'
+import { idlFactory } from '@/declarations'
 
-const canisterId = process.env.NEXT_PUBLIC_SPLIT_DAPP_CANISTER_ID!
+export const createSplitDappActor = async () => {
+  const host = process.env.NEXT_PUBLIC_DFX_HOST || 'https://ic0.app'
+  const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
-export const createSplitDappActor = () => {
-  const agent = new HttpAgent({ host: 'http://localhost:4943' })
+  if (!canisterId) {
+    throw new Error(
+      '❌ Canister ID is required. Check your .env file for NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP'
+    )
+  }
 
-  if (process.env.NODE_ENV === 'development') {
-    agent.fetchRootKey().catch(console.warn)
+  const agent = new HttpAgent({ host })
+  // Optionally fetch root key in local
+  if (host.includes('localhost')) {
+    await agent.fetchRootKey()
   }
 
   return Actor.createActor(idlFactory, {

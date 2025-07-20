@@ -6,9 +6,6 @@
 
 <div align="center"> 
 	<img src="./frontend/public/split.png" width="30%" /> 
-</div>
-
-<div align="center"> 
 	by:  
 	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
 		<img src="./frontend/public/team.png" width="10%" /> 

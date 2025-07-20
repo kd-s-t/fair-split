@@ -1,6 +1,7 @@
 import './globals.css'
 import { ReactNode } from 'react'
 import { AuthProvider } from '@/contexts/auth-context'
+import { Toaster } from "@/components/ui/sonner"
 
 export const metadata = {
   title: 'Fair Split',
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <main>{children}</main>
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   )

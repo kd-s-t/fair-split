@@ -37,9 +37,12 @@ export default function DashboardPage() {
   const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null)
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([])
   const [amount, setAmount] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+
   const router = useRouter()
   const { principal } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
+
+  const selectedBiz = mockBusinesses.find(biz => biz.id === selectedBusiness)
 
   const handleCheckboxToggle = (employeeId: string) => {
     setSelectedEmployees(prev =>
@@ -50,11 +53,17 @@ export default function DashboardPage() {
   }
 
   const handleSplitBill = async () => {
-    console.log("xxx", {
-      selectedBiz, selectedEmployees, principal
-    })
-    if (!selectedBiz || selectedEmployees.length === 0 || !principal) return
+    if (!selectedBiz || selectedEmployees.length === 0 || !principal) {
+      toast.error('Please select a business and at least one employee.')
+      return
+    }
+
     const total = Number(amount)
+    if (isNaN(total) || total <= 0) {
+      toast.error('Invalid amount')
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -66,8 +75,13 @@ export default function DashboardPage() {
         },
         principal
       )
-
-      toast.success('Bill split successfully!')
+      toast.success('Bill split successfully!', {
+        description: 'The amount was successfully distributed to selected employees.',
+        action: {
+          label: 'Dismiss',
+          onClick: () => console.log('Toast dismissed'),
+        },
+      })
       console.log('Split result:', result)
     } catch (err: any) {
       toast.error(`Error splitting bill: ${err.message || err}`)
@@ -77,17 +91,12 @@ export default function DashboardPage() {
     }
   }
 
-
   const handleLogout = async () => {
     const { AuthClient } = await import('@dfinity/auth-client')
     const client = await AuthClient.create()
     await client.logout()
-
     router.push('/')
   }
-
-
-  const selectedBiz = mockBusinesses.find(biz => biz.id === selectedBusiness)
 
   return (
     <motion.div
@@ -133,65 +142,34 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedBiz.employees.map(emp => (
-              <div key={emp.id} className="cursor-pointer flex items-center space-x-3">
+              <div key={emp.id} className="flex items-center space-x-3">
                 <Checkbox
                   id={emp.id}
+                  className='cursor-pointer'
                   checked={selectedEmployees.includes(emp.id)}
                   onCheckedChange={() => handleCheckboxToggle(emp.id)}
                 />
-                <label htmlFor={emp.id} className="text-sm">
+                <label htmlFor={emp.id} className="cursor-pointer text-sm">
                   {emp.name}
                 </label>
               </div>
             ))}
+
             <Input
-              placeholder="Enter amount to split"
+              placeholder="cursor-pointer Enter amount to split"
               type="number"
               value={amount}
+              min={1}
+              step="0.01"
               onChange={e => setAmount(e.target.value)}
             />
+
             <Button
-              disabled={
-                isLoading ||
-                selectedEmployees.length === 0 ||
-                !amount.trim() ||
-                Number(amount) <= 0
-              }
-              className={`cursor-pointer w-full flex items-center justify-center transition-transform duration-200 hover:scale-105 ${selectedEmployees.length === 0 ||
-                !amount.trim() ||
-                Number(amount) <= 0
-                ? 'opacity-50 cursor-not-allowed'
-                : ''
-                }`}
+              disabled={isLoading}
               onClick={handleSplitBill}
+              className="cursor-pointer w-full flex items-center justify-center"
             >
-              {isLoading ? (
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-              ) : (
-                <>
-                  Split pay ₱{amount || '0'} among {selectedEmployees.length} employee
-                  {selectedEmployees.length > 1 && 's'}
-                </>
-              )}
+              {isLoading ? 'Splitting...' : `Split pay ₱${amount || '0'} among ${selectedEmployees.length} employee${selectedEmployees.length > 1 ? 's' : ''}`}
             </Button>
           </CardContent>
         </Card>

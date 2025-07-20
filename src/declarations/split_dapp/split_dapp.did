@@ -1,0 +1,15 @@
+type SplitRecord = 
+ record {
+   participant: principal;
+   share: nat;
+ };
+type SplitDApp = 
+ service {
+   getAdmin: () -> (principal) query;
+   getLogs: () -> (vec text) query;
+   splitBill: (args: record {
+                       participants: vec principal;
+                       total: nat;
+                     }, caller: principal) -> (vec SplitRecord);
+ };
+service : (admin: principal) -> SplitDApp

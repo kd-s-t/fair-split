@@ -1,11 +1,11 @@
 <div align="center"> 
-	<img src="split.png" width="30%" /> 
+	<img src="./frontend/public/split.png" width="30%" /> 
 </div>
 
 <div align="center"> 
 	by:  
 	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
-		<img src="team.png" width="10%" /> 
+		<img src="./frontend/public/team.png" width="10%" /> 
 	</a>
 </div>
 
@@ -51,7 +51,7 @@ npm run dev
 
 ### Deploy ICP locally http://localhost:4943
 ```bash
-cd icp
+cd icp-backend
 dfx deploy
 ```
 

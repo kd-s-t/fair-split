@@ -1,0 +1,20 @@
+{
+  "canisters": {
+    "split_dapp": {
+      "main": "icp-backend/src/main.mo",
+      "type": "motoko",
+      "candid": "icp-backend/src/main.did",
+      "arguments": "(principal \"aaaaa-aa\")"
+    },
+    "split_dapp_test": {
+      "main": "icp-backend/test/main_test.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    }
+  },
+  "version": 1
+}

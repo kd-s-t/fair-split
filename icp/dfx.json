@@ -1,8 +1,0 @@
-{
-  "canisters": {
-    "fairsplit": {
-      "type": "motoko",
-      "main": "icp/fairsplit/main.mo"
-    }
-  }
-}

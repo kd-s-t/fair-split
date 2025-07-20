@@ -5,10 +5,10 @@
 </div>
 
 <div align="center"> 
-	<img src="./frontend/public/split.png" width="30%" /> 
+	<img src="./frontend/public/split.png" width="20%" />
 	by:  
 	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
-		<img src="./frontend/public/team.png" width="10%" /> 
+		<img src="./frontend/public/team.png" width="5%" /> 
 	</a>
 </div>
 

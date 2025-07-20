@@ -4,11 +4,11 @@
 	</a>
 </div>
 
-<div align="center"> 
+<div align="center" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
 	<img src="./frontend/public/split.png" width="20%" />
-	by:  
+	<span>by:</span>
 	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
-		<img src="./frontend/public/team.png" width="5%" /> 
+		<img src="./frontend/public/team.png" width="5%" />
 	</a>
 </div>
 

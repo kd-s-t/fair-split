@@ -1,5 +1,7 @@
 <div align="center"> 
-	<img src="./event.jpg" width="100%" /> 
+	<a href="https://dorahacks.io/hackathon/wchl25-qualification-round/buidl" target="_blank">
+		<img src="./event.jpg" width="100%" /> 
+	</a>
 </div>
 
 <div align="center"> 

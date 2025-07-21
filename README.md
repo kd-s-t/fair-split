@@ -54,9 +54,21 @@ npm run dev
 
 ### Deploy ICP locally http://localhost:4943
 ```bash
-cd icp-backend
+cd backend
 dfx deploy
 ```
+
+### Update frontend bindings after backend changes
+If you change the backend `.did` file (add/remove methods), you must update the frontend bindings:
+```bash
+# From the project root
+# Regenerate bindings using dfx
+dfx generate
+
+# If your frontend expects declarations in frontend/src/declarations, copy them:
+cp -r backend/src/declarations/* frontend/src/declarations/
+```
+This ensures your frontend can call all updated canister methods.
 
 ## Authors
 

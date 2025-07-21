@@ -1,3 +1,10 @@
+type Transaction = 
+ record {
+   amount: nat;
+   from: principal;
+   timestamp: nat;
+   to: principal;
+ };
 type SplitRecord = 
  record {
    participant: principal;
@@ -6,7 +13,12 @@ type SplitRecord =
 type SplitDApp = 
  service {
    getAdmin: () -> (principal) query;
+   getBalance: (p: principal) -> (nat) query;
    getLogs: () -> (vec text) query;
+   getName: (p: principal) -> (opt text) query;
+   getTransactions: (p: principal) -> (vec Transaction) query;
+   setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
+   setName: (p: principal, name: text) -> ();
    splitBill: (args: record {
                        participants: vec principal;
                        total: nat;

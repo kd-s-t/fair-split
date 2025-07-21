@@ -1,1 +1,44 @@
-.dfx
+# DFX/ICP
+.dfx/
+backend/.dfx/
+backend/.cache/
+backend/wasm/
+backend/.moj/
+backend/.vessel/
+backend/.vessel-lock
+backend/.vessel-bin
+
+# Node.js
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build artifacts
+dist/
+build/
+*.wasm
+*.dfx
+*.mo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+*.swp
+*.swo

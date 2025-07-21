@@ -22,7 +22,6 @@ dist/
 build/
 *.wasm
 *.dfx
-*.mo
 
 # OS files
 .DS_Store

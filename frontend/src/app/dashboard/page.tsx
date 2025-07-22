@@ -38,8 +38,6 @@ export default function DashboardPage() {
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([])
   const [amount, setAmount] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
-
-  const router = useRouter()
   const { principal } = useAuth()
 
   const selectedBiz = mockBusinesses.find(biz => biz.id === selectedBusiness)
@@ -91,13 +89,6 @@ export default function DashboardPage() {
     }
   }
 
-  const handleLogout = async () => {
-    const { AuthClient } = await import('@dfinity/auth-client')
-    const client = await AuthClient.create()
-    await client.logout()
-    router.push('/')
-  }
-
   return (
     <motion.div
       className="p-6 max-w-2xl mx-auto space-y-6"
@@ -105,12 +96,6 @@ export default function DashboardPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex justify-end">
-        <Button className='cursor-pointer' variant="default" onClick={handleLogout}>
-          Logout
-        </Button>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Select Business</CardTitle>

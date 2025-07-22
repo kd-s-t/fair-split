@@ -5,6 +5,7 @@ import Time "mo:base/Time";
 import Text "mo:base/Text";
 import Int "mo:base/Int";
 import HashMap "mo:base/HashMap";
+import Debug "mo:base/Debug";
 
 actor class SplitDApp(admin : Principal) {
 
@@ -13,11 +14,22 @@ actor class SplitDApp(admin : Principal) {
     share : Nat;
   };
 
+  type ParticipantShare = {
+    principal : Principal;
+    amount : Nat;
+  };
+
+  type ToEntry = {
+    principal : Principal;
+    name : Text;
+    amount : Nat;
+  };
+
   type Transaction = {
     from : Principal;
-    to : Principal;
-    amount : Nat;
+    to : [ToEntry];
     timestamp : Nat;
+    isRead : Bool;
   };
 
   var logs : [Text] = [];
@@ -28,63 +40,76 @@ actor class SplitDApp(admin : Principal) {
   // 📤 Public method to split a bill
   public shared func splitBill(
     args : {
-      participants : [Principal];
-      total : Nat;
+      participants : [ParticipantShare];
     },
     caller : Principal,
   ) : async [SplitRecord] {
     let count = args.participants.size();
     if (count == 0) return [];
 
-    let share = args.total / count;
+    // Prevent sending to self
+    for (p in args.participants.vals()) {
+      if (p.principal == caller) {
+        Debug.trap("Cannot send to yourself");
+      };
+    };
 
     let timestamp = Int.abs(Time.now());
+    var txToList : [ToEntry] = [];
 
-    let result = Array.map<Principal, SplitRecord>(
+    for (p in args.participants.vals()) {
+      let currentCallerBal = switch (balances.get(caller)) {
+        case (?bal) bal;
+        case null 0;
+      };
+      if (currentCallerBal < p.amount) {
+        Debug.trap("Insufficient balance for transfer");
+      };
+
+      balances.put(caller, currentCallerBal - p.amount);
+
+      let currentBal = switch (balances.get(p.principal)) {
+        case (?bal) bal;
+        case null 0;
+      };
+      balances.put(p.principal, currentBal + p.amount);
+
+      let name = switch (names.get(p.principal)) {
+        case (?n) n;
+        case null "";
+      };
+
+      txToList := Array.append(txToList, [{ principal = p.principal; name = name; amount = p.amount }]);
+    };
+
+    let tx : Transaction = {
+      from = caller;
+      to = txToList;
+      timestamp = timestamp;
+      isRead = false;
+    };
+
+    // Save only to sender
+    let prevTxsSender = switch (transactions.get(caller)) {
+      case (?txs) txs;
+      case null [];
+    };
+    transactions.put(caller, Array.append(prevTxsSender, [tx]));
+
+    logs := Array.append<Text>(
+      logs,
+      ["Caller = " # Principal.toText(caller) # " split at " # Nat.toText(timestamp)],
+    );
+
+    return Array.map<ParticipantShare, SplitRecord>(
       args.participants,
       func(p) {
-        // Deduct from caller and credit each participant
-        let currentCallerBal = switch (balances.get(caller)) {
-          case (?bal) bal;
-          case null 0;
-        };
-        if (currentCallerBal >= share) {
-          balances.put(caller, currentCallerBal - share);
-          let currentBal = switch (balances.get(p)) {
-            case (?bal) bal;
-            case null 0;
-          };
-          balances.put(p, currentBal + share);
-
-          let tx : Transaction = {
-            from = caller;
-            to = p;
-            amount = share;
-            timestamp = timestamp;
-          };
-
-          // Store transaction per recipient
-          let prevTxs = switch (transactions.get(p)) {
-            case (?txs) txs;
-            case null [];
-          };
-          transactions.put(p, Array.append(prevTxs, [tx]));
-        };
-
         {
-          participant = p;
-          share = share;
+          participant = p.principal;
+          share = p.amount;
         };
       },
     );
-
-    let log = "Caller = " # Principal.toText(caller)
-    # " split " # Nat.toText(args.total)
-    # " at " # Nat.toText(timestamp);
-
-    logs := Array.append<Text>(logs, [log]);
-
-    return result;
   };
 
   // 🧾 Get all transactions for a participant
@@ -92,7 +117,7 @@ actor class SplitDApp(admin : Principal) {
     switch (transactions.get(p)) {
       case (?txs) txs;
       case null [];
-    }
+    };
   };
 
   // 💰 Get balance of a participant
@@ -100,7 +125,7 @@ actor class SplitDApp(admin : Principal) {
     switch (balances.get(p)) {
       case (?bal) bal;
       case null 0;
-    }
+    };
   };
 
   // 🛠 Set initial balance (only admin can do this)
@@ -108,6 +133,17 @@ actor class SplitDApp(admin : Principal) {
     if (caller == admin) {
       balances.put(p, amount);
     };
+  };
+
+  public shared func markTransactionsAsRead(caller : Principal) : async () {
+    let txs = switch (transactions.get(caller)) {
+      case (?list) list;
+      case null return;
+    };
+
+    let updated = Array.map<Transaction, Transaction>(txs, func(tx) { { from = tx.from; to = tx.to; timestamp = tx.timestamp; isRead = true } });
+
+    transactions.put(caller, updated);
   };
 
   public query func getLogs() : async [Text] {
@@ -118,11 +154,11 @@ actor class SplitDApp(admin : Principal) {
     return admin;
   };
 
-  public shared func setName(p: Principal, name: Text) : async () {
+  public shared func setName(p : Principal, name : Text) : async () {
     names.put(p, name);
   };
 
-  public query func getName(p: Principal) : async ?Text {
-    names.get(p)
+  public query func getName(p : Principal) : async ?Text {
+    names.get(p);
   };
 };

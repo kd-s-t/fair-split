@@ -1,9 +1,15 @@
 type Transaction = 
  record {
-   amount: nat;
    from: principal;
+   isRead: bool;
    timestamp: nat;
-   to: principal;
+   to: vec ToEntry;
+ };
+type ToEntry = 
+ record {
+   amount: nat;
+   name: text;
+   "principal": principal;
  };
 type SplitRecord = 
  record {
@@ -17,11 +23,15 @@ type SplitDApp =
    getLogs: () -> (vec text) query;
    getName: (p: principal) -> (opt text) query;
    getTransactions: (p: principal) -> (vec Transaction) query;
+   markTransactionsAsRead: (caller: principal) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setName: (p: principal, name: text) -> ();
-   splitBill: (args: record {
-                       participants: vec principal;
-                       total: nat;
-                     }, caller: principal) -> (vec SplitRecord);
+   splitBill: (args: record {participants: vec ParticipantShare;}, caller:
+    principal) -> (vec SplitRecord);
+ };
+type ParticipantShare = 
+ record {
+   amount: nat;
+   "principal": principal;
  };
 service : (admin: principal) -> SplitDApp

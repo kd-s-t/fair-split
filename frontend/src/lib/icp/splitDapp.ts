@@ -1,5 +1,5 @@
 import { Actor, HttpAgent } from '@dfinity/agent'
-import { idlFactory } from '@/declarations'
+import { idlFactory } from '@/declarations/split_dapp'
 
 export const createSplitDappActor = async () => {
   const host = process.env.NEXT_PUBLIC_DFX_HOST || 'https://ic0.app'

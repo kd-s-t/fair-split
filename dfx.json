@@ -3,8 +3,7 @@
     "split_dapp": {
       "main": "backend/src/main.mo",
       "type": "motoko",
-      "candid": "backend/src/main.did",
-      "arguments": "(principal \"aaaaa-aa\")"
+      "candid": "backend/src/main.did"
     },
     "split_dapp_test": {
       "main": "backend/test/main_test.mo",

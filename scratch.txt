@@ -1,0 +1,22 @@
+
+dfx identity whoami
+dfx identity get-principal
+
+dfx identity use default
+dfx identity get-principal
+27x7r-i75hq-n7emo-27bdr-t75ik-bghml-ayjp3-b475x-2imua-ehkeu-3qe
+
+dfx identity use user2
+dfx identity get-principal
+modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe
+
+
+dfx identity use user3
+dfx identity get-principal
+lj5ry-unyjc-jdn7p-j3qmv-ug3zb-cegzu-wnmf7-vpni3-5f3zj-hhjjf-tqe
+
+dfx identity use user4
+dfx identity get-principal
+6d7pr-gfm24-fnvuv-odsjz-6brox-4spcl-ahcyw-gzync-bx3qg-sdaqt-rqe
+
+dfx identity list

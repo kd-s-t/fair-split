@@ -63,7 +63,7 @@ export default function Home() {
             height={64}
           />
         </div>
-        <h1 className="text-2xl font-bold text-center">SplitDApp Authentication</h1>
+        <h1 className="text-2xl font-bold text-center">SafeSplit Authentication</h1>
 
         {principal ? (
           <>

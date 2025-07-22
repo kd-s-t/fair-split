@@ -1,8 +1,17 @@
 export const idlFactory = ({ IDL }) => {
+  const ToEntry = IDL.Record({
+    'principal' : IDL.Principal,
+    'name' : IDL.Text,
+    'amount' : IDL.Nat,
+  });
   const Transaction = IDL.Record({
-    'to' : IDL.Principal,
+    'to' : IDL.Vec(ToEntry),
     'from' : IDL.Principal,
+    'isRead' : IDL.Bool,
     'timestamp' : IDL.Nat,
+  });
+  const ParticipantShare = IDL.Record({
+    'principal' : IDL.Principal,
     'amount' : IDL.Nat,
   });
   const SplitRecord = IDL.Record({
@@ -19,6 +28,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Transaction)],
         ['query'],
       ),
+    'markTransactionsAsRead' : IDL.Func([IDL.Principal], [], []),
     'setInitialBalance' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Principal],
         [],
@@ -27,10 +37,7 @@ export const idlFactory = ({ IDL }) => {
     'setName' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'splitBill' : IDL.Func(
         [
-          IDL.Record({
-            'participants' : IDL.Vec(IDL.Principal),
-            'total' : IDL.Nat,
-          }),
+          IDL.Record({ 'participants' : IDL.Vec(ParticipantShare) }),
           IDL.Principal,
         ],
         [IDL.Vec(SplitRecord)],

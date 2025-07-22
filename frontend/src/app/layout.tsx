@@ -7,6 +7,8 @@ import { Toaster } from '@/components/ui/sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
 import * as React from "react";
+import { Provider } from 'react-redux';
+import { store } from '../lib/redux/store';
 
 export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
   return <table className={`w-full caption-bottom text-sm ${className || ""}`} {...props} />;
@@ -59,9 +61,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <LayoutShell>{children}</LayoutShell>
-        </AuthProvider>
+        <Provider store={store}>
+          <AuthProvider>
+            <LayoutShell>{children}</LayoutShell>
+          </AuthProvider>
+        </Provider>
         <Toaster />
       </body>
     </html>

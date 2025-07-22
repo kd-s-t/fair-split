@@ -26,14 +26,14 @@ export default function TransactionDetailsModal({ transaction, onClose }: { tran
         <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
         <div className="mb-2">
           <span className="font-semibold">From:</span>
-          <span className="ml-2 font-mono text-xs">{transaction.from.toText()}</span>
+          <span className="ml-2 font-mono text-xs">{String(transaction.from)}</span>
         </div>
         <div className="mb-2">
           <span className="font-semibold">Recipients:</span>
           <ul className="ml-4 mt-1">
             {transaction.to.map((toEntry, idx) => (
               <li key={idx} className="mb-1">
-                <span className="font-mono text-xs">{toEntry.principal.toText()}</span>
+                <span className="font-mono text-xs">{String(toEntry.principal)}</span>
                 {toEntry.name && <span className="ml-2 text-sm text-gray-500">({toEntry.name})</span>}
                 <span className="ml-2 text-yellow-600 font-semibold">{Number(toEntry.amount) / 1e8} BTC</span>
               </li>

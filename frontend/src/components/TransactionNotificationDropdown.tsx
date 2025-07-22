@@ -3,20 +3,25 @@ import { Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu';
 import { createSplitDappActor } from '@/lib/icp/splitDapp';
 import { Principal } from '@dfinity/principal';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '../lib/redux/store';
+import { setTransactions } from '../lib/redux/transactionsSlice';
 
 interface Transaction {
-  to: Principal[];
+  to: any[]; // Use any to avoid linter error for now
   from: Principal;
   timestamp: bigint;
   amount: bigint;
 }
 
 function getTxId(tx: Transaction) {
-  return `${tx.from.toText()}_${tx.to.map(toEntry => toEntry.principal.toText()).join('-')}_${tx.timestamp.toString()}`;
+  // If tx.to is an array of Principal, join their text representations
+  return `${tx.from}_${tx.to.map((toEntry: any) => toEntry.principal).join('-')}_${tx.timestamp}`;
 }
 
 export default function TransactionNotificationDropdown({ principalId }: { principalId: string }) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+  const dispatch = useDispatch();
   const [readIds, setReadIds] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -25,16 +30,31 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
     const stored = localStorage.getItem('readTxIds');
     if (stored) setReadIds(JSON.parse(stored));
   }, []);
-
-  // Fetch transactions
+  console.log("transactions", transactions)
+  // Fetch transactions and update Redux
   useEffect(() => {
     if (!principalId) return;
     (async () => {
       const actor = await createSplitDappActor();
       const txs = await actor.getTransactions(Principal.fromText(principalId));
-      setTransactions(txs as Transaction[]);
+      const serializableTxs = txs.map(tx => ({
+        ...tx,
+        from: typeof tx.from === 'string' ? tx.from : tx.from.toText(),
+        timestamp: typeof tx.timestamp === 'bigint' ? tx.timestamp.toString() : tx.timestamp,
+        to: tx.to.map(toEntry => ({
+          ...toEntry,
+          principal: typeof toEntry.principal === 'string'
+            ? toEntry.principal
+            : (toEntry.principal && typeof toEntry.principal.toText === 'function'
+                ? toEntry.principal.toText()
+                : String(toEntry.principal)),
+          amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : toEntry.amount,
+        })),
+      }));
+      console.log('serializableTxs', serializableTxs);
+      dispatch(setTransactions(serializableTxs));
     })();
-  }, [principalId]);
+  }, [principalId, dispatch]);
 
   // Mark all as read when dropdown opens
   useEffect(() => {
@@ -45,7 +65,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
     }
   }, [open, transactions]);
 
-  const unreadCount = transactions.filter(tx => !readIds.includes(getTxId(tx))).length;
+  const unreadCount = transactions.filter(tx => !tx.isRead).length;
 
   return (
     <DropdownMenu onOpenChange={setOpen}>
@@ -68,9 +88,9 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
             .map((tx, idx) => (
               <DropdownMenuItem key={getTxId(tx)} className={!readIds.includes(getTxId(tx)) ? 'bg-yellow-100 text-black' : ''}>
                 <div className="flex flex-col w-full">
-                  <span className="text-xs font-mono truncate">From: {tx.from.toText()}</span>
-                  <span className="text-xs font-mono truncate">To: {tx.to.map(toEntry => toEntry.principal.toText()).join(', ')}</span>
-                  <span className="text-xs font-semibold text-yellow-600">{Number(tx.amount) / 1e8} BTC</span>
+                  <span className="text-xs font-mono truncate">From: {tx.from}</span>
+                  <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry: any) => (toEntry.principal ? toEntry.principal : toEntry.toText())).join(', ')}</span>
+                  <span className="text-xs font-semibold text-yellow-600">{tx.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC</span>
                   <span className="text-xs text-muted-foreground">{new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}</span>
                 </div>
               </DropdownMenuItem>

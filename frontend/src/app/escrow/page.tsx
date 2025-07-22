@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/auth-context'
 import { createSplitDappActor } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useDispatch } from 'react-redux';
+import { setTransactions } from '../../lib/redux/transactionsSlice';
 
 interface Recipient {
   id: string
@@ -27,6 +29,7 @@ export default function EscrowPage() {
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [btcAmount, setBtcAmount] = useState<string>('')
   const { principal }: { principal: { toText: () => string } | null } = useAuth()
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -105,6 +108,7 @@ export default function EscrowPage() {
         },
       })
       console.log('Split result:', result)
+      await fetchAndStoreTransactions();
     } catch (err: any) {
       toast.error(`Error splitting bill: ${err.message || err}`)
       console.error('Error splitting bill:', err)
@@ -129,6 +133,27 @@ export default function EscrowPage() {
 
     await handleSplitBill()
   }
+
+  const fetchAndStoreTransactions = async () => {
+    if (!principal) return;
+    const actor = await createSplitDappActor();
+    const txs = await actor.getTransactions(Principal.fromText(principal.toText()));
+    const serializableTxs = txs.map(tx => ({
+      ...tx,
+      from: typeof tx.from === 'string' ? tx.from : tx.from.toText(),
+      timestamp: typeof tx.timestamp === 'bigint' ? tx.timestamp.toString() : tx.timestamp,
+      to: tx.to.map(toEntry => ({
+        ...toEntry,
+        principal: toEntry.principal && typeof toEntry.principal === 'object' && typeof toEntry.principal.toText === 'function'
+          ? toEntry.principal.toText()
+          : (typeof toEntry.principal === 'string'
+              ? toEntry.principal
+              : String(toEntry.principal)),
+        amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : toEntry.amount,
+      })),
+    }));
+    dispatch(setTransactions(serializableTxs));
+  };
 
 
   return (

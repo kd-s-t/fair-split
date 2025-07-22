@@ -6,11 +6,15 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { Transaction } from "@/declarations/split_dapp/split_dapp.did";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { motion } from 'framer-motion';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '../../lib/redux/store';
+import { setTransactions, markAllAsRead } from '../../lib/redux/transactionsSlice';
 import TransactionDetailsModal from "../../components/TransactionDetailsModal";
 
 export default function HistoryPage() {
   const { principal } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
@@ -24,8 +28,21 @@ export default function HistoryPage() {
       try {
         const actor = await createSplitDappActor();
         const txs = await actor.getTransactions(principal);
-        console.log("txs", txs)
-        setTransactions(txs as Transaction[]);
+        const serializableTxs = txs.map(tx => ({
+          ...tx,
+          from: typeof tx.from === 'string' ? tx.from : tx.from.toText(),
+          timestamp: typeof tx.timestamp === 'bigint' ? tx.timestamp.toString() : tx.timestamp,
+          to: tx.to.map(toEntry => ({
+            ...toEntry,
+            principal: toEntry.principal && typeof toEntry.principal === 'object' && typeof toEntry.principal.toText === 'function'
+              ? toEntry.principal.toText()
+              : (typeof toEntry.principal === 'string'
+                  ? toEntry.principal
+                  : String(toEntry.principal)),
+            amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : toEntry.amount,
+          })),
+        }));
+        dispatch(setTransactions(serializableTxs));
       } catch (err: any) {
         setError(err.message || "Failed to fetch transactions");
       } finally {
@@ -33,10 +50,10 @@ export default function HistoryPage() {
       }
     };
     fetchTransactions();
-  }, [principal]);
+  }, [principal, dispatch]);
 
   function getTxId(tx: Transaction) {
-    return `${tx.from.toText()}_${tx.to.map(toEntry => toEntry.principal.toText()).join('-')}_${tx.timestamp.toString()}`;
+    return `${tx.from}_${tx.to.map(toEntry => toEntry.principal).join('-')}_${tx.timestamp}`;
   }
 
   async function handleRowClick(tx: Transaction) {
@@ -44,7 +61,7 @@ export default function HistoryPage() {
     if (!tx.isRead) {
       const actor = await createSplitDappActor();
       await actor.markTransactionsAsRead(principal);
-      setTransactions(prev => prev.map(t => ({ ...t, isRead: true })));
+      dispatch(markAllAsRead());
     }
     setSelectedTx(tx);
     setModalOpen(true);
@@ -84,11 +101,11 @@ export default function HistoryPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
                   className={`hover:bg-yellow-50 transition-colors ${!tx.isRead ? 'bg-yellow-100' : ''} cursor-pointer`}
-                  onClick={() => handleRowClick(tx)} // for modal/details
+                  onClick={() => handleRowClick(tx)}
                 >
-                  <TableCell className="p-3 font-mono text-xs">{tx.from.toText()}</TableCell>
+                  <TableCell className="p-3 font-mono text-xs">{tx.from}</TableCell>
                   <TableCell className="p-3 font-mono text-xs">
-                    {tx.to.map(toEntry => toEntry.principal.toText()).join(', ')}
+                    {tx.to.map(toEntry => toEntry.principal).join(', ')}
                   </TableCell>
                   <TableCell className="p-3 text-right font-semibold text-yellow-600">
                     {tx.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8}

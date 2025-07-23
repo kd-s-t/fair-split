@@ -13,6 +13,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux';
 import { setTransactions } from '../../lib/redux/transactionsSlice';
 import { setBtcBalance } from '../../lib/redux/userSlice';
+import { Bitcoin, Shield } from 'lucide-react'
+import { Typography } from '@/components/ui/typography'
+import { Badge } from '@/components/ui/badge'
 
 interface Recipient {
   id: string
@@ -164,15 +167,28 @@ export default function EscrowPage() {
       transition={{ duration: 0.4 }}
     >
       {/* Main form: 60% */}
-      <div className="w-[60%] min-w-[340px]">
+      <div className="w-[70%] min-w-[340px]">
         <Card>
           <CardHeader>
-            <CardTitle>Escrow setup</CardTitle>
+            <CardTitle className='flex items-center justify-between'>
+              <Typography variant="h4">Escrow setup</Typography>
+              <Bitcoin color='#F97415'/>
+              </CardTitle>
+            
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium">Description <span className="text-xs text-muted-foreground">(optional)</span></label>
+              <Input
+                type="text"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="e.g., Freelance project payment"
+              />
+            </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium">amount</label>
+                <label className="text-sm font-medium">BTC amount</label>
                 <span className="text-xs text-muted-foreground">
                   {/* {isBalanceLoading ? 'Loading...' : btcBalance !== null ? `${btcBalance} BTC` : '—'} */}
                 </span>
@@ -187,23 +203,14 @@ export default function EscrowPage() {
                 placeholder="0.00000000"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium">Description <span className="text-xs text-muted-foreground">(optional)</span></label>
-              <Input
-                type="text"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="e.g., Freelance project payment"
-              />
-            </div>
             <hr className="my-2" />
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">Recipients ({recipients.length})</span>
-                <Button variant="ghost" size="sm" onClick={handleAddRecipient} type="button" className="cursor-pointer">
-                  + Add recipient
-                </Button>
-              </div>
+            <div className='flex items-center justify-between mt-6'>
+              <Typography variant="base">Recipients & split allocation</Typography>
+              <Button variant="ghost" size="sm" onClick={handleAddRecipient} type="button" className="cursor-pointer">
+                + Add recipient
+              </Button>
+            </div>
+            <div className='container'>
               <div className="space-y-4">
                 <AnimatePresence>
                   {recipients.map((r, idx) => (
@@ -214,29 +221,34 @@ export default function EscrowPage() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }} // swipe out to left
                       transition={{ duration: 0.25 }}
-                      className="bg-muted rounded-lg p-4 relative"
+                      className="bg-muted rounded-lg relative"
                     >
-                      {recipients.length > 1 && (
-                        <button
-                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 cursor-pointer"
-                          onClick={() => handleRemoveRecipient(idx)}
-                          type="button"
-                          aria-label="Remove recipient"
-                        >
-                          &#128465;
-                        </button>
-                      )}
-                      <div className="mb-2">
-                        <label className="text-xs font-medium">Recipient address</label>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Recipient {idx + 1}</span>
+                          {recipients.length > 1 && (
+                            <button
+                              className="absolute top-2 right-2 text-red-500 hover:text-red-700 cursor-pointer"
+                              onClick={() => handleRemoveRecipient(idx)}
+                              type="button"
+                              aria-label="Remove recipient"
+                            >
+                             
+                            </button>
+                            )}
+                        </div>
+                      
+                      <div className='grid grid-cols-8 gap-4'>
+                      <div className="col-span-6">
+                        <label className="text-xs font-medium">BTC address</label>
                         <Input
                           type="text"
                           value={r.principal}
                           onChange={e => handleRecipientChange(idx, 'principal', e.target.value)}
-                          placeholder="Principal address"
+                          placeholder="BTC address"
                           className="mt-1"
                         />
                       </div>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-center col-span-2">
                         <div className="flex-1">
                           <label className="text-xs font-medium">Percentage (%)</label>
                           <Input
@@ -250,7 +262,7 @@ export default function EscrowPage() {
                             className="mt-1"
                           />
                         </div>
-                        <div className="flex-1">
+                        {/* <div className="flex-1">
                           <label className="text-xs font-medium">Amount</label>
                           <Input
                             type="text"
@@ -262,7 +274,8 @@ export default function EscrowPage() {
                             readOnly
                             className="mt-1 bg-gray-900/30"
                           />
-                        </div>
+                        </div> */}
+                      </div>
                       </div>
                     </motion.div>
                   ))}
@@ -270,35 +283,49 @@ export default function EscrowPage() {
 
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+      {/* Transaction summary: 20% */}
+      <div className="w-[30%] min-w-[220px]">
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className='flex items-center justify-between'>
+              <Typography variant="h4">Escrow summary</Typography>
+              <Shield color='#FEB64D'/>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 mt-6">
+            <div className="flex items-center justify-between">
+              <Typography variant="small">Status</Typography>
+              <Badge variant='outline' className='!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D]'>Pending</Badge>
+            </div>
+            <hr className='my-5 text-[#424444]' />
+            <div className="flex justify-between text-sm">
+              <span>Total deposit</span>
+              <span>{btcAmount || '0.00000000'} BTC</span>
+            </div>
+            <div className="flex justify-between text-sm mt-4">
+              <span>Recipients</span>
+              <span>{recipients.length}</span>
+            </div>
+            <hr className='my-5 text-[#424444]' />
+
+            <div className='flex items-center gap-1'>
+              <Shield size={16} color='#FEB64D'/>
+              <Typography variant="small">Trustless Escrow</Typography>
+            </div>
+
+            <Typography >Powered by Internet Computer's native Bitcoin integration. No bridges, no wrapped BTC.</Typography>
+            
             <Button
-              className="w-full mt-4 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold cursor-pointer"
+              variant='default'
+              className="w-full mt-4"
               disabled={isLoading}
               onClick={handleInitiateEscrow}
             >
               {isLoading ? 'Processing...' : 'Initiate escrow'}
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Transaction summary: 20% */}
-      <div className="w-[20%] min-w-[220px]">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Transaction summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Total deposit</span>
-              <span>{btcAmount || '0.00000000'} BTC</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Recipients</span>
-              <span>{recipients.length}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Status</span>
-              <span className="text-yellow-400">Awaiting deposit</span>
-            </div>
           </CardContent>
         </Card>
       </div>

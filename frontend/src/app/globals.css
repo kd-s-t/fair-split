@@ -1,7 +1,21 @@
 @import "tailwindcss";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.container {
+  @apply p-3 rounded-[10px] border bg-[#222222] border-[#303434];
+}
+
+.container-error {
+  @apply p-3 rounded-[10px] border bg-[#362823] border-[#714024];
+}
+
+.container-success {
+  @apply p-3 rounded-[10px] border bg-[#1B2E25] border-[#296239];
+}
+
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 

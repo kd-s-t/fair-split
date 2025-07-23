@@ -52,7 +52,7 @@ export const DashboardStats: React.FC = () => {
           </Button>
         </div>
 
-        <div className='w-full p-3 rounded-[10px] border bg-[#222222] border-[#303434] shadow-sm flex items-center gap-2 mt-6'>
+        <div className='container w-full shadow-sm flex items-center gap-2 mt-6'>
           <Shield color='#FEB64D' /> <Typography variant='muted' className='font-medium'>Secured by ICP threshold ECDSA • No bridges, no wrapped BTC</Typography>
         </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
@@ -74,10 +74,10 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
   <Card className="flex flex-col gap-6">
     <div className="flex items-center gap-2 mb-2 justify-between">
-        <Typography variant='h3' className="font-semibold">{value}</Typography>
+        <Typography variant='muted' className='text-sm'>{label}</Typography>
         <span>{icon}</span>
     </div>
-    <Typography variant='muted'>{label}</Typography>
+    <Typography variant='h3' className="font-semibold text-2xl">{value}</Typography>
   </Card>
 );
 

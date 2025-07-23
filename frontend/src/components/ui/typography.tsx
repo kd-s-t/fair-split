@@ -12,6 +12,7 @@ const typographyVariants = cva('', {
       p: 'leading-7',
       list: 'my-6 ml-6 list-disc [&>li]:mt-2',
       large: 'text-lg font-semibold',
+      base: 'text-base font-medium',
       small: 'text-sm font-medium',
       muted: 'text-sm text-[#BCBCBC]',
     },
@@ -22,7 +23,7 @@ const typographyVariants = cva('', {
 });
 
 export interface TypographyProps extends React.HTMLAttributes<HTMLElement> {
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'list' | 'large' | 'small' | 'muted';
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'list' | 'large' | 'small' | 'muted' | 'base';
   asChild?: boolean;
 }
 

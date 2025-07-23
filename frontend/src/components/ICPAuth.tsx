@@ -4,15 +4,16 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { LogIn, LogOut } from 'lucide-react'
-import { Principal } from '@dfinity/principal'
 import { AuthClient } from '@dfinity/auth-client'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useDispatch } from 'react-redux'
+import { useAppSelector } from '@/lib/redux/store'
+import { setUser, clearUser } from '@/lib/redux/userSlice'
 
 export default function Home() {
+  const dispatch = useDispatch();
+  const principal = useAppSelector(state => state.user.principal);
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
-  const [principal, setPrincipal] = useState<Principal | null>(null)
-  const router = useRouter()
 
   useEffect(() => {
     AuthClient.create().then(client => {
@@ -20,12 +21,14 @@ export default function Home() {
       client.isAuthenticated().then(async (authenticated) => {
         if (authenticated) {
           const identity = client.getIdentity()
-          const principal = identity.getPrincipal()
-          setPrincipal(principal)
-          router.push('/dashboard')
+          const principalObj = identity.getPrincipal()
+          dispatch(setUser({ principal: principalObj.toText(), name: null }))
+        } else {
+          dispatch(clearUser())
         }
       })
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const login = async () => {
@@ -34,9 +37,8 @@ export default function Home() {
       identityProvider: process.env.NEXT_PUBLIC_ICP_PROVIDER || 'https://identity.ic0.app/#authorize',
       onSuccess: async () => {
         const identity = authClient.getIdentity()
-        const principal = identity.getPrincipal()
-        setPrincipal(principal)
-        router.push('/dashboard')
+        const principalObj = identity.getPrincipal()
+        dispatch(setUser({ principal: principalObj.toText(), name: null }))
       },
     })
   }
@@ -44,7 +46,7 @@ export default function Home() {
   const logout = async () => {
     if (!authClient) return
     await authClient.logout()
-    setPrincipal(null)
+    dispatch(clearUser())
   }
 
   return (
@@ -67,13 +69,13 @@ export default function Home() {
 
         {principal ? (
           <>
-            <p className="text-center break-all">Principal: {principal.toText()}</p>
+            <p className="text-center break-all">Principal: {principal}</p>
             <Button onClick={logout} variant="default" className="w-full">
               <LogOut className="cursor-pointer mr-2 h-4 w-4" /> Logout
             </Button>
           </>
         ) : (
-          <Button onClick={login} className="w-full">
+          <Button onClick={login} className="w-full cursor-pointer">
             <LogIn className="cursor-pointer mr-2 h-4 w-4" /> Login with Internet Identity
           </Button>
         )}

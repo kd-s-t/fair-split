@@ -1,32 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Principal } from '@dfinity/principal';
 import { getAvatarUrl, truncatePrincipal } from '@/lib/utils';
 import EditNameModal from './SettingsModal';
 import LogoutButton from './LogoutButton';
+import { useAppSelector } from '../lib/redux/store';
+import type { RootState } from '../lib/redux/store';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);
-  const [displayName, setDisplayName] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchName = async () => {
-      if (!principalId) return;
-      const actor = await import('@/lib/icp/splitDapp').then(m => m.createSplitDappActor());
-      const result = await (await actor).getName(Principal.fromText(principalId));
-      if (Array.isArray(result) && result.length > 0 && typeof result[0] === 'string') {
-        setDisplayName(result[0]);
-      } else if (typeof result === 'object' && result !== null && 0 in result && typeof result[0] === 'string') {
-        setDisplayName(result[0]);
-      } else {
-        setDisplayName(null);
-      }
-    };
-    fetchName();
-  }, [principalId, showSettings]);
+  const displayName = useAppSelector((state: RootState) => state.user.name);
 
   return (
     <>
@@ -58,7 +43,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
         open={showSettings}
         principalId={principalId}
         onClose={() => setShowSettings(false)}
-        name={displayName || undefined}
         onNameSaved={() => setShowSettings(false)}
       />
     </>

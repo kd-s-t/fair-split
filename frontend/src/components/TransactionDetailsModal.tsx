@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import type { Transaction } from '@/declarations/split_dapp/split_dapp.did';
 
-export default function TransactionDetailsModal({ transaction, onClose }: { transaction: Transaction, onClose: () => void }) {
+export default function TransactionDetailsModal({ transaction, onClose }: { transaction: Transaction | null, onClose: () => void }) {
+  if (!transaction) return null;
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -43,10 +44,6 @@ export default function TransactionDetailsModal({ transaction, onClose }: { tran
         <div className="mb-2">
           <span className="font-semibold">Date:</span>
           <span className="ml-2 text-xs">{new Date(Number(transaction.timestamp) / 1_000_000).toLocaleString()}</span>
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">Read:</span>
-          <span className="ml-2 text-xs">{transaction.isRead ? 'Yes' : 'No'}</span>
         </div>
       </motion.div>
     </motion.div>

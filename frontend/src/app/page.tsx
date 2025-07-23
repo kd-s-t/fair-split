@@ -1,5 +1,5 @@
-import ICPAuth from '@/components/ICPAuth'
+import DashboardPage from "./dashboard/page";
 
 export default function Home() {
-  return <ICPAuth />
+  return <DashboardPage />
 }

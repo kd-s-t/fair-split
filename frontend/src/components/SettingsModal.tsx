@@ -2,34 +2,39 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDispatch } from 'react-redux';
+import { setUserName } from '../lib/redux/userSlice';
+import { useAppSelector } from '../lib/redux/store';
+import { Principal } from '@dfinity/principal';
+import type { RootState } from '../lib/redux/store';
+import { createSplitDappActor } from '@/lib/icp/splitDapp';
 
 export default function EditNameModal({
   open,
   onClose,
   principalId,
-  name,
   onNameSaved,
 }: {
   open: boolean;
   onClose: () => void;
   principalId: string;
-  name?: string;
   onNameSaved?: () => void;
 }) {
+  const name = useAppSelector((state: RootState) => state.user.name);
   const [nameInput, setNameInput] = useState(name || '');
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const dispatch = useDispatch();
+  const principal = useAppSelector((state: RootState) => state.user.principal);
 
   const handleSaveName = async () => {
     setIsSaving(true);
     try {
-      const { AuthClient } = await import('@dfinity/auth-client');
-      const client = await AuthClient.create();
-      const identity = client.getIdentity();
-      const principal = identity.getPrincipal();
-      const actor = await import('@/lib/icp/splitDapp').then(m => m.createSplitDappActor());
-      await (await actor).setName(principal, nameInput);
+      if (!principal) throw new Error('No principal found');
+      const actor = await createSplitDappActor();
+      await actor.setName(Principal.fromText(principal), nameInput);
       toast.success('Name updated successfully!');
+      dispatch(setUserName(nameInput));
       onClose();
       if (onNameSaved) onNameSaved();
     } finally {

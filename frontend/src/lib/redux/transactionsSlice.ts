@@ -19,13 +19,12 @@ const transactionsSlice = createSlice({
     markAllAsRead(state) {
       state.transactions.forEach(tx => { tx.isRead = true; });
     },
-    markTransactionAsRead(state, action: PayloadAction<string>) {
-      // action.payload is the transaction id (use getTxId logic)
-      state.transactions.forEach(tx => {
-        const txId = `${tx.from.toText()}_${tx.to.map(toEntry => toEntry.principal.toText()).join('-')}_${tx.timestamp.toString()}`;
-        if (txId === action.payload) {
-          tx.isRead = true;
-        }
+    markTransactionAsRead(state, action: PayloadAction<Transaction>) {
+      const updatedTx = action.payload;
+      state.transactions = state.transactions.map(tx => {
+        const txId = `${tx.from}_${tx.to.map(toEntry => toEntry.principal).join('-')}_${tx.timestamp}`;
+        const updatedTxId = `${updatedTx.from}_${updatedTx.to.map(toEntry => toEntry.principal).join('-')}_${updatedTx.timestamp}`;
+        return txId === updatedTxId ? updatedTx : tx;
       });
     },
   },

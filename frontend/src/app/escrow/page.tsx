@@ -22,7 +22,7 @@ interface Recipient {
 export default function EscrowPage() {
   const [description, setDescription] = useState<string>('')
   const [recipients, setRecipients] = useState<Recipient[]>([
-    { id: '1', principal: 'modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe', percentage: 0 },
+    { id: '1', principal: 'modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe', percentage: 100 },
   ])
   const [isLoading, setIsLoading] = useState(false)
   const [btcBalance, setBtcBalance] = useState<string | null>(null)
@@ -62,15 +62,35 @@ export default function EscrowPage() {
   }
 
   const handleAddRecipient = () => {
-    setRecipients(prev => [
-      { id: String(Date.now()), principal: '', percentage: 0 },
-      ...prev,
-    ])
-  }
+    setRecipients(prev => {
+      const newRecipients = [
+        { id: String(Date.now()), principal: '', percentage: 0 },
+        ...prev,
+      ];
+      // Auto-distribute percentage
+      const count = newRecipients.length;
+      let autoPercent = count > 0 ? Math.floor(100 / count) : 0;
+      let remainder = 100 - autoPercent * count;
+      return newRecipients.map((r, idx) => ({
+        ...r,
+        percentage: autoPercent + (idx === 0 ? remainder : 0),
+      }));
+    });
+  };
 
   const handleRemoveRecipient = (idx: number) => {
-    setRecipients(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)
-  }
+    setRecipients(prev => {
+      const filtered = prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev;
+      // Auto-distribute percentage
+      const count = filtered.length;
+      let autoPercent = count > 0 ? Math.floor(100 / count) : 0;
+      let remainder = 100 - autoPercent * count;
+      return filtered.map((r, i) => ({
+        ...r,
+        percentage: autoPercent + (i === 0 ? remainder : 0),
+      }));
+    });
+  };
   const handleSplitBill = async () => {
     if (recipients.length === 0 || !principal) {
       toast.error('Please add at least one recipient and make sure you’re logged in.')

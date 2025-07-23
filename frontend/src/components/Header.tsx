@@ -1,6 +1,5 @@
 'use client'
 
-import { Bell } from 'lucide-react'
 import ProfileDropdown from '@/components/ProfileDropdown'
 import TransactionNotificationDropdown from './TransactionNotificationDropdown'
 

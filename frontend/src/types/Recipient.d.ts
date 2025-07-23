@@ -1,5 +1,5 @@
 export interface Recipient {
-    walletAddress: string;
-    amount: string;
-    percentage: string;
+    id: string
+    principal: string
+    percentage: number
 }

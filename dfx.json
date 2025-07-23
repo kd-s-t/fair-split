@@ -1,9 +1,13 @@
 {
   "canisters": {
     "split_dapp": {
-      "main": "backend/src/main.mo",
       "type": "motoko",
-      "candid": "backend/src/main.did"
+      "main": "backend/src/main.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
     },
     "split_dapp_test": {
       "main": "backend/test/main_test.mo",

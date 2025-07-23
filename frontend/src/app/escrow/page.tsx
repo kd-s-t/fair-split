@@ -133,8 +133,39 @@ export default function EscrowPage() {
       toast.error('All recipients must have a Principal address')
       return
     }
-
-    await handleSplitBill()
+    if (!principal) {
+      toast.error('You must be logged in to proceed.')
+      return
+    }
+  
+    setIsLoading(true)
+  
+    try {
+      const actor = await createSplitDappActor()
+  
+      await actor.initiateSplit(
+        Principal.fromText(principal.toText()),
+        recipients.map(r => ({
+          principal: Principal.fromText(r.principal),
+          amount: Math.round(Number(btcAmount) * r.percentage / 100 * 1e8),
+        }))
+      )
+  
+      toast.success('Escrow initiated!', {
+        description: 'Funds are now held for 24 hours pending release or cancel.',
+        action: {
+          label: 'Dismiss',
+          onClick: () => toast.dismiss(),
+        },
+      })
+  
+      await fetchAndStoreTransactions()
+    } catch (err: any) {
+      toast.error(`Error initiating escrow: ${err.message || err}`)
+      console.error('Initiate escrow failed:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const fetchAndStoreTransactions = async () => {

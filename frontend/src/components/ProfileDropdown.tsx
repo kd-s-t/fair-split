@@ -20,24 +20,16 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 focus:outline-none cursor-pointer">
             <div className="relative w-6 h-6 overflow-hidden rounded-full">
-              {isLoading ? (
-                <span className="block w-6 h-6 bg-gray-200 animate-pulse rounded-full" />
-              ) : (
-                <Image
-                  src={getAvatarUrl()}
-                  alt={'User avatar'}
-                  fill
-                  sizes="24px"
-                  className="object-cover"
-                />
-              )}
+              <Image
+                src={getAvatarUrl()}
+                alt={'User avatar'}
+                fill
+                sizes="24px"
+                className="object-cover"
+              />
             </div>
             <span className="text-sm font-medium">
-              {isLoading ? (
-                <span className="inline-block w-24 h-5 bg-gray-200 animate-pulse rounded" />
-              ) : (
-                displayName ? displayName : truncatePrincipal(principalId)
-              )}
+              {displayName && displayName.trim() !== '' ? displayName : truncatePrincipal(principalId)}
             </span>
           </button>
         </DropdownMenuTrigger>

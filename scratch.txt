@@ -21,3 +21,6 @@ dfx identity get-principal
 6d7pr-gfm24-fnvuv-odsjz-6brox-4spcl-ahcyw-gzync-bx3qg-sdaqt-rqe
 
 dfx identity list
+
+
+dfx canister id split_dapp

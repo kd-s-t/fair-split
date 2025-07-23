@@ -96,6 +96,7 @@ export default function HistoryPage() {
               <TableHead className="p-3 text-left">To</TableHead>
               <TableHead className="p-3 text-right">Amount</TableHead>
               <TableHead className="p-3 text-right">Date</TableHead>
+              <TableHead className="p-3 text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -120,6 +121,9 @@ export default function HistoryPage() {
                   </TableCell>
                   <TableCell className="p-3 text-right text-xs">
                     {new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="p-3 text-right text-xs">
+                    {tx.status ? Object.keys(tx.status)[0] : 'unknown'}
                   </TableCell>
                 </motion.tr>
               ))}

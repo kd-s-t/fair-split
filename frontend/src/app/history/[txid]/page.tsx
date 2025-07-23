@@ -3,9 +3,13 @@
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../lib/redux/store";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { createSplitDappActor } from '@/lib/icp/splitDapp';
+import { Principal } from '@dfinity/principal';
+import { toast } from 'sonner';
 
 export default function TransactionDetailsPage() {
+  const [isLoading, setIsLoading] = useState<'release' | 'refund' | null>(null);
   const { txid } = useParams();
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const transaction = useMemo(() => {
@@ -14,7 +18,8 @@ export default function TransactionDetailsPage() {
       return id === txid;
     });
   }, [transactions, txid]);
-
+  console.log(transaction);
+  console.log('Transaction status:', transaction && transaction.status ? Object.keys(transaction.status)[0] : 'unknown');
   if (!transaction) {
     return (
       <div className="max-w-3xl mx-auto p-6">
@@ -26,6 +31,42 @@ export default function TransactionDetailsPage() {
       </div>
     );
   }
+
+  const handleRelease = async () => {
+    setIsLoading('release');
+    try {
+      const actor = await createSplitDappActor();
+      await actor.releaseSplit(Principal.fromText(
+        typeof transaction.from === 'string'
+          ? transaction.from
+          : transaction.from.toText()
+      ));
+      toast.success('Escrow released!');
+    } catch (err) {
+      console.error('Release error:', err);
+      toast.error('Failed to release escrow' + (err && (err as any).message ? ': ' + (err as any).message : ''));
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleRefund = async () => {
+    setIsLoading('refund');
+    try {
+      const actor = await createSplitDappActor();
+      await actor.cancelSplit(Principal.fromText(
+        typeof transaction.from === 'string'
+          ? transaction.from
+          : transaction.from.toText()
+      ));
+      toast.success('Escrow refunded!');
+    } catch (err) {
+      console.error('Refund error:', err);
+      toast.error('Failed to refund escrow' + (err && (err as any).message ? ': ' + (err as any).message : ''));
+    } finally {
+      setIsLoading(null);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto p-6 flex flex-col gap-6">
@@ -48,9 +89,28 @@ export default function TransactionDetailsPage() {
             <div className="flex flex-col items-center">
               <span className="text-2xl">⚡</span>
               <span className="text-xs text-slate-300">Status</span>
-              <span className="text-green-400">Active</span>
+              <span className="text-green-400">{transaction.status ? Object.keys(transaction.status)[0] : 'unknown'}</span>
             </div>
           </div>
+          {/* Add refund/release buttons if status is pending */}
+          {transaction.status && Object.keys(transaction.status)[0] === 'pending' && (
+            <div className="flex gap-4 mb-2">
+              <button
+                className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold cursor-pointer"
+                onClick={handleRelease}
+                disabled={isLoading === 'release' || isLoading === 'refund'}
+              >
+                {isLoading === 'release' ? 'Releasing...' : 'Release payment'}
+              </button>
+              <button
+                className="bg-slate-700 px-4 py-2 rounded text-white cursor-pointer"
+                onClick={handleRefund}
+                disabled={isLoading === 'release' || isLoading === 'refund'}
+              >
+                {isLoading === 'refund' ? 'Refunding...' : 'Request refund'}
+              </button>
+            </div>
+          )}
           <div className="mb-4">
             <div className="text-xs text-slate-400 mb-1">Transaction from</div>
             <div className="bg-slate-800 rounded px-2 py-1 font-mono text-xs flex items-center justify-between">
@@ -95,10 +155,6 @@ export default function TransactionDetailsPage() {
       </div>
       {/* Escrow actions */}
       <div className="bg-slate-900 rounded-xl p-6 text-white flex flex-col gap-4">
-        <div className="flex gap-4 mb-2">
-          <button className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold">Release payment</button>
-          <button className="bg-slate-700 px-4 py-2 rounded text-white">Request refund</button>
-        </div>
         <div className="bg-yellow-900 text-yellow-300 rounded px-2 py-1 text-xs mb-2">Note: Release payment only when you're satisfied with the delivered work or received goods.</div>
         <div className="bg-slate-800 text-xs rounded p-2">Smart contract execution: Funds are locked and will be released by smart contract logic. No human mediation.</div>
       </div>

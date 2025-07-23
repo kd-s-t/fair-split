@@ -8,14 +8,7 @@ import type { RootState } from '../lib/redux/store';
 import { setTransactions, markTransactionAsRead } from '../lib/redux/transactionsSlice';
 import TransactionDetailsModal from './TransactionDetailsModal';
 import { useAppSelector } from '../lib/redux/store';
-
-interface Transaction {
-  to: any[]; // Use any to avoid linter error for now
-  from: Principal;
-  timestamp: bigint;
-  amount: bigint;
-  isRead?: boolean;
-}
+import type { Transaction } from '@/declarations/split_dapp/split_dapp.did';
 
 function getTxId(tx: Transaction) {
   // If tx.to is an array of Principal, join their text representations
@@ -118,7 +111,9 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                   <div className="flex flex-col w-full">
                     <span className="text-xs font-mono truncate">From: {tx.from}</span>
                     <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry: any) => (toEntry.principal ? toEntry.principal : toEntry.toText())).join(', ')}</span>
-                    <span className="text-xs font-semibold text-yellow-600">{tx.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC</span>
+                    <span className="text-xs font-semibold text-yellow-600">
+                      {tx.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC
+                    </span>
                     <span className="text-xs text-muted-foreground">{new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}</span>
                   </div>
                 </DropdownMenuItem>
@@ -127,11 +122,10 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
         </DropdownMenuContent>
       </DropdownMenu>
       <TransactionDetailsModal
-        open={modalOpen}
         transaction={selectedTx}
         onClose={() => {
           setModalOpen(false);
-          setSelectedTx(null); // <-- also clear the transaction
+          setSelectedTx(null);
         }}
       />
     </>

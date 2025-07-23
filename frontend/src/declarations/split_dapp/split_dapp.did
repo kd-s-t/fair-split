@@ -1,7 +1,15 @@
+type TransactionStatus = 
+ variant {
+   cancelled;
+   completed;
+   pending;
+   released;
+ };
 type Transaction = 
  record {
    from: principal;
    isRead: bool;
+   status: TransactionStatus;
    timestamp: nat;
    to: vec ToEntry;
  };
@@ -11,23 +19,28 @@ type ToEntry =
    name: text;
    "principal": principal;
  };
-type SplitRecord = 
- record {
-   participant: principal;
-   share: nat;
- };
 type SplitDApp = 
  service {
+   cancelSplit: (caller: principal) -> ();
    getAdmin: () -> (principal) query;
    getBalance: (p: principal) -> (nat) query;
    getLogs: () -> (vec text) query;
    getName: (p: principal) -> (opt text) query;
+   getPending: (caller: principal) -> (vec PendingTransfer) query;
    getTransactions: (p: principal) -> (vec Transaction) query;
+   initiateSplit: (caller: principal, participants: vec ParticipantShare) ->
+    ();
    markTransactionsAsRead: (caller: principal) -> ();
+   releaseSplit: (caller: principal) -> (vec ToEntry);
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setName: (p: principal, name: text) -> ();
-   splitBill: (args: record {participants: vec ParticipantShare;}, caller:
-    principal) -> (vec SplitRecord);
+ };
+type PendingTransfer = 
+ record {
+   amount: nat;
+   initiatedAt: nat;
+   name: text;
+   to: principal;
  };
 type ParticipantShare = 
  record {

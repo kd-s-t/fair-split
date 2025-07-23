@@ -24,35 +24,21 @@ actor {
     Debug.print("Alice Name: " # (switch aliceName { case (?n) n; case null "N/A" }));
     Debug.print("Bob Name: " # (switch bobName { case (?n) n; case null "N/A" }));
 
-    // Removed setInitialBalance calls as they do not exist in SplitDApp
+    await SplitDApp.setInitialBalance(alice, 1000, alice);
+    await SplitDApp.setInitialBalance(bob, 0, alice);
 
-    // Call splitBill with hardcoded caller
-    let result = await SplitDApp.splitBill(
-      {
-        participants = [alice, bob];
-        total = 1000;
-      },
-      alice // simulate caller
+    await SplitDApp.initiateSplit(
+      alice,
+      [
+        { principal = bob; amount = 400 },
+        { principal = alice; amount = 600 }
+      ]
     );
 
-    Debug.print("✅ Split Results:");
-    for (r in result.vals()) {
-      Debug.print("Participant: " # Principal.toText(r.participant));
-      Debug.print("Share: " # Nat.toText(r.share));
-    };
-
-    // getBalance does not exist in SplitDApp, so we infer balances from splitBill result
-    var aliceShare : ?Nat = null;
-    var bobShare : ?Nat = null;
-    for (r in result.vals()) {
-      if (r.participant == alice) {
-        aliceShare := ?r.share;
-      } else if (r.participant == bob) {
-        bobShare := ?r.share;
-      }
-    };
-    Debug.print("Alice Balance after split: " # (switch aliceShare { case (?s) Nat.toText(s); case null "N/A" }));
-    Debug.print("Bob Balance after split: " # (switch bobShare { case (?s) Nat.toText(s); case null "N/A" }));
+    let aliceBal = await SplitDApp.getBalance(alice);
+    let bobBal = await SplitDApp.getBalance(bob);
+    Debug.print("Alice Balance after split: " # Nat.toText(aliceBal));
+    Debug.print("Bob Balance after split: " # Nat.toText(bobBal));
 
     Debug.print("📜 Logs:");
     let logs = await SplitDApp.getLogs();

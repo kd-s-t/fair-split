@@ -7,13 +7,16 @@ import { LogIn, LogOut } from 'lucide-react'
 import { AuthClient } from '@dfinity/auth-client'
 import Image from 'next/image'
 import { useDispatch } from 'react-redux'
-import { useAppSelector } from '@/lib/redux/store'
-import { setUser, clearUser } from '@/lib/redux/userSlice'
+import { useAppSelector } from '@/lib/redux/store';
+import type { RootState } from '@/lib/redux/store';
+import { setUser, clearUser, setBtcBalance } from '@/lib/redux/userSlice';
+import { createSplitDappActor } from '@/lib/icp/splitDapp';
 
 export default function Home() {
   const dispatch = useDispatch();
-  const principal = useAppSelector(state => state.user.principal);
+  const principal = useAppSelector((state: RootState) => state.user.principal);
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
+  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
 
   useEffect(() => {
     AuthClient.create().then(client => {
@@ -66,7 +69,9 @@ export default function Home() {
           />
         </div>
         <h1 className="text-2xl font-bold text-center">SafeSplit Authentication</h1>
-
+        {isBalanceLoading && (
+          <div className="text-center text-yellow-500 font-semibold">Loading BTC balance...</div>
+        )}
         {principal ? (
           <>
             <p className="text-center break-all">Principal: {principal}</p>

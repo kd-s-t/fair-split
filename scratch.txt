@@ -1,3 +1,4 @@
+import { Principal } from '@dfinity/principal';
 
 dfx identity whoami
 dfx identity get-principal

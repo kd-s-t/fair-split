@@ -75,7 +75,15 @@ export default function HistoryPage() {
       transition={{ duration: 0.5 }}
     >
       <h1 className="text-3xl font-bold mb-6 text-center">Transaction History</h1>
-      {isLoading && <div className="text-center">Loading...</div>}
+      {isLoading && (
+        <div className="text-center">
+          <div className="flex flex-col gap-2 items-center">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="w-full max-w-3xl h-10 bg-gray-200 animate-pulse rounded" />
+            ))}
+          </div>
+        </div>
+      )}
       {error && <div className="text-red-500 text-center">{error}</div>}
       {!isLoading && !error && transactions.length === 0 && (
         <div className="text-center text-muted-foreground">No transactions found.</div>

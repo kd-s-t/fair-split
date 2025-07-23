@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { Card } from '@/components/ui/card';
 import { Shield, Zap, CircleCheck, Clock8, Plus, Eye } from 'lucide-react';
-import { CardHeader } from '@mui/material';
+import { useAppSelector } from '@/lib/redux/store';
+import type { RootState } from '@/lib/redux/store';
 
 interface DashboardStatsProps {
   portfolioBalance: string;
@@ -19,6 +20,8 @@ interface DashboardStatsProps {
 }
 
 export const DashboardStats: React.FC = () => {
+  const btcBalance = useAppSelector((state: any) => state.user.btcBalance);
+  const isLoading = btcBalance === null || btcBalance === undefined || btcBalance === '';
   return (
     <React.Fragment>  
         <div className="flex items-center justify-between">
@@ -30,7 +33,11 @@ export const DashboardStats: React.FC = () => {
             </div>
 
             <Typography variant='h2' className="font-semibold">
-              3.72847291 BTC
+              {isLoading ? (
+                <span className="inline-block w-32 h-7 bg-gray-200 animate-pulse rounded" />
+              ) : (
+                `${btcBalance} BTC`
+              )}
             </Typography>
 
             <div className="flex items-center gap-3">

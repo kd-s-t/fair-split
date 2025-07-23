@@ -11,7 +11,8 @@ import type { RootState } from '../lib/redux/store';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);
-  const displayName = useAppSelector((state: RootState) => state.user.name);
+  const displayName = useAppSelector((state: any) => state.user.name);
+  const isLoading = displayName === null || displayName === undefined || displayName === '';
 
   return (
     <>
@@ -19,16 +20,24 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 focus:outline-none cursor-pointer">
             <div className="relative w-6 h-6 overflow-hidden rounded-full">
-              <Image
-                src={getAvatarUrl()}
-                alt={'User avatar'}
-                fill
-                sizes="24px"
-                className="object-cover"
-              />
+              {isLoading ? (
+                <span className="block w-6 h-6 bg-gray-200 animate-pulse rounded-full" />
+              ) : (
+                <Image
+                  src={getAvatarUrl()}
+                  alt={'User avatar'}
+                  fill
+                  sizes="24px"
+                  className="object-cover"
+                />
+              )}
             </div>
             <span className="text-sm font-medium">
-              {displayName ? displayName : truncatePrincipal(principalId)}
+              {isLoading ? (
+                <span className="inline-block w-24 h-5 bg-gray-200 animate-pulse rounded" />
+              ) : (
+                displayName ? displayName : truncatePrincipal(principalId)
+              )}
             </span>
           </button>
         </DropdownMenuTrigger>

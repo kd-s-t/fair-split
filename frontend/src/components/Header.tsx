@@ -2,6 +2,7 @@
 
 import ProfileDropdown from '@/components/ProfileDropdown'
 import TransactionNotificationDropdown from './TransactionNotificationDropdown'
+import { Typography } from '@/components/ui/typography'
 
 type HeaderProps = {
   title: string
@@ -16,9 +17,9 @@ export default function Header({ title, subtitle, user }: HeaderProps) {
   return (
     <header className="h-14 px-6 flex items-center justify-between text-foreground">
       <div className="flex flex-col">
-        <h1 className="text-base font-semibold leading-tight">{title}</h1>
+        <Typography variant="h3">{title}</Typography>
         {subtitle && (
-          <span className="text-sm text-muted-foreground">{subtitle}</span>
+          <Typography variant="muted">{subtitle}</Typography>
         )}
       </div>
 

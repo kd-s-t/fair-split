@@ -13,7 +13,7 @@ const typographyVariants = cva('', {
       list: 'my-6 ml-6 list-disc [&>li]:mt-2',
       large: 'text-lg font-semibold',
       small: 'text-sm font-medium',
-      muted: 'text-sm text-muted-foreground',
+      muted: 'text-sm text-[#BCBCBC]',
     },
   },
   defaultVariants: {

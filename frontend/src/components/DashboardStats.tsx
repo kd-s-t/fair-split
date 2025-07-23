@@ -26,7 +26,7 @@ export const DashboardStats: React.FC = () => {
             
             <div className="flex items-center gap-2">
               <Typography variant='small'>Portfolio balance</Typography> 
-              <Eye />
+              <Eye size={16} />
             </div>
 
             <Typography variant='h2' className="font-semibold">
@@ -43,6 +43,10 @@ export const DashboardStats: React.FC = () => {
           <Button variant="default" className="font-medium rounded-md bg-[#FEB64D] text-[#0D0D0D]">
             <Plus className='text-xs mr-2'/> New escrow
           </Button>
+        </div>
+
+        <div className='w-full p-3 rounded-[10px] border bg-[#222222] border-[#303434] shadow-sm flex items-center gap-2 mt-6'>
+          <Shield color='#FEB64D' /> <Typography variant='muted' className='font-medium'>Secured by ICP threshold ECDSA • No bridges, no wrapped BTC</Typography>
         </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <StatCard label="Total escrows" value={24} icon={<Shield className="text-yellow-400 text-2xl" />} />

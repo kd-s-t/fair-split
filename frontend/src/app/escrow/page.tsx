@@ -23,36 +23,12 @@ interface Recipient {
 export default function EscrowPage() {
   const [description, setDescription] = useState<string>('')
   const [recipients, setRecipients] = useState<Recipient[]>([
-    { id: '1', principal: 'modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe', percentage: 100 },
+    { id: '1', principal: '', percentage: 100 },
   ])
   const [isLoading, setIsLoading] = useState(false)
-  const [btcBalance, setLocalBtcBalance] = useState<string | null>(null)
-  const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [btcAmount, setBtcAmount] = useState<string>('')
   const { principal }: { principal: { toText: () => string } | null } = useAuth()
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (!principal) return
-      setIsBalanceLoading(true)
-      try {
-        const actor = await createSplitDappActor()
-        const principalObj = Principal.fromText(principal.toText())
-        const balance = await actor.getBalance(principalObj)
-        const formatted = (Number(balance) / 1e8).toFixed(8)
-        setLocalBtcBalance(formatted)
-        dispatch(setBtcBalance(formatted))
-      } catch (err) {
-        console.error("err", err)
-        setLocalBtcBalance(null)
-        dispatch(setBtcBalance(null))
-      } finally {
-        setIsBalanceLoading(false)
-      }
-    }
-    fetchBalance()
-  }, [principal, dispatch])
 
   const totalPercentage = recipients.reduce((sum, r) => sum + Number(r.percentage), 0)
   const btcAmountNum = Math.round(Number(btcAmount) * 1e8)
@@ -198,7 +174,7 @@ export default function EscrowPage() {
               <div className="flex items-center justify-between mb-1">
                 <label className="text-sm font-medium">amount</label>
                 <span className="text-xs text-muted-foreground">
-                  {isBalanceLoading ? 'Loading...' : btcBalance !== null ? `${btcBalance} BTC` : '—'}
+                  {/* {isBalanceLoading ? 'Loading...' : btcBalance !== null ? `${btcBalance} BTC` : '—'} */}
                 </span>
               </div>
               <Input

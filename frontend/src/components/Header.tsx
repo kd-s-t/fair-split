@@ -22,12 +22,12 @@ export default function Header({ title, subtitle, user }: HeaderProps) {
         )}
       </div>
 
-      {user?.principalId && (
-        <div className="flex items-center gap-4">
-          <TransactionNotificationDropdown principalId={user.principalId} />
-          <ProfileDropdown principalId={user.principalId} />
-        </div>
-      )}
+      <div className="flex items-center gap-4">
+          <>
+            <TransactionNotificationDropdown principalId={user?.principalId ?? ''} />
+            <ProfileDropdown principalId={user?.principalId ?? ''} />
+          </>
+      </div>
     </header>
   )
 }

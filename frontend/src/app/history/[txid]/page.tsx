@@ -16,7 +16,15 @@ export default function TransactionDetailsPage() {
   }, [transactions, txid]);
 
   if (!transaction) {
-    return <div className="max-w-3xl mx-auto p-6 text-center">Transaction not found.</div>;
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex flex-col gap-4">
+          <div className="h-10 bg-gray-200 animate-pulse rounded w-1/2 mx-auto" />
+          <div className="h-32 bg-gray-200 animate-pulse rounded" />
+          <div className="h-20 bg-gray-200 animate-pulse rounded" />
+        </div>
+      </div>
+    );
   }
 
   return (

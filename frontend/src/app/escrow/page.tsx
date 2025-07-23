@@ -12,6 +12,7 @@ import { Principal } from '@dfinity/principal'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch } from 'react-redux';
 import { setTransactions } from '../../lib/redux/transactionsSlice';
+import { setBtcBalance } from '../../lib/redux/userSlice';
 
 interface Recipient {
   id: string
@@ -25,7 +26,7 @@ export default function EscrowPage() {
     { id: '1', principal: 'modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe', percentage: 100 },
   ])
   const [isLoading, setIsLoading] = useState(false)
-  const [btcBalance, setBtcBalance] = useState<string | null>(null)
+  const [btcBalance, setLocalBtcBalance] = useState<string | null>(null)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [btcAmount, setBtcAmount] = useState<string>('')
   const { principal }: { principal: { toText: () => string } | null } = useAuth()
@@ -39,16 +40,19 @@ export default function EscrowPage() {
         const actor = await createSplitDappActor()
         const principalObj = Principal.fromText(principal.toText())
         const balance = await actor.getBalance(principalObj)
-        setBtcBalance((Number(balance) / 1e8).toFixed(8))
+        const formatted = (Number(balance) / 1e8).toFixed(8)
+        setLocalBtcBalance(formatted)
+        dispatch(setBtcBalance(formatted))
       } catch (err) {
         console.error("err", err)
-        setBtcBalance(null)
+        setLocalBtcBalance(null)
+        dispatch(setBtcBalance(null))
       } finally {
         setIsBalanceLoading(false)
       }
     }
     fetchBalance()
-  }, [principal])
+  }, [principal, dispatch])
 
   const totalPercentage = recipients.reduce((sum, r) => sum + Number(r.percentage), 0)
   const btcAmountNum = Math.round(Number(btcAmount) * 1e8)

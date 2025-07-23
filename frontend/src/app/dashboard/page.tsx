@@ -1,13 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import Badge from '../../components/ui/badge'
 import { Tabs, Tab } from '@/components/ui/tabs' // Assume you have or will create these
 import { Bitcoin, ShieldCheck, Clock, Zap, CheckCircle } from 'lucide-react'
+import { useAppSelector } from '@/lib/redux/store';
+import type { RootState } from '@/lib/redux/store';
+import { createSplitDappActor } from '@/lib/icp/splitDapp';
+import { useRouter } from 'next/navigation';
 
 // Mock data for stats and transactions
 const stats = [
@@ -51,6 +55,9 @@ const tabs = [
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState(0)
+  const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
+  const principal = useAppSelector((state: RootState) => state.user.principal);
+  const router = useRouter();
 
   return (
     <motion.div
@@ -65,12 +72,15 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold mb-1">Welcome back</h2>
           <p className="text-gray-400 mb-2">Manage your Bitcoin escrow transactions with confidence</p>
           <div className="flex items-end gap-3">
-            <span className="text-3xl font-mono font-semibold">3.72847291 BTC</span>
-            <span className="text-gray-400 text-lg">$438,730.15</span>
+            <span className="text-3xl font-mono font-semibold">
+              {btcBalance !== undefined && btcBalance !== null ? `${btcBalance} BTC` : '—'}
+            </span>
+            {/* Optionally, you can fetch and show USD value if you have a price API */}
+            {/* <span className="text-gray-400 text-lg">$438,730.15</span> */}
             <Badge className="ml-2 bg-green-900 text-green-400">24H</Badge>
           </div>
         </div>
-        <Button className="bg-amber-400 text-black font-semibold hover:bg-amber-500 px-6 py-2 rounded-lg shadow" size="lg">
+        <Button className="bg-amber-400 text-black font-semibold hover:bg-amber-500 px-6 py-2 rounded-lg shadow" size="lg" onClick={() => router.push('/escrow')}>
           + New escrow
         </Button>
       </div>

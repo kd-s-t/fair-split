@@ -29,7 +29,9 @@ const TransactionSummary = ({
         </CardHeader>
         <CardContent className="space-y-2 mt-6">
           <div className="flex items-center justify-between">
-            <Typography variant="small" className="text-[#9F9F9F]">Status</Typography>
+            <Typography variant="small" className="text-[#9F9F9F]">
+              Status
+            </Typography>
             <Badge
               variant="outline"
               className="!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D] text-xs font-semibold"
@@ -39,17 +41,25 @@ const TransactionSummary = ({
           </div>
           <hr className="my-5 text-[#424444]" />
           <div className="flex justify-between items-center">
-            <Typography variant="small" className="text-[#9F9F9F]">Total deposit</Typography>
-            <Typography variant="base">{btcAmount || "0.00000000"} BTC</Typography>
+            <Typography variant="small" className="text-[#9F9F9F]">
+              Total deposit
+            </Typography>
+            <Typography variant="base">
+              {btcAmount || "0.00000000"} BTC
+            </Typography>
           </div>
           <div className="flex justify-between items-center mt-4">
-            <Typography variant="small" className="text-[#9F9F9F]">Recipients</Typography>
+            <Typography variant="small" className="text-[#9F9F9F]">
+              Recipients
+            </Typography>
             <Typography variant="base">{recipients.length}</Typography>
           </div>
           <hr className="mt-5 mb-7 text-[#424444]" />
           <div className="flex items-center gap-2">
             <Shield size={16} color="#FEB64D" />
-            <Typography variant="base" className="text-[#FEB64D]">Trustless Escrow</Typography>
+            <Typography variant="base" className="text-[#FEB64D]">
+              Trustless Escrow
+            </Typography>
           </div>
 
           <Typography variant="muted" className="text-[#9F9F9F]">

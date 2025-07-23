@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../lib/redux/store';
 import { setTransactions, markAllAsRead } from '../../lib/redux/transactionsSlice';
 import TransactionDetailsModal from "../../components/TransactionDetailsModal";
+import { useRouter } from "next/navigation";
 
 export default function HistoryPage() {
   const { principal } = useAuth();
@@ -17,8 +18,7 @@ export default function HistoryPage() {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -63,8 +63,8 @@ export default function HistoryPage() {
       await actor.markTransactionsAsRead(principal);
       dispatch(markAllAsRead());
     }
-    setSelectedTx(tx);
-    setModalOpen(true);
+    // Navigate to the transaction details page
+    router.push(`/history/${encodeURIComponent(getTxId(tx))}`);
   }
 
   return (
@@ -117,12 +117,6 @@ export default function HistoryPage() {
               ))}
           </TableBody>
         </Table>
-      )}
-      {modalOpen && selectedTx && (
-        <TransactionDetailsModal
-          transaction={selectedTx}
-          onClose={() => setModalOpen(false)}
-        />
       )}
     </motion.div>
   );

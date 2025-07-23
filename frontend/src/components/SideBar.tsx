@@ -14,7 +14,7 @@ export default function Sidebar() {
   ]
 
   return (
-    <aside className="h-screen w-64 bg-white border-r border-gray-200 flex flex-col text-sm">
+    <aside className="h-screen w-64 border-r border-gray-200 flex flex-col text-sm">
       <div className="p-4 flex items-center gap-2">
         <Image
           src="/split.png"

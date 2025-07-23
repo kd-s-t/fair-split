@@ -18,7 +18,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
   const name = useAppSelector((state: RootState) => state.user.name);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex bg-gray-50 text-gray-900">
+    <div className="relative w-screen h-screen overflow-hidden flex">
       <Sidebar />
       <main className="flex-1 flex flex-col">
         <Header

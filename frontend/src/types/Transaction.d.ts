@@ -1,6 +1,7 @@
 import { Recipient } from "./Recipient";
 
-type TransactionStatus = 'active' | 'completed';
+type TransactionStatus = 'active' | 'completed' | 'pending' | 'refunded';
+type TransactionCategory = 'sent' | 'received';
 
 export interface Transaction {
     description: string;

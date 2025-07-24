@@ -260,6 +260,44 @@ actor class SplitDApp(admin : Principal) {
     });
     transactions.put(sender, updated);
     logs := Array.append<Text>(logs, ["Escrow declined by recipient " # Principal.toText(recipient) # " for " # Principal.toText(sender)]);
+
+    // Also update the recipient's transaction list if it exists
+    let recipientTxs = switch (transactions.get(recipient)) {
+      case (?list) list;
+      case null [];
+    };
+    let updatedRecipientTxs = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(recipientTxs, func(tx) {
+      // Find the matching transaction (by from and timestamp)
+      if (tx.from == sender and tx.timestamp == txs[idx].timestamp) {
+        let newTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(tx.to, func(entry) {
+          if (entry.principal == recipient) {
+            {
+              principal = entry.principal;
+              name = entry.name;
+              amount = entry.amount;
+              status = #declined;
+            }
+          } else {
+            entry
+          }
+        });
+        // Update status for recipient's view as well
+        let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
+        let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });
+        let newStatus = if (anyDeclined) #declined else if (allApproved) #confirmed else tx.status;
+        {
+          from = tx.from;
+          to = newTo;
+          timestamp = tx.timestamp;
+          isRead = tx.isRead;
+          status = newStatus;
+          title = tx.title;
+        }
+      } else {
+        tx
+      }
+    });
+    transactions.put(recipient, updatedRecipientTxs);
   };
 
   public shared func releaseEscrow(

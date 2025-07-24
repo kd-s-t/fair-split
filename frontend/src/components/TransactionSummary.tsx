@@ -96,7 +96,7 @@ const TransactionSummary = ({
             onClick={handleInitiateEscrow}
           >
             <Send size={16} />
-            {isLoading ? "Processing..." : "Initiate escrow"}
+            {isLoading ? "Processing..." : "Create escrow"}
           </Button>
         </CardContent>
       </Card>

@@ -54,9 +54,10 @@ npm run dev
 
 ### Deploy Canisters and Sync Declarations
 ```bash
-chmod +x deploy.sh
-./deploy.sh
+chmod +x nuke.sh
+./nuke.sh
 ```
+After setting up a `principals.json` will be generated these are sample user for sending money
 
 ## Authors
 

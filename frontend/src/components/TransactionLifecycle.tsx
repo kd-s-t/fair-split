@@ -22,8 +22,9 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
   return (
       <ol className="relative ml-4 mb-6">
         {steps.map((step, idx, array) => {
-          const isCompleted = idx < currentStep;
-          const isCurrent = idx === currentStep;
+          // Only the first step (Locked) can be active/completed
+          const isCompleted = idx === 0 && currentStep > 0;
+          const isCurrent = idx === 0 && currentStep === 0;
           const isLastIdx = idx === array.length - 1;
 
           return (

@@ -91,9 +91,9 @@ const TransactionForm = ({
                 <motion.div
                   key={r.id}
                   layout
-                  initial={{ opacity: 0, x: 50 }} // swipe in from right
+                  initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }} // swipe out to left
+                  exit={{ opacity: 0, x: -50 }}
                   transition={{ duration: 0.25 }}
                   className="container bg-[#2C2C2C] rounded-lg relative"
                 >

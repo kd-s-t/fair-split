@@ -152,11 +152,9 @@ export default function EscrowPage() {
       );
       // Fetch transactions to get the new transaction
       const txs = await actor.getTransactions(Principal.fromText(principal.toText())) as any[];
-      const newTx = txs[txs.length - 1];
-      const txid = `${typeof newTx.from === "string" ? newTx.from : newTx.from.toText()}_${newTx.to.map((toEntry: any) => typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText()).join("-")}_${typeof newTx.timestamp === "bigint" ? newTx.timestamp.toString() : newTx.timestamp}`;
-      setNewTxId(txid);
+      const newIdx = txs.length - 1;
+      setNewTxId(newIdx.toString());
       setShowDialog(true);
-      console.log("txs",txs.length - 1)
 
       await fetchAndStoreTransactions();
     } catch (err: any) {

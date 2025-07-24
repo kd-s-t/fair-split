@@ -12,7 +12,7 @@ import { setTransactions, markAllAsRead } from '../../lib/redux/transactionsSlic
 import TransactionDetailsModal from "../../components/TransactionDetailsModal";
 import { useRouter } from "next/navigation";
 
-export default function HistoryPage() {
+export default function TransactionsPage() {
   const { principal } = useAuth();
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const dispatch = useDispatch();
@@ -64,7 +64,7 @@ export default function HistoryPage() {
       dispatch(markAllAsRead());
     }
     // Navigate to the transaction details page
-    router.push(`/history/${encodeURIComponent(getTxId(tx))}`);
+    router.push(`/transactions/${encodeURIComponent(getTxId(tx))}`);
   }
 
   return (
@@ -74,7 +74,7 @@ export default function HistoryPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h1 className="text-3xl font-bold mb-6 text-center">Transaction History</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Transactions</h1>
       {isLoading && (
         <div className="text-center">
           <div className="flex flex-col gap-2 items-center">

@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
-import type { Transaction, ToEntry } from '@/declarations/split_dapp/split_dapp.did';
+import { useRouter } from 'next/navigation';
 
 export default function EscrowPage() {
   const [description, setDescription] = useState<string>("");
@@ -24,6 +24,10 @@ export default function EscrowPage() {
   const { principal }: { principal: { toText: () => string } | null } =
     useAuth();
   const dispatch = useDispatch();
+  const router = useRouter();
+  const [showDialog, setShowDialog] = useState(false);
+  const [newTxIdx, setNewTxIdx] = useState<number | null>(null);
+  const [newTxId, setNewTxId] = useState<string | null>(null);
 
   const totalPercentage = recipients.reduce(
     (sum, r) => sum + Number(r.percentage),
@@ -105,13 +109,7 @@ export default function EscrowPage() {
         },
         Principal.fromText(principal.toText())
       );
-      toast.success("Bill split successfully!", {
-        description: "The BTC was successfully distributed to recipients.",
-        action: {
-          label: "Dismiss",
-          onClick: () => toast.dismiss(),
-        },
-      });
+     
       console.log("Split result:", result);
       await fetchAndStoreTransactions();
     } catch (err: any) {
@@ -152,15 +150,13 @@ export default function EscrowPage() {
         })),
         description || ""
       );
-
-      toast.success("Escrow initiated!", {
-        description:
-          "Funds are now held for 24 hours pending release or cancel.",
-        action: {
-          label: "Dismiss",
-          onClick: () => toast.dismiss(),
-        },
-      });
+      // Fetch transactions to get the new transaction
+      const txs = await actor.getTransactions(Principal.fromText(principal.toText())) as any[];
+      const newTx = txs[txs.length - 1];
+      const txid = `${typeof newTx.from === "string" ? newTx.from : newTx.from.toText()}_${newTx.to.map((toEntry: any) => typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText()).join("-")}_${typeof newTx.timestamp === "bigint" ? newTx.timestamp.toString() : newTx.timestamp}`;
+      setNewTxId(txid);
+      setShowDialog(true);
+      console.log("txs",txs.length - 1)
 
       await fetchAndStoreTransactions();
     } catch (err: any) {
@@ -176,15 +172,15 @@ export default function EscrowPage() {
     const actor = await createSplitDappActor();
     const txs = await actor.getTransactions(
       Principal.fromText(principal.toText())
-    ) as Transaction[];
-    const serializableTxs = txs.map((tx: Transaction) => ({
+    ) as any[];
+    const serializableTxs = txs.map((tx: any) => ({
       ...tx,
       from: typeof tx.from === "string" ? tx.from : tx.from.toText(),
       timestamp:
         typeof tx.timestamp === "bigint"
           ? tx.timestamp.toString()
           : tx.timestamp,
-      to: tx.to.map((toEntry: ToEntry) => ({
+      to: tx.to.map((toEntry: any) => ({
         ...toEntry,
         principal:
           toEntry.principal &&
@@ -204,28 +200,33 @@ export default function EscrowPage() {
   };
 
   return (
-    <motion.div
-      className="flex flex-row w-full max-w-[1200px] mx-auto p-6 gap-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <TransactionForm
-        description={description}
-        setDescription={setDescription}
-        btcAmount={btcAmount}
-        setBtcAmount={setBtcAmount}
-        recipients={recipients}
-        handleAddRecipient={handleAddRecipient}
-        handleRemoveRecipient={handleRemoveRecipient}
-        handleRecipientChange={handleRecipientChange}
-      />
-      <TransactionSummary
-        btcAmount={btcAmount}
-        recipients={recipients}
-        isLoading={isLoading}
-        handleInitiateEscrow={handleInitiateEscrow}
-      />
-    </motion.div>
+    <>
+      <motion.div
+        className="flex flex-row w-full max-w-[1200px] mx-auto p-6 gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <TransactionForm
+          description={description}
+          setDescription={setDescription}
+          btcAmount={btcAmount}
+          setBtcAmount={setBtcAmount}
+          recipients={recipients}
+          handleAddRecipient={handleAddRecipient}
+          handleRemoveRecipient={handleRemoveRecipient}
+          handleRecipientChange={handleRecipientChange}
+        />
+        <TransactionSummary
+          btcAmount={btcAmount}
+          recipients={recipients}
+          isLoading={isLoading}
+          handleInitiateEscrow={handleInitiateEscrow}
+          showDialog={showDialog}
+          setShowDialog={setShowDialog}
+          newTxId={newTxId}
+        />
+      </motion.div>
+    </>
   );
 }

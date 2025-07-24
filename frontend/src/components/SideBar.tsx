@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { History, House, Wallet } from 'lucide-react'
+import { House, Wallet } from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -11,7 +11,7 @@ export default function Sidebar() {
   const nav = [
     { name: 'Dashboard', href: '/dashboard', icon: <House size={16} /> },
     { name: 'Escrow', href: '/escrow', icon: <Wallet size={16} /> },
-    { name: 'History', href: '/history', icon: <History size={16} /> },
+    { name: 'Transactions', href: '/transactions', icon: <Wallet size={16} /> },
   ]
 
   return (

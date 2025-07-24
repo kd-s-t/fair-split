@@ -21,6 +21,10 @@ module {
         status : TransactionStatus;
         title : Text;
     };
+    public type ParticipantShare = {
+        principal : Principal;
+        amount : Nat;
+    };
     public func createTransaction(
         from : Principal,
         to : [ToEntry],

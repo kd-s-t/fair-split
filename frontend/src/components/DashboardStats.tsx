@@ -4,12 +4,25 @@ import { Card } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { useAppSelector } from "@/lib/redux/store";
 import { CircleCheck, Clock8, Eye, Plus, Shield, Zap } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
+import type { Transaction } from '@/declarations/split_dapp/split_dapp.did'
+import { useRouter } from 'next/navigation'
 
-export const DashboardStats: React.FC = () => {
+export default function DashboardStats({ transactions }: { transactions: Transaction[] }) {
   const btcBalance = useAppSelector((state: any) => state.user.btcBalance);
   const isLoading =
     btcBalance === null || btcBalance === undefined || btcBalance === "";
+  const router = useRouter();
+  const [showBalance, setShowBalance] = useState(true);
+
+  const handleNewEscrow = () => {
+    router.push('/escrow');
+  };
+
+  const handleToggleBalance = () => {
+    setShowBalance((prev) => !prev);
+  };
+
   return (
     <React.Fragment>
       <div className="flex items-center justify-between">
@@ -28,18 +41,15 @@ export const DashboardStats: React.FC = () => {
           </Typography>
 
           <div className="flex items-center gap-3">
-            <Typography variant="muted">$438,730.15</Typography>
-            <Badge
-              variant="default"
-              className="text-[#00E19C] !font-normal text-xs"
-            >
-              24H
-            </Badge>
+            <Typography variant="muted">
+              ${btcBalance ? btcToUsd(Number(btcBalance)).toLocaleString() : '0.00'}
+            </Typography>
           </div>
         </div>
         <Button
           variant="default"
           className="font-medium rounded-md bg-[#FEB64D] text-[#0D0D0D]"
+          onClick={handleNewEscrow}
         >
           <Plus className="text-xs mr-2" /> New escrow
         </Button>
@@ -97,4 +107,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
   </Card>
 );
 
-export default DashboardStats;
+function btcToUsd(btc: number) {
+  const rate = 60000; // 1 BTC = $60,000 (example rate)
+  return btc * rate;
+}

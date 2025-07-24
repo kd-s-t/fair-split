@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
+import type { Transaction, ToEntry } from '@/declarations/split_dapp/split_dapp.did';
 
 export default function EscrowPage() {
   const [description, setDescription] = useState<string>("");
@@ -143,13 +144,13 @@ export default function EscrowPage() {
 
     try {
       const actor = await createSplitDappActor();
-
-      await actor.initiateSplit(
+      await actor.createEscrow(
         Principal.fromText(principal.toText()),
         recipients.map((r) => ({
           principal: Principal.fromText(r.principal),
-          amount: Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8),
-        }))
+          amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
+        })),
+        description || ""
       );
 
       toast.success("Escrow initiated!", {
@@ -175,15 +176,15 @@ export default function EscrowPage() {
     const actor = await createSplitDappActor();
     const txs = await actor.getTransactions(
       Principal.fromText(principal.toText())
-    );
-    const serializableTxs = txs.map((tx) => ({
+    ) as Transaction[];
+    const serializableTxs = txs.map((tx: Transaction) => ({
       ...tx,
       from: typeof tx.from === "string" ? tx.from : tx.from.toText(),
       timestamp:
         typeof tx.timestamp === "bigint"
           ? tx.timestamp.toString()
           : tx.timestamp,
-      to: tx.to.map((toEntry) => ({
+      to: tx.to.map((toEntry: ToEntry) => ({
         ...toEntry,
         principal:
           toEntry.principal &&
@@ -199,7 +200,7 @@ export default function EscrowPage() {
             : toEntry.amount,
       })),
     }));
-    dispatch(setTransactions(serializableTxs));
+    dispatch(setTransactions(serializableTxs as any));
   };
 
   return (

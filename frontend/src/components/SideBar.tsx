@@ -3,18 +3,19 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { History, House, Wallet } from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()
 
   const nav = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Escrow', href: '/escrow' },
-    { name: 'History', href: '/history' },
+    { name: 'Dashboard', href: '/dashboard', icon: <House size={16} /> },
+    { name: 'Escrow', href: '/escrow', icon: <Wallet size={16} /> },
+    { name: 'History', href: '/history', icon: <History size={16} /> },
   ]
 
   return (
-    <aside className="h-screen w-64 border-r border-gray-200 flex flex-col text-sm">
+    <aside className="h-screen w-48 flex flex-col text-sm bg-[#222222] m-4 rounded-xl">
       <div className="p-4 flex items-center gap-2">
         <Image
           src="/split.png"
@@ -28,17 +29,17 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-3">
         {nav.map(link => (
           <Link
             key={link.href}
             href={link.href}
-            className={`rounded-md px-3 py-2 text-sm transition-colors flex items-center gap-2 ${pathname.startsWith(link.href)
-              ? 'bg-slate-900 text-white'
-              : 'hover:bg-slate-100 text-slate-800'
+            className={`text-white rounded-md px-4 py-3 text-sm transition-colors flex items-center gap-2 ${pathname.startsWith(link.href)
+              ? 'bg-[#FEB64D] !text-[#0D0D0D] font-semibold'
+              : 'hover:bg[] text-slate-800'
               }`}
           >
-            {link.name}
+            {link.icon} {link.name}
           </Link>
         ))}
       </nav>

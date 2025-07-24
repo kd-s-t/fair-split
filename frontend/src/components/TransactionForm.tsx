@@ -180,7 +180,7 @@ const TransactionForm = ({
         </CardContent>
       </Card>
 
-    <TransactionDialog open={true} onOpenChange={() => {}} amount="100" onDone={() => {}} />
+    <TransactionDialog open={false} onOpenChange={() => {}} amount="100" onDone={() => {}} />
     </div>
   );
 };

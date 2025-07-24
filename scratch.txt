@@ -24,3 +24,6 @@ dfx identity list
 
 
 dfx canister id split_dapp
+
+
+2820835

@@ -1,5 +1,6 @@
 import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
+import Nat "mo:base/Nat";
 
 module {
   public func getBalance(
@@ -38,4 +39,4 @@ module {
     assert current >= amount;
     map.put(principal, current - amount);
   };
-};
+}

@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { createSplitDappActor } from '@/lib/icp/splitDapp';
 import { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<'release' | 'refund' | null>(null);
@@ -67,6 +68,32 @@ export default function TransactionDetailsPage() {
       setIsLoading(null);
     }
   };
+
+  // Calculate lifecycle step
+  const statusKey = transaction.status ? Object.keys(transaction.status)[0] : 'unknown';
+  const now = Date.now() / 1000; // seconds
+  const txTimestamp = Number(transaction.timestamp);
+  const twoHours = 2 * 60 * 60;
+  const elapsed = now - txTimestamp;
+
+  // Step order: Locked -> Trigger Met -> Splitting -> Released
+  let currentStep = 0;
+  if (statusKey === 'released') {
+    currentStep = 3;
+  } else if (statusKey === 'pending') {
+    if (elapsed < twoHours) {
+      currentStep = 0;
+    } else {
+      currentStep = 2;
+    }
+  }
+  // Step labels
+  const steps = [
+    { label: 'Locked' },
+    { label: 'Trigger Met' },
+    { label: 'Splitting' },
+    { label: 'Released' },
+  ];
 
   return (
     <div className="max-w-5xl mx-auto p-6 flex flex-col gap-6">
@@ -132,23 +159,33 @@ export default function TransactionDetailsPage() {
         {/* Transaction lifecycle */}
         <div className="w-full md:w-80 bg-slate-800 rounded-xl p-6 text-white flex flex-col gap-4">
           <div className="bg-yellow-900 text-yellow-300 rounded px-2 py-1 text-xs mb-2">Native Bitcoin Escrow — No bridges or wrapped tokens</div>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>
-              <span>Locked</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>
-              <span>Trigger Met</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-slate-600 inline-block"></span>
-              <span>Splitting</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-slate-600 inline-block"></span>
-              <span>Released</span>
-            </div>
+          <div className="flex flex-col gap-2 relative">
+            {steps.map((step, idx) => (
+              <div key={step.label} className="flex items-center gap-2 relative min-h-8">
+                {/* Step dot */}
+                <span className={`w-3 h-3 rounded-full inline-block z-10 ${idx <= currentStep ? 'bg-yellow-400' : 'bg-slate-600'}`}></span>
+                <span
+                  className={idx <= currentStep ? 'text-yellow-300 font-semibold' : 'text-slate-400'}
+                  style={{ textDecoration: 'none' }}
+                >
+                  {step.label}
+                </span>
+                {/* Connector bar (except last step) */}
+                {idx < steps.length - 1 && (
+                  <motion.span
+                    className="absolute left-5 top-1/2 transform -translate-y-1/2 h-1 w-8 rounded-full z-0"
+                    initial={false}
+                    animate={{
+                      background: idx < currentStep ? 'linear-gradient(90deg, #fde047 80%, #334155 100%)' : '#334155',
+                      width: idx < currentStep ? '2.5rem' : '2.5rem',
+                    }}
+                    transition={{
+                      background: { duration: 0.7, ease: 'easeInOut' },
+                    }}
+                  />
+                )}
+              </div>
+            ))}
           </div>
           <div className="bg-slate-900 text-xs rounded p-2 mt-2">This escrow is executed fully on-chain using Internet Computer. No human mediation.</div>
         </div>

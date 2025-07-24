@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { truncateAddress } from "@/helper/string_helpper";
+import { TransactionLifecycle } from "@/components/TransactionLifecycle";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
@@ -423,48 +424,7 @@ export default function TransactionDetailsPage() {
           <div className="container-primary text-sm">
             Native Bitcoin Escrow — No bridges or wrapped tokens
           </div>
-          <div className="flex flex-col gap-2 relative">
-            {steps.map((step, idx) => (
-              <div
-                key={step.label}
-                className="flex items-center gap-2 relative min-h-8"
-              >
-                {/* Step dot */}
-                <span
-                  className={`w-3 h-3 rounded-full inline-block z-10 ${
-                    idx <= currentStep ? "bg-yellow-400" : "bg-slate-600"
-                  }`}
-                ></span>
-                <span
-                  className={
-                    idx <= currentStep
-                      ? "text-yellow-300 font-semibold"
-                      : "text-slate-400"
-                  }
-                  style={{ textDecoration: "none" }}
-                >
-                  {step.label}
-                </span>
-                {/* Connector bar (except last step) */}
-                {idx < steps.length - 1 && (
-                  <motion.span
-                    className="absolute left-5 top-1/2 transform -translate-y-1/2 h-1 w-8 rounded-full z-0"
-                    initial={false}
-                    animate={{
-                      background:
-                        idx < currentStep
-                          ? "linear-gradient(90deg, #fde047 80%, #334155 100%)"
-                          : "#334155",
-                      width: idx < currentStep ? "2.5rem" : "2.5rem",
-                    }}
-                    transition={{
-                      background: { duration: 0.7, ease: "easeInOut" },
-                    }}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+          <TransactionLifecycle currentStep={3} />
           <div className="container-gray text-sm text-[#9F9F9F]">
             This escrow is executed fully on-chain using Internet Computer. No
             human mediation.

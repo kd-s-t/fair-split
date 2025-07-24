@@ -16,15 +16,12 @@ export default function TransactionDialog({
   onOpenChange,
   amount,
   onDone,
-  depositAddress,
 }: TransactionDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <div className="flex flex-col items-center text-center">
-        <div className="flex items-center justify-center w-20 h-20 rounded-full border-4 border-[#FEB64D] mb-6">
-          <img src="/check.svg" alt="check" className="w-10 h-10" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2">Escrow initiated</h2>
+        <img src="/check.png" alt="check" className="w-15 h-15" />
+        <h2 className="text-2xl font-bold mb-2 mt-8">Escrow initiated</h2>
         <p className="text-gray-400 mb-6 max-w-md">
           The Bitcoin escrow has been successfully created and is awaiting funding.
         </p>

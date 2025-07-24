@@ -17,7 +17,7 @@ actor class SplitDApp(admin : Principal) {
 
   let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
-  let pendingTransfers = HashMap.HashMap<Principal, [TransactionTypes.PendingTransfer]>(10, Principal.equal, Principal.hash);
+  let pendingTransfers = HashMap.HashMap<Principal, [Pending.PendingTransfer]>(10, Principal.equal, Principal.hash);
   let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
   var logs : [Text] = [];
 
@@ -117,7 +117,7 @@ actor class SplitDApp(admin : Principal) {
         case (?arr) arr;
         case null [];
       };
-      let pending : TransactionTypes.PendingTransfer = {
+      let pending : Pending.PendingTransfer = {
         to = toEntry.principal;
         name = toEntry.name;
         amount = toEntry.amount;
@@ -226,7 +226,7 @@ actor class SplitDApp(admin : Principal) {
       case null [];
     };
     var refund : Nat = 0;
-    let newPendings = Array.filter<TransactionTypes.PendingTransfer>(pendings, func(pending) {
+    let newPendings = Array.filter<Pending.PendingTransfer>(pendings, func(pending) {
       if (pending.to == recipient) {
         refund += pending.amount;
         false // Remove
@@ -423,7 +423,7 @@ actor class SplitDApp(admin : Principal) {
     Balance.getBalance(balances, p);
   };
 
-  public query func getPending(caller : Principal) : async [TransactionTypes.PendingTransfer] {
+  public query func getPending(caller : Principal) : async [Pending.PendingTransfer] {
     switch (pendingTransfers.get(caller)) { case (?list) list; case null [] };
   };
 
@@ -445,7 +445,7 @@ actor class SplitDApp(admin : Principal) {
         }
       }
     }
-    return result;
+    return result
   };
 
   public shared func setInitialBalance(p : Principal, amount : Nat, caller : Principal) : async () {

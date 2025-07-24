@@ -12,8 +12,16 @@
   @apply p-3 rounded-[10px] border bg-[#362823] border-[#714024];
 }
 
+.container-primary {
+  @apply p-3 rounded-[10px] border bg-[#48351A] border-[#BD822D];
+}
+
 .container-success {
   @apply p-3 rounded-[10px] border bg-[#1B2E25] border-[#296239];
+}
+
+.container-gray {
+  @apply p-3 rounded-[10px] border bg-[#2C2C2C] border-[#424444];
 }
 
 

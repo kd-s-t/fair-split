@@ -9,7 +9,7 @@ const typographyVariants = cva('', {
       h2: 'scroll-m-20 text-3xl font-semibold',
       h3: 'scroll-m-20 text-2xl font-semibold',
       h4: 'scroll-m-20 text-xl font-semibold',
-      p: 'leading-7',
+      p: '',
       list: 'my-6 ml-6 list-disc [&>li]:mt-2',
       large: 'text-lg font-semibold',
       base: 'text-base font-medium',

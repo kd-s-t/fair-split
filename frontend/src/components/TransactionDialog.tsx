@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Dialog } from './dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Typography } from '@/components/ui/typography';
 
 interface TransactionDialogProps {
   open: boolean;
@@ -10,7 +11,7 @@ interface TransactionDialogProps {
   depositAddress?: string;
 }
 
-export function TransactionDialog({
+export default function TransactionDialog({
   open,
   onOpenChange,
   amount,
@@ -24,13 +25,13 @@ export function TransactionDialog({
           <img src="/check.svg" alt="check" className="w-10 h-10" />
         </div>
         <h2 className="text-2xl font-bold mb-2">Escrow initiated</h2>
-        <p className="text-gray-400 mb-6 max-w-xs">
+        <p className="text-gray-400 mb-6 max-w-md">
           The Bitcoin escrow has been successfully created and is awaiting funding.
         </p>
         <div className="w-full bg-[#222222] border border-[#303434] rounded-[10px] p-3 mb-6">
-          <span className="text-gray-200 text-sm">
-            Send <span className="font-semibold">{amount} BTC</span> to the generated deposit{depositAddress ? ` (${depositAddress})` : ''} to activate the escrow.
-          </span>
+          <Typography variant="muted">
+            Send {amount} BTC to the generated deposit to activate the escrow.
+          </Typography>
         </div>
         <Button
           className="w-full"

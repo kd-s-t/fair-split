@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Recipient } from "@/types/Recipient";
-import { Dialog } from "@/components/ui/dialog";
-import { TransactionDialog } from "./ui/transaction-dialog";
+import TransactionDialog from "@/components/TransactionDialog";
 
 type TransactionFormProps = {
   description: string;
@@ -182,7 +181,6 @@ const TransactionForm = ({
       </Card>
 
     <TransactionDialog open={true} onOpenChange={() => {}} amount="100" onDone={() => {}} />
-      
     </div>
   );
 };

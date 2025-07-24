@@ -96,7 +96,7 @@ export default function RecentActivities() {
       <Tabs defaultValue="all" className="mt-4">
         <div className="flex items-center justify-between">
             <TabsList>
-                <TabsTrigger value="all" className="text-muted-foreground font-medium">All Transactions (5)</TabsTrigger>
+                <TabsTrigger value="all" className="text-muted-foreground font-medium">All transactions (5)</TabsTrigger>
                 <TabsTrigger value="active" className="text-muted-foreground font-medium">Send (3)</TabsTrigger>
                 <TabsTrigger value="completed" className="text-muted-foreground font-medium">Received (2)</TabsTrigger>
             </TabsList>
@@ -139,13 +139,13 @@ export default function RecentActivities() {
                         </div>
 
                         {activity.category === 'sent' && (
-                            <Button variant="default" size="sm" className="font-medium bg-primary">
-                                <Wallet className='mr-2'/> Manage escrow 
+                            <Button variant="outline" size="sm" className="font-medium border-[#7A7A7A]">
+                                <Wallet className='mr-2' /> Manage escrow 
                             </Button>
                         )}
 
                         {activity.category === 'received' && (
-                            <Button variant="outline" size="sm" className="font-medium">
+                            <Button variant="outline" size="sm" className="font-medium border-[#7A7A7A]">
                                 <Eye className='mr-2'/> View escrow
                             </Button>
                         )}

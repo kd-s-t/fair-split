@@ -62,7 +62,7 @@ export default function Home() {
       >
         <div className="flex justify-center">
           <Image
-            src="/split.png"
+            src="/safesplit.svg"
             alt="SplitDApp Logo"
             width={150}
             height={64}

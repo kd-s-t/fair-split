@@ -18,7 +18,7 @@ export default function Sidebar() {
     <aside className="h-screen w-48 flex flex-col text-sm bg-[#222222] m-4 rounded-xl">
       <div className="p-4 flex items-center gap-2">
         <Image
-          src="/split.png"
+          src="/safesplit.svg"
           alt="Logo"
           width={24}
           height={24}

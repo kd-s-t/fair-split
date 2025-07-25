@@ -8,11 +8,12 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Recipient } from "@/types/Recipient";
 import { Principal } from "@dfinity/principal";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
 import { useRouter } from 'next/navigation';
+import { setTitle, setSubtitle } from '@/lib/redux/store';
 
 export default function EscrowPage() {
   const [description, setDescription] = useState<string>("");
@@ -24,6 +25,10 @@ export default function EscrowPage() {
   const { principal }: { principal: { toText: () => string } | null } =
     useAuth();
   const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(setTitle('Create new escrow'));
+    dispatch(setSubtitle('Configure your secure Bitcoin transaction'));
+  }, [dispatch]);
   const router = useRouter();
   const [showDialog, setShowDialog] = useState(false);
   const [newTxIdx, setNewTxIdx] = useState<number | null>(null);

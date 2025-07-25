@@ -5,7 +5,7 @@ import { Typography } from "@/components/ui/typography";
 import { useAppSelector } from "@/lib/redux/store";
 import { CircleCheck, Clock8, Eye, Plus, Shield, Zap } from "lucide-react";
 import React, { useState } from "react";
-import type { Transaction } from '@/declarations/split_dapp/split_dapp.did'
+import type { Transaction } from '@/declarations/split_dapp.did'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardStats({ transactions }: { transactions: Transaction[] }) {
@@ -27,7 +27,7 @@ export default function DashboardStats({ transactions }: { transactions: Transac
     <React.Fragment>
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={handleToggleBalance}>
             <Typography variant="small">Portfolio balance</Typography>
             <Eye size={16} />
           </div>
@@ -35,14 +35,18 @@ export default function DashboardStats({ transactions }: { transactions: Transac
           <Typography variant="h2" className="font-semibold">
             {isLoading ? (
               <span className="inline-block w-32 h-7 bg-gray-200 animate-pulse rounded" />
-            ) : (
+            ) : showBalance ? (
               `${btcBalance} BTC`
+            ) : (
+              '•••••••• BTC'
             )}
           </Typography>
 
           <div className="flex items-center gap-3">
             <Typography variant="muted">
-              ${btcBalance ? btcToUsd(Number(btcBalance)).toLocaleString() : '0.00'}
+              {showBalance
+                ? `$${btcBalance ? btcToUsd(Number(btcBalance)).toLocaleString() : '0.00'}`
+                : '••••••••'}
             </Typography>
           </div>
         </div>
@@ -64,22 +68,22 @@ export default function DashboardStats({ transactions }: { transactions: Transac
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <StatCard
           label="Total escrows"
-          value={24}
+          value={transactions ? transactions.length : 0}
           icon={<Shield className="text-yellow-400 text-2xl" />}
         />
         <StatCard
           label="Active escrows"
-          value={6}
+          value={0}
           icon={<Zap className="text-blue-400 text-2xl" />}
         />
         <StatCard
           label="Completed escrows"
-          value={17}
+          value={0}
           icon={<CircleCheck className="text-green-400 text-2xl" />}
         />
         <StatCard
           label="Pending escrows"
-          value={1}
+          value={0}
           icon={<Clock8 className="text-gray-400 text-2xl" />}
         />
       </div>

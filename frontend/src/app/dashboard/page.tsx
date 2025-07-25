@@ -15,13 +15,12 @@ export default function DashboardPage() {
   const { principal } = useAuth()
   const transactions = useSelector((state: RootState) => state.transactions.transactions)
   const dispatch = useDispatch()
-
+  
   useEffect(() => {
     const fetchTransactions = async () => {
       if (!principal) return
       const actor = await createSplitDappActor()
       const txs = await actor.getTransactions(principal) as Transaction[]
-      console.log("txs", txs)
       const normalizeTx = (tx: any) => ({
         ...tx,
         from: typeof tx.from === 'object' && tx.from.toText ? tx.from.toText() : String(tx.from),

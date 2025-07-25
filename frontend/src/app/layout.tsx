@@ -16,6 +16,7 @@ import { createSplitDappActor } from '@/lib/icp/splitDapp';
 import { useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { Principal } from '@dfinity/principal';
+import { useSelector } from 'react-redux';
 
 function BalanceAndNameSyncer() {
   const principal = useAppSelector((state: any) => state.user.principal);
@@ -52,14 +53,16 @@ function BalanceAndNameSyncer() {
 function LayoutShell({ children }: { children: ReactNode }) {
   const principal = useAppSelector((state: any) => state.user.principal);
   const name = useAppSelector((state: any) => state.user.name);
+  const title = useSelector((state: any) => state.layout.title);
+  const subtitle = useSelector((state: any) => state.layout.subtitle);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden flex">
       <Sidebar />
       <main className="flex-1 flex flex-col">
         <Header
-          title="Create new escrow"
-          subtitle="Configure your secure Bitcoin transaction"
+          title={title}
+          subtitle={subtitle}
           user={{
             principalId: principal,
             name: name || undefined,

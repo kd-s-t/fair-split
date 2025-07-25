@@ -38,10 +38,15 @@ import { markAllAsRead } from '../../lib/redux/transactionsSlice';
 import { useRouter } from "next/navigation";
 import { Principal } from "@dfinity/principal";
 import { toast } from "sonner";
+import { setTitle, setSubtitle } from '@/lib/redux/store';
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(setTitle('Transaction history'));
+    dispatch(setSubtitle('View all your escrow transactions'));
+  }, [dispatch]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localTransactions, setLocalTransactions] = useState<any[]>([]);
@@ -422,7 +427,11 @@ export default function TransactionsPage() {
                       <TableCell className={pendingApproval ? "p-4 text-right font-semibold text-blue-300" : "p-3 text-right font-semibold text-yellow-600"}>{tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8}</TableCell>
                       <TableCell className={pendingApproval ? "p-4 text-right text-xs" : "p-3 text-right text-xs"}>{new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}</TableCell>
                       <TableCell className={pendingApproval ? "p-4 text-right text-blue-300 font-bold" : "p-3 text-right text-xs"}>
-                        {pendingApproval ? "Pending your approval" : (tx.status ? Object.keys(tx.status)[0] : 'unknown')}
+                        {pendingApproval ? "Pending your approval" : (() => {
+                          const statusKey = tx.status ? Object.keys(tx.status)[0] : 'unknown';
+                          if (statusKey === "released") return "Completed";
+                          return "Active";
+                        })()}
                       </TableCell>
                       <TableCell className={pendingApproval ? "p-4 text-right flex gap-2 justify-end" : "p-3 text-right"}>
                         {pendingApproval ? (

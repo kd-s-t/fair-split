@@ -16,12 +16,14 @@ export default function Sidebar() {
 
   return (
     <aside className="h-screen w-48 flex flex-col text-sm bg-[#222222] m-4 rounded-xl">
-      <div className="p-4 flex items-center gap-2">
-        <Image src="/safesplit.svg" alt="Logo" width={24} height={24} />
-        <div>
-          <div className="font-semibold text-base">SplitSafe</div>
-          <div className="text-xs text-gray-500">Enterprise</div>
-        </div>
+      <div className="p-4 w-full flex items-center justify-center">
+        <Image
+          src="/safesplit.svg"
+          alt="Logo"
+          width={160}
+          height={40}
+          className="object-contain w-full h-auto"
+        />
       </div>
 
       <nav className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -36,11 +38,10 @@ export default function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-white rounded-md px-4 py-3 text-sm transition-colors flex items-center gap-2 ${
-                isActive
+              className={`text-white rounded-md px-4 py-3 text-sm transition-colors flex items-center gap-2 ${isActive
                   ? "bg-[#FEB64D] !text-[#0D0D0D] font-semibold"
                   : "hover:bg-[#FEB64D]/20 text-slate-800"
-              }`}
+                }`}
             >
               {link.icon} {link.name}
             </Link>

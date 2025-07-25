@@ -5,10 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { Transaction } from "@/declarations/split_dapp.did";
 import { motion } from "framer-motion";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "../../lib/redux/store";
 import {
-  setTransactions,
   markAllAsRead,
 } from "../../lib/redux/transactionsSlice";
 import { useRouter } from "next/navigation";
@@ -24,21 +21,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { statusMap } from "@/components/RecentActivities";
 import { Button } from "@/components/ui/button";
-
-export default function TransactionsPage() {
-  const { principal } = useAuth();
-  const transactions = useSelector(
-    (state: RootState) => state.transactions.transactions
-  );
-  console.log("Redux transactions state:", transactions);
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { motion } from 'framer-motion';
-import { useDispatch } from 'react-redux';
-import { markAllAsRead } from '../../lib/redux/transactionsSlice';
-import { useRouter } from "next/navigation";
-import { Principal } from "@dfinity/principal";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { toast } from "sonner";
-import { setTitle, setSubtitle } from '@/lib/redux/store';
+import { setTitle, setSubtitle } from '../../lib/redux/store';
+import { useDispatch } from "react-redux";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -53,7 +39,6 @@ export default function TransactionsPage() {
   const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isReleasing, setIsReleasing] = useState(false);
-  const [isRefunding, setIsRefunding] = useState(false);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -197,21 +182,6 @@ export default function TransactionsPage() {
     }
   }
 
-  async function handleRefund() {
-    if (!principal) return;
-    setIsRefunding(true);
-    try {
-      const actor = await createSplitDappActor();
-      await actor.cancelSplit(principal);
-      toast.success("Escrow refunded!");
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to refund escrow");
-    } finally {
-      setIsRefunding(false);
-    }
-  }
-
   async function handleRowClick(tx: Transaction, idx: number) {
     if (!principal) return;
     if (!tx.isRead) {
@@ -249,9 +219,9 @@ export default function TransactionsPage() {
       )}
       {!isLoading && !error && localTransactions.length > 0 && (
         <>
-          {console.log("Rendering table with transactions:", transactions)}
+          {console.log("Rendering table with transactions:", localTransactions)}
           <div className="space-y-4">
-            {transactions.map((tx: any, idx: number) => {
+            {localTransactions.map((tx: any, idx: number) => {
               const pendingApproval = isPendingApproval(tx);
 
               return (
@@ -262,7 +232,7 @@ export default function TransactionsPage() {
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
                   className="bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm"
                   onClick={
-                    pendingApproval ? undefined : () => handleRowClick(tx)
+                    pendingApproval ? undefined : () => handleRowClick(tx, idx)
                   }
                 >
                   <div className="flex-1 min-w-0">
@@ -358,7 +328,9 @@ export default function TransactionsPage() {
                         <div className="flex items-center gap-1">
                           <Bitcoin size={16} color="#F97415" />
                           <Typography variant="base" className="font-semibold">
-                            {tx.amount} BTC
+                            {tx.to && Array.isArray(tx.to)
+                              ? (tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                              : '0.00000000'} BTC
                           </Typography>
                         </div>
                       </div>
@@ -368,8 +340,8 @@ export default function TransactionsPage() {
                           To
                         </Typography>
                         <Typography variant="base" className="font-semibold">
-                          {tx.recipients} recipient
-                          {tx.recipients !== 1 ? "s" : ""}
+                          {tx.to.length} recipient
+                          {tx.to.length !== 1 ? "s" : ""}
                         </Typography>
                       </div>
 
@@ -390,83 +362,6 @@ export default function TransactionsPage() {
               );
             })}
           </div>
-          <Table className="rounded-xl overflow-hidden border border-slate-200 shadow-md bg-white">
-            <TableHeader>
-              <TableRow className="bg-slate-800 text-white">
-                <TableHead className="p-3 text-left">From</TableHead>
-                <TableHead className="p-3 text-left">To</TableHead>
-                <TableHead className="p-3 text-right">Amount</TableHead>
-                <TableHead className="p-3 text-right">Date</TableHead>
-                <TableHead className="p-3 text-right">Status</TableHead>
-                <TableHead className="p-3 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {localTransactions
-                .map((tx: any, idx: number) => {
-                  const pendingApproval = isPendingApproval(tx);
-                  // Use tx.idx if present, otherwise fallback to idx
-                  const txIndex = tx.idx !== undefined ? tx.idx : idx;
-                  return (
-                    <motion.tr
-                      key={idx}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      className={
-                        pendingApproval
-                          ? "bg-blue-900/70 border-l-4 border-blue-400 text-blue-100"
-                          : isSentByUser(tx)
-                            ? `hover:bg-yellow-800 transition-colors ${!tx.isRead ? 'bg-yellow-900 text-yellow-200' : ''} cursor-pointer`
-                            : "bg-slate-900 text-slate-200"
-                      }
-                      onClick={pendingApproval ? undefined : () => handleRowClick(tx,idx)}
-                    >
-                      <TableCell className={pendingApproval ? "p-4 font-mono text-xs" : "p-3 font-mono text-xs"}>{tx.from}</TableCell>
-                      <TableCell className={pendingApproval ? "p-4 font-mono text-xs" : "p-3 font-mono text-xs"}>{tx.to.map((toEntry: any) => toEntry.principal).join(', ')}</TableCell>
-                      <TableCell className={pendingApproval ? "p-4 text-right font-semibold text-blue-300" : "p-3 text-right font-semibold text-yellow-600"}>{tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8}</TableCell>
-                      <TableCell className={pendingApproval ? "p-4 text-right text-xs" : "p-3 text-right text-xs"}>{new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}</TableCell>
-                      <TableCell className={pendingApproval ? "p-4 text-right text-blue-300 font-bold" : "p-3 text-right text-xs"}>
-                        {pendingApproval ? "Pending your approval" : (() => {
-                          const statusKey = tx.status ? Object.keys(tx.status)[0] : 'unknown';
-                          if (statusKey === "released") return "Completed";
-                          return "Active";
-                        })()}
-                      </TableCell>
-                      <TableCell className={pendingApproval ? "p-4 text-right flex gap-2 justify-end" : "p-3 text-right"}>
-                        {pendingApproval ? (
-                          <>
-                            <button
-                              className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                              onClick={() => handleApprove(tx, txIndex)}
-                              disabled={isApproving === getTxId(tx)}
-                            >
-                              {isApproving === getTxId(tx) ? (
-                                <span className="flex items-center gap-2">
-                                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                                  Approving...
-                                </span>
-                              ) : (
-                                'Approve'
-                              )}
-                            </button>
-                            <button
-                              className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                              onClick={() => handleDecline(tx, txIndex)}
-                              disabled={isApproving === getTxId(tx)}
-                            >
-                              Decline
-                            </button>
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                    </motion.tr>
-                  );
-                })}
-            </TableBody>
-          </Table>
         </>
       )}
     </motion.div>

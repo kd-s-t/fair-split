@@ -86,15 +86,20 @@ const mockActivities = [
   },
 ];
 
-const statusMap: Record<string, { label: string; variant: string }> = {
+export const statusMap: Record<string, { label: string; variant: string }> = {
   active: { label: "Active", variant: "secondary" },
   completed: { label: "Completed", variant: "success" },
   pending: { label: "Pending", variant: "primary" },
   refunded: { label: "Refunded", variant: "error" },
 };
 
-export default function RecentActivities({transactions}) {
-  const activities = transactions && transactions.length > 0 ? transactions : mockActivities;
+export default function RecentActivities({
+  transactions,
+}: {
+  transactions: any;
+}) {
+  const activities =
+    transactions && transactions.length > 0 ? transactions : mockActivities;
   return (
     <div className="mt-10">
       <Typography variant="h3" className="font-semibold">
@@ -146,12 +151,23 @@ export default function RecentActivities({transactions}) {
                           {activity.description}
                         </Typography>
 
-                        <Badge
-                          variant={statusMap[activity.status].variant}
+                        {/* <Badge
+                          variant={
+                            statusMap[activity.status]?.variant as
+                              | "default"
+                              | "primary"
+                              | "secondary"
+                              | "outline"
+                              | "success"
+                              | "warning"
+                              | "error"
+                              | null
+                              | undefined
+                          }
                           className="text-xs"
                         >
                           {statusMap[activity.status]?.label || activity.status}
-                        </Badge>
+                        </Badge> */}
                       </div>
                       <div className="flex items-center gap-2">
                         <Typography variant="muted" className="text-xs">
@@ -159,7 +175,7 @@ export default function RecentActivities({transactions}) {
                         </Typography>
                         <span className="text-white">•</span>
                         {activity.category === "sent" ||
-                          activity.category === "pending" ? (
+                        activity.category === "pending" ? (
                           <div className="flex items-center gap-1 text-[#007AFF]">
                             <ArrowUpRight size={14} />
                             <Typography
@@ -217,10 +233,11 @@ export default function RecentActivities({transactions}) {
                     {activity.recipients.map((r: any, i: number) => (
                       <div
                         key={i}
-                        className={`flex items-center px-4 py-3 text-sm font-normal ${i !== activity.recipients.length - 1
+                        className={`flex items-center px-4 py-3 text-sm font-normal ${
+                          i !== activity.recipients.length - 1
                             ? "border-b border-[#35363a]"
                             : ""
-                          }`}
+                        }`}
                       >
                         <span className="flex-1 text-ellipsis overflow-hidden">
                           {truncateAddress(r.walletAddress)}

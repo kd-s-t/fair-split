@@ -36,7 +36,7 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div
         className={cn(
-          'bg-white dark:bg-[#222] rounded-xl shadow-lg max-w-lg w-full p-10 relative',
+          'bg-[#222] rounded-xl shadow-lg max-w-lg w-full p-10 relative',
           className
         )}
         role="dialog"

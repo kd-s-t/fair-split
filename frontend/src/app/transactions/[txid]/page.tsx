@@ -75,7 +75,7 @@ export default function TransactionDetailsPage() {
       console.error("Release error:", err);
       toast.error(
         "Failed to release escrow" +
-        (err && (err as any).message ? ": " + (err as any).message : "")
+          (err && (err as any).message ? ": " + (err as any).message : "")
       );
     } finally {
       setIsLoading(null);
@@ -98,7 +98,7 @@ export default function TransactionDetailsPage() {
       console.error("Refund error:", err);
       toast.error(
         "Failed to refund escrow" +
-        (err && (err as any).message ? ": " + (err as any).message : "")
+          (err && (err as any).message ? ": " + (err as any).message : "")
       );
     } finally {
       setIsLoading(null);
@@ -123,7 +123,7 @@ export default function TransactionDetailsPage() {
       console.error("Initiate escrow error:", err);
       toast.error(
         "Failed to initiate escrow" +
-        (err && (err as any).message ? ": " + (err as any).message : "")
+          (err && (err as any).message ? ": " + (err as any).message : "")
       );
     } finally {
       setIsInitiating(false);
@@ -241,7 +241,10 @@ export default function TransactionDetailsPage() {
           <hr className="my-8 text-[#424444] h-[1px]"></hr>
           {statusKey === "pending" && (
             <div className="flex items-center gap-4 mt-4">
-              <Button variant="outline" className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent">
+              <Button
+                variant="outline"
+                className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent"
+              >
                 <CircleXIcon size={16} /> Cancel escrow
               </Button>
               <div className="flex items-center gap-2">
@@ -261,20 +264,33 @@ export default function TransactionDetailsPage() {
                 onClick={handleInitiateEscrow}
                 disabled={isInitiating}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="#0D0D0D" d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="#0D0D0D"
+                    d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"
+                  />
+                </svg>
                 {isInitiating ? "Initiating..." : "Initiate escrow"}
               </Button>
               <div className="flex items-center gap-2">
                 <CircleAlert size={16} color="#FEB64D" />
                 <Typography variant="small" className="text-white font-normal">
-                  This action cannot be undone. Only available while pending. 
+                  This action cannot be undone. Only available while pending.
                 </Typography>
               </div>
             </div>
           )}
 
           {transaction.status &&
-            !["pending", "draft"].includes(Object.keys(transaction.status)[0]) && (
+            !["pending", "draft"].includes(
+              Object.keys(transaction.status)[0]
+            ) && (
               <div className="flex gap-4 mb-2">
                 <button
                   className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold cursor-pointer"
@@ -306,7 +322,6 @@ export default function TransactionDetailsPage() {
             human mediation.
           </div>
         </Card>
-
       </div>
     </div>
   );

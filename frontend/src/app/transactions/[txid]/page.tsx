@@ -206,7 +206,7 @@ export default function TransactionDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold mb-4">Manage escrow – Active</h1>
+      <h1 className="text-3xl font-bold mb-4">{transaction.title}</h1>
       <div className="flex flex-col md:flex-row gap-6">
         {/* Escrow overview */}
         <div className="container flex-1 !rounded-2xl !px-6 !py-4 text-white">
@@ -249,9 +249,11 @@ export default function TransactionDetailsPage() {
               }>
                 {transaction.status && Object.keys(transaction.status)[0] === 'confirmed'
                   ? 'Active'
-                  : transaction.status
-                    ? Object.keys(transaction.status)[0]
-                    : 'unknown'}
+                  : transaction.status && Object.keys(transaction.status)[0] === 'released'
+                    ? 'Completed'
+                    : transaction.status
+                      ? Object.keys(transaction.status)[0]
+                      : 'unknown'}
               </span>
             </div>
           </div>

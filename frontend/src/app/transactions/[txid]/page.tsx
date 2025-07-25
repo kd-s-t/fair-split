@@ -48,7 +48,7 @@ export default function TransactionDetailsPage() {
         const result = await actor.getTransactionBy(Principal.fromText(sender), BigInt(idx));
         console.log("result", result);
         if (result) {
-          setTransaction(result[0]); // it's a single transaction, not an array
+          setTransaction((result as any[])[0] ?? result);
         } else {
           setTransaction(null);
         }
@@ -94,6 +94,7 @@ export default function TransactionDetailsPage() {
         )
       );
       toast.success("Escrow released!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Release error:", err);
       toast.error(
@@ -117,6 +118,7 @@ export default function TransactionDetailsPage() {
         )
       );
       toast.success("Escrow refunded!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Refund error:", err);
       toast.error(
@@ -145,6 +147,7 @@ export default function TransactionDetailsPage() {
         BigInt(idx)
       );
       toast.success("Escrow initiated!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Initiate escrow error:", err);
       toast.error(
@@ -167,7 +170,8 @@ export default function TransactionDetailsPage() {
 
   // Step order: Locked -> Trigger Met -> Splitting -> Released
   let currentStep = 0;
-  if (statusKey === "released") {
+  let isReleased = statusKey === "released";
+  if (isReleased) {
     currentStep = 3;
   } else if (statusKey === "confirmed") {
     currentStep = 1;
@@ -187,6 +191,75 @@ export default function TransactionDetailsPage() {
     { label: "Splitting" },
     { label: "Released" },
   ];
+
+  if (isReleased) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="w-full rounded-xl bg-gradient-to-r from-[#1FE29A] to-[#5FFFD7] p-1 mb-4">
+          <div className="bg-[#181818] rounded-xl p-6 flex flex-col gap-2">
+            <span className="text-lg font-semibold text-[#181818] bg-gradient-to-r from-[#1FE29A] to-[#5FFFD7] bg-clip-text text-transparent">Escrow completed</span>
+            <span className="text-[#181818] text-sm">All payments have been successfully distributed to recipients</span>
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left: Escrow overview and payment distribution */}
+          <div className="container flex-1 !rounded-2xl !px-6 !py-4 text-white bg-[#181818]">
+            <Typography variant="h4">Escrow overview</Typography>
+            <div className="grid grid-cols-2 gap-6 my-8">
+              <div className="flex flex-col gap-2">
+                <span className="text-[#9F9F9F] text-xs">Completed on</span>
+                <span className="font-semibold">
+                  {new Date(Number(transaction.timestamp) * 1000).toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' })}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-[#9F9F9F] text-xs">Transaction</span>
+                <span className="font-semibold">{transaction.hash ? transaction.hash : '—'}</span>
+              </div>
+            </div>
+            <Typography variant="h4" className="mb-2">Payment distribution</Typography>
+            <div className="flex flex-col gap-4">
+              {transaction.to.map((toEntry: any, idx: number) => (
+                <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between bg-[#232323] rounded-xl p-4 gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="bg-[#1FE29A] rounded-full p-1 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#181818" strokeWidth="2" fill="none" /><path d="M7 13l3 3 7-7" stroke="#181818" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                    </span>
+                    <div>
+                      <div className="font-semibold">Recipient {idx + 1}</div>
+                      <div className="text-xs text-[#9F9F9F]">{toEntry.principal}</div>
+                      <div className="text-xs text-[#9F9F9F]">Transaction hash<br/>{toEntry.txHash ? toEntry.txHash : '—'}</div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="font-semibold">{Number(toEntry.amount) / 1e8} BTC</span>
+                    <span className="text-xs text-[#9F9F9F]">{toEntry.percent ? toEntry.percent + '%' : ''}</span>
+                    <Button variant="outline" className="mt-2 text-xs px-3 py-1">View</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-[#232323] rounded-xl p-4 mt-6 text-[#9F9F9F] text-sm">
+              Escrow executed via ICP-native BTC API with threshold ECDSA signature.<br/>
+              No middleman. No human intervention. Fully automated on-chain execution.
+            </div>
+          </div>
+          {/* Right: Transaction lifecycle */}
+          <Card className="w-full md:w-90 bg-[#222222] border-[#303434] text-white flex flex-col gap-4">
+            <Typography variant="large">Transaction lifecycle</Typography>
+            <div className="container-primary text-sm">
+              Native Bitcoin Escrow — No bridges or wrapped tokens
+            </div>
+            <TransactionLifecycle currentStep={currentStep} />
+            <div className="container-gray text-sm text-[#9F9F9F]">
+              This escrow is executed fully on-chain using Internet Computer. No
+              human mediation.
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -267,7 +340,7 @@ export default function TransactionDetailsPage() {
             </div>
           </div>
           <hr className="my-8 text-[#424444] h-[1px]"></hr>
-          {statusKey === "pending" && (
+          {statusKey === "pending" && !isReleased && (
             <div className="flex items-center gap-4 mt-4">
               <Button variant="outline" className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent">
                 <CircleXIcon size={16} /> Cancel escrow
@@ -281,7 +354,7 @@ export default function TransactionDetailsPage() {
             </div>
           )}
 
-          {statusKey !== "pending" && statusKey !== "confirmed" && (
+          {statusKey !== "pending" && statusKey !== "confirmed" && !isReleased && (
             <div className="flex items-center gap-8">
               <Button
                 variant="default"
@@ -302,21 +375,35 @@ export default function TransactionDetailsPage() {
           )}
 
           {transaction.status &&
-            !["pending", "draft"].includes(Object.keys(transaction.status)[0]) && (
+            !["pending", "draft", "released"].includes(Object.keys(transaction.status)[0]) && (
               <div className="flex gap-4 mb-2">
                 <button
                   className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold cursor-pointer"
                   onClick={handleRelease}
                   disabled={isLoading === "release" || isLoading === "refund"}
                 >
-                  {isLoading === "release" ? "Releasing..." : "Release payment"}
+                  {isLoading === "release" ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                      Releasing...
+                    </span>
+                  ) : (
+                    "Release payment"
+                  )}
                 </button>
                 <button
                   className="bg-slate-700 px-4 py-2 rounded text-white cursor-pointer"
                   onClick={handleRefund}
                   disabled={isLoading === "release" || isLoading === "refund"}
                 >
-                  {isLoading === "refund" ? "Refunding..." : "Request refund"}
+                  {isLoading === "refund" ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                      Refunding...
+                    </span>
+                  ) : (
+                    "Request refund"
+                  )}
                 </button>
               </div>
             )}

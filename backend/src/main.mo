@@ -471,7 +471,7 @@ actor class SplitDApp(admin : Principal) {
     let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
       txs,
       func(tx) {
-        if (tx.status == #pending) {
+        if (tx.status == #pending or tx.status == #confirmed) {
           {
             from = tx.from;
             to = tx.to;

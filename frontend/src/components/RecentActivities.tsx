@@ -93,7 +93,11 @@ const statusMap: Record<string, { label: string; variant: string }> = {
   refunded: { label: "Refunded", variant: "error" },
 };
 
-export default function RecentActivities({transactions}) {
+interface RecentActivitiesProps {
+  transactions?: any[];
+}
+
+export default function RecentActivities({ transactions }: RecentActivitiesProps) {
   const activities = transactions && transactions.length > 0 ? transactions : mockActivities;
   return (
     <div className="mt-10">
@@ -146,12 +150,20 @@ export default function RecentActivities({transactions}) {
                           {activity.description}
                         </Typography>
 
-                        <Badge
-                          variant={statusMap[activity.status].variant}
-                          className="text-xs"
-                        >
-                          {statusMap[activity.status]?.label || activity.status}
-                        </Badge>
+                        {/* Fix: extract statusKey from object or use as string */}
+                        {(() => {
+                          const statusKey = typeof activity.status === 'object' && activity.status !== null
+                            ? Object.keys(activity.status)[0]
+                            : activity.status;
+                          return (
+                            <Badge
+                              variant={(statusMap[statusKey]?.variant ?? 'default') as 'secondary' | 'success' | 'primary' | 'error' | 'default' | 'outline' | 'warning'}
+                              className="text-xs"
+                            >
+                              {statusMap[statusKey]?.label || statusKey}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-2">
                         <Typography variant="muted" className="text-xs">

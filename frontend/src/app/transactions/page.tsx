@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { markAllAsRead } from '../../lib/redux/transactionsSlice';
 import { useRouter } from "next/navigation";
 import { Principal } from "@dfinity/principal";
+import { toast } from "sonner";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -18,6 +19,9 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [localTransactions, setLocalTransactions] = useState<any[]>([]);
   const router = useRouter();
+  const [isApproving, setIsApproving] = useState<string | null>(null);
+  const [isReleasing, setIsReleasing] = useState(false);
+  const [isRefunding, setIsRefunding] = useState(false);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -42,7 +46,7 @@ export default function TransactionsPage() {
             })),
           };
         }
-        const allTxs = [...txs, ...pendingApprovals].map(normalizeTx);
+        const allTxs = ([...(txs as any[]), ...(pendingApprovals as any[])]).map(normalizeTx);
         console.log("allTxs:", allTxs);
         setLocalTransactions(allTxs);
       } catch (err: any) {
@@ -74,20 +78,28 @@ export default function TransactionsPage() {
 
   async function handleApprove(tx: any, idx: number) {
     if (!principal) return;
-    const actor = await createSplitDappActor();
-    const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
-    // Always compare principal as string
-    const principalStr = typeof principal === "string" ? principal : principal.toText();
-    const recipientEntry = tx.to.find((entry: any) => entry.principal === principalStr);
-    if (!recipientEntry) {
-      alert('Recipient entry not found.');
-      return;
+    setIsApproving(getTxId(tx));
+    try {
+      const actor = await createSplitDappActor();
+      const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
+      // Always compare principal as string
+      const principalStr = typeof principal === "string" ? principal : principal.toText();
+      const recipientEntry = tx.to.find((entry: any) => entry.principal === principalStr);
+      if (!recipientEntry) {
+        toast.error('Recipient entry not found.');
+        setIsApproving(null);
+        return;
+      }
+      const recipientPrincipal = typeof recipientEntry.principal === "string"
+        ? Principal.fromText(recipientEntry.principal)
+        : recipientEntry.principal;
+      await actor.recipientApproveEscrow(senderPrincipal, idx, recipientPrincipal);
+      toast.success('Approved successfully!');
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to approve');
+      setIsApproving(null);
     }
-    const recipientPrincipal = typeof recipientEntry.principal === "string"
-      ? Principal.fromText(recipientEntry.principal)
-      : recipientEntry.principal;
-    await actor.recipientApproveEscrow(senderPrincipal, idx, recipientPrincipal);
-    window.location.reload();
   }
 
   async function handleDecline(tx: any,idx:number) {
@@ -107,6 +119,36 @@ export default function TransactionsPage() {
 
     await actor.recipientDeclineEscrow(senderPrincipal, idx, recipientPrincipal);
     window.location.reload();
+  }
+
+  async function handleRelease() {
+    if (!principal) return;
+    setIsReleasing(true);
+    try {
+      const actor = await createSplitDappActor();
+      await actor.releaseSplit(principal);
+      toast.success("Escrow released!");
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to release escrow");
+    } finally {
+      setIsReleasing(false);
+    }
+  }
+
+  async function handleRefund() {
+    if (!principal) return;
+    setIsRefunding(true);
+    try {
+      const actor = await createSplitDappActor();
+      await actor.cancelSplit(principal);
+      toast.success("Escrow refunded!");
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to refund escrow");
+    } finally {
+      setIsRefunding(false);
+    }
   }
 
   async function handleRowClick(tx: Transaction, idx: number) {
@@ -188,14 +230,23 @@ export default function TransactionsPage() {
                         {pendingApproval ? (
                           <>
                             <button
-                              className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition"
+                              className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
                               onClick={() => handleApprove(tx, txIndex)}
+                              disabled={isApproving === getTxId(tx)}
                             >
-                              Approve
+                              {isApproving === getTxId(tx) ? (
+                                <span className="flex items-center gap-2">
+                                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                                  Approving...
+                                </span>
+                              ) : (
+                                'Approve'
+                              )}
                             </button>
                             <button
-                              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition"
+                              className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
                               onClick={() => handleDecline(tx, txIndex)}
+                              disabled={isApproving === getTxId(tx)}
                             >
                               Decline
                             </button>

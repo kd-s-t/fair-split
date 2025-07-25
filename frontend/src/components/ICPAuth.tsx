@@ -57,7 +57,7 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen flex flex-col p-4 relative"
+      className="min-h-screen flex flex-col p-4 relative justify-between"
       style={{
         background:
           "radial-gradient(91.85% 91.85% at 57.95% 22.75%, #3E3E3E 0%, #0D0D0D 100%)",

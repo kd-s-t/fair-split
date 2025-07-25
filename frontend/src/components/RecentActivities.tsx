@@ -93,7 +93,8 @@ const statusMap: Record<string, { label: string; variant: string }> = {
   refunded: { label: "Refunded", variant: "error" },
 };
 
-export default function RecentActivities() {
+export default function RecentActivities({transactions}) {
+  const activities = transactions && transactions.length > 0 ? transactions : mockActivities;
   return (
     <div className="mt-10">
       <Typography variant="h3" className="font-semibold">
@@ -131,7 +132,7 @@ export default function RecentActivities() {
         </div>
 
         <TabsContent value="all" className="flex flex-col gap-6 mt-6">
-          {mockActivities.map((activity, idx) => (
+          {activities.map((activity: any, idx: number) => (
             <Card key={idx}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex justify-between flex-1">
@@ -158,7 +159,7 @@ export default function RecentActivities() {
                         </Typography>
                         <span className="text-white">•</span>
                         {activity.category === "sent" ||
-                        activity.category === "pending" ? (
+                          activity.category === "pending" ? (
                           <div className="flex items-center gap-1 text-[#007AFF]">
                             <ArrowUpRight size={14} />
                             <Typography
@@ -213,14 +214,13 @@ export default function RecentActivities() {
                     </Typography>
                   </div>
                   <div className="rounded-lg overflow-hidden border border-[#424444]">
-                    {activity.recipients.map((r, i) => (
+                    {activity.recipients.map((r: any, i: number) => (
                       <div
                         key={i}
-                        className={`flex items-center px-4 py-3 text-sm font-normal ${
-                          i !== activity.recipients.length - 1
+                        className={`flex items-center px-4 py-3 text-sm font-normal ${i !== activity.recipients.length - 1
                             ? "border-b border-[#35363a]"
                             : ""
-                        }`}
+                          }`}
                       >
                         <span className="flex-1 text-ellipsis overflow-hidden">
                           {truncateAddress(r.walletAddress)}

@@ -38,7 +38,7 @@ export default function TransactionDetailsPage() {
   const transaction = useMemo(() => {
     return transactions.find((tx) => {
       const id = `${tx.from}_${tx.to
-        .map((toEntry) => toEntry.principal)
+        .map((toEntry: any) => toEntry.principal)
         .join("-")}_${tx.timestamp}`;
       return id === txid;
     });
@@ -121,6 +121,8 @@ export default function TransactionDetailsPage() {
   let currentStep = 0;
   if (statusKey === "released") {
     currentStep = 3;
+  } else if (statusKey === "draft") {
+    currentStep = 0;
   } else if (statusKey === "pending") {
     if (elapsed < twoHours) {
       currentStep = 0;
@@ -153,7 +155,7 @@ export default function TransactionDetailsPage() {
               </Typography>
               <span className="font-semibold">
                 {transaction.to.reduce(
-                  (sum, toEntry) => sum + Number(toEntry.amount),
+                  (sum: number, toEntry: any) => sum + Number(toEntry.amount),
                   0
                 ) / 1e8}
               </span>
@@ -399,19 +401,19 @@ export default function TransactionDetailsPage() {
           <div>
             <h3 className="font-semibold mb-2">Recipients breakdown</h3>
             <div className="space-y-1">
-              {transaction.to.map((toEntry, idx) => (
+              {transaction.to.map((toEntry: any, idx: number) => (
                 <div
                   key={idx}
                   className="flex justify-between bg-slate-800 rounded px-2 py-1 text-xs font-mono"
                 >
                   <span>
-                    {typeof toEntry.principal === "string"
-                      ? toEntry.principal
-                      : toEntry.principal.toText
-                      ? toEntry.principal.toText()
-                      : toEntry.principal.toString()}
+                    {typeof (toEntry as any).principal === "string"
+                      ? (toEntry as any).principal
+                      : (toEntry as any).principal.toText
+                      ? (toEntry as any).principal.toText()
+                      : (toEntry as any).principal.toString()}
                   </span>
-                  <span>{(Number(toEntry.amount) / 1e8).toFixed(8)} BTC</span>
+                  <span>{(Number((toEntry as any).amount) / 1e8).toFixed(8)} BTC</span>
                 </div>
               ))}
             </div>

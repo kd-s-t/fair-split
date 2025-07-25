@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Recipient } from "@/types/Recipient";
-import TransactionDialog from "@/components/TransactionDialog";
 
 type TransactionFormProps = {
   description: string;
@@ -92,9 +91,9 @@ const TransactionForm = ({
                 <motion.div
                   key={r.id}
                   layout
-                  initial={{ opacity: 0, x: 50 }} // swipe in from right
+                  initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }} // swipe out to left
+                  exit={{ opacity: 0, x: -50 }}
                   transition={{ duration: 0.25 }}
                   className="container bg-[#2C2C2C] rounded-lg relative"
                 >
@@ -179,8 +178,6 @@ const TransactionForm = ({
           </div>
         </CardContent>
       </Card>
-
-    <TransactionDialog open={false} onOpenChange={() => {}} amount="100" onDone={() => {}} />
     </div>
   );
 };

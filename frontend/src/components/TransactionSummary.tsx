@@ -4,12 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Send, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Recipient } from "@/types/Recipient";
+import TransactionDialog from '@/components/TransactionDialog';
+import { useRouter } from 'next/navigation';
 
 type TransactionSummaryProps = {
   btcAmount: string;
   recipients: Recipient[];
   isLoading: boolean;
   handleInitiateEscrow: () => void;
+  showDialog: boolean;
+  setShowDialog: (open: boolean) => void;
+  newTxId: string | null;
 };
 
 const TransactionSummary = ({
@@ -17,9 +22,26 @@ const TransactionSummary = ({
   recipients,
   isLoading,
   handleInitiateEscrow,
+  showDialog,
+  setShowDialog,
+  newTxId,
 }: TransactionSummaryProps) => {
+  const router = useRouter();
   return (
     <div className="w-[35%] min-w-[220px]">
+      <TransactionDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        amount={btcAmount}
+        onDone={() => {
+          setShowDialog(false);
+          if (newTxId) {
+            router.push(`/transactions/${newTxId}`);
+          } else {
+            router.push('/transactions');
+          }
+        }}
+      />
       <Card className="h-fit">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -74,7 +96,7 @@ const TransactionSummary = ({
             onClick={handleInitiateEscrow}
           >
             <Send size={16} />
-            {isLoading ? "Processing..." : "Initiate escrow"}
+            {isLoading ? "Processing..." : "Create escrow"}
           </Button>
         </CardContent>
       </Card>

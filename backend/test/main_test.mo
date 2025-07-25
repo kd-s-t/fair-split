@@ -12,7 +12,6 @@ actor {
     // Prepare test participants
     let alice = Principal.fromText("aaaaa-aa");
     let bob = Principal.fromText("bbbbb-bb");
-    let _ = Principal.fromText("aaaaa-aa");
 
     // Set participant names
     await SplitDApp.setName(alice, "Alice Wonderland");
@@ -27,13 +26,26 @@ actor {
     await SplitDApp.setInitialBalance(alice, 1000, alice);
     await SplitDApp.setInitialBalance(bob, 0, alice);
 
-    await SplitDApp.initiateSplit(
+    // Step 1: Create escrow draft
+    await SplitDApp.createEscrow(
       alice,
       [
         { principal = bob; amount = 400 },
         { principal = alice; amount = 600 }
-      ]
+      ],
+      "Test Escrow"
     );
+
+    // Step 2: Initiate escrow (deducts funds, sets to pending)
+    await SplitDApp.initiateEscrow(alice, 0);
+
+    // Step 3: Bob approves
+    await SplitDApp.recipientApproveEscrow(alice, 0, bob);
+    // Step 4: Alice approves (if needed for full confirmation)
+    await SplitDApp.recipientApproveEscrow(alice, 0, alice);
+
+    // Step 5: Release escrow (payout)
+    await SplitDApp.releaseEscrow(alice, 0);
 
     let aliceBal = await SplitDApp.getBalance(alice);
     let bobBal = await SplitDApp.getBalance(bob);
@@ -45,6 +57,5 @@ actor {
     for (log in logs.vals()) {
       Debug.print(log);
     }
-
   };
-};
+}

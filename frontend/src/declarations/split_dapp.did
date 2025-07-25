@@ -1,7 +1,9 @@
 type TransactionStatus = 
  variant {
    cancelled;
-   completed;
+   confirmed;
+   declined;
+   draft;
    pending;
    released;
  };
@@ -11,6 +13,7 @@ type Transaction =
    isRead: bool;
    status: TransactionStatus;
    timestamp: nat;
+   title: text;
    to: vec ToEntry;
  };
 type ToEntry = 
@@ -18,19 +21,35 @@ type ToEntry =
    amount: nat;
    name: text;
    "principal": principal;
+   status: variant {
+             approved;
+             declined;
+             pending;
+           };
  };
 type SplitDApp = 
  service {
+   cancelEscrow: (caller: principal, idx: nat) -> ();
    cancelSplit: (caller: principal) -> ();
+   createEscrow: (caller: principal, participants: vec ParticipantShare,
+    title: text) -> ();
    getAdmin: () -> (principal) query;
    getBalance: (p: principal) -> (nat) query;
    getLogs: () -> (vec text) query;
    getName: (p: principal) -> (opt text) query;
    getPending: (caller: principal) -> (vec PendingTransfer) query;
+   getPendingApprovalsForRecipient: (recipient: principal) ->
+    (vec Transaction) query;
    getTransactions: (p: principal) -> (vec Transaction) query;
-   initiateSplit: (caller: principal, participants: vec ParticipantShare) ->
-    ();
+   initiateEscrow: (caller: principal, idx: nat) -> ();
+   initiateSplit: (caller: principal, participants: vec ParticipantShare,
+    title: text) -> ();
    markTransactionsAsRead: (caller: principal) -> ();
+   recipientApproveEscrow: (sender: principal, idx: nat, recipient:
+    principal) -> ();
+   recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
+    principal) -> ();
+   releaseEscrow: (caller: principal, idx: nat) -> ();
    releaseSplit: (caller: principal) -> (vec ToEntry);
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setName: (p: principal, name: text) -> ();

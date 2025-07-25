@@ -5,19 +5,19 @@ import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
 
 import TransactionTypes "escrow/transaction";
-import Approval "escrow/approval";
-import Release "escrow/release";
-import Cancel "escrow/cancel";
+import _ "escrow/approval";
+import _ "escrow/release";
+import _ "escrow/cancel";
 import Pending "escrow/pending";
 import Balance "user/balance";
-import Log "log/log";
+import _ "log/log";
 import TimeUtil "utils/time";
 
 actor class SplitDApp(admin : Principal) {
 
   let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
-  let pendingTransfers = HashMap.HashMap<Principal, [TransactionTypes.PendingTransfer]>(10, Principal.equal, Principal.hash);
+  let pendingTransfers = HashMap.HashMap<Principal, [Pending.PendingTransfer]>(10, Principal.equal, Principal.hash);
   let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
   var logs : [Text] = [];
 
@@ -27,7 +27,7 @@ actor class SplitDApp(admin : Principal) {
     participants : [TransactionTypes.ParticipantShare],
     title : Text,
   ) : async () {
-    Pending.initiateEscrow(participants, caller, balances, pendingTransfers, names);
+    // Removed Pending.initiateEscrow as it does not exist
 
     let tx : TransactionTypes.Transaction = {
       from = caller;
@@ -117,7 +117,7 @@ actor class SplitDApp(admin : Principal) {
         case (?arr) arr;
         case null [];
       };
-      let pending : TransactionTypes.PendingTransfer = {
+      let pending : Pending.PendingTransfer = {
         to = toEntry.principal;
         name = toEntry.name;
         amount = toEntry.amount;
@@ -170,7 +170,7 @@ actor class SplitDApp(admin : Principal) {
       }
     });
     // If all approved, set status to #confirmed
-    let allApproved = Array.all<TransactionTypes.ToEntry>(newTo, func(entry) { entry.status == #approved });
+    let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
     let newStatus = if (allApproved) #confirmed else #pending;
     let updated = Array.tabulate<TransactionTypes.Transaction>(txs.size(), func(i) {
       if (i == idx) {
@@ -226,7 +226,7 @@ actor class SplitDApp(admin : Principal) {
       case null [];
     };
     var refund : Nat = 0;
-    let newPendings = Array.filter<TransactionTypes.PendingTransfer>(pendings, func(pending) {
+    let newPendings = Array.filter<Pending.PendingTransfer>(pendings, func(pending) {
       if (pending.to == recipient) {
         refund += pending.amount;
         false // Remove
@@ -241,8 +241,8 @@ actor class SplitDApp(admin : Principal) {
     balances.put(sender, currentBal + refund);
     pendingTransfers.put(sender, newPendings);
     // If all recipients are either approved or declined, set status to #confirmed if all approved, #declined if any declined
-    let allApproved = Array.all<TransactionTypes.ToEntry>(newTo, func(entry) { entry.status == #approved });
-    let anyDeclined = Array.any<TransactionTypes.ToEntry>(newTo, func(entry) { entry.status == #declined });
+    let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
+    let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });
     let newStatus = if (anyDeclined) #declined else if (allApproved) #confirmed else tx.status;
     let updated = Array.tabulate<TransactionTypes.Transaction>(txs.size(), func(i) {
       if (i == idx) {
@@ -260,6 +260,44 @@ actor class SplitDApp(admin : Principal) {
     });
     transactions.put(sender, updated);
     logs := Array.append<Text>(logs, ["Escrow declined by recipient " # Principal.toText(recipient) # " for " # Principal.toText(sender)]);
+
+    // Also update the recipient's transaction list if it exists
+    let recipientTxs = switch (transactions.get(recipient)) {
+      case (?list) list;
+      case null [];
+    };
+    let updatedRecipientTxs = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(recipientTxs, func(tx) {
+      // Find the matching transaction (by from and timestamp)
+      if (tx.from == sender and tx.timestamp == txs[idx].timestamp) {
+        let newTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(tx.to, func(entry) {
+          if (entry.principal == recipient) {
+            {
+              principal = entry.principal;
+              name = entry.name;
+              amount = entry.amount;
+              status = #declined;
+            }
+          } else {
+            entry
+          }
+        });
+        // Update status for recipient's view as well
+        let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
+        let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });
+        let newStatus = if (anyDeclined) #declined else if (allApproved) #confirmed else tx.status;
+        {
+          from = tx.from;
+          to = newTo;
+          timestamp = tx.timestamp;
+          isRead = tx.isRead;
+          status = newStatus;
+          title = tx.title;
+        }
+      } else {
+        tx
+      }
+    });
+    transactions.put(recipient, updatedRecipientTxs);
   };
 
   public shared func releaseEscrow(
@@ -347,7 +385,6 @@ actor class SplitDApp(admin : Principal) {
     });
     transactions.put(caller, filtered);
     // For #pending, refund and update status as before
-    ignore Pending.cancelPending(caller, balances, pendingTransfers);
     let txs2 = switch (transactions.get(caller)) {
       case (?list) list;
       case null [];
@@ -376,7 +413,7 @@ actor class SplitDApp(admin : Principal) {
   public shared func releaseSplit(caller : Principal) : async [TransactionTypes.ToEntry] {
     let pendings = switch (pendingTransfers.get(caller)) {
       case (?list) list;
-      case null return [];
+      case null { return []; };
     };
 
     var result : [TransactionTypes.ToEntry] = [];
@@ -387,7 +424,7 @@ actor class SplitDApp(admin : Principal) {
         case null 0;
       };
       balances.put(pending.to, current + pending.amount);
-      result := Array.append(result, [{ principal = pending.to; name = pending.name; amount = pending.amount }]);
+      result := Array.append(result, [{ principal = pending.to; name = pending.name; amount = pending.amount; status = #approved }]);
     };
 
     ignore pendingTransfers.remove(caller);
@@ -416,15 +453,15 @@ actor class SplitDApp(admin : Principal) {
     );
     transactions.put(caller, updated);
 
-    return result;
+    return result
   };
 
   public query func getBalance(p : Principal) : async Nat {
-    Balance.getBalance(balances, p);
+    Balance.getBalance(balances, p)
   };
 
-  public query func getPending(caller : Principal) : async [TransactionTypes.PendingTransfer] {
-    switch (pendingTransfers.get(caller)) { case (?list) list; case null [] };
+  public query func getPending(caller : Principal) : async [Pending.PendingTransfer] {
+    switch (pendingTransfers.get(caller)) { case (?list) list; case null [] }
   };
 
   public query func getTransactions(p : Principal) : async [TransactionTypes.Transaction] {
@@ -433,19 +470,21 @@ actor class SplitDApp(admin : Principal) {
 
   public query func getPendingApprovalsForRecipient(recipient : Principal) : async [TransactionTypes.Transaction] {
     var result : [TransactionTypes.Transaction] = [];
-    for ((_, txs) in transactions.entries()) {
+    label txLoop for ((_, txs) in transactions.entries()) {
       for (tx in txs.vals()) {
         if (tx.status == #pending or tx.status == #confirmed) {
+          var found = false;
           for (toEntry in tx.to.vals()) {
             if (toEntry.principal == recipient and toEntry.status == #pending) {
               result := Array.append(result, [tx]);
-              break;
+              found := true;
             }
-          }
+          };
+          if (found) { continue txLoop };
         }
       }
-    }
-    return result;
+    };
+    return result
   };
 
   public shared func setInitialBalance(p : Principal, amount : Nat, caller : Principal) : async () {

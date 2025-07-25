@@ -1,4 +1,3 @@
-import { Principal } from '@dfinity/principal';
 
 dfx identity whoami
 dfx identity get-principal
@@ -27,3 +26,4 @@ dfx canister id split_dapp
 
 
 2820835
+j7r3u-uzdl5-2ywu3-ylhp3-gpkhl-7rcxu-3xyyu-kmdp2-dsl7z-sdfe6-hae

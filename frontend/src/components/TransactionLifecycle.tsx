@@ -3,7 +3,6 @@ import * as React from 'react';
 interface Step {
   label: string;
   description: string;
-  link?: string;
 }
 
 interface TransactionLifecycleProps {
@@ -48,11 +47,7 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
                   {step.label}
                 </div>
                 <div className="text-sm text-[#9F9F9F]">
-                  {step.link ? (
-                    <a href={step.link} className="text-[#A259FF] underline">{step.description}</a>
-                  ) : (
                     <span>{step.description}</span>
-                  )}
                 </div>
               </div>
             </li>

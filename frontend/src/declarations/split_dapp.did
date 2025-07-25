@@ -36,6 +36,7 @@ type SplitDApp =
    getAdmin: () -> (principal) query;
    getBalance: (p: principal) -> (nat) query;
    getLogs: () -> (vec text) query;
+   getMyTransactionByIndex: (idx: nat) -> (opt Transaction);
    getName: (p: principal) -> (opt text) query;
    getPending: (caller: principal) -> (vec PendingTransfer) query;
    getPendingApprovalsForRecipient: (recipient: principal) ->

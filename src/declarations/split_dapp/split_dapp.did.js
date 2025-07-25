@@ -3,12 +3,6 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'amount' : IDL.Nat,
   });
-  const PendingTransfer = IDL.Record({
-    'to' : IDL.Principal,
-    'name' : IDL.Text,
-    'initiatedAt' : IDL.Nat,
-    'amount' : IDL.Nat,
-  });
   const ToEntry = IDL.Record({
     'status' : IDL.Variant({
       'pending' : IDL.Null,
@@ -35,6 +29,12 @@ export const idlFactory = ({ IDL }) => {
     'isRead' : IDL.Bool,
     'timestamp' : IDL.Nat,
   });
+  const PendingTransfer = IDL.Record({
+    'to' : IDL.Principal,
+    'name' : IDL.Text,
+    'initiatedAt' : IDL.Nat,
+    'amount' : IDL.Nat,
+  });
   const SplitDApp = IDL.Service({
     'cancelEscrow' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'cancelSplit' : IDL.Func([IDL.Principal], [], []),
@@ -46,6 +46,7 @@ export const idlFactory = ({ IDL }) => {
     'getAdmin' : IDL.Func([], [IDL.Principal], ['query']),
     'getBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'getLogs' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'getMyTransactionByIndex' : IDL.Func([IDL.Nat], [IDL.Opt(Transaction)], []),
     'getName' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
     'getPending' : IDL.Func(
         [IDL.Principal],

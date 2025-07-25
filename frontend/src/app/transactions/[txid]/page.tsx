@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../lib/redux/store";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Principal } from "@dfinity/principal";
 import { toast } from "sonner";
@@ -23,31 +23,44 @@ import {
   Zap,
 } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { truncateAddress } from "@/helper/string_helpper";
 import { TransactionLifecycle } from "@/components/TransactionLifecycle";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
   const [isInitiating, setIsInitiating] = useState(false);
+  const [transaction, setTransaction] = useState<any>(null);
+  const [isTxLoading, setIsTxLoading] = useState(true);
   const { txid } = useParams();
-  const transactions = useSelector(
-    (state: RootState) => state.transactions.transactions
-  );
-  // Use txid as the index
-  const txIndex = Number(txid);
-  const transaction = transactions[txIndex];
-  console.log(transactions);
-  console.log(transaction);
-  console.log(
-    "Transaction status:",
-    transaction && transaction.status
-      ? Object.keys(transaction.status)[0]
-      : "unknown"
-  );
-  if (!transaction) {
+  // txid format: "index-sender"
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      if (!txid) return;
+      setIsTxLoading(true);
+      const [idxStr, ...senderParts] = (txid as string).split("-");
+      const idx = Number(idxStr);
+      const sender = senderParts.join("-");
+      console.log("params1",{id:BigInt(idx),sender:Principal.fromText(sender)});
+      console.log("params2",{id:BigInt(idx),sender:sender});
+      try {
+        const actor = await createSplitDappActor();
+        const result = await actor.getMyTransactionByIndex(BigInt(idx));
+  console.log("result",result);
+  const tx = result[0];
+        setTransaction(tx);
+        
+        setIsTxLoading(false);
+      } catch (err) {
+  console.error("err",err);
+  setTransaction(null);
+        setIsTxLoading(false);
+      }
+    };
+    fetchTransaction();
+  }, [txid]);
+  console.log("transaction",transaction);
+  if (isTxLoading) {
     return (
       <div className="max-w-3xl mx-auto p-6">
         <div className="flex flex-col gap-4">
@@ -55,6 +68,13 @@ export default function TransactionDetailsPage() {
           <div className="h-32 bg-gray-200 animate-pulse rounded" />
           <div className="h-20 bg-gray-200 animate-pulse rounded" />
         </div>
+      </div>
+    );
+  }
+  if (!transaction) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="text-center text-muted-foreground">Transaction not found.</div>
       </div>
     );
   }
@@ -109,6 +129,9 @@ export default function TransactionDetailsPage() {
   const handleInitiateEscrow = async () => {
     setIsInitiating(true);
     try {
+      const [idxStr, ...senderParts] = (txid as string).split("-");
+      const idx = Number(idxStr);
+      const sender = senderParts.join("-");
       const actor = await createSplitDappActor();
       await actor.initiateEscrow(
         Principal.fromText(
@@ -116,7 +139,7 @@ export default function TransactionDetailsPage() {
             ? transaction.from
             : transaction.from.toText()
         ),
-        BigInt(txIndex)
+        BigInt(idx)
       );
       toast.success("Escrow initiated!");
     } catch (err) {
@@ -143,6 +166,8 @@ export default function TransactionDetailsPage() {
   let currentStep = 0;
   if (statusKey === "released") {
     currentStep = 3;
+  } else if (statusKey === "confirmed") {
+    currentStep = 1;
   } else if (statusKey === "draft") {
     currentStep = 0;
   } else if (statusKey === "pending") {
@@ -253,7 +278,7 @@ export default function TransactionDetailsPage() {
             </div>
           )}
 
-          {statusKey !== "pending" && (
+          {statusKey !== "pending" && statusKey !== "confirmed" && (
             <div className="flex items-center gap-8">
               <Button
                 variant="default"
@@ -267,7 +292,7 @@ export default function TransactionDetailsPage() {
               <div className="flex items-center gap-2">
                 <CircleAlert size={16} color="#FEB64D" />
                 <Typography variant="small" className="text-white font-normal">
-                  This action cannot be undone. Only available while pending. 
+                  This action cannot be undone. Only available while pending. 1
                 </Typography>
               </div>
             </div>
@@ -300,7 +325,7 @@ export default function TransactionDetailsPage() {
           <div className="container-primary text-sm">
             Native Bitcoin Escrow — No bridges or wrapped tokens
           </div>
-          <TransactionLifecycle currentStep={3} />
+          <TransactionLifecycle currentStep={currentStep} />
           <div className="container-gray text-sm text-[#9F9F9F]">
             This escrow is executed fully on-chain using Internet Computer. No
             human mediation.

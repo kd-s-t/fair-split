@@ -6,31 +6,28 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { Transaction } from "@/declarations/split_dapp.did";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { motion } from 'framer-motion';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from '../../lib/redux/store';
-import { setTransactions, markAllAsRead } from '../../lib/redux/transactionsSlice';
+import { useDispatch } from 'react-redux';
+import { markAllAsRead } from '../../lib/redux/transactionsSlice';
 import { useRouter } from "next/navigation";
 import { Principal } from "@dfinity/principal";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
-  const transactions = useSelector((state: RootState) => state.transactions.transactions);
-  console.log("Redux transactions state:", transactions);
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localTransactions, setLocalTransactions] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!principal || transactions.length) return;
+      if (!principal || localTransactions.length) return;
       setIsLoading(true);
       setError(null);
       try {
         const actor = await createSplitDappActor();
         const txs = await actor.getTransactions(principal);
         const pendingApprovals = await actor.getPendingApprovalsForRecipient(principal);
-        // Normalize all principal fields to strings for both txs and pendingApprovals
         function normalizeTx(tx: any) {
           return {
             ...tx,
@@ -45,9 +42,9 @@ export default function TransactionsPage() {
             })),
           };
         }
-        // Apply normalization BEFORE any filtering or deduplication
         const allTxs = [...txs, ...pendingApprovals].map(normalizeTx);
-        dispatch(setTransactions(allTxs));
+        console.log("allTxs:", allTxs);
+        setLocalTransactions(allTxs);
       } catch (err: any) {
         setError(err.message || "Failed to fetch transactions");
       } finally {
@@ -55,7 +52,7 @@ export default function TransactionsPage() {
       }
     };
     fetchTransactions();
-  }, [principal,dispatch]);
+  }, [principal, localTransactions.length]);
 
   function getTxId(tx: any) {
     return `${tx.from}_${tx.to.map((toEntry: any) => toEntry.principal).join('-')}_${tx.timestamp}`;
@@ -75,7 +72,7 @@ export default function TransactionsPage() {
     return String(tx.from) === String(principal);
   }
 
-  async function handleApprove(tx: any) {
+  async function handleApprove(tx: any, idx: number) {
     if (!principal) return;
     const actor = await createSplitDappActor();
     const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
@@ -89,26 +86,12 @@ export default function TransactionsPage() {
     const recipientPrincipal = typeof recipientEntry.principal === "string"
       ? Principal.fromText(recipientEntry.principal)
       : recipientEntry.principal;
-    // Find the index of this transaction in the sender's transaction list
-    const senderTxs = await actor.getTransactions(senderPrincipal);
-    const idx = senderTxs.findIndex((t: any) =>
-      String(t.from) === (typeof tx.from === "string" ? tx.from : tx.from.toText()) &&
-      t.timestamp.toString() === tx.timestamp.toString() &&
-      JSON.stringify(t.to.map((e: any) => e.principal)) === JSON.stringify(tx.to.map((e: any) => e.principal))
-    );
-    if (idx === -1) {
-      alert('Transaction not found for approval.');
-      return;
-    }
     await actor.recipientApproveEscrow(senderPrincipal, idx, recipientPrincipal);
     window.location.reload();
   }
 
   async function handleDecline(tx: any,idx:number) {
     if (!principal) return;
-    console.log("principal",principal)
-    console.log("tx.to",tx.to)
-    console.log("idx",idx)
     const actor = await createSplitDappActor();
     const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
     // Always compare principal as string
@@ -126,15 +109,15 @@ export default function TransactionsPage() {
     window.location.reload();
   }
 
-  async function handleRowClick(tx: Transaction) {
+  async function handleRowClick(tx: Transaction, idx: number) {
     if (!principal) return;
     if (!tx.isRead) {
       const actor = await createSplitDappActor();
       await actor.markTransactionsAsRead(principal);
       dispatch(markAllAsRead());
     }
-    // Navigate to the transaction details page
-    router.push(`/transactions/${encodeURIComponent(getTxId(tx))}`);
+    // Navigate to the transaction details page using index-sender
+    router.push(`/transactions/${idx}-${tx.from}`);
   }
 
   return (
@@ -155,15 +138,13 @@ export default function TransactionsPage() {
         </div>
       )}
       {error && <div className="text-red-500 text-center">{error}</div>}
-      {!isLoading && !error && transactions.length === 0 && (
+      {!isLoading && !error && localTransactions.length === 0 && (
         <>
-          {console.log("Transactions to render:", transactions)}
           <div className="text-center text-muted-foreground">No transactions found.</div>
         </>
       )}
-      {!isLoading && !error && transactions.length > 0 && (
+      {!isLoading && !error && localTransactions.length > 0 && (
         <>
-          {console.log("Rendering table with transactions:", transactions)}
           <Table className="rounded-xl overflow-hidden border border-slate-200 shadow-md bg-white">
             <TableHeader>
               <TableRow className="bg-slate-800 text-white">
@@ -176,9 +157,11 @@ export default function TransactionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions
+              {localTransactions
                 .map((tx: any, idx: number) => {
                   const pendingApproval = isPendingApproval(tx);
+                  // Use tx.idx if present, otherwise fallback to idx
+                  const txIndex = tx.idx !== undefined ? tx.idx : idx;
                   return (
                     <motion.tr
                       key={idx}
@@ -192,7 +175,7 @@ export default function TransactionsPage() {
                             ? `hover:bg-yellow-800 transition-colors ${!tx.isRead ? 'bg-yellow-900 text-yellow-200' : ''} cursor-pointer`
                             : "bg-slate-900 text-slate-200"
                       }
-                      onClick={pendingApproval ? undefined : () => handleRowClick(tx)}
+                      onClick={pendingApproval ? undefined : () => handleRowClick(tx,idx)}
                     >
                       <TableCell className={pendingApproval ? "p-4 font-mono text-xs" : "p-3 font-mono text-xs"}>{tx.from}</TableCell>
                       <TableCell className={pendingApproval ? "p-4 font-mono text-xs" : "p-3 font-mono text-xs"}>{tx.to.map((toEntry: any) => toEntry.principal).join(', ')}</TableCell>
@@ -206,13 +189,13 @@ export default function TransactionsPage() {
                           <>
                             <button
                               className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition"
-                              onClick={() => handleApprove(tx)}
+                              onClick={() => handleApprove(tx, txIndex)}
                             >
                               Approve
                             </button>
                             <button
                               className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition"
-                              onClick={() => handleDecline(tx,idx)}
+                              onClick={() => handleDecline(tx, txIndex)}
                             >
                               Decline
                             </button>

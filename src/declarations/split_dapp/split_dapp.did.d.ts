@@ -19,6 +19,7 @@ export interface SplitDApp {
   'getAdmin' : ActorMethod<[], Principal>,
   'getBalance' : ActorMethod<[Principal], bigint>,
   'getLogs' : ActorMethod<[], Array<string>>,
+  'getMyTransactionByIndex' : ActorMethod<[bigint], [] | [Transaction]>,
   'getName' : ActorMethod<[Principal], [] | [string]>,
   'getPending' : ActorMethod<[Principal], Array<PendingTransfer>>,
   'getPendingApprovalsForRecipient' : ActorMethod<

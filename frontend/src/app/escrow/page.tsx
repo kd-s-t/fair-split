@@ -155,9 +155,13 @@ export default function EscrowPage() {
         })),
         description || ""
       );
-      // Fetch transactions to get the new transaction
+      // Fetch transactions to get the new transaction index
       const txs = await actor.getTransactions(Principal.fromText(principal.toText())) as any[];
       const newIdx = txs.length - 1;
+      await actor.initiateEscrow(
+        Principal.fromText(principal.toText()),
+        BigInt(newIdx)
+      );
       setNewTxId(`${newIdx}-${principal.toText()}`);
       setShowDialog(true);
 

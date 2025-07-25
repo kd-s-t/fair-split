@@ -44,6 +44,12 @@ A decentralized, trustless Bitcoin escrow and payout system using ICP and modern
 	<img src="https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white" /> 
 </div>
 
+### Deploy Canisters and Sync Declarations
+```bash
+chmod +x nuke.sh
+./nuke.sh
+```
+
 ### Run frontend http://localhost:3000
 ```bash
 cd frontend
@@ -52,11 +58,6 @@ npm i
 npm run dev
 ```
 
-### Deploy Canisters and Sync Declarations
-```bash
-chmod +x nuke.sh
-./nuke.sh
-```
 After setting up a `principals.json` will be generated these are sample user for sending money
 
 ## Authors

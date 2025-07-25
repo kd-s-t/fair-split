@@ -6,7 +6,6 @@ import {
   UsersRound,
   Bitcoin,
   ChevronRight,
-  Clock8,
   ArrowUpRight,
   ArrowDownLeft,
   Eye,
@@ -93,11 +92,13 @@ export const statusMap: Record<string, { label: string; variant: string }> = {
   refunded: { label: "Refunded", variant: "error" },
 };
 
+interface RecentActivitiesProps {
+  transactions?: any[];
+}
+
 export default function RecentActivities({
   transactions,
-}: {
-  transactions: any;
-}) {
+}: RecentActivitiesProps) {
   const activities =
     transactions && transactions.length > 0 ? transactions : mockActivities;
   return (
@@ -151,23 +152,31 @@ export default function RecentActivities({
                           {activity.description}
                         </Typography>
 
-                        {/* <Badge
-                          variant={
-                            statusMap[activity.status]?.variant as
-                              | "default"
-                              | "primary"
-                              | "secondary"
-                              | "outline"
-                              | "success"
-                              | "warning"
-                              | "error"
-                              | null
-                              | undefined
-                          }
-                          className="text-xs"
-                        >
-                          {statusMap[activity.status]?.label || activity.status}
-                        </Badge> */}
+                        {/* Fix: extract statusKey from object or use as string */}
+                        {(() => {
+                          const statusKey =
+                            typeof activity.status === "object" &&
+                            activity.status !== null
+                              ? Object.keys(activity.status)[0]
+                              : activity.status;
+                          return (
+                            <Badge
+                              variant={
+                                (statusMap[statusKey]?.variant ?? "default") as
+                                  | "secondary"
+                                  | "success"
+                                  | "primary"
+                                  | "error"
+                                  | "default"
+                                  | "outline"
+                                  | "warning"
+                              }
+                              className="text-xs"
+                            >
+                              {statusMap[statusKey]?.label || statusKey}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-2">
                         <Typography variant="muted" className="text-xs">

@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../lib/redux/store";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Principal } from "@dfinity/principal";
 import { toast } from "sonner";
@@ -23,37 +23,68 @@ import {
   Zap,
 } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { truncateAddress } from "@/helper/string_helpper";
 import { TransactionLifecycle } from "@/components/TransactionLifecycle";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
   const [isInitiating, setIsInitiating] = useState(false);
+  const [transaction, setTransaction] = useState<any>(null);
+  const [isTxLoading, setIsTxLoading] = useState(true);
   const { txid } = useParams();
-  const transactions = useSelector(
-    (state: RootState) => state.transactions.transactions
-  );
-  // Use txid as the index
-  const txIndex = Number(txid);
-  const transaction = transactions[txIndex];
-  console.log(transactions);
-  console.log(transaction);
-  console.log(
-    "Transaction status:",
-    transaction && transaction.status
-      ? Object.keys(transaction.status)[0]
-      : "unknown"
-  );
-  if (!transaction) {
+  // txid format: "index-sender"
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      if (!txid) return;
+      setIsTxLoading(true);
+      const [idxStr, ...senderParts] = (txid as string).split("-");
+      const idx = Number(idxStr);
+      const sender = senderParts.join("-");
+      console.log("params1", {
+        id: BigInt(idx),
+        sender: Principal.fromText(sender),
+      });
+      console.log("params2", { id: BigInt(idx), sender: sender });
+      try {
+        const actor = await createSplitDappActor();
+        const result = await actor.getTransactionBy(
+          Principal.fromText(sender),
+          BigInt(idx)
+        );
+        console.log("result", result);
+        if (result) {
+          setTransaction((result as any[])[0] ?? result);
+        } else {
+          setTransaction(null);
+        }
+
+        setIsTxLoading(false);
+      } catch (err) {
+        console.error("err", err);
+        setTransaction(null);
+        setIsTxLoading(false);
+      }
+    };
+    fetchTransaction();
+  }, [txid]);
+  console.log("transaction", transaction);
+  if (isTxLoading) {
     return (
       <div className="max-w-3xl mx-auto p-6">
         <div className="flex flex-col gap-4">
           <div className="h-10 bg-gray-200 animate-pulse rounded w-1/2 mx-auto" />
           <div className="h-32 bg-gray-200 animate-pulse rounded" />
           <div className="h-20 bg-gray-200 animate-pulse rounded" />
+        </div>
+      </div>
+    );
+  }
+  if (!transaction) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="text-center text-muted-foreground">
+          Transaction not found.
         </div>
       </div>
     );
@@ -71,6 +102,7 @@ export default function TransactionDetailsPage() {
         )
       );
       toast.success("Escrow released!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Release error:", err);
       toast.error(
@@ -94,6 +126,7 @@ export default function TransactionDetailsPage() {
         )
       );
       toast.success("Escrow refunded!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Refund error:", err);
       toast.error(
@@ -109,6 +142,9 @@ export default function TransactionDetailsPage() {
   const handleInitiateEscrow = async () => {
     setIsInitiating(true);
     try {
+      const [idxStr, ...senderParts] = (txid as string).split("-");
+      const idx = Number(idxStr);
+      const sender = senderParts.join("-");
       const actor = await createSplitDappActor();
       await actor.initiateEscrow(
         Principal.fromText(
@@ -116,9 +152,10 @@ export default function TransactionDetailsPage() {
             ? transaction.from
             : transaction.from.toText()
         ),
-        BigInt(txIndex)
+        BigInt(idx)
       );
       toast.success("Escrow initiated!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Initiate escrow error:", err);
       toast.error(
@@ -141,8 +178,11 @@ export default function TransactionDetailsPage() {
 
   // Step order: Locked -> Trigger Met -> Splitting -> Released
   let currentStep = 0;
-  if (statusKey === "released") {
+  let isReleased = statusKey === "released";
+  if (isReleased) {
     currentStep = 3;
+  } else if (statusKey === "confirmed") {
+    currentStep = 1;
   } else if (statusKey === "draft") {
     currentStep = 0;
   } else if (statusKey === "pending") {
@@ -214,7 +254,14 @@ export default function TransactionDetailsPage() {
 
           <div className="container-primary mt-4">
             <Typography variant="p" className="text-[#FEB64D] font-semibold">
-              Send exactly 0.85000000 BTC to activate escrow
+              Send exactly{" "}
+              {(
+                transaction.to.reduce(
+                  (sum: number, toEntry: any) => sum + Number(toEntry.amount),
+                  0
+                ) / 1e8
+              ).toFixed(8)}{" "}
+              BTC to activate escrow
             </Typography>
             <Typography variant="p" className="text-white">
               This address is generated by ICP threshold ECDSA — no bridges, no
@@ -239,7 +286,7 @@ export default function TransactionDetailsPage() {
             </div>
           </div>
           <hr className="my-8 text-[#424444] h-[1px]"></hr>
-          {statusKey === "pending" && (
+          {statusKey === "pending" && !isReleased && (
             <div className="flex items-center gap-4 mt-4">
               <Button
                 variant="outline"
@@ -256,39 +303,45 @@ export default function TransactionDetailsPage() {
             </div>
           )}
 
-          {statusKey !== "pending" && (
-            <div className="flex items-center gap-8">
-              <Button
-                variant="default"
-                className="w-full mt-2 text-sm text-[#0D0D0D] font-medium gap-2 bg-[#FEB64D] hover:bg-[#e6a93c]"
-                onClick={handleInitiateEscrow}
-                disabled={isInitiating}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
+          {statusKey !== "pending" &&
+            statusKey !== "confirmed" &&
+            !isReleased && (
+              <div className="flex items-center gap-8">
+                <Button
+                  variant="default"
+                  className="w-full mt-2 text-sm text-[#0D0D0D] font-medium gap-2 bg-[#FEB64D] hover:bg-[#e6a93c]"
+                  onClick={handleInitiateEscrow}
+                  disabled={isInitiating}
                 >
-                  <path
-                    fill="#0D0D0D"
-                    d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"
-                  />
-                </svg>
-                {isInitiating ? "Initiating..." : "Initiate escrow"}
-              </Button>
-              <div className="flex items-center gap-2">
-                <CircleAlert size={16} color="#FEB64D" />
-                <Typography variant="small" className="text-white font-normal">
-                  This action cannot be undone. Only available while pending.
-                </Typography>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fill="#0D0D0D"
+                      d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"
+                    />
+                  </svg>
+                  {isInitiating ? "Initiating..." : "Initiate escrow"}
+                </Button>
+                <div className="flex items-center gap-2">
+                  <CircleAlert size={16} color="#FEB64D" />
+                  <Typography
+                    variant="small"
+                    className="text-white font-normal"
+                  >
+                    This action cannot be undone. Only available while pending.
+                    1
+                  </Typography>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {transaction.status &&
-            !["pending", "draft"].includes(
+            !["pending", "draft", "released"].includes(
               Object.keys(transaction.status)[0]
             ) && (
               <div className="flex gap-4 mb-2">
@@ -297,14 +350,66 @@ export default function TransactionDetailsPage() {
                   onClick={handleRelease}
                   disabled={isLoading === "release" || isLoading === "refund"}
                 >
-                  {isLoading === "release" ? "Releasing..." : "Release payment"}
+                  {isLoading === "release" ? (
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-black"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        ></path>
+                      </svg>
+                      Releasing...
+                    </span>
+                  ) : (
+                    "Release payment"
+                  )}
                 </button>
                 <button
                   className="bg-slate-700 px-4 py-2 rounded text-white cursor-pointer"
                   onClick={handleRefund}
                   disabled={isLoading === "release" || isLoading === "refund"}
                 >
-                  {isLoading === "refund" ? "Refunding..." : "Request refund"}
+                  {isLoading === "refund" ? (
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        ></path>
+                      </svg>
+                      Refunding...
+                    </span>
+                  ) : (
+                    "Request refund"
+                  )}
                 </button>
               </div>
             )}
@@ -316,7 +421,7 @@ export default function TransactionDetailsPage() {
           <div className="container-primary text-sm">
             Native Bitcoin Escrow — No bridges or wrapped tokens
           </div>
-          <TransactionLifecycle currentStep={3} />
+          <TransactionLifecycle currentStep={currentStep} />
           <div className="container-gray text-sm text-[#9F9F9F]">
             This escrow is executed fully on-chain using Internet Computer. No
             human mediation.

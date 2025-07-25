@@ -9,7 +9,7 @@ import type { RootState } from '@/lib/redux/store'
 import { motion } from 'framer-motion'
 import DashboardStats from '@/components/DashboardStats'
 import RecentActivities from '@/components/RecentActivities'
-import type { Transaction } from '@/declarations/split_dapp/split_dapp.did'
+import type { Transaction } from '@/declarations/split_dapp.did'
 
 export default function DashboardPage() {
   const { principal } = useAuth()
@@ -22,7 +22,21 @@ export default function DashboardPage() {
       const actor = await createSplitDappActor()
       const txs = await actor.getTransactions(principal) as Transaction[]
       console.log("txs", txs)
-      dispatch(setTransactions(txs))
+      const normalizeTx = (tx: any) => ({
+        ...tx,
+        from: typeof tx.from === 'object' && tx.from.toText ? tx.from.toText() : String(tx.from),
+        timestamp: typeof tx.timestamp === 'bigint' ? tx.timestamp.toString() : String(tx.timestamp),
+        to: tx.to.map((toEntry: any) => ({
+          ...toEntry,
+          principal: typeof toEntry.principal === 'object' && toEntry.principal.toText
+            ? toEntry.principal.toText()
+            : String(toEntry.principal),
+          amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : String(toEntry.amount),
+        })),
+      });
+      const normalizedTxs = txs.map(normalizeTx);
+      console.log("normalize",normalizedTxs)
+      dispatch(setTransactions(normalizedTxs))
     }
     fetchTransactions()
   }, [principal, dispatch])

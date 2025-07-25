@@ -153,7 +153,7 @@ export default function EscrowPage() {
       // Fetch transactions to get the new transaction
       const txs = await actor.getTransactions(Principal.fromText(principal.toText())) as any[];
       const newIdx = txs.length - 1;
-      setNewTxId(newIdx.toString());
+      setNewTxId(`${newIdx}-${principal.toText()}`);
       setShowDialog(true);
 
       await fetchAndStoreTransactions();

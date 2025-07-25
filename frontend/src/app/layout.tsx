@@ -25,13 +25,11 @@ function BalanceAndNameSyncer() {
     if (!principal) return;
     (async () => {
       try {
-        console.log("here")
         const actor = await createSplitDappActor();
         const principalObj = Principal.fromText(principal);
         // Fetch BTC balance
         const balance = await actor.getBalance(principalObj);
         const formatted = (Number(balance) / 1e8).toFixed(8);
-        console.log("here",{formatted})
         dispatch(setBtcBalance(formatted));
         // Fetch name
         const nameResult = await actor.getName(principalObj);

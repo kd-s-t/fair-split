@@ -23,6 +23,8 @@ import {
   Shield,
   UsersRound,
   Zap,
+  CheckCircle,
+  RotateCcw,
 } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
@@ -240,10 +242,16 @@ export default function TransactionDetailsPage() {
               <Typography variant="small" className="text-[#9F9F9F] mt-2">
                 Status
               </Typography>
-              <span className="text-green-400 font-semibold">
-                {transaction.status
-                  ? Object.keys(transaction.status)[0]
-                  : "unknown"}
+              <span className={
+                transaction.status && Object.keys(transaction.status)[0] === 'confirmed'
+                  ? 'text-blue-400 font-semibold'
+                  : 'text-green-400 font-semibold'
+              }>
+                {transaction.status && Object.keys(transaction.status)[0] === 'confirmed'
+                  ? 'Active'
+                  : transaction.status
+                    ? Object.keys(transaction.status)[0]
+                    : 'unknown'}
               </span>
             </div>
           </div>
@@ -361,74 +369,86 @@ export default function TransactionDetailsPage() {
             !["pending", "draft", "released"].includes(
               Object.keys(transaction.status)[0]
             ) && (
-              <div className="flex gap-4 mb-2">
-                <button
-                  className="bg-yellow-400 text-black px-4 py-2 rounded font-semibold cursor-pointer"
-                  onClick={handleRelease}
-                  disabled={isLoading === "release" || isLoading === "refund"}
-                >
-                  {isLoading === "release" ? (
-                    <span className="flex items-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4 text-black"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8z"
-                        ></path>
-                      </svg>
-                      Releasing...
-                    </span>
-                  ) : (
-                    "Release payment"
-                  )}
-                </button>
-                <button
-                  className="bg-slate-700 px-4 py-2 rounded text-white cursor-pointer"
-                  onClick={handleRefund}
-                  disabled={isLoading === "release" || isLoading === "refund"}
-                >
-                  {isLoading === "refund" ? (
-                    <span className="flex items-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8z"
-                        ></path>
-                      </svg>
-                      Refunding...
-                    </span>
-                  ) : (
-                    "Request refund"
-                  )}
-                </button>
-              </div>
+              <>
+                <div className="w-full mb-3 flex items-center gap-2 rounded-xl bg-[#6B4A1B] border border-[#B8862A] px-4 py-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#B8862A"/><path d="M12 7v4m0 4h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <span className="text-white font-medium">Note: Release payment only when you're satisfied with the delivered work or received goods.</span>
+                </div>
+                <div className="flex gap-4 mb-2">
+                  <Button
+                    variant="default"
+                    className="w-1/2 flex items-center justify-center gap-2 text-base font-semibold"
+                    onClick={handleRelease}
+                    disabled={isLoading === "release" || isLoading === "refund"}
+                  >
+                    {isLoading === "release" ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4 text-black"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8z"
+                          ></path>
+                        </svg>
+                        Releasing...
+                      </span>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5" /> Release payment
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="w-1/2 flex items-center justify-center gap-2 text-base font-semibold"
+                    onClick={handleRefund}
+                    disabled={isLoading === "release" || isLoading === "refund"}
+                  >
+                    {isLoading === "refund" ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8z"
+                          ></path>
+                        </svg>
+                        Refunding...
+                      </span>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-5 h-5" /> Request refund
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
             )}
         </div>
 

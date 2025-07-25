@@ -58,6 +58,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Transaction)],
         ['query'],
       ),
+    'getTransactionBy' : IDL.Func(
+        [IDL.Principal, IDL.Nat],
+        [IDL.Opt(Transaction)],
+        ['query'],
+      ),
     'getTransactions' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(Transaction)],

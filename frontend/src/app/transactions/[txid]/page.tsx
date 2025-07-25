@@ -41,25 +41,28 @@ export default function TransactionDetailsPage() {
       const [idxStr, ...senderParts] = (txid as string).split("-");
       const idx = Number(idxStr);
       const sender = senderParts.join("-");
-      console.log("params1",{id:BigInt(idx),sender:Principal.fromText(sender)});
-      console.log("params2",{id:BigInt(idx),sender:sender});
+      console.log("params1", { id: BigInt(idx), sender: Principal.fromText(sender) });
+      console.log("params2", { id: BigInt(idx), sender: sender });
       try {
         const actor = await createSplitDappActor();
-        const result = await actor.getMyTransactionByIndex(BigInt(idx));
-  console.log("result",result);
-  const tx = result[0];
-        setTransaction(tx);
-        
+        const result = await actor.getTransactionBy(Principal.fromText(sender), BigInt(idx));
+        console.log("result", result);
+        if (result) {
+          setTransaction(result[0]); // it's a single transaction, not an array
+        } else {
+          setTransaction(null);
+        }
+
         setIsTxLoading(false);
       } catch (err) {
-  console.error("err",err);
-  setTransaction(null);
+        console.error("err", err);
+        setTransaction(null);
         setIsTxLoading(false);
       }
     };
     fetchTransaction();
   }, [txid]);
-  console.log("transaction",transaction);
+  console.log("transaction", transaction);
   if (isTxLoading) {
     return (
       <div className="max-w-3xl mx-auto p-6">

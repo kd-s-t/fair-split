@@ -26,6 +26,7 @@ export interface SplitDApp {
     [Principal],
     Array<Transaction>
   >,
+  'getTransactionBy' : ActorMethod<[Principal, bigint], [] | [Transaction]>,
   'getTransactions' : ActorMethod<[Principal], Array<Transaction>>,
   'initiateEscrow' : ActorMethod<[Principal, bigint], undefined>,
   'initiateSplit' : ActorMethod<

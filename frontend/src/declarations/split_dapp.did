@@ -41,6 +41,7 @@ type SplitDApp =
    getPending: (caller: principal) -> (vec PendingTransfer) query;
    getPendingApprovalsForRecipient: (recipient: principal) ->
     (vec Transaction) query;
+   getTransactionBy: (p: principal, index: nat) -> (opt Transaction) query;
    getTransactions: (p: principal) -> (vec Transaction) query;
    initiateEscrow: (caller: principal, idx: nat) -> ();
    initiateSplit: (caller: principal, participants: vec ParticipantShare,

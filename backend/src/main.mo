@@ -521,22 +521,33 @@ actor class SplitDApp(admin : Principal) {
     return result;
   };
 
-public shared (msg) func getMyTransactionByIndex(idx : Nat) : async ?TransactionTypes.Transaction {
-  let sender = msg.caller;
-  Debug.print("getMyTransactionByIndex: caller=" # Principal.toText(sender));
-  switch (transactions.get(sender)) {
-    case (?txs) {
-      if (idx < txs.size()) {
-        ?txs[idx]
-      } else {
-        null
+  public query func getTransactionBy(p : Principal, index : Nat) : async ?TransactionTypes.Transaction {
+    switch (transactions.get(p)) {
+      case (?txs) {
+        if (index < txs.size()) {
+          return ?txs[index];
+        } else {
+          return null;
+        };
       };
+      case null null;
     };
-    case null null;
   };
-};
 
-
+  public shared (msg) func getMyTransactionByIndex(idx : Nat) : async ?TransactionTypes.Transaction {
+    let sender = msg.caller;
+    Debug.print("getMyTransactionByIndex: caller=" # Principal.toText(sender));
+    switch (transactions.get(sender)) {
+      case (?txs) {
+        if (idx < txs.size()) {
+          ?txs[idx];
+        } else {
+          null;
+        };
+      };
+      case null null;
+    };
+  };
 
   public shared func setInitialBalance(p : Principal, amount : Nat, caller : Principal) : async () {
     if (caller == admin) {

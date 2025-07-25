@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { truncateAddress } from "@/helper/string_helpper";
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/lib/redux/store';
-import { useRouter } from 'next/navigation';
+import { useSelector } from "react-redux";
+import type { RootState } from "@/lib/redux/store";
+import { useRouter } from "next/navigation";
 
 const mockActivities = [
   {
@@ -104,10 +104,13 @@ interface RecentActivitiesProps {
   transactions?: any[];
 }
 
-export default function RecentActivities({ transactions }: RecentActivitiesProps) {
+export default function RecentActivities({
+  transactions,
+}: RecentActivitiesProps) {
   const router = useRouter();
   const principal = useSelector((state: RootState) => state.user?.principal);
-  const activities = transactions && transactions.length > 0 ? transactions : mockActivities;
+  const activities =
+    transactions && transactions.length > 0 ? transactions : mockActivities;
   return (
     <div className="mt-10">
       <Typography variant="h3" className="font-semibold">
@@ -139,17 +142,26 @@ export default function RecentActivities({ transactions }: RecentActivitiesProps
               Received (0)
             </TabsTrigger>
           </TabsList>
-          <Button variant="ghost" className="font-medium" onClick={() => window.location.href = '/transactions'}>
+          <Button
+            variant="ghost"
+            className="font-medium"
+            onClick={() => (window.location.href = "/transactions")}
+          >
             View all transactions <ChevronRight />
           </Button>
         </div>
 
         <TabsContent value="all" className="flex flex-col gap-6 mt-6">
           {activities.map((activity: any, idx: number) => {
-            const isSender = principal && activity.from && String(activity.from) === String(principal);
-            const category = isSender ? 'sent' : 'received';
+            const isSender =
+              principal &&
+              activity.from &&
+              String(activity.from) === String(principal);
+            const category = isSender ? "sent" : "received";
             // Build transaction details URL
-            const txUrl = activity.from ? `/transactions/${idx}-${activity.from}` : undefined;
+            const txUrl = activity.from
+              ? `/transactions/${idx}-${activity.from}`
+              : undefined;
             return (
               <Card key={idx}>
                 <div className="flex items-center justify-between mb-4">
@@ -163,36 +175,51 @@ export default function RecentActivities({ transactions }: RecentActivitiesProps
                           >
                             {activity.title || activity.description}
                           </Typography>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {activity.date || (activity.timestamp ? new Date(Number(activity.timestamp) / 1_000_000).toLocaleString() : '')}
-                          </div>
                           {(() => {
-                            const statusKey = typeof activity.status === 'object' && activity.status !== null
-                              ? Object.keys(activity.status)[0]
-                              : activity.status;
-                            let label = '';
-                            let badgeClass = '';
-                            if (statusKey === 'released') {
-                              label = 'Completed';
-                              badgeClass = 'bg-green-500 text-white';
-                            } else if (statusKey === 'pending') {
-                              label = 'Pending';
-                              badgeClass = 'bg-yellow-400 text-black';
-                            } else if (["refund", "cancelled", "declined"].includes(statusKey)) {
-                              label = 'Refunded';
-                              badgeClass = 'bg-red-500 text-white';
+                            const statusKey =
+                              typeof activity.status === "object" &&
+                              activity.status !== null
+                                ? Object.keys(activity.status)[0]
+                                : activity.status;
+                            let label = "";
+                            let badgeClass = "";
+                            if (statusKey === "released") {
+                              label = "Completed";
+                              badgeClass = "bg-green-500 text-white";
+                            } else if (statusKey === "pending") {
+                              label = "Pending";
+                              badgeClass = "bg-yellow-400 text-black";
+                            } else if (
+                              ["refund", "cancelled", "declined"].includes(
+                                statusKey
+                              )
+                            ) {
+                              label = "Refunded";
+                              badgeClass = "bg-red-500 text-white";
                             } else {
-                              label = 'Active';
-                              badgeClass = 'bg-blue-600 text-white';
+                              label = "Active";
+                              badgeClass = "bg-blue-600 text-white";
                             }
                             return (
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ml-2 ${badgeClass}`}>{label}</span>
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ml-2 ${badgeClass}`}
+                              >
+                                {label}
+                              </span>
                             );
                           })()}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Typography variant="muted" className="text-xs">
-                            {activity.date || ''}
+                          <Typography
+                            variant="muted"
+                            className="text-xs text[rgba(159, 159, 159, 1)]"
+                          >
+                            {activity.date ||
+                              (activity.timestamp
+                                ? new Date(
+                                    Number(activity.timestamp) / 1_000_000
+                                  ).toLocaleString()
+                                : "")}
                           </Typography>
                           <span className="text-white">•</span>
                           {category === "sent" ? (
@@ -220,44 +247,62 @@ export default function RecentActivities({ transactions }: RecentActivitiesProps
                       </div>
                     </div>
                   </div>
+                  {/* View escrow button/link */}
+                  {txUrl && (
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="font-medium border-[#7A7A7A]"
+                        onClick={() => router.push(txUrl)}
+                      >
+                        <Eye className="mr-2" /> View escrow
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {/* View escrow button/link */}
-                {txUrl && (
-                  <div className="flex justify-end mt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="font-medium border-[#7A7A7A]"
-                      onClick={() => router.push(txUrl)}
-                    >
-                      <Eye className="mr-2" /> View escrow
-                    </Button>
-                  </div>
-                )}
                 {/* Recipients List and Total Escrow logic remains unchanged */}
-                {activity.to && Array.isArray(activity.to) && activity.to.length > 0 && (
-                  <div className="mt-4 bg-[#232323] rounded-xl">
-                    <div className="flex items-center gap-2 px-4 py-2 font-semibold text-white">
-                      <UsersRound size={18} /> Recipients ({activity.to.length})
-                    </div>
-                    {activity.to.map((recipient: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white">
-                        <span className="font-mono text-sm">{recipient.principal}</span>
-                        <span className="text-xs text-[#bdbdbd]">{recipient.percent ? recipient.percent + '%' : ''} • {(Number(recipient.amount) / 1e8).toFixed(8)} BTC</span>
+                {activity.to &&
+                  Array.isArray(activity.to) &&
+                  activity.to.length > 0 && (
+                    <div className="mt-4 bg-[#232323] rounded-xl">
+                      <div className="flex items-center gap-2 px-4 py-2 font-semibold text-white">
+                        <UsersRound size={18} /> Recipients (
+                        {activity.to.length})
                       </div>
-                    ))}
-                    {/* Total escrow */}
-                    <div className="flex justify-between items-center px-4 py-3 bg-[#3a2921] rounded-b-xl mt-2">
-                      <span className="font-semibold text-[#FEB64D]">Total escrow:</span>
-                      <span className="font-mono text-[#FEB64D] flex items-center gap-1">
-                        <Bitcoin size={16} />
-                        {(
-                          activity.to.reduce((sum: number, recipient: any) => sum + Number(recipient.amount), 0) / 1e8
-                        ).toFixed(8)} BTC
-                      </span>
+                      {activity.to.map((recipient: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white"
+                        >
+                          <span className="font-mono text-sm">
+                            {recipient.principal}
+                          </span>
+                          <span className="text-xs text-[#bdbdbd]">
+                            {recipient.percent ? recipient.percent + "%" : ""} •{" "}
+                            {(Number(recipient.amount) / 1e8).toFixed(8)} BTC
+                          </span>
+                        </div>
+                      ))}
+                      {/* Total escrow */}
+                      <div className="flex justify-between items-center px-4 py-3 bg-[#3a2921] rounded-b-xl mt-2">
+                        <span className="font-semibold text-[#FEB64D]">
+                          Total escrow:
+                        </span>
+                        <span className="font-mono text-[#FEB64D] flex items-center gap-1">
+                          <Bitcoin size={16} />
+                          {(
+                            activity.to.reduce(
+                              (sum: number, recipient: any) =>
+                                sum + Number(recipient.amount),
+                              0
+                            ) / 1e8
+                          ).toFixed(8)}{" "}
+                          BTC
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </Card>
             );
           })}

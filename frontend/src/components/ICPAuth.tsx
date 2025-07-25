@@ -68,7 +68,6 @@ export default function Home() {
             height={64}
           />
         </div>
-        <h1 className="text-2xl font-bold text-center">SafeSplit Authentication</h1>
         {isBalanceLoading && (
           <div className="text-center text-yellow-500 font-semibold">Loading BTC balance...</div>
         )}

@@ -58,6 +58,8 @@ npm i
 npm run dev
 ```
 
+Use principals.json to transfer to someone else.
+
 After setting up a `principals.json` will be generated these are sample user for sending money
 
 ## Authors

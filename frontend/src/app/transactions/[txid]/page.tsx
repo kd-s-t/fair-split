@@ -9,9 +9,9 @@ import { useAuth } from "@/contexts/auth-context";
 import { Typography } from "@/components/ui/typography";
 import { Card } from "@/components/ui/card";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
-import PendingEscrowDetails from "../../../modules/transactions/PendingEscrowDetails";
-import ConfirmedEscrowActions from "../../../modules/transactions/ConfirmedEscrowActions";
-import ReleasedEscrowDetails from "../../../modules/transactions/ReleasedEscrowDetails";
+import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
+import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
+import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import type { Transaction } from "@/declarations/split_dapp.did";
 
 export default function TransactionDetailsPage() {

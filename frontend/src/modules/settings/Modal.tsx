@@ -33,8 +33,8 @@ export default function EditNameModal({
       if (!authClient) throw new Error("No auth client found");
       const identity = authClient.getIdentity();
       const actor = await createSplitDappActor(identity);
-      await actor.setName(Principal.fromText(principal), nameInput);
-      toast.success("Name updated successfully!");
+      await actor.setNickname(Principal.fromText(principal), nameInput);
+      toast.success("Nickname updated successfully!");
       dispatch(setUserName(nameInput));
       onClose();
       if (onNameSaved) onNameSaved();
@@ -100,7 +100,7 @@ export default function EditNameModal({
           className="w-full border rounded px-3 py-2 mb-4"
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
-          placeholder="Enter your name"
+          placeholder="Enter your nickname"
         />
         <div className="flex justify-end gap-2">
           <button

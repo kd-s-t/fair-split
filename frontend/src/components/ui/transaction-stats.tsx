@@ -18,7 +18,7 @@ export function TransactionStats({ totalBTC, recipientCount, status, statusClass
       case 'released':
         return 'Completed';
       case 'pending':
-        return 'Pending';
+        return 'Awaiting Deposit';
       case 'cancelled':
         return 'Cancelled';
       case 'declined':

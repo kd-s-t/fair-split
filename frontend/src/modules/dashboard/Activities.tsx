@@ -39,6 +39,10 @@ export default function RecentActivities({
   const activities = transactions && transactions.length > 0 
     ? [...transactions].sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
     : [];
+  const sentCount = activities.filter(
+    (activity: any) => principal && String(activity.from) === String(principal)
+  ).length;
+  const receivedCount = activities.length - sentCount;
   return (
     <div className="mt-10">
       <Typography variant="h3" className="font-semibold">
@@ -61,13 +65,13 @@ export default function RecentActivities({
               value="active"
               className="text-muted-foreground font-medium"
             >
-              Send (0)
+              Send ({sentCount})
             </TabsTrigger>
             <TabsTrigger
               value="completed"
               className="text-muted-foreground font-medium"
             >
-              Received (0)
+              Received ({receivedCount})
             </TabsTrigger>
           </TabsList>
           <Button

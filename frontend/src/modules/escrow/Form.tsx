@@ -13,6 +13,7 @@ const TransactionForm = ({
   btcAmount,
   setBtcAmount,
   recipients,
+  setRecipients,
   handleAddRecipient,
   handleRemoveRecipient,
   handleRecipientChange,
@@ -73,25 +74,15 @@ const TransactionForm = ({
           setBtcAmount(jsonData.amount.toString());
         }
 
-        // Clear all existing recipients first
-        while (recipients.length > 1) {
-          handleRemoveRecipient(0);
-        }
+        // Create new recipients array from JSON data
+        const newRecipients = jsonData.recipients.map((principal: string, index: number) => ({
+          id: `recipient-${index + 1}`,
+          principal,
+          percentage: Math.floor(100 / jsonData.recipients.length)
+        }));
 
-        // Update first recipient
-        if (jsonData.recipients.length > 0) {
-          handleRecipientChange(0, "principal", jsonData.recipients[0]);
-          handleRecipientChange(0, "percentage", Math.floor(100 / jsonData.recipients.length));
-        }
-
-        // Add additional recipients
-        for (let i = 1; i < jsonData.recipients.length; i++) {
-          handleAddRecipient();
-          setTimeout(() => {
-            handleRecipientChange(i, "principal", jsonData.recipients[i]);
-            handleRecipientChange(i, "percentage", Math.floor(100 / jsonData.recipients.length));
-          }, 100 * i);
-        }
+        // Replace all recipients at once
+        setRecipients(newRecipients);
 
         toast.success(`Loaded ${jsonData.recipients.length} recipients and amount from JSON file`);
       } catch (error) {
@@ -164,29 +155,31 @@ const TransactionForm = ({
                 Title 
               </label>
               <div className="flex gap-2">
-                <span
-                  className="cursor-pointer text-[#FEB64D] hover:text-[#FEB64D] text-sm flex items-center gap-1"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={generateTitle}
+                  className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
                 >
-                  <Sparkles size={14} />
+                  <Sparkles size={14} className="mr-1" />
                   Generate
-                </span>
-                <div className="relative inline-block">
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    id="json-upload"
-                  />
-                  <span
-                    className="cursor-pointer text-[#FEB64D] hover:text-[#FEB64D] text-sm flex items-center gap-1"
-                    onClick={() => document.getElementById('json-upload')?.click()}
-                  >
-                    <Upload size={14} />
-                    Upload JSON
-                  </span>
-                </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => document.getElementById('json-upload')?.click()}
+                  className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
+                >
+                  <Upload size={14} className="mr-1" />
+                  Upload JSON
+                </Button>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="json-upload"
+                />
               </div>
             </div>
             <Input
@@ -272,6 +265,8 @@ const TransactionForm = ({
                         }
                         placeholder="BTC address"
                         className="mt-1"
+                        autoComplete="off"
+                        name={`btc-address-${idx}`}
                       />
                     </div>
                     <div className="flex gap-2 items-center col-span-2">

@@ -28,6 +28,7 @@ export interface TransactionFormProps {
   btcAmount: string;
   setBtcAmount: (btcAmount: string) => void;
   recipients: Recipient[];
+  setRecipients: (recipients: Recipient[]) => void;
   handleAddRecipient: () => void;
   handleRemoveRecipient: (idx: number) => void;
   handleRecipientChange: (

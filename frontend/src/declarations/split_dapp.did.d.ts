@@ -3,26 +3,12 @@ import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
 export interface ParticipantShare { 'principal' : Principal, 'amount' : bigint }
-export interface PendingTransfer {
-  'to' : Principal,
-  'name' : string,
-  'initiatedAt' : bigint,
-  'amount' : bigint,
-}
 export interface SplitDApp {
-  'cancelEscrow' : ActorMethod<[Principal, bigint], undefined>,
   'cancelSplit' : ActorMethod<[Principal], undefined>,
   'getAdmin' : ActorMethod<[], Principal>,
   'getBalance' : ActorMethod<[Principal], bigint>,
-  'getLogs' : ActorMethod<[], Array<string>>,
-  'getName' : ActorMethod<[Principal], [] | [string]>,
-  'getPending' : ActorMethod<[Principal], Array<PendingTransfer>>,
-  'getPendingApprovalsForRecipient' : ActorMethod<
-    [Principal],
-    Array<Transaction>
-  >,
+  'getNickname' : ActorMethod<[Principal], [] | [string]>,
   'getTransaction' : ActorMethod<[string, Principal], [] | [Transaction]>,
-  'getTransactions' : ActorMethod<[Principal], Array<Transaction>>,
   'getTransactionsPaginated' : ActorMethod<
     [Principal, bigint, bigint],
     {
@@ -35,23 +21,18 @@ export interface SplitDApp {
     [Principal, Array<ParticipantShare>, string],
     string
   >,
-  'initiateSplit' : ActorMethod<
-    [Principal, Array<ParticipantShare>, string],
-    undefined
-  >,
   'markTransactionsAsRead' : ActorMethod<[Principal], undefined>,
   'recipientApproveEscrow' : ActorMethod<
-    [Principal, bigint, Principal],
+    [Principal, string, Principal],
     undefined
   >,
   'recipientDeclineEscrow' : ActorMethod<
     [Principal, bigint, Principal],
     undefined
   >,
-  'releaseEscrow' : ActorMethod<[Principal, bigint], undefined>,
   'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'setInitialBalance' : ActorMethod<[Principal, bigint, Principal], undefined>,
-  'setName' : ActorMethod<[Principal, string], undefined>,
+  'setNickname' : ActorMethod<[Principal, string], undefined>,
 }
 export interface ToEntry {
   'status' : { 'pending' : null } |

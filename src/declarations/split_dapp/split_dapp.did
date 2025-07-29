@@ -23,17 +23,11 @@ type ToEntry =
  };
 type SplitDApp = 
  service {
-   cancelEscrow: (caller: principal, idx: nat) -> ();
    cancelSplit: (caller: principal) -> ();
    getAdmin: () -> (principal) query;
    getBalance: (p: principal) -> (nat) query;
-   getLogs: () -> (vec text) query;
-   getName: (p: principal) -> (opt text) query;
-   getPending: (caller: principal) -> (vec PendingTransfer) query;
-   getPendingApprovalsForRecipient: (recipient: principal) ->
-    (vec Transaction) query;
+   getNickname: (p: principal) -> (opt text) query;
    getTransaction: (id: text, caller: principal) -> (opt Transaction);
-   getTransactions: (p: principal) -> (vec Transaction) query;
    getTransactionsPaginated: (p: principal, page: nat, pageSize: nat) ->
     (record {
        totalCount: nat;
@@ -42,24 +36,14 @@ type SplitDApp =
      });
    initiateEscrow: (caller: principal, participants: vec ParticipantShare,
     title: text) -> (text);
-   initiateSplit: (caller: principal, participants: vec ParticipantShare,
-    title: text) -> ();
    markTransactionsAsRead: (caller: principal) -> ();
-   recipientApproveEscrow: (sender: principal, idx: nat, recipient:
+   recipientApproveEscrow: (sender: principal, txId: text, recipient:
     principal) -> ();
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
     principal) -> ();
-   releaseEscrow: (caller: principal, idx: nat) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
-   setName: (p: principal, name: text) -> ();
- };
-type PendingTransfer = 
- record {
-   amount: nat;
-   initiatedAt: nat;
-   name: text;
-   to: principal;
+   setNickname: (p: principal, name: text) -> ();
  };
 type ParticipantShare = 
  record {

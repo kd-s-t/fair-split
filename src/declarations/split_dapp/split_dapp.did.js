@@ -1,10 +1,4 @@
 export const idlFactory = ({ IDL }) => {
-  const PendingTransfer = IDL.Record({
-    'to' : IDL.Principal,
-    'name' : IDL.Text,
-    'initiatedAt' : IDL.Nat,
-    'amount' : IDL.Nat,
-  });
   const ToEntry = IDL.Record({
     'status' : IDL.Variant({
       'pending' : IDL.Null,
@@ -31,31 +25,14 @@ export const idlFactory = ({ IDL }) => {
     'amount' : IDL.Nat,
   });
   const SplitDApp = IDL.Service({
-    'cancelEscrow' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'cancelSplit' : IDL.Func([IDL.Principal], [], []),
     'getAdmin' : IDL.Func([], [IDL.Principal], ['query']),
     'getBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
-    'getLogs' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'getName' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
-    'getPending' : IDL.Func(
-        [IDL.Principal],
-        [IDL.Vec(PendingTransfer)],
-        ['query'],
-      ),
-    'getPendingApprovalsForRecipient' : IDL.Func(
-        [IDL.Principal],
-        [IDL.Vec(Transaction)],
-        ['query'],
-      ),
+    'getNickname' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
     'getTransaction' : IDL.Func(
         [IDL.Text, IDL.Principal],
         [IDL.Opt(Transaction)],
         [],
-      ),
-    'getTransactions' : IDL.Func(
-        [IDL.Principal],
-        [IDL.Vec(Transaction)],
-        ['query'],
       ),
     'getTransactionsPaginated' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Nat],
@@ -73,14 +50,9 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
-    'initiateSplit' : IDL.Func(
-        [IDL.Principal, IDL.Vec(ParticipantShare), IDL.Text],
-        [],
-        [],
-      ),
     'markTransactionsAsRead' : IDL.Func([IDL.Principal], [], []),
     'recipientApproveEscrow' : IDL.Func(
-        [IDL.Principal, IDL.Nat, IDL.Principal],
+        [IDL.Principal, IDL.Text, IDL.Principal],
         [],
         [],
       ),
@@ -89,14 +61,13 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'releaseEscrow' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'releaseSplit' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'setInitialBalance' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Principal],
         [],
         [],
       ),
-    'setName' : IDL.Func([IDL.Principal, IDL.Text], [], []),
+    'setNickname' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   });
   return SplitDApp;
 };

@@ -24,7 +24,8 @@ type EscrowTransaction = {
 };
 
 export default function PendingEscrowDetails({ transaction }: { transaction: EscrowTransaction }) {
-  const depositAddress = transaction?.depositAddress || "Unknown address";
+  const depositAddress = transaction?.depositAddress ||
+    Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0

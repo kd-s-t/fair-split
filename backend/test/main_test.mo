@@ -13,15 +13,15 @@ actor {
     let alice = Principal.fromText("aaaaa-aa");
     let bob = Principal.fromText("bbbbb-bb");
 
-    // Set participant names
-    await SplitDApp.setName(alice, "Alice Wonderland");
-    await SplitDApp.setName(bob, "Bob Builder");
+    // Set participant nicknames
+    await SplitDApp.setNickname(alice, "Alice Wonderland");
+    await SplitDApp.setNickname(bob, "Bob Builder");
 
-    // Get and print participant names
-    let aliceName = await SplitDApp.getName(alice);
-    let bobName = await SplitDApp.getName(bob);
-    Debug.print("Alice Name: " # (switch aliceName { case (?n) n; case null "N/A" }));
-    Debug.print("Bob Name: " # (switch bobName { case (?n) n; case null "N/A" }));
+    // Get and print participant nicknames
+    let aliceName = await SplitDApp.getNickname(alice);
+    let bobName = await SplitDApp.getNickname(bob);
+    Debug.print("Alice Nickname: " # (switch aliceName { case (?n) n; case null "N/A" }));
+    Debug.print("Bob Nickname: " # (switch bobName { case (?n) n; case null "N/A" }));
 
     await SplitDApp.setInitialBalance(alice, 1000, alice);
     await SplitDApp.setInitialBalance(bob, 0, alice);
@@ -49,11 +49,5 @@ actor {
     let bobBal = await SplitDApp.getBalance(bob);
     Debug.print("Alice Balance after split: " # Nat.toText(aliceBal));
     Debug.print("Bob Balance after split: " # Nat.toText(bobBal));
-
-    Debug.print("📜 Logs:");
-    let logs = await SplitDApp.getLogs();
-    for (log in logs.vals()) {
-      Debug.print(log);
-    }
   };
 }

@@ -39,7 +39,6 @@ function BalanceAndNameSyncer() {
         // Fetch BTC Balance
         try {
           const balance = await actor.getBalance(principalObj)
-          console.log('balance', balance)
           const formatted = (Number(balance) / 1e8).toFixed(8)
           dispatch(setBtcBalance(formatted))
         } catch (err) {
@@ -47,16 +46,16 @@ function BalanceAndNameSyncer() {
           dispatch(setBtcBalance(null))
         }
 
-        // Fetch Name
+        // Fetch Nickname
         try {
-          const nameResult = await actor.getName(principalObj)
+          const nameResult = await actor.getNickname(principalObj)
           if (Array.isArray(nameResult) && nameResult.length > 0) {
             dispatch(setUserName(nameResult[0]))
           } else {
             dispatch(setUserName(null))
           }
         } catch (err) {
-          console.error('❌ Could not fetch name:', err)
+          console.error('❌ Could not fetch nickname:', err)
           dispatch(setUserName(null))
         }
 

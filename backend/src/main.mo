@@ -4,19 +4,18 @@ import Array "mo:base/Array";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
+import Iter "mo:base/Iter";
 
 import TransactionTypes "escrow/transaction";
-import Pending "escrow/pending";
 import Balance "user/balance";
 import TimeUtil "utils/time";
 
-actor class SplitDApp(admin : Principal) {
+persistent actor class SplitDApp(admin : Principal) {
 
-  let balances = transient HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
-  let transactions = transient HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
-  let pendingTransfers = transient HashMap.HashMap<Principal, [Pending.PendingTransfer]>(10, Principal.equal, Principal.hash);
-  let names = transient HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
-  var logs : [Text] = transient[];
+  transient var logs : [Text] = [];
+  transient let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  transient let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
+  transient let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
 
   public shared func initiateEscrow(
     caller : Principal,
@@ -33,6 +32,26 @@ actor class SplitDApp(admin : Principal) {
     let principalText = Principal.toText(caller);
     let randomSuffix = Nat.toText(timestamp % 1000000);
     let escrowId = Nat.toText(timestamp) # "-" # principalText # "-" # randomSuffix;
+
+    // Calculate total amount to escrow
+    let totalAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
+      participants,
+      0,
+      func(acc, p) { acc + p.amount }
+    );
+
+    // Check sender's balance
+    let senderBalance = switch (balances.get(caller)) {
+      case (?b) b;
+      case null 0;
+    };
+
+    if (senderBalance < totalAmount) {
+      return "Error: Insufficient balance";
+    };
+
+    // Deduct from sender and hold in escrow
+    balances.put(caller, senderBalance - totalAmount);
 
     let tx : TransactionTypes.Transaction = {
       id = escrowId;
@@ -73,62 +92,26 @@ actor class SplitDApp(admin : Principal) {
     return escrowId;
   };
 
-  public shared func initiateSplit(
-    caller : Principal,
-    participants : [TransactionTypes.ParticipantShare],
-    title : Text,
-  ) : async () {
-    let timestamp = TimeUtil.now();
-    let principalText = Principal.toText(caller);
-    let randomSuffix = Nat.toText(timestamp % 1000000);
-    let escrowId = Nat.toText(timestamp) # "-" # principalText # "-" # randomSuffix;
-
-    let tx : TransactionTypes.Transaction = {
-      id = escrowId;
-      from = caller;
-      to = Array.map<TransactionTypes.ParticipantShare, TransactionTypes.ToEntry>(
-        participants,
-        func(p) {
-          {
-            principal = p.principal;
-            name = switch (names.get(p.principal)) { case (?n) n; case null "" };
-            amount = p.amount;
-            status = #pending;
-          };
-        },
-      );
-      timestamp = timestamp;
-      isRead = false;
-      status = "pending";
-      title = title;
-      releasedAt = null;
-    };
-
-    let existing = switch (transactions.get(caller)) {
-      case (?txs) txs;
-      case null [];
-    };
-    transactions.put(caller, Array.append(existing, [tx]));
-
-    logs := Array.append<Text>(
-      logs,
-      [
-        "Escrow created by " # Principal.toText(caller) # " at " # Nat.toText(TimeUtil.now()),
-        "Awaiting recipient approvals",
-      ],
-    );
-  };
-
   public shared func recipientApproveEscrow(
     sender : Principal,
-    idx : Nat,
+    txId : Text,
     recipient : Principal,
   ) : async () {
     let txs = switch (transactions.get(sender)) {
       case (?list) list;
       case null return;
     };
-    if (idx >= txs.size()) return;
+    // Manual search for index by id
+    var idx : Nat = 0;
+    var found : Bool = false;
+    label search for (i in Iter.range(0, txs.size() - 1)) {
+      if (txs[i].id == txId) {
+        idx := i;
+        found := true;
+        break search;
+      }
+    };
+    if (not found) return;
     let tx = txs[idx];
     if (tx.status != "pending") return;
 
@@ -166,7 +149,7 @@ actor class SplitDApp(admin : Principal) {
             to = newTo;
             timestamp = tx.timestamp;
             isRead = tx.isRead;
-            status = if (allApproved) "confirmed" else tx.status; // 👈 only update if all approved
+            status = if (allApproved) "confirmed" else tx.status;
             title = tx.title;
             releasedAt = null;
           };
@@ -213,28 +196,11 @@ actor class SplitDApp(admin : Principal) {
         };
       },
     );
-    let pendings = switch (pendingTransfers.get(sender)) {
-      case (?arr) arr;
-      case null [];
-    };
-    var refund : Nat = 0;
-    let newPendings = Array.filter<Pending.PendingTransfer>(
-      pendings,
-      func(pending) {
-        if (pending.to == recipient) {
-          refund += pending.amount;
-          false // Remove
-        } else {
-          true // Keep
-        };
-      },
-    );
     let currentBal = switch (balances.get(sender)) {
       case (?b) b;
       case null 0;
     };
-    balances.put(sender, currentBal + refund);
-    pendingTransfers.put(sender, newPendings);
+    balances.put(sender, currentBal + tx.to[idx].amount); // Refund the declined amount
     let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
     let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });
     let newStatus = if (anyDeclined) "declined" else if (allApproved) "confirmed" else tx.status;
@@ -302,89 +268,6 @@ actor class SplitDApp(admin : Principal) {
       },
     );
     transactions.put(recipient, updatedRecipientTxs);
-  };
-  public shared func releaseEscrow(
-    caller : Principal,
-    idx : Nat,
-  ) : async () {
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null return;
-    };
-    if (idx >= txs.size()) return;
-
-    let tx = txs[idx];
-    if (tx.status != "confirmed") return;
-
-    // ✅ Transfer to approved recipients only
-    for (toEntry in tx.to.vals()) {
-      if (toEntry.status == #approved) {
-        let currentBalance = switch (balances.get(toEntry.principal)) {
-          case (?b) b;
-          case null 0;
-        };
-        balances.put(toEntry.principal, currentBalance + toEntry.amount);
-      };
-    };
-
-    // ✅ Update transaction with releasedAt timestamp
-    let updated = Array.tabulate<TransactionTypes.Transaction>(
-      txs.size(),
-      func(i) {
-        if (i == idx) {
-          {
-            id = tx.id;
-            from = tx.from;
-            to = tx.to;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = "released";
-            title = tx.title;
-            releasedAt = ?TimeUtil.now();
-          };
-        } else {
-          txs[i];
-        };
-      },
-    );
-    transactions.put(caller, updated);
-
-    logs := Array.append<Text>(logs, ["Escrow released for " # Principal.toText(caller)]);
-  };
-
-  public shared func cancelEscrow(
-    caller : Principal,
-    idx : Nat,
-  ) : async () {
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null return;
-    };
-    if (idx >= txs.size()) return;
-    let tx = txs[idx];
-    if (tx.status == "released" or tx.status == "cancelled") return;
-    // Update status to #cancelled
-    let updated = Array.tabulate<TransactionTypes.Transaction>(
-      txs.size(),
-      func(i) {
-        if (i == idx) {
-          {
-            id = tx.id;
-            from = tx.from;
-            to = tx.to;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = "cancelled";
-            title = tx.title;
-            releasedAt = null;
-          };
-        } else {
-          txs[i];
-        };
-      },
-    );
-    transactions.put(caller, updated);
-    logs := Array.append<Text>(logs, ["Escrow cancelled for " # Principal.toText(caller)]);
   };
 
   // Update cancelSplit to allow cancelling #locked and #pending
@@ -464,30 +347,6 @@ actor class SplitDApp(admin : Principal) {
             return tx;
           };
 
-          // Calculate total amount to release
-          let totalToRelease = Array.foldLeft<TransactionTypes.ToEntry, Nat>(
-            tx.to,
-            0,
-            func(acc, entry) {
-              if (entry.status == #approved) {
-                acc + entry.amount;
-              } else {
-                acc;
-              };
-            },
-          );
-
-          // Check if sender has enough balance
-          let senderBalance = switch (balances.get(caller)) {
-            case (?b) b;
-            case null 0;
-          };
-
-          if (senderBalance < totalToRelease) {
-            Debug.print("❌ Insufficient balance. Transfer aborted.");
-            return tx;
-          };
-
           // Perform the transfer
           for (toEntry in tx.to.vals()) {
             if (toEntry.status == #approved) {
@@ -498,9 +357,6 @@ actor class SplitDApp(admin : Principal) {
               balances.put(toEntry.principal, currentBalance + toEntry.amount);
             };
           };
-
-          // Deduct from sender
-          balances.put(caller, senderBalance - totalToRelease);
 
           Debug.print("✅ Escrow released for txId: " # txId);
           Debug.print("✅ ReleasedAt: " # Nat.toText(TimeUtil.now()));
@@ -534,32 +390,6 @@ actor class SplitDApp(admin : Principal) {
 
   public query func getBalance(p : Principal) : async Nat {
     return Balance.getBalance(balances, p);
-  };
-
-  public query func getPending(caller : Principal) : async [Pending.PendingTransfer] {
-    switch (pendingTransfers.get(caller)) { case (?list) list; case null [] };
-  };
-
-  public query func getTransactions(p : Principal) : async [TransactionTypes.Transaction] {
-    var result : [TransactionTypes.Transaction] = [];
-
-    // Get transactions where user is the sender
-    let sentTxs = switch (transactions.get(p)) { case (?txs) txs; case null [] };
-    result := Array.append(result, sentTxs);
-
-    // Get transactions where user is a recipient
-    for ((_, txs) in transactions.entries()) {
-      for (tx in txs.vals()) {
-        // Check if user is in the recipients list
-        for (toEntry in tx.to.vals()) {
-          if (toEntry.principal == p) {
-            result := Array.append(result, [tx]);
-          };
-        };
-      };
-    };
-
-    return result;
   };
 
   public func getTransactionsPaginated(
@@ -608,25 +438,6 @@ actor class SplitDApp(admin : Principal) {
       totalCount = totalCount;
       totalPages = totalPages;
     };
-  };
-
-  public query func getPendingApprovalsForRecipient(recipient : Principal) : async [TransactionTypes.Transaction] {
-    var result : [TransactionTypes.Transaction] = [];
-    label txLoop for ((_, txs) in transactions.entries()) {
-      for (tx in txs.vals()) {
-        if (tx.status == "pending" or tx.status == "confirmed") {
-          var found = false;
-          for (toEntry in tx.to.vals()) {
-            if (toEntry.principal == recipient and toEntry.status == #pending) {
-              result := Array.append(result, [tx]);
-              found := true;
-            };
-          };
-          if (found) { continue txLoop };
-        };
-      };
-    };
-    return result;
   };
 
   public shared (_msg) func getTransaction(id : Text, caller : Principal) : async ?TransactionTypes.Transaction {
@@ -691,16 +502,12 @@ actor class SplitDApp(admin : Principal) {
     transactions.put(caller, updated);
   };
 
-  public shared func setName(p : Principal, name : Text) : async () {
+  public shared func setNickname(p : Principal, name : Text) : async () {
     names.put(p, name);
   };
 
-  public query func getName(p : Principal) : async ?Text {
+  public query func getNickname(p : Principal) : async ?Text {
     return names.get(p);
-  };
-
-  public query func getLogs() : async [Text] {
-    return logs;
   };
 
   public query func getAdmin() : async Principal {

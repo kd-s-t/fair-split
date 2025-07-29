@@ -12,11 +12,12 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
 import { setTitle as setPageTitle, setSubtitle } from '@/lib/redux/store';
+import { setBtcBalance } from "@/lib/redux/userSlice";
 
 export default function EscrowPage() {
   const [title, setTitle] = useState<string>("");
   const [recipients, setRecipients] = useState<Recipient[]>([
-    { id: "1", principal: "", percentage: 100 },
+    { id: "recipient-1", principal: "", percentage: 100 },
   ]);
   const idCounter = useRef(2);
 
@@ -70,7 +71,6 @@ export default function EscrowPage() {
     });
 
   };
-
   const handleRemoveRecipient = (idx: number) => {
     setRecipients((prev) => {
       const filtered =
@@ -130,6 +130,16 @@ export default function EscrowPage() {
       setNewTxId(String(txId));
       setShowDialog(true);
       await fetchAndStoreTransactions();
+      if (principal && authClient) {
+        try {
+          const actor = await createSplitDappActor();
+          const balance = await actor.getBalance(Principal.fromText(principal.toText()));
+          const formatted = (Number(balance) / 1e8).toFixed(8);
+          dispatch(setBtcBalance(formatted));
+        } catch (err) {
+          dispatch(setBtcBalance(null));
+        }
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       toast.error(`Error initiating escrow: ${errorMessage}`);
@@ -198,6 +208,7 @@ export default function EscrowPage() {
           btcAmount={btcAmount}
           setBtcAmount={setBtcAmount}
           recipients={recipients}
+          setRecipients={setRecipients}
           handleAddRecipient={handleAddRecipient}
           handleRemoveRecipient={handleRemoveRecipient}
           handleRecipientChange={handleRecipientChange}

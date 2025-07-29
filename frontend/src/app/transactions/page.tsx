@@ -50,6 +50,7 @@ export default function TransactionsPage() {
       setLocalTransactions(sorted);
     }
   }, [transactions]);
+  console.log("transactions", transactions);
 
   // Get available categories and statuses for dropdowns
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
@@ -127,19 +128,12 @@ export default function TransactionsPage() {
         ? Principal.fromText(recipientEntry.principal)
         : recipientEntry.principal;
       
-      // Find the actual transaction index in the backend
-      const txs = await actor.getTransactionsPaginated(Principal.fromText(principalStr), BigInt(0), BigInt(100)) as any;
-      const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
+      // No need to find index, just use tx.id
+      console.log("payload", {senderPrincipal, txId: tx.id, recipientPrincipal});
       
-      if (txIndex === -1) {
-        toast.error('Transaction not found.');
-        setIsApproving(null);
-        return;
-      }
-      
-      await actor.recipientApproveEscrow(senderPrincipal, txIndex, recipientPrincipal);
+      const x = await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
+      console.log("x", x);
       toast.success('Approved successfully!');
-      // Refresh transactions instead of page reload
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
       toast.error(err.message || 'Failed to approve');

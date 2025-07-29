@@ -6,8 +6,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialLayoutState = {
   activePage: 'dashboard',
-  title: 'Welcome back',
-  subtitle: 'Manage your Bitcoin escrow transactions with confidence',
+  title: '',
+  subtitle: '',
 };
 
 const layoutSlice = createSlice({

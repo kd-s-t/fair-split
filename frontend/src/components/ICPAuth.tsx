@@ -10,8 +10,8 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
 import { setUser, clearUser, setBtcBalance } from "@/lib/redux/userSlice";
-import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Typography } from "./ui/typography";
+import Logo3D from "./Logo3D";
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -32,34 +32,28 @@ export default function Home() {
         }
       });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const login = async () => {
-    console.log('xCanister ID:', process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP);
-    console.log('xHost:', process.env.NEXT_PUBLIC_DFX_HOST);
     if (!authClient) return;
     await authClient.login({
       identityProvider: 'https://identity.ic0.app',
-      maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000), // 7 days
+      maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000),
       onSuccess: async () => {
         const identity = authClient.getIdentity();
         const principal = identity.getPrincipal();
         dispatch(setUser({ principal: principal.toText(), name: null }));
-    
-        // You can now create an actor using this identity
-        const actor = createSplitDappActor(identity); // Pass the identity to your actor
       },
     });
   };
-  
+
   const logout = async () => {
     if (!authClient) return;
     await authClient.logout();
-    indexedDB.deleteDatabase('auth-client-storage'); // ✅ force delegation cleanup
+    indexedDB.deleteDatabase('auth-client-storage');
     dispatch(clearUser());
-    dispatch(setBtcBalance(null)); // also clear balance
+    dispatch(setBtcBalance(null));
   };
-  
+
 
   return (
     <div
@@ -77,14 +71,19 @@ export default function Home() {
           height={24}
         />
       </div>
-      <div className="absolute top-0 right-0">
+      <motion.div
+        className="absolute top-0 right-0"
+        initial={{ x: 400, y: 0, opacity: 0 }}
+        animate={{ x: 130, y: -40, opacity: 1 }}
+        transition={{ duration: 0.7, type: "spring" }}
+      >
         <Image
           src="/bg-logo.svg"
           alt="SplitDApp Logo"
           width={800}
           height={64}
         />
-      </div>
+      </motion.div>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -134,14 +133,19 @@ export default function Home() {
           </Button>
         )}
       </motion.div>
-      <div className="absolute bottom-0 left-0">
+      <motion.div
+        className="absolute bottom-0 left-0 w-[450px]"
+        initial={{ scale: 0.2 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.7, type: "spring" }}
+      >
         <Image
           src="/bg-eclipse-group.svg"
           alt="SplitDApp Logo"
           width={450}
           height={64}
         />
-      </div>
+      </motion.div>
       <div className="flex items-center gap-8 w-full justify-center">
         <Typography variant="muted">Terms of service</Typography>
         <Typography variant="muted">Privacy policy</Typography>

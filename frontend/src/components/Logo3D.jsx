@@ -32,8 +32,8 @@ const Logo3D = () => {
     const controls = new OrbitControls(camera, renderer.domElement)
 
     const loader = new SVGLoader()
-    loader.load('/logo.svg', (data) => {
-      const paths = data.paths
+    loader.load('/safesplit.svg', (data) => {
+      const paths = data.paths; // Use all paths for the full logo
 
       paths.forEach((path) => {
         const shapes = SVGLoader.createShapes(path)
@@ -49,8 +49,9 @@ const Logo3D = () => {
           geometry.boundingBox.getCenter(center)
           geometry.translate(-center.x, -center.y, 0)
 
+          // Use path color if available, otherwise fallback to white
           const material = new THREE.MeshStandardMaterial({
-            color: 0xffff00, // Yellow
+            color: path.color ? new THREE.Color(path.color) : 0xffffff,
             metalness: 0.3,
             roughness: 0.4,
           })

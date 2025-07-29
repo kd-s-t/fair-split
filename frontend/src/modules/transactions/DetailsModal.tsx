@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import type { Transaction } from '@/declarations/split_dapp/split_dapp.did';
+import type { Transaction, ToEntry } from '@/declarations/split_dapp.did';
 
 export default function TransactionDetailsModal({ transaction, onClose }: { transaction: Transaction | null, onClose: () => void }) {
   if (!transaction) return null;
@@ -32,7 +32,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: { tran
         <div className="mb-2">
           <span className="font-semibold">Recipients:</span>
           <ul className="ml-4 mt-1">
-            {transaction.to.map((toEntry, idx) => (
+            {transaction.to.map((toEntry: ToEntry, idx: number) => (
               <li key={idx} className="mb-1">
                 <span className="font-mono text-xs">{String(toEntry.principal)}</span>
                 {toEntry.name && <span className="ml-2 text-sm text-gray-500">({toEntry.name})</span>}
@@ -42,8 +42,16 @@ export default function TransactionDetailsModal({ transaction, onClose }: { tran
           </ul>
         </div>
         <div className="mb-2">
+          <span className="font-semibold">Released At:</span>
+          <span className="ml-2 text-xs">
+            {transaction.releasedAt
+              ? new Date(Number(transaction.releasedAt) * 1000).toLocaleString()
+              : 'N/A'}
+          </span>
+        </div>
+        <div className="mb-2">
           <span className="font-semibold">Date:</span>
-          <span className="ml-2 text-xs">{new Date(Number(transaction.timestamp) / 1_000_000).toLocaleString()}</span>
+          <span className="ml-2 text-xs">{new Date(Number(transaction.timestamp) * 1000).toLocaleString()}</span>
         </div>
       </motion.div>
     </motion.div>

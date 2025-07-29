@@ -131,6 +131,7 @@ actor class SplitDApp(admin : Principal) {
     if (idx >= txs.size()) return;
     let tx = txs[idx];
     if (tx.status != "pending") return;
+
     let newTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(
       tx.to,
       func(entry) {
@@ -146,8 +147,15 @@ actor class SplitDApp(admin : Principal) {
         };
       },
     );
-    let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
-    let newStatus = if (allApproved) "confirmed" else "pending";
+
+    let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(
+      newTo,
+      true,
+      func(acc, entry) {
+        acc and (entry.status == #approved)
+      },
+    );
+
     let updated = Array.tabulate<TransactionTypes.Transaction>(
       txs.size(),
       func(i) {
@@ -158,7 +166,7 @@ actor class SplitDApp(admin : Principal) {
             to = newTo;
             timestamp = tx.timestamp;
             isRead = tx.isRead;
-            status = newStatus;
+            status = if (allApproved) "confirmed" else tx.status; // 👈 only update if all approved
             title = tx.title;
             releasedAt = null;
           };
@@ -167,7 +175,9 @@ actor class SplitDApp(admin : Principal) {
         };
       },
     );
+
     transactions.put(sender, updated);
+
     if (allApproved) {
       logs := Array.append<Text>(logs, ["All recipients approved escrow for " # Principal.toText(sender)]);
     } else {

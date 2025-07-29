@@ -158,6 +158,9 @@ export default function EscrowPage() {
         typeof tx.timestamp === "bigint"
           ? tx.timestamp.toString()
           : tx.timestamp,
+      releasedAt: Array.isArray(tx.releasedAt) && tx.releasedAt.length > 0
+        ? tx.releasedAt[0].toString()
+        : null,
       to: tx.to.map((toEntry: any) => ({
         ...toEntry,
         principal:

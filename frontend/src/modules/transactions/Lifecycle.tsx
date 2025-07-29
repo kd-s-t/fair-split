@@ -24,7 +24,7 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
                   isCompleted ? 'bg-[#181818] border-[#FEB64D]' : isCurrent ? 'bg-[#FEB64D] border-[#FEB64D]' : 'bg-[#222] border-[#444]',
                 ].join(' ')
               }>
-                {isCompleted ? (
+                {isCompleted || (isCurrent && isLastIdx) ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <circle cx="12" cy="12" r="10" stroke="#FEB64D" strokeWidth="2" fill="none" />
                     <path d="M7 13l3 3 7-7" stroke="#FEB64D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />

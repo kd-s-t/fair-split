@@ -13,6 +13,7 @@ import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import type { Transaction } from "@/declarations/split_dapp.did";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
@@ -63,6 +64,13 @@ export default function TransactionDetailsPage() {
       const actor = await createSplitDappActor();
       await actor.releaseSplit(principal, String(id));
       toast.success("Escrow released!");
+      // Fetch updated transaction and update state
+      const updated = await actor.getTransaction(String(id), principal);
+      if (Array.isArray(updated) && updated.length > 0) {
+        setTransaction(updated[0]);
+        setIsAuthorized(true);
+        setIsTxLoading(false);
+      }
     } catch (err) {
       console.error("Release error:", err);
       toast.error("Failed to release escrow");
@@ -115,18 +123,27 @@ export default function TransactionDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {statusKey === "released" && (
-        <div className="rounded-xl bg-gradient-to-r from-[#1be37c] to-[#b0ff6c] p-4 flex items-center justify-between mb-2">
-          <div>
-            <div className="text-lg font-semibold text-black">Escrow completed</div>
-            <div className="text-sm text-black/80">All payments have been successfully distributed to recipients</div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-black">{totalBTC.toFixed(8)} BTC</div>
-            <div className="text-xs text-black/80">BTC Released</div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {statusKey === "released" && (
+          <motion.div
+            key="escrow-completed-banner"
+            initial={{ y: -40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -40, opacity: 0 }}
+            transition={{ duration: 0.4, type: "spring" }}
+            className="rounded-xl bg-gradient-to-r from-[#1be37c] to-[#b0ff6c] p-4 flex items-center justify-between mb-2"
+          >
+            <div>
+              <div className="text-lg font-semibold text-black">Escrow completed</div>
+              <div className="text-sm text-black/80">All payments have been successfully distributed to recipients</div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-black">{totalBTC.toFixed(8)} BTC</div>
+              <div className="text-xs text-black/80">BTC Released</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex flex-col md:flex-row gap-6">
         <div className="container flex-1 rounded-2xl px-6 py-4 text-white">
           <Typography variant="large">Escrow overview</Typography>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { House, Wallet } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -22,7 +23,8 @@ export default function Sidebar() {
           alt="Logo"
           width={160}
           height={40}
-          className="object-contain w-full h-auto"
+          priority
+          className="object-contain w-auto h-auto"
         />
       </div>
 

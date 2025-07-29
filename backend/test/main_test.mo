@@ -26,8 +26,8 @@ actor {
     await SplitDApp.setInitialBalance(alice, 1000, alice);
     await SplitDApp.setInitialBalance(bob, 0, alice);
 
-    // Step 1: Create escrow draft
-    await SplitDApp.createEscrow(
+    // Step 1: Create escrow draft using initiateEscrow
+    let escrowId = await SplitDApp.initiateEscrow(
       alice,
       [
         { principal = bob; amount = 400 },
@@ -35,16 +35,14 @@ actor {
       ],
       "Test Escrow"
     );
+    Debug.print("Created escrow with ID: " # escrowId);
 
-    // Step 2: Initiate escrow (deducts funds, sets to pending)
-    await SplitDApp.initiateEscrow(alice, 0);
-
-    // Step 3: Bob approves
+    // Step 2: Bob approves
     await SplitDApp.recipientApproveEscrow(alice, 0, bob);
-    // Step 4: Alice approves (if needed for full confirmation)
+    // Step 3: Alice approves (if needed for full confirmation)
     await SplitDApp.recipientApproveEscrow(alice, 0, alice);
 
-    // Step 5: Release escrow (payout)
+    // Step 4: Release escrow (payout)
     await SplitDApp.releaseEscrow(alice, 0);
 
     let aliceBal = await SplitDApp.getBalance(alice);

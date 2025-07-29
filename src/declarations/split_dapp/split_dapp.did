@@ -1,15 +1,8 @@
-type TransactionStatus = 
- variant {
-   cancelled;
-   confirmed;
-   declined;
-   draft;
-   pending;
-   released;
- };
+type TransactionStatus = text;
 type Transaction = 
  record {
    from: principal;
+   id: text;
    isRead: bool;
    status: TransactionStatus;
    timestamp: nat;
@@ -31,19 +24,23 @@ type SplitDApp =
  service {
    cancelEscrow: (caller: principal, idx: nat) -> ();
    cancelSplit: (caller: principal) -> ();
-   createEscrow: (caller: principal, participants: vec ParticipantShare,
-    title: text) -> ();
    getAdmin: () -> (principal) query;
    getBalance: (p: principal) -> (nat) query;
    getLogs: () -> (vec text) query;
-   getMyTransactionByIndex: (idx: nat) -> (opt Transaction);
    getName: (p: principal) -> (opt text) query;
    getPending: (caller: principal) -> (vec PendingTransfer) query;
    getPendingApprovalsForRecipient: (recipient: principal) ->
     (vec Transaction) query;
-   getTransactionBy: (p: principal, index: nat) -> (opt Transaction) query;
+   getTransaction: (id: text, caller: principal) -> (opt Transaction);
    getTransactions: (p: principal) -> (vec Transaction) query;
-   initiateEscrow: (caller: principal, idx: nat) -> ();
+   getTransactionsPaginated: (p: principal, page: nat, pageSize: nat) ->
+    (record {
+       totalCount: nat;
+       totalPages: nat;
+       transactions: vec Transaction;
+     });
+   initiateEscrow: (caller: principal, participants: vec ParticipantShare,
+    title: text) -> (text);
    initiateSplit: (caller: principal, participants: vec ParticipantShare,
     title: text) -> ();
    markTransactionsAsRead: (caller: principal) -> ();

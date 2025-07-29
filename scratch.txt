@@ -32,3 +32,6 @@ j7r3u-uzdl5-2ywu3-ylhp3-gpkhl-7rcxu-3xyyu-kmdp2-dsl7z-sdfe6-hae
 
 
 dfx canister call split_dapp getTransactionBySenderAndIndex '(principal "uu3ee-ff3xm-vhws5-zxy6q-vtsvx-q2uhy-4ligb-wcltn-dd6xn-bckkv-mqe", 0)'
+
+Option 1: Use dfx identity in browser (Recommended)
+dfx identity export default

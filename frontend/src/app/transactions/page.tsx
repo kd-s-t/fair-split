@@ -15,82 +15,41 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Bitcoin,
-  Eye,
   Wallet,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { statusMap } from "@/components/RecentActivities";
+import { statusMap } from "@/modules/dashboard/Activities";
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { toast } from "sonner";
 import { setTitle, setSubtitle } from '../../lib/redux/store';
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
     dispatch(setSubtitle('View all your escrow transactions'));
   }, [dispatch]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localTransactions, setLocalTransactions] = useState<any[]>([]);
   const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
-  const [isReleasing, setIsReleasing] = useState(false);
+
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!principal || localTransactions.length) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const actor = await createSplitDappActor();
-        const txs = await actor.getTransactions(principal);
-        const pendingApprovals = await actor.getPendingApprovalsForRecipient(
-          principal
-        );
-        // Normalize all principal fields to strings for both txs and pendingApprovals
-        function normalizeTx(tx: any) {
-          return {
-            ...tx,
-            from:
-              tx.from &&
-              typeof tx.from === "object" &&
-              typeof tx.from.toText === "function"
-                ? tx.from.toText()
-                : String(tx.from),
-            timestamp:
-              typeof tx.timestamp === "bigint"
-                ? tx.timestamp.toString()
-                : tx.timestamp,
-            to: tx.to.map((toEntry: any) => ({
-              ...toEntry,
-              principal:
-                toEntry.principal &&
-                typeof toEntry.principal === "object" &&
-                typeof toEntry.principal.toText === "function"
-                  ? toEntry.principal.toText()
-                  : String(toEntry.principal),
-              amount:
-                typeof toEntry.amount === "bigint"
-                  ? toEntry.amount.toString()
-                  : toEntry.amount,
-            })),
-          };
-        }
-        const allTxs = ([...(txs as any[]), ...(pendingApprovals as any[])]).map(normalizeTx);
-        console.log("allTxs:", allTxs);
-        setLocalTransactions(allTxs);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch transactions");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTransactions();
-  }, [principal, localTransactions.length]);
+    if (transactions && transactions.length > 0) {
+      setLocalTransactions(transactions);
+    }
+  }, [transactions]);
 
   function getTxId(tx: any) {
     return `${tx.from}_${tx.to
@@ -111,6 +70,11 @@ export default function TransactionsPage() {
   // Helper to determine if tx is sent by the user
   function isSentByUser(tx: any): boolean {
     return String(tx.from) === String(principal);
+  }
+
+  // Helper to determine transaction category (sent vs received)
+  function getTransactionCategory(tx: any): "sent" | "received" {
+    return isSentByUser(tx) ? "sent" : "received";
   }
 
   async function handleApprove(tx: any, idx: number) {
@@ -167,31 +131,24 @@ export default function TransactionsPage() {
     window.location.reload();
   }
 
-  async function handleRelease() {
-    if (!principal) return;
-    setIsReleasing(true);
-    try {
-      const actor = await createSplitDappActor();
-      await actor.releaseSplit(principal);
-      toast.success("Escrow released!");
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to release escrow");
-    } finally {
-      setIsReleasing(false);
-    }
-  }
-
-  async function handleRowClick(tx: Transaction, idx: number) {
+  async function handleRowClick(tx: Transaction) {
     if (!principal) return;
     if (!tx.isRead) {
       const actor = await createSplitDappActor();
       await actor.markTransactionsAsRead(principal);
       dispatch(markAllAsRead());
     }
-    // Navigate to the transaction details page using index-sender
-    router.push(`/transactions/${idx}-${tx.from}`);
+    router.push(`/transactions/${tx.id}`);
   }
+
+  const filteredTransactions = localTransactions.filter(tx => {
+    const matchesSearch = tx.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.id?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || tx.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const currentTransactions = filteredTransactions;
 
   return (
     <motion.div
@@ -219,9 +176,47 @@ export default function TransactionsPage() {
       )}
       {!isLoading && !error && localTransactions.length > 0 && (
         <>
-          {console.log("Rendering table with transactions:", localTransactions)}
+          {/* Search and Filter Section */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search transactions"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#FEB64D]"
+              />
+            </div>
+            <div className="w-1/5">
+              <select className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]">
+                <option value="all">All transactions</option>
+                <option value="sent">Sent</option>
+                <option value="received">Received</option>
+              </select>
+            </div>
+            <div className="w-1/5">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]"
+              >
+                <option value="all">All status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="released">Released</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Transaction Count */}
+          <div className="text-sm text-gray-400 mb-4">
+            Showing {currentTransactions.length} of {localTransactions.length} transactions
+          </div>
+
           <div className="space-y-4">
-            {localTransactions.map((tx: any, idx: number) => {
+            {currentTransactions.map((tx: any, idx: number) => {
               const pendingApproval = isPendingApproval(tx);
 
               return (
@@ -230,9 +225,9 @@ export default function TransactionsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  className="bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm"
+                  className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval ? 'cursor-pointer hover:bg-[#2a2a2a] transition-colors' : ''}`}
                   onClick={
-                    pendingApproval ? undefined : () => handleRowClick(tx, idx)
+                    pendingApproval ? undefined : () => handleRowClick(tx)
                   }
                 >
                   <div key={tx.id} className="flex-1 min-w-0">
@@ -242,17 +237,13 @@ export default function TransactionsPage() {
                           <Typography variant="large" className="text-xl">
                             {tx.title}
                           </Typography>
-                            
+
                           {(() => {
-                          const statusKey =
-                            typeof tx.status === "object" &&
-                            tx.status !== null
-                              ? Object.keys(tx.status)[0]
-                              : tx.status;
-                          return (
-                            <Badge
-                              variant={
-                                (statusMap[statusKey]?.variant ?? "default") as
+                            const statusKey = tx.status;
+                            return (
+                              <Badge
+                                variant={
+                                  (statusMap[statusKey]?.variant ?? "default") as
                                   | "secondary"
                                   | "success"
                                   | "primary"
@@ -260,50 +251,22 @@ export default function TransactionsPage() {
                                   | "default"
                                   | "outline"
                                   | "warning"
-                              }
-                              className="text-xs"
-                            >
-                              {statusMap[statusKey]?.label || statusKey}
-                            </Badge>
-                          );
-                        })()}
-                        {pendingApproval ? (
-                          <>
-                            <button
-                              className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                              onClick={() => handleApprove(tx, idx)}
-                              disabled={isApproving === getTxId(tx)}
-                            >
-                              {isApproving === getTxId(tx) ? (
-                                <span className="flex items-center gap-2">
-                                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                                  Approving...
-                                </span>
-                              ) : (
-                                'Approve'
-                              )}
-                            </button>
-                            <button
-                              className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                              onClick={() => handleDecline(tx, idx)}
-                              disabled={isApproving === getTxId(tx)}
-                            >
-                              Decline
-                            </button>
-                          </>
-                        ) : (
-                          "—"
-                        )}
+                                }
+                                className="text-xs"
+                              >
+                                {statusMap[statusKey]?.label || statusKey}
+                              </Badge>
+                            );
+                          })()}
                         </div>
                         <div className="flex items-center gap-2 text-xs mb-2">
                           <Typography
                             variant="small"
                             className="text-[#9F9F9F]"
                           >
-                            {tx.date}
+                            {new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}
                           </Typography>
-                          {tx.category === "sent" ||
-                          tx.category === "pending" ? (
+                          {getTransactionCategory(tx) === "sent" ? (
                             <div className="flex items-center gap-1 text-[#007AFF]">
                               <ArrowUpRight size={14} />
                               <Typography
@@ -327,7 +290,7 @@ export default function TransactionsPage() {
                         </div>
                       </div>
 
-                      {tx.category === "sent" && (
+                      {getTransactionCategory(tx) === "sent" && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -336,16 +299,50 @@ export default function TransactionsPage() {
                           <Wallet /> Manage escrow
                         </Button>
                       )}
-
-                      {tx.category === "received" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="font-medium border-[#7A7A7A] gap-1"
-                        >
-                          <Eye /> View escrow
-                        </Button>
-                      )}
+                      {pendingApproval && !isSentByUser(tx) ? (
+                        <div className="flex justify-end w-full gap-2 mt-2">
+                          <Button
+                            className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            onClick={() => handleApprove(tx, idx)}
+                            disabled={isApproving === getTxId(tx)}
+                          >
+                            {isApproving === getTxId(tx) ? (
+                              <span className="flex items-center gap-2">
+                                <svg
+                                  className="animate-spin h-4 w-4 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v8z"
+                                  />
+                                </svg>
+                                Approving...
+                              </span>
+                            ) : (
+                              'Approve'
+                            )}
+                          </Button>
+                          <Button
+                            className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            onClick={() => handleDecline(tx, idx)}
+                            disabled={isApproving === getTxId(tx)}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="grid grid-cols-3 mt-2">
                       <div>
@@ -389,6 +386,8 @@ export default function TransactionsPage() {
               );
             })}
           </div>
+
+
         </>
       )}
     </motion.div>

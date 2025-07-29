@@ -3,35 +3,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-import { setUserName } from "../lib/redux/userSlice";
-import { useAppSelector } from "../lib/redux/store";
+import { setUserName } from "@/lib/redux/userSlice";
+import { useAppSelector } from "@/lib/redux/store";
 import { Principal } from "@dfinity/principal";
-import type { RootState } from "../lib/redux/store";
+import type { RootState } from "@/lib/redux/store";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
+import { useAuth } from "@/contexts/auth-context";
+
+import { SettingsModalProps } from './types';
 
 export default function EditNameModal({
   open,
   onClose,
   principalId,
   onNameSaved,
-}: {
-  open: boolean;
-  onClose: () => void;
-  principalId: string;
-  onNameSaved?: () => void;
-}) {
+}: SettingsModalProps) {
   const name = useAppSelector((state: RootState) => state.user.name);
   const [nameInput, setNameInput] = useState(name || "");
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
+  const { authClient } = useAuth();
 
   const handleSaveName = async () => {
     setIsSaving(true);
     try {
       if (!principal) throw new Error("No principal found");
-      const actor = await createSplitDappActor();
+      if (!authClient) throw new Error("No auth client found");
+      const identity = authClient.getIdentity();
+      const actor = await createSplitDappActor(identity);
       await actor.setName(Principal.fromText(principal), nameInput);
       toast.success("Name updated successfully!");
       dispatch(setUserName(nameInput));

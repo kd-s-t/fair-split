@@ -12,23 +12,29 @@ export interface PendingTransfer {
 export interface SplitDApp {
   'cancelEscrow' : ActorMethod<[Principal, bigint], undefined>,
   'cancelSplit' : ActorMethod<[Principal], undefined>,
-  'createEscrow' : ActorMethod<
-    [Principal, Array<ParticipantShare>, string],
-    undefined
-  >,
   'getAdmin' : ActorMethod<[], Principal>,
   'getBalance' : ActorMethod<[Principal], bigint>,
   'getLogs' : ActorMethod<[], Array<string>>,
-  'getMyTransactionByIndex' : ActorMethod<[bigint], [] | [Transaction]>,
   'getName' : ActorMethod<[Principal], [] | [string]>,
   'getPending' : ActorMethod<[Principal], Array<PendingTransfer>>,
   'getPendingApprovalsForRecipient' : ActorMethod<
     [Principal],
     Array<Transaction>
   >,
-  'getTransactionBy' : ActorMethod<[Principal, bigint], [] | [Transaction]>,
+  'getTransaction' : ActorMethod<[string, Principal], [] | [Transaction]>,
   'getTransactions' : ActorMethod<[Principal], Array<Transaction>>,
-  'initiateEscrow' : ActorMethod<[Principal, bigint], undefined>,
+  'getTransactionsPaginated' : ActorMethod<
+    [Principal, bigint, bigint],
+    {
+      'totalCount' : bigint,
+      'totalPages' : bigint,
+      'transactions' : Array<Transaction>,
+    }
+  >,
+  'initiateEscrow' : ActorMethod<
+    [Principal, Array<ParticipantShare>, string],
+    string
+  >,
   'initiateSplit' : ActorMethod<
     [Principal, Array<ParticipantShare>, string],
     undefined
@@ -56,6 +62,7 @@ export interface ToEntry {
   'amount' : bigint,
 }
 export interface Transaction {
+  'id' : string,
   'to' : Array<ToEntry>,
   'status' : TransactionStatus,
   'title' : string,
@@ -63,12 +70,7 @@ export interface Transaction {
   'isRead' : boolean,
   'timestamp' : bigint,
 }
-export type TransactionStatus = { 'cancelled' : null } |
-  { 'pending' : null } |
-  { 'released' : null } |
-  { 'confirmed' : null } |
-  { 'declined' : null } |
-  { 'draft' : null };
+export type TransactionStatus = string;
 export interface _SERVICE extends SplitDApp {}
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

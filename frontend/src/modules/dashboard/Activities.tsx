@@ -13,80 +13,11 @@ import {
   UserRound,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { truncateAddress } from "@/helper/string_helpper";
+import { truncateAddress } from "@/lib/utils";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
 import { useRouter } from "next/navigation";
-
-const mockActivities = [
-  {
-    description: "Freelance project payment",
-    status: "active",
-    date: "Jul 15, 06:30 PM",
-    category: "sent",
-    recipients: [
-      {
-        walletAddress: "0xA1B2C3D4E5F6",
-        amount: 0.003,
-        percentage: 60,
-      },
-      {
-        walletAddress: "0xB2C3D4E5F6A1",
-        amount: 0.002,
-        percentage: 40,
-      },
-    ],
-  },
-  {
-    description: "NFT collab - July share",
-    status: "completed",
-    date: "Jul 12, 07:29 PM",
-    category: "received",
-    recipients: [
-      {
-        walletAddress: "0xD4E5F6A1B2C3",
-        amount: 0.002,
-        percentage: 50,
-      },
-    ],
-  },
-  {
-    description: "Smart Contract Audit",
-    status: "pending",
-    date: "Jul 12, 11:45 PM",
-    category: "sent",
-    recipients: [
-      {
-        walletAddress: "0xF6A1B2C3D4E5",
-        amount: 0.016,
-        percentage: 30,
-      },
-      {
-        walletAddress: "0xA1B2C3D4E5F7",
-        amount: 0.024,
-        percentage: 40,
-      },
-      {
-        walletAddress: "0xB2C3D4E5F6A2",
-        amount: 0.02,
-        percentage: 30,
-      },
-    ],
-  },
-  {
-    description: "Product sale",
-    status: "refunded",
-    date: "Jul 10, 05:15 PM",
-    category: "received",
-    recipients: [
-      {
-        walletAddress: "0xF6A1B2C3D4E5",
-        amount: 1.25,
-        percentage: 100,
-      },
-    ],
-  },
-];
+import { RecentActivitiesProps } from './types';
 
 export const statusMap: Record<string, { label: string; variant: string }> = {
   released: { label: "Completed", variant: "success" },
@@ -100,17 +31,12 @@ export const statusMap: Record<string, { label: string; variant: string }> = {
   completed: { label: "Completed", variant: "success" },
 };
 
-interface RecentActivitiesProps {
-  transactions?: any[];
-}
-
 export default function RecentActivities({
   transactions,
 }: RecentActivitiesProps) {
   const router = useRouter();
   const principal = useSelector((state: RootState) => state.user?.principal);
-  const activities =
-    transactions && transactions.length > 0 ? transactions : mockActivities;
+  const activities = transactions && transactions.length > 0 ? transactions : [];
   return (
     <div className="mt-10">
       <Typography variant="h3" className="font-semibold">
@@ -170,7 +96,7 @@ export default function RecentActivities({
                       <div>
                         <div className="flex gap-2">
                           <Typography
-                            variant="h4"
+                            variant="large"
                             className="font-semibold leading-none"
                           >
                             {activity.title || activity.description}

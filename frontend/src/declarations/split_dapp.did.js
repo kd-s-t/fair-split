@@ -1,6 +1,8 @@
 export const idlFactory = ({ IDL }) => {
-  const ParticipantShare = IDL.Record({
-    'principal' : IDL.Principal,
+  const PendingTransfer = IDL.Record({
+    'to' : IDL.Principal,
+    'name' : IDL.Text,
+    'initiatedAt' : IDL.Nat,
     'amount' : IDL.Nat,
   });
   const ToEntry = IDL.Record({
@@ -13,15 +15,9 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'amount' : IDL.Nat,
   });
-  const TransactionStatus = IDL.Variant({
-    'cancelled' : IDL.Null,
-    'pending' : IDL.Null,
-    'released' : IDL.Null,
-    'confirmed' : IDL.Null,
-    'declined' : IDL.Null,
-    'draft' : IDL.Null,
-  });
+  const TransactionStatus = IDL.Text;
   const Transaction = IDL.Record({
+    'id' : IDL.Text,
     'to' : IDL.Vec(ToEntry),
     'status' : TransactionStatus,
     'title' : IDL.Text,
@@ -29,24 +25,16 @@ export const idlFactory = ({ IDL }) => {
     'isRead' : IDL.Bool,
     'timestamp' : IDL.Nat,
   });
-  const PendingTransfer = IDL.Record({
-    'to' : IDL.Principal,
-    'name' : IDL.Text,
-    'initiatedAt' : IDL.Nat,
+  const ParticipantShare = IDL.Record({
+    'principal' : IDL.Principal,
     'amount' : IDL.Nat,
   });
   const SplitDApp = IDL.Service({
     'cancelEscrow' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'cancelSplit' : IDL.Func([IDL.Principal], [], []),
-    'createEscrow' : IDL.Func(
-        [IDL.Principal, IDL.Vec(ParticipantShare), IDL.Text],
-        [],
-        [],
-      ),
     'getAdmin' : IDL.Func([], [IDL.Principal], ['query']),
     'getBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'getLogs' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'getMyTransactionByIndex' : IDL.Func([IDL.Nat], [IDL.Opt(Transaction)], []),
     'getName' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
     'getPending' : IDL.Func(
         [IDL.Principal],
@@ -58,17 +46,32 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Transaction)],
         ['query'],
       ),
-    'getTransactionBy' : IDL.Func(
-        [IDL.Principal, IDL.Nat],
+    'getTransaction' : IDL.Func(
+        [IDL.Text, IDL.Principal],
         [IDL.Opt(Transaction)],
-        ['query'],
+        [],
       ),
     'getTransactions' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(Transaction)],
         ['query'],
       ),
-    'initiateEscrow' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
+    'getTransactionsPaginated' : IDL.Func(
+        [IDL.Principal, IDL.Nat, IDL.Nat],
+        [
+          IDL.Record({
+            'totalCount' : IDL.Nat,
+            'totalPages' : IDL.Nat,
+            'transactions' : IDL.Vec(Transaction),
+          }),
+        ],
+        [],
+      ),
+    'initiateEscrow' : IDL.Func(
+        [IDL.Principal, IDL.Vec(ParticipantShare), IDL.Text],
+        [IDL.Text],
+        [],
+      ),
     'initiateSplit' : IDL.Func(
         [IDL.Principal, IDL.Vec(ParticipantShare), IDL.Text],
         [],

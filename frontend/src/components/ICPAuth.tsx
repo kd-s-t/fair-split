@@ -34,26 +34,32 @@ export default function Home() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   const login = async () => {
+    console.log('xCanister ID:', process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP);
+    console.log('xHost:', process.env.NEXT_PUBLIC_DFX_HOST);
     if (!authClient) return;
     await authClient.login({
-      identityProvider:
-        process.env.NEXT_PUBLIC_ICP_PROVIDER ||
-        "https://identity.ic0.app/#authorize",
+      identityProvider: 'https://identity.ic0.app',
+      maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000), // 7 days
       onSuccess: async () => {
         const identity = authClient.getIdentity();
-        const principalObj = identity.getPrincipal();
-        dispatch(setUser({ principal: principalObj.toText(), name: null }));
+        const principal = identity.getPrincipal();
+        dispatch(setUser({ principal: principal.toText(), name: null }));
+    
+        // You can now create an actor using this identity
+        const actor = createSplitDappActor(identity); // Pass the identity to your actor
       },
     });
   };
-
+  
   const logout = async () => {
     if (!authClient) return;
     await authClient.logout();
+    indexedDB.deleteDatabase('auth-client-storage'); // ✅ force delegation cleanup
     dispatch(clearUser());
+    dispatch(setBtcBalance(null)); // also clear balance
   };
+  
 
   return (
     <div

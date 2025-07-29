@@ -3,19 +3,10 @@ import { Typography } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 import { Send, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Recipient } from "@/types/Recipient";
-import TransactionDialog from '@/components/TransactionDialog';
+import TransactionDialog from '@/modules/escrow/Dialog';
 import { useRouter } from 'next/navigation';
-
-type TransactionSummaryProps = {
-  btcAmount: string;
-  recipients: Recipient[];
-  isLoading: boolean;
-  handleInitiateEscrow: () => void;
-  showDialog: boolean;
-  setShowDialog: (open: boolean) => void;
-  newTxId: string | null;
-};
+import { motion } from 'framer-motion';
+import { TransactionSummaryProps } from './types';
 
 const TransactionSummary = ({
   btcAmount,
@@ -45,7 +36,7 @@ const TransactionSummary = ({
       <Card className="h-fit">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <Typography variant="h4">Escrow summary</Typography>
+            <Typography variant="large">Escrow summary</Typography>
             <Shield color="#FEB64D" />
           </CardTitle>
         </CardHeader>
@@ -89,15 +80,35 @@ const TransactionSummary = ({
             bridges, no wrapped BTC.
           </Typography>
 
-          <Button
-            variant="default"
-            className="w-full mt-4 text-sm text-[#0D0D0D] font-medium gap-2"
-            disabled={isLoading}
-            onClick={handleInitiateEscrow}
+          <motion.div
+            className="relative overflow-hidden w-full mt-4"
           >
-            <Send size={16} />
-            {isLoading ? "Processing..." : "Initiate escrow"}
-          </Button>
+            <Button
+              variant="default"
+              className="w-full text-sm text-[#0D0D0D] font-medium gap-2 relative cursor-pointer"
+              disabled={isLoading}
+              onClick={handleInitiateEscrow}
+            >
+              <Send size={16} />
+              {isLoading ? "Processing..." : "Initiate escrow"}
+            </Button>
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
+              animate={{
+                x: ["-100%", "100%"],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "linear",
+                delay: 2,
+              }}
+              style={{
+                background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+                transform: "skewX(-20deg)",
+              }}
+            />
+          </motion.div>
         </CardContent>
       </Card>
     </div>

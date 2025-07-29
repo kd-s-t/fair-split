@@ -4,10 +4,11 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { getAvatarUrl, truncatePrincipal } from '@/lib/utils';
-import EditNameModal from './SettingsModal';
-import LogoutButton from './LogoutButton';
-import { useAppSelector } from '../lib/redux/store';
-import type { RootState } from '../lib/redux/store';
+import EditNameModal from './Modal';
+import LogoutButton from './Button';
+import { useAppSelector } from '@/lib/redux/store';
+import type { RootState } from '@/lib/redux/store';
+import { ProfileDropdownProps } from './types';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);

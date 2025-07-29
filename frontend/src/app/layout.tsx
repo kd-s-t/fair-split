@@ -1,60 +1,104 @@
 'use client'
 
 import './globals.css'
-import { ReactNode } from 'react'
-import { AuthProvider } from '@/contexts/auth-context'
+import { ReactNode, useEffect } from 'react'
+import { AuthProvider, useAuth } from '@/contexts/auth-context'
 import { Toaster } from '@/components/ui/sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
-import * as React from "react";
-import { Provider } from 'react-redux';
-import { store } from '../lib/redux/store';
-import { useAppSelector } from '../lib/redux/store';
-import AuthOverlay from '@/components/AuthOverlay';
-import { setBtcBalance, setUserName } from '../lib/redux/userSlice';
-import { createSplitDappActor } from '@/lib/icp/splitDapp';
-import { useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { Principal } from '@dfinity/principal';
-import { useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux'
+import { store, useAppSelector } from '../lib/redux/store'
+import AuthOverlay from '@/components/AuthOverlay'
+import { setBtcBalance, setUserName } from '../lib/redux/userSlice'
+import { setTransactions } from '../lib/redux/transactionsSlice'
+import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
+import { Principal } from '@dfinity/principal'
 
 function BalanceAndNameSyncer() {
-  const principal = useAppSelector((state: any) => state.user.principal);
-  const dispatch = useDispatch();
-  
+  const principal = useAppSelector((state: any) => state.user.principal)
+  const { authClient } = useAuth()
+  const dispatch = useDispatch()
+
   useEffect(() => {
-    if (!principal) return;
-    (async () => {
+    if (!principal || !authClient) return
+
+    ;(async () => {
       try {
-        const actor = await createSplitDappActor();
-        const principalObj = Principal.fromText(principal);
-        // Fetch BTC balance
-        const balance = await actor.getBalance(principalObj);
-        const formatted = (Number(balance) / 1e8).toFixed(8);
-        dispatch(setBtcBalance(formatted));
-        // Fetch name
-        const nameResult = await actor.getName(principalObj);
-        if (Array.isArray(nameResult) && nameResult.length > 0) {
-          dispatch(setUserName(nameResult[0]));
-        } else {
-          dispatch(setUserName(null));
+        const isAuthenticated = await authClient.isAuthenticated()
+        if (!isAuthenticated) {
+          console.warn('User not authenticated, skipping backend calls')
+          dispatch(setBtcBalance(null))
+          dispatch(setUserName(null))
+          dispatch(setTransactions([]))
+          return
+        }
+
+        const actor = await createSplitDappActorAnonymous()
+        const principalObj = Principal.fromText(principal)
+
+        // Fetch BTC Balance
+        try {
+          const balance = await actor.getBalance(principalObj)
+          console.log('balance', balance)
+          const formatted = (Number(balance) / 1e8).toFixed(8)
+          dispatch(setBtcBalance(formatted))
+        } catch (err) {
+          console.error('❌ Could not fetch balance:', err)
+          dispatch(setBtcBalance(null))
+        }
+
+        // Fetch Name
+        try {
+          const nameResult = await actor.getName(principalObj)
+          if (Array.isArray(nameResult) && nameResult.length > 0) {
+            dispatch(setUserName(nameResult[0]))
+          } else {
+            dispatch(setUserName(null))
+          }
+        } catch (err) {
+          console.error('❌ Could not fetch name:', err)
+          dispatch(setUserName(null))
+        }
+
+        // Fetch Transactions
+        try {
+          const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(10)) as any
+          const normalizeTx = (tx: any) => ({
+            ...tx,
+            from: typeof tx.from === 'object' && tx.from.toText ? tx.from.toText() : String(tx.from),
+            timestamp: typeof tx.timestamp === 'bigint' ? tx.timestamp.toString() : String(tx.timestamp),
+            to: tx.to.map((toEntry: any) => ({
+              ...toEntry,
+              principal:
+                typeof toEntry.principal === 'object' && toEntry.principal.toText
+                  ? toEntry.principal.toText()
+                  : String(toEntry.principal),
+              amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : String(toEntry.amount),
+            })),
+          })
+          const normalizedTxs = (result.transactions as any[]).map(normalizeTx)
+          dispatch(setTransactions(normalizedTxs))
+        } catch (err) {
+          console.error('❌ Could not fetch transactions:', err)
+          dispatch(setTransactions([]))
         }
       } catch (error) {
-        console.error(error)
-        dispatch(setBtcBalance(null));
-        dispatch(setUserName(null));
+        console.error('🔥 Unexpected error in BalanceAndNameSyncer:', error)
+        dispatch(setBtcBalance(null))
+        dispatch(setUserName(null))
+        dispatch(setTransactions([]))
       }
-    })();
-  }, [principal, dispatch]);
+    })()
+  }, [principal, authClient, dispatch])
 
-  return null;
+  return null
 }
 
 function LayoutShell({ children }: { children: ReactNode }) {
-  const principal = useAppSelector((state: any) => state.user.principal);
-  const name = useAppSelector((state: any) => state.user.name);
-  const title = useSelector((state: any) => state.layout.title);
-  const subtitle = useSelector((state: any) => state.layout.subtitle);
+  const principal = useAppSelector((state: any) => state.user.principal)
+  const name = useAppSelector((state: any) => state.user.name)
+  const title = useSelector((state: any) => state.layout.title)
+  const subtitle = useSelector((state: any) => state.layout.subtitle)
 
   return (
     <div className="relative w-screen h-screen overflow-hidden flex">
@@ -73,9 +117,8 @@ function LayoutShell({ children }: { children: ReactNode }) {
       <AuthOverlay />
       <BalanceAndNameSyncer />
     </div>
-  );
+  )
 }
-
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

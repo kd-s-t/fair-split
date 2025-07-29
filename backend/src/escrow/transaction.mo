@@ -5,15 +5,9 @@ module {
         amount : Nat;
         status : { #pending; #approved; #declined };
     };
-    public type TransactionStatus = {
-        #draft;
-        #pending;
-        #confirmed;
-        #released;
-        #cancelled;
-        #declined;
-    };
+    public type TransactionStatus = Text; // Changed from variant to Text
     public type Transaction = {
+        id : Text;
         from : Principal;
         to : [ToEntry];
         timestamp : Nat;
@@ -24,18 +18,5 @@ module {
     public type ParticipantShare = {
         principal : Principal;
         amount : Nat;
-    };
-    public func createTransaction(
-        from : Principal,
-        to : [ToEntry],
-        timestamp : Nat,
-        title : Text
-    ) : Transaction = {
-        from = from;
-        to = to;
-        timestamp = timestamp;
-        isRead = false;
-        status = #draft;
-        title = title;
     };
 }

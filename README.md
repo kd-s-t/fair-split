@@ -65,7 +65,5 @@ After setting up a `principals.json` will be generated these are sample user for
 ## Authors
 
 - [@kenn](https://www.linkedin.com/in/kdst/)
-- [@ron](https://www.linkedin.com/in/rausch-lobiano-276780219/)
 - [@don](https://www.linkedin.com/in/carl-john-don-sebial-882430187/)
 - [@peter](https://www.linkedin.com/in/petertibon/)
-- [@regie](https://www.linkedin.com/in/rigie-tamala-31224718b/)

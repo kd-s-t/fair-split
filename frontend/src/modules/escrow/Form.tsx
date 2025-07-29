@@ -4,26 +4,11 @@ import { Bitcoin, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { Recipient } from "@/types/Recipient";
-
-type TransactionFormProps = {
-  description: string;
-  setDescription: (description: string) => void;
-  btcAmount: string;
-  setBtcAmount: (btcAmount: string) => void;
-  recipients: Recipient[];
-  handleAddRecipient: () => void;
-  handleRemoveRecipient: (idx: number) => void;
-  handleRecipientChange: (
-    idx: number,
-    field: keyof Recipient,
-    value: string | number
-  ) => void;
-};
+import { TransactionFormProps } from './types';
 
 const TransactionForm = ({
-  description,
-  setDescription,
+  title,
+  setTitle,
   btcAmount,
   setBtcAmount,
   recipients,
@@ -36,20 +21,20 @@ const TransactionForm = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <Typography variant="h4">Escrow setup</Typography>
+            <Typography variant="large">Escrow setup</Typography>
             <Bitcoin color="#F97415" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 mt-4">
           <div>
             <label className="text-sm font-medium text-[#A1A1AA]">
-              Title <span className="font-normal">(optional)</span>
+              Title 
             </label>
             <Input
               className="mt-1 "
               type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Freelance project payment"
             />
           </div>
@@ -74,7 +59,7 @@ const TransactionForm = ({
           </div>
           <hr className="mt-6 mb-6 text-[#424444]" />
           <div className="flex items-center justify-between">
-            <Typography variant="h4">Recipients & split allocation</Typography>
+            <Typography variant="large">Recipients & split allocation</Typography>
             <Button
               variant="ghost"
               size="sm"

@@ -1,0 +1,19 @@
+{
+  "name": "splitsafe-script",
+  "version": "1.0.0",
+  "description": "Script to test SplitDApp escrow functionality",
+  "main": "script.ts",
+  "scripts": {
+    "start": "ts-node script.ts"
+  },
+  "dependencies": {
+    "@dfinity/principal": "^0.15.0",
+    "@dfinity/agent": "^0.15.0",
+    "@dfinity/auth-client": "^0.15.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0"
+  }
+} 

@@ -1,14 +1,5 @@
 import * as React from 'react';
-
-interface Step {
-  label: string;
-  description: string;
-}
-
-interface TransactionLifecycleProps {
-  currentStep: number; // 0-based index
-  steps?: Step[];
-}
+import { TransactionLifecycleProps, Step } from './types';
 
 const defaultSteps: Step[] = [
   { label: 'Locked', description: 'Signed by ICP threshold ECDSA' },

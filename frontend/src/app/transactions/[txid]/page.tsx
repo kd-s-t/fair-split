@@ -96,19 +96,17 @@ export default function TransactionDetailsPage() {
     );
   }
 
-  const handleRelease = async () => {
+  const handleRelease = async (id: unknown) => {
     setIsLoading("release");
     try {
+      const txId = String(id); // ✅ convert to Text
+
+      console.log("Releasing for:", { principal: principal.toText?.(), txId });
+
       const actor = await createSplitDappActor();
-      await actor.releaseSplit(
-        Principal.fromText(
-          typeof transaction.from === "string"
-            ? transaction.from
-            : transaction.from.toText()
-        )
-      );
+      await actor.releaseSplit(principal, txId); // pass cleanly
+
       toast.success("Escrow released!");
-      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error("Release error:", err);
       toast.error(
@@ -436,7 +434,7 @@ export default function TransactionDetailsPage() {
                   <Button
                     variant="default"
                     className="w-1/2 flex items-center justify-center gap-2 text-base font-semibold"
-                    onClick={handleRelease}
+                    onClick={() => handleRelease(transaction.id)}
                     disabled={isLoading === "release" || isLoading === "refund"}
                   >
                     {isLoading === "release" ? (

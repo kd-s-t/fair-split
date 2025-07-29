@@ -4,6 +4,7 @@ type Transaction =
    from: principal;
    id: text;
    isRead: bool;
+   releasedAt: opt nat;
    status: TransactionStatus;
    timestamp: nat;
    title: text;
@@ -49,7 +50,7 @@ type SplitDApp =
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
     principal) -> ();
    releaseEscrow: (caller: principal, idx: nat) -> ();
-   releaseSplit: (caller: principal) -> (vec ToEntry);
+   releaseSplit: (caller: principal, txId: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setName: (p: principal, name: text) -> ();
  };

@@ -24,6 +24,7 @@ export const idlFactory = ({ IDL }) => {
     'from' : IDL.Principal,
     'isRead' : IDL.Bool,
     'timestamp' : IDL.Nat,
+    'releasedAt' : IDL.Opt(IDL.Nat),
   });
   const ParticipantShare = IDL.Record({
     'principal' : IDL.Principal,
@@ -89,7 +90,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'releaseEscrow' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
-    'releaseSplit' : IDL.Func([IDL.Principal], [IDL.Vec(ToEntry)], []),
+    'releaseSplit' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'setInitialBalance' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Principal],
         [],

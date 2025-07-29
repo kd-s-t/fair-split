@@ -49,7 +49,7 @@ export interface SplitDApp {
     undefined
   >,
   'releaseEscrow' : ActorMethod<[Principal, bigint], undefined>,
-  'releaseSplit' : ActorMethod<[Principal], Array<ToEntry>>,
+  'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'setInitialBalance' : ActorMethod<[Principal, bigint, Principal], undefined>,
   'setName' : ActorMethod<[Principal, string], undefined>,
 }
@@ -69,6 +69,7 @@ export interface Transaction {
   'from' : Principal,
   'isRead' : boolean,
   'timestamp' : bigint,
+  'releasedAt' : [] | [bigint],
 }
 export type TransactionStatus = string;
 export interface _SERVICE extends SplitDApp {}

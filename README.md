@@ -5,7 +5,7 @@
 </div>
 
 <div align="center"> 
-	<img src="./frontend/public/safesplit.svg" width="20%" />
+	<img src="./frontend/public/githublogo.png" width="20%" />
 	by:  
 	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
 		<img src="./frontend/public/team.png" width="5%" /> 

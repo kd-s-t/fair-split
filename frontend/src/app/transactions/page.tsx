@@ -41,13 +41,13 @@ export default function TransactionsPage() {
   const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
 
-  // Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     if (transactions && transactions.length > 0) {
-      setLocalTransactions(transactions);
+      const sorted = [...transactions].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+      setLocalTransactions(sorted);
     }
   }, [transactions]);
 
@@ -218,6 +218,7 @@ export default function TransactionsPage() {
           <div className="space-y-4">
             {currentTransactions.map((tx: any, idx: number) => {
               const pendingApproval = isPendingApproval(tx);
+              const isRowClickable = !pendingApproval && getTransactionCategory(tx) === "sent";
 
               return (
                 <motion.div
@@ -225,10 +226,8 @@ export default function TransactionsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval ? 'cursor-pointer hover:bg-[#2a2a2a] transition-colors' : ''}`}
-                  onClick={
-                    pendingApproval ? undefined : () => handleRowClick(tx)
-                  }
+                  className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors' : ''}`}
+                  onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
                 >
                   <div key={tx.id} className="flex-1 min-w-0">
                     <div className="flex justify-between">

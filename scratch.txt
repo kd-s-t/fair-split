@@ -25,9 +25,10 @@ dfx identity list
 dfx canister id split_dapp
 uxrrr-q7777-77774-qaaaq-cai
 
-2820835
-j7r3u-uzdl5-2ywu3-ylhp3-gpkhl-7rcxu-3xyyu-kmdp2-dsl7z-sdfe6-hae
 
+uu3ee-ff3xm-vhws5-zxy6q-vtsvx-q2uhy-4ligb-wcltn-dd6xn-bckkv-mqe
+2820835 - j7r3u-uzdl5-2ywu3-ylhp3-gpkhl-7rcxu-3xyyu-kmdp2-dsl7z-sdfe6-hae
+fe4nh-lgnft-kpdcw-tufpd-jt5eo-3hai3-ev76u-y2hht-dgohe-b5tsn-fqe
 
 
 

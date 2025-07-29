@@ -50,13 +50,9 @@ export default function TransactionsPage() {
       setLocalTransactions(sorted);
     }
   }, [transactions]);
-  console.log("transactions", transactions);
-
-  // Get available categories and statuses for dropdowns
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
 
-  // Helper to generate random transaction hash
   function generateRandomHash(): string {
     const chars = '0123456789abcdef';
     let hash = '';
@@ -66,7 +62,6 @@ export default function TransactionsPage() {
     return hash;
   }
 
-  // Helper to truncate hash for display
   function truncateHash(hash: string): string {
     if (hash.length <= 16) return hash;
     return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
@@ -78,7 +73,6 @@ export default function TransactionsPage() {
       .join("-")}_${tx.timestamp}`;
   }
 
-  // Helper to determine if tx is pending approval for the current user
   function isPendingApproval(tx: any): boolean {
     if (!principal) return false;
     return tx.to.some(
@@ -89,7 +83,6 @@ export default function TransactionsPage() {
     );
   }
 
-  // Helper to check if current user has already approved
   function hasUserApproved(tx: any): boolean {
     if (!principal) return false;
     return tx.to.some(
@@ -100,12 +93,10 @@ export default function TransactionsPage() {
     );
   }
 
-  // Helper to determine if tx is sent by the user
   function isSentByUser(tx: any): boolean {
     return String(tx.from) === String(principal);
   }
 
-  // Helper to determine transaction category (sent vs received)
   function getTransactionCategory(tx: any): "sent" | "received" {
     return isSentByUser(tx) ? "sent" : "received";
   }
@@ -128,11 +119,7 @@ export default function TransactionsPage() {
         ? Principal.fromText(recipientEntry.principal)
         : recipientEntry.principal;
       
-      // No need to find index, just use tx.id
-      console.log("payload", {senderPrincipal, txId: tx.id, recipientPrincipal});
-      
-      const x = await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
-      console.log("x", x);
+      await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
       toast.success('Approved successfully!');
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
@@ -148,7 +135,6 @@ export default function TransactionsPage() {
       const actor = await createSplitDappActor();
       const senderPrincipal =
         typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
-      // Always compare principal as string
       const principalStr =
         typeof principal === "string" ? principal : principal.toText();
       const recipientEntry = tx.to.find(
@@ -164,7 +150,6 @@ export default function TransactionsPage() {
           ? Principal.fromText(recipientEntry.principal)
           : recipientEntry.principal;
 
-      // Find the actual transaction index in the backend
       const txs = await actor.getTransactionsPaginated(Principal.fromText(principalStr), BigInt(0), BigInt(100)) as any;
       const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
       
@@ -232,7 +217,6 @@ export default function TransactionsPage() {
       )}
       {!isLoading && !error && localTransactions.length > 0 && (
         <>
-          {/* Search and Filter Section */}
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1">
               <input
@@ -266,7 +250,6 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          {/* Transaction Count */}
           <div className="text-sm text-gray-400 mb-4">
             Showing {currentTransactions.length} of {localTransactions.length} transactions
           </div>
@@ -342,7 +325,6 @@ export default function TransactionsPage() {
                               </Typography>
                             </div>
                           )}
-                          {/* Show "Approved" text for pending/confirmed transactions where user has approved */}
                           {((tx.status === 'pending' || tx.status === 'confirmed') && 
                             !isSentByUser(tx) && hasUserApproved(tx)) && (
                             <Typography
@@ -441,7 +423,7 @@ export default function TransactionsPage() {
                         <Typography
                           variant="base"
                           className="font-semibold text-[#FEB64D] truncate"
-                          title={generateRandomHash()} // Show full hash on hover
+                          title={generateRandomHash()} 
                         >
                           {truncateHash(generateRandomHash())}
                         </Typography>

@@ -109,14 +109,12 @@ export default function TransactionDetailsPage() {
   else if (statusKey === "confirmed") currentStep = 1;
   else if (statusKey === "pending") currentStep = elapsed < twoHours ? 0 : 2;
 
-  // Calculate total released BTC for banner
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Green banner for released status */}
       {statusKey === "released" && (
         <div className="rounded-xl bg-gradient-to-r from-[#1be37c] to-[#b0ff6c] p-4 flex items-center justify-between mb-2">
           <div>
@@ -138,7 +136,20 @@ export default function TransactionDetailsPage() {
           )}
 
           {statusKey === "pending" && (
-            <PendingEscrowDetails transaction={transaction} />
+            <PendingEscrowDetails transaction={{
+              ...transaction,
+              from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+              to: Array.isArray(transaction.to)
+                ? transaction.to.map((toEntry: any) => ({
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
+                : [],
+              status: (transaction.status as "released" | "confirmed" | "pending"),
+              releasedAt: Array.isArray(transaction.releasedAt)
+                ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                : transaction.releasedAt
+            }} />
           )}
 
           {statusKey === "confirmed" && (

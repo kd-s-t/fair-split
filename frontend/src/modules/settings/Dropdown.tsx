@@ -7,13 +7,10 @@ import { getAvatarUrl, truncatePrincipal } from '@/lib/utils';
 import EditNameModal from './Modal';
 import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
-import type { RootState } from '@/lib/redux/store';
-import { ProfileDropdownProps } from './types';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);
   const displayName = useAppSelector((state: any) => state.user.name);
-  const isLoading = displayName === null || displayName === undefined || displayName === '';
 
   return (
     <>

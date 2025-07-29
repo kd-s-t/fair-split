@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import TransactionForm from "@/modules/escrow/Form";
@@ -8,7 +7,7 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Recipient } from "@/modules/escrow/types";
 import { Principal } from "@dfinity/principal";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
@@ -19,10 +18,16 @@ export default function EscrowPage() {
   const [recipients, setRecipients] = useState<Recipient[]>([
     { id: "1", principal: "", percentage: 100 },
   ]);
+  const idCounter = useRef(2);
+
+  const generateUniqueId = () => {
+    const uniqueId = `recipient-${idCounter.current}`;
+    idCounter.current += 1;
+    return { uniqueId, newId: idCounter.current - 1 };
+  };
   const [isLoading, setIsLoading] = useState(false);
   const [btcAmount, setBtcAmount] = useState<string>("");
-  const { principal, authClient }: { principal: { toText: () => string } | null, authClient: any } =
-    useAuth();
+  const { principal, authClient } = useAuth();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -49,12 +54,12 @@ export default function EscrowPage() {
   };
 
   const handleAddRecipient = () => {
+    const { uniqueId, newId } = generateUniqueId();
     setRecipients((prev) => {
       const newRecipients = [
-        { id: String(Date.now()), principal: "", percentage: 0 },
+        { id: uniqueId, principal: "", percentage: 0 },
         ...prev,
       ];
-      // Auto-distribute percentage
       const count = newRecipients.length;
       const autoPercent = count > 0 ? Math.floor(100 / count) : 0;
       const remainder = 100 - autoPercent * count;
@@ -63,13 +68,13 @@ export default function EscrowPage() {
         percentage: autoPercent + (idx === 0 ? remainder : 0),
       }));
     });
+
   };
 
   const handleRemoveRecipient = (idx: number) => {
     setRecipients((prev) => {
       const filtered =
         prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev;
-      // Auto-distribute percentage
       const count = filtered.length;
       const autoPercent = count > 0 ? Math.floor(100 / count) : 0;
       const remainder = 100 - autoPercent * count;
@@ -104,17 +109,7 @@ export default function EscrowPage() {
     setIsLoading(true);
 
     try {
-      // Log environment values (optional for debug)
-      console.log("Canister ID:", process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP);
-      console.log("Host:", process.env.NEXT_PUBLIC_DFX_HOST);
-
-      // Refresh login session if needed
-      if (!(await authClient.isAuthenticated())) {
-        await authClient.login(); // Refresh delegation
-      }
-
-      const identity = authClient.getIdentity();
-      const actor = await createSplitDappActor(identity);
+      const actor = await createSplitDappActor();
 
       const callerPrincipal = Principal.fromText(principal.toText());
 
@@ -132,11 +127,12 @@ export default function EscrowPage() {
         return;
       }
 
-      setNewTxId(txId);
+      setNewTxId(String(txId));
       setShowDialog(true);
       await fetchAndStoreTransactions();
-    } catch (err: any) {
-      toast.error(`Error initiating escrow: ${err.message || err}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      toast.error(`Error initiating escrow: ${errorMessage}`);
       console.error("Initiate escrow failed:", err);
     } finally {
       setIsLoading(false);
@@ -146,38 +142,46 @@ export default function EscrowPage() {
   const fetchAndStoreTransactions = async () => {
     if (!principal) return;
     if (!authClient) return;
-    const identity = authClient.getIdentity();
-    const actor = await createSplitDappActor(identity);
-    const txs = await actor.getTransactions(
-      Principal.fromText(principal.toText())
-    ) as any[];
-    const serializableTxs = txs.map((tx: any) => ({
-      ...tx,
-      from: typeof tx.from === "string" ? tx.from : tx.from.toText(),
-      timestamp:
-        typeof tx.timestamp === "bigint"
-          ? tx.timestamp.toString()
-          : tx.timestamp,
-      releasedAt: Array.isArray(tx.releasedAt) && tx.releasedAt.length > 0
-        ? tx.releasedAt[0].toString()
-        : null,
-      to: tx.to.map((toEntry: any) => ({
-        ...toEntry,
-        principal:
-          toEntry.principal &&
-            typeof toEntry.principal === "object" &&
-            typeof toEntry.principal.toText === "function"
-            ? toEntry.principal.toText()
-            : typeof toEntry.principal === "string"
-              ? toEntry.principal
-              : String(toEntry.principal),
-        amount:
-          typeof toEntry.amount === "bigint"
-            ? toEntry.amount.toString()
-            : toEntry.amount,
-      })),
-    }));
-    dispatch(setTransactions(serializableTxs as any));
+    const actor = await createSplitDappActor();
+    const result = await actor.getTransactionsPaginated(
+      Principal.fromText(principal.toText()),
+      BigInt(0),
+      BigInt(50)
+    ) as { transactions: unknown[] };
+    const txs = result.transactions || [];
+    const serializableTxs = txs.map((tx: unknown) => {
+      const txObj = tx as Record<string, unknown>;
+      return {
+        ...txObj,
+        from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
+        timestamp:
+          typeof txObj.timestamp === "bigint"
+            ? txObj.timestamp.toString()
+            : txObj.timestamp,
+        releasedAt: Array.isArray(txObj.releasedAt) && txObj.releasedAt.length > 0
+          ? txObj.releasedAt[0].toString()
+          : null,
+        to: (txObj.to as unknown[]).map((toEntry: unknown) => {
+          const entry = toEntry as Record<string, unknown>;
+          return {
+            ...entry,
+            principal:
+              entry.principal &&
+                typeof entry.principal === "object" &&
+                typeof (entry.principal as { toText: () => string }).toText === "function"
+                ? (entry.principal as { toText: () => string }).toText()
+                : typeof entry.principal === "string"
+                  ? entry.principal
+                  : String(entry.principal),
+            amount:
+              typeof entry.amount === "bigint"
+                ? entry.amount.toString()
+                : entry.amount,
+          };
+        }),
+      };
+    });
+    dispatch(setTransactions(serializableTxs));
   };
 
   return (

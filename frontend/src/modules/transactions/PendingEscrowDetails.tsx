@@ -2,24 +2,57 @@
 
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
+import { TransactionStats } from "@/components/ui/transaction-stats";
 
-export default function PendingEscrowDetails({ transaction }: { transaction: any }) {
-  const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
-    : 0;
+type ToEntry = {
+  principal: string;
+  name: string;
+  amount: bigint;
+  status: { [key: string]: null }; // e.g., { approved: null } or { pending: null }
+};
+
+type EscrowTransaction = {
+  id: string;
+  from: string;
+  to: ToEntry[];
+  status: "pending" | "confirmed" | "released";
+  timestamp: bigint;
+  title: string;
+  depositAddress?: string;
+  isRead?: boolean;
+  releasedAt?: bigint;
+};
+
+export default function PendingEscrowDetails({ transaction }: { transaction: EscrowTransaction }) {
+  const depositAddress = transaction?.depositAddress || "Unknown address";
+
+  const totalBTC =
+    Array.isArray(transaction?.to) && transaction.to.length > 0
+      ? transaction.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
+      : 0;
+
+  const recipientCount = transaction?.to?.length || 0;
 
   return (
     <>
+      <TransactionStats 
+        totalBTC={totalBTC}
+        recipientCount={recipientCount}
+        status={transaction.status}
+      />
+
+      <hr className="my-10 text-[#424444] h-[1px]" />
+
       <Typography variant="large" className="text-[#FEB64D]">Funding required</Typography>
 
       <Typography variant="small" className="text-[#fff] font-semibold">
         Bitcoin deposit address
       </Typography>
       <div className="grid grid-cols-12 gap-3 mt-2">
-        <div className="container-gray col-span-11">
-          bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
+        <div className="container-gray col-span-11 break-all">
+          {depositAddress}
         </div>
-        <div className="container-gray">
+        <div className="container-gray cursor-pointer">
           <Copy />
         </div>
       </div>
@@ -43,7 +76,8 @@ export default function PendingEscrowDetails({ transaction }: { transaction: any
               Fully Trustless
             </Typography>
             <Typography className="text-[#9F9F9F] mt-1">
-              Escrow powered by Internet Computer's native Bitcoin integration. No bridge. No wrap. Fully trustless.
+              Escrow powered by Internet Computer&apos;s native Bitcoin integration.
+              No bridge. No wrap. Fully trustless.
             </Typography>
           </div>
         </div>

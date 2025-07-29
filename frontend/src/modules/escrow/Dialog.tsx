@@ -41,64 +41,28 @@ export default function TransactionDialog({
           />
         </motion.div>
         
-        <motion.h2 
-          className="text-2xl font-bold mb-2 mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
+        <h2 className="text-2xl font-bold mb-2 mt-8">
           Escrow initiated
-        </motion.h2>
+        </h2>
         
-        <motion.p 
-          className="text-gray-400 mb-6 max-w-md"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
+        <p className="text-gray-400 mb-6 max-w-md">
           The Bitcoin escrow has been successfully created and is awaiting funding.
-        </motion.p>
+        </p>
         
-        <motion.div 
-          className="w-full bg-[#222222] border border-[#303434] rounded-[10px] p-3 mb-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-        >
+        <div className="w-full bg-[#222222] border border-[#303434] rounded-[10px] p-3 mb-6">
           <Typography variant="muted">
             Send {amount} BTC to the generated deposit to activate the escrow.
           </Typography>
-        </motion.div>
+        </div>
         
-        <motion.div
-          className="relative overflow-hidden w-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 1.0 }}
-        >
+        <div className="relative overflow-hidden w-full">
           <Button
             className="w-full relative cursor-pointer"
             onClick={onDone}
           >
             Done
           </Button>
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-            animate={{
-              x: ["-100%", "100%"],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "linear",
-              delay: 1.5,
-            }}
-            style={{
-              background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
-              transform: "skewX(-20deg)",
-            }}
-          />
-        </motion.div>
+        </div>
       </motion.div>
     </Dialog>
   );

@@ -1,6 +1,10 @@
 {
-  "user1": "6plni-kg3vz-j364n-kq4og-knybs-dlcve-foeoj-3dom6-72644-44fmd-bqe",
-  "user2": "modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe",
-  "user3": "lj5ry-unyjc-jdn7p-j3qmv-ug3zb-cegzu-wnmf7-vpni3-5f3zj-hhjjf-tqe",
-  "user4": "6d7pr-gfm24-fnvuv-odsjz-6brox-4spcl-ahcyw-gzync-bx3qg-sdaqt-rqe"
+  "title": "Strategic Income",
+  "amount": 1,
+  "recipients":[
+    "6plni-kg3vz-j364n-kq4og-knybs-dlcve-foeoj-3dom6-72644-44fmd-bqe",
+    "modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe",
+    "lj5ry-unyjc-jdn7p-j3qmv-ug3zb-cegzu-wnmf7-vpni3-5f3zj-hhjjf-tqe",
+    "6d7pr-gfm24-fnvuv-odsjz-6brox-4spcl-ahcyw-gzync-bx3qg-sdaqt-rqe"
+  ]
 }

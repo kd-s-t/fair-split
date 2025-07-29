@@ -23,7 +23,7 @@ export const statusMap: Record<string, { label: string; variant: string }> = {
   released: { label: "Completed", variant: "success" },
   draft: { label: "Draft", variant: "secondary" },
   pending: { label: "Pending", variant: "primary" },
-  confirmed: { label: "Confirmed", variant: "primary" },
+  confirmed: { label: "Active", variant: "secondary" },
   cancelled: { label: "Cancelled", variant: "error" },
   declined: { label: "Declined", variant: "error" },
   refund: { label: "Refunded", variant: "error" },
@@ -36,7 +36,9 @@ export default function RecentActivities({
 }: RecentActivitiesProps) {
   const router = useRouter();
   const principal = useSelector((state: RootState) => state.user?.principal);
-  const activities = transactions && transactions.length > 0 ? transactions : [];
+  const activities = transactions && transactions.length > 0 
+    ? [...transactions].sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+    : [];
   return (
     <div className="mt-10">
       <Typography variant="h3" className="font-semibold">
@@ -85,8 +87,8 @@ export default function RecentActivities({
               String(activity.from) === String(principal);
             const category = isSender ? "sent" : "received";
             // Build transaction details URL
-            const txUrl = activity.from
-              ? `/transactions/${idx}-${activity.from}`
+            const txUrl = activity.id
+              ? `/transactions/${activity.id}`
               : undefined;
             return (
               <Card key={idx}>
@@ -141,11 +143,9 @@ export default function RecentActivities({
                             className="text-xs text[rgba(159, 159, 159, 1)]"
                           >
                             {activity.date ||
-                              (activity.timestamp
-                                ? new Date(
-                                    Number(activity.timestamp) / 1_000_000
-                                  ).toLocaleString()
-                                : "")}
+                              (activity.timestamp && !isNaN(Number(activity.timestamp))
+                                ? new Date(Number(activity.timestamp) * 1000).toLocaleString()
+                                : new Date().toLocaleString())}
                           </Typography>
                           <span className="text-white">•</span>
                           {category === "sent" ? (

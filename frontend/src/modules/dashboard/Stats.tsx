@@ -18,6 +18,12 @@ export default function DashboardStats({ transactions }: { transactions: Transac
   const [displayBalance, setDisplayBalance] = useState("0.00000000");
   const [displayUsd, setDisplayUsd] = useState("$0.00");
 
+  // Calculate transaction counts
+  const totalEscrows = transactions ? transactions.length : 0;
+  const activeEscrows = transactions ? transactions.filter(tx => tx.status === 'confirmed').length : 0;
+  const completedEscrows = transactions ? transactions.filter(tx => tx.status === 'released').length : 0;
+  const pendingEscrows = transactions ? transactions.filter(tx => tx.status === 'pending').length : 0;
+
   const handleNewEscrow = () => {
     router.push('/escrow');
   };
@@ -164,22 +170,22 @@ export default function DashboardStats({ transactions }: { transactions: Transac
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <StatCard
           label="Total escrows"
-          value={transactions ? transactions.length : 0}
+          value={totalEscrows}
           icon={<Shield className="text-yellow-400 text-2xl" />}
         />
         <StatCard
           label="Active escrows"
-          value={0}
+          value={activeEscrows}
           icon={<Zap className="text-blue-400 text-2xl" />}
         />
         <StatCard
           label="Completed escrows"
-          value={0}
+          value={completedEscrows}
           icon={<CircleCheck className="text-green-400 text-2xl" />}
         />
         <StatCard
           label="Pending escrows"
-          value={0}
+          value={pendingEscrows}
           icon={<Clock8 className="text-gray-400 text-2xl" />}
         />
       </div>

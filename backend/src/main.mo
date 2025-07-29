@@ -12,11 +12,11 @@ import TimeUtil "utils/time";
 
 actor class SplitDApp(admin : Principal) {
 
-  let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
-  let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
-  let pendingTransfers = HashMap.HashMap<Principal, [Pending.PendingTransfer]>(10, Principal.equal, Principal.hash);
-  let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
-  var logs : [Text] = [];
+  let balances = transient HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  let transactions = transient HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
+  let pendingTransfers = transient HashMap.HashMap<Principal, [Pending.PendingTransfer]>(10, Principal.equal, Principal.hash);
+  let names = transient HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+  var logs : [Text] = transient[];
 
   public shared func initiateEscrow(
     caller : Principal,
@@ -445,13 +445,50 @@ actor class SplitDApp(admin : Principal) {
     };
 
     var found = false;
+
     let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
       txs,
       func(tx) {
         if (tx.id == txId and tx.status == "confirmed") {
-          found := true;
+          // Check if all recipients are approved
+          let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(
+            tx.to,
+            true,
+            func(acc, entry) {
+              acc and (entry.status == #approved)
+            },
+          );
 
-          // Transfer only to approved recipients
+          if (not allApproved) {
+            Debug.print("❌ Not all recipients approved. Transfer aborted.");
+            return tx;
+          };
+
+          // Calculate total amount to release
+          let totalToRelease = Array.foldLeft<TransactionTypes.ToEntry, Nat>(
+            tx.to,
+            0,
+            func(acc, entry) {
+              if (entry.status == #approved) {
+                acc + entry.amount;
+              } else {
+                acc;
+              };
+            },
+          );
+
+          // Check if sender has enough balance
+          let senderBalance = switch (balances.get(caller)) {
+            case (?b) b;
+            case null 0;
+          };
+
+          if (senderBalance < totalToRelease) {
+            Debug.print("❌ Insufficient balance. Transfer aborted.");
+            return tx;
+          };
+
+          // Perform the transfer
           for (toEntry in tx.to.vals()) {
             if (toEntry.status == #approved) {
               let currentBalance = switch (balances.get(toEntry.principal)) {
@@ -462,8 +499,13 @@ actor class SplitDApp(admin : Principal) {
             };
           };
 
+          // Deduct from sender
+          balances.put(caller, senderBalance - totalToRelease);
+
           Debug.print("✅ Escrow released for txId: " # txId);
           Debug.print("✅ ReleasedAt: " # Nat.toText(TimeUtil.now()));
+
+          found := true;
 
           {
             id = tx.id;

@@ -39,4 +39,4 @@ module {
     assert current >= amount;
     map.put(principal, current - amount);
   };
-}
+}; 

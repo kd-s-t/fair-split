@@ -1,9 +1,15 @@
 type TransactionStatus = text;
 type Transaction = 
  record {
+   bitcoinAddress: opt text;
+   bitcoinTransactionHash: opt text;
+   cancelledAt: opt nat;
+   confirmedAt: opt nat;
+   createdAt: nat;
    from: principal;
    id: text;
-   isRead: bool;
+   readAt: opt nat;
+   refundedAt: opt nat;
    releasedAt: opt nat;
    status: TransactionStatus;
    timestamp: nat;
@@ -13,20 +19,40 @@ type Transaction =
 type ToEntry = 
  record {
    amount: nat;
+   approvedAt: opt nat;
+   declinedAt: opt nat;
    name: text;
    "principal": principal;
+   readAt: opt nat;
    status: variant {
              approved;
              declined;
+             noaction;
              pending;
            };
  };
 type SplitDApp = 
  service {
+   canUserCreateEscrow: (user: principal) -> (bool) query;
    cancelSplit: (caller: principal) -> ();
    getAdmin: () -> (principal) query;
+   getAllNicknames: () -> (vec record {
+                                 principal;
+                                 text;
+                               }) query;
    getBalance: (p: principal) -> (nat) query;
+   getBitcoinTransactionHash: (escrowId: text, caller: principal) ->
+    (opt text);
+   getCustomNickname: ("principal": principal) -> (opt text) query;
+   getFraudHistory: (user: principal) -> (vec FraudActivity) query;
    getNickname: (p: principal) -> (opt text) query;
+   getReputationStats: (user: principal) ->
+    (record {
+       canCreateEscrow: bool;
+       fraudCount: nat;
+       isFlagged: bool;
+       reputation: nat;
+     }) query;
    getTransaction: (id: text, caller: principal) -> (opt Transaction);
    getTransactionsPaginated: (p: principal, page: nat, pageSize: nat) ->
     (record {
@@ -34,20 +60,34 @@ type SplitDApp =
        totalPages: nat;
        transactions: vec Transaction;
      });
+   getUserReputationScore: (user: principal) -> (nat) query;
    initiateEscrow: (caller: principal, participants: vec ParticipantShare,
     title: text) -> (text);
+   isUserFlaggedForFraud: (user: principal) -> (bool) query;
    markTransactionsAsRead: (caller: principal) -> ();
    recipientApproveEscrow: (sender: principal, txId: text, recipient:
     principal) -> ();
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
     principal) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
+   removeNickname: ("principal": principal) -> ();
+   resetUserReputation: (user: principal, caller: principal) -> ();
+   setCustomNickname: ("principal": principal, nickname: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setNickname: (p: principal, name: text) -> ();
+   updateBitcoinTransactionHash: (escrowId: text, txHash: text, caller:
+    principal) -> (bool);
  };
 type ParticipantShare = 
  record {
    amount: nat;
+   nickname: text;
    "principal": principal;
+ };
+type FraudActivity = 
+ record {
+   activityType: text;
+   timestamp: int;
+   transactionId: text;
  };
 service : (admin: principal) -> SplitDApp

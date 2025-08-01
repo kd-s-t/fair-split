@@ -118,6 +118,7 @@ export default function EscrowPage() {
         recipients.map((r) => ({
           principal: Principal.fromText(r.principal),
           amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
+          nickname: r.principal, // Use principal as default nickname
         })),
         title || ""
       );
@@ -168,8 +169,24 @@ export default function EscrowPage() {
           typeof txObj.timestamp === "bigint"
             ? txObj.timestamp.toString()
             : txObj.timestamp,
+        createdAt:
+          typeof txObj.createdAt === "bigint"
+            ? txObj.createdAt.toString()
+            : txObj.createdAt,
+        confirmedAt: Array.isArray(txObj.confirmedAt) && txObj.confirmedAt.length > 0
+          ? txObj.confirmedAt[0].toString()
+          : null,
+        cancelledAt: Array.isArray(txObj.cancelledAt) && txObj.cancelledAt.length > 0
+          ? txObj.cancelledAt[0].toString()
+          : null,
+        refundedAt: Array.isArray(txObj.refundedAt) && txObj.refundedAt.length > 0
+          ? txObj.refundedAt[0].toString()
+          : null,
         releasedAt: Array.isArray(txObj.releasedAt) && txObj.releasedAt.length > 0
           ? txObj.releasedAt[0].toString()
+          : null,
+        readAt: Array.isArray(txObj.readAt) && txObj.readAt.length > 0
+          ? txObj.readAt[0].toString()
           : null,
         to: (txObj.to as unknown[]).map((toEntry: unknown) => {
           const entry = toEntry as Record<string, unknown>;
@@ -187,6 +204,15 @@ export default function EscrowPage() {
               typeof entry.amount === "bigint"
                 ? entry.amount.toString()
                 : entry.amount,
+            approvedAt: Array.isArray(entry.approvedAt) && entry.approvedAt.length > 0
+              ? entry.approvedAt[0].toString()
+              : null,
+            declinedAt: Array.isArray(entry.declinedAt) && entry.declinedAt.length > 0
+              ? entry.declinedAt[0].toString()
+              : null,
+            readAt: Array.isArray(entry.readAt) && entry.readAt.length > 0
+              ? entry.readAt[0].toString()
+              : null,
           };
         }),
       };

@@ -12,8 +12,8 @@
 	</a>
 </div>
 
-# Split DApp
-A decentralized, trustless Bitcoin escrow and payout system using ICP and modern web technologies.
+# SplitSafe
+A decentralized, trustless Bitcoin escrow and payout system using Internet Computer (ICP) and modern web technologies. It enables secure cross-chain transactions with native Bitcoin integration, no bridges or wrapped tokens required.
 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 

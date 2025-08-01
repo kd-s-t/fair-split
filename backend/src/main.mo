@@ -1,14 +1,16 @@
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
-import Array "mo:base/Array";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
-import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
 
-import TransactionTypes "escrow/transaction";
-import Balance "user/balance";
+import TransactionTypes "schema";
+import Balance "modules/balance";
 import TimeUtil "utils/time";
+import Reputation "modules/reputation";
+import Transactions "modules/transactions";
+import Escrow "modules/escrow";
+import Users "modules/users";
+import Admin "modules/admin";
 
 persistent actor class SplitDApp(admin : Principal) {
 
@@ -16,80 +18,24 @@ persistent actor class SplitDApp(admin : Principal) {
   transient let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   transient let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
   transient let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+  
+  // Reputation system
+  transient let reputation = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  transient let fraudHistory = HashMap.HashMap<Principal, [Reputation.FraudActivity]>(10, Principal.equal, Principal.hash);
+  transient let transactionHistory = HashMap.HashMap<Principal, [Text]>(10, Principal.equal, Principal.hash);
 
   public shared func initiateEscrow(
     caller : Principal,
     participants : [TransactionTypes.ParticipantShare],
     title : Text,
   ) : async Text {
-    for (participant in participants.vals()) {
-      if (participant.principal == caller) {
-        return "Error: Cannot send to your own address";
-      };
+    let result = Escrow.initiateEscrow(caller, participants, title, balances, transactions, names, reputation, fraudHistory, transactionHistory, logs);
+    logs := result.newLogs;
+    switch (result.success, result.escrowId, result.error) {
+      case (true, ?escrowId, null) { escrowId };
+      case (false, null, ?error) { error };
+      case (_, _, _) { "Error: Unexpected result from escrow module" };
     };
-
-    let timestamp = TimeUtil.now();
-    let principalText = Principal.toText(caller);
-    let randomSuffix = Nat.toText(timestamp % 1000000);
-    let escrowId = Nat.toText(timestamp) # "-" # principalText # "-" # randomSuffix;
-
-    // Calculate total amount to escrow
-    let totalAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
-      participants,
-      0,
-      func(acc, p) { acc + p.amount }
-    );
-
-    // Check sender's balance
-    let senderBalance = switch (balances.get(caller)) {
-      case (?b) b;
-      case null 0;
-    };
-
-    if (senderBalance < totalAmount) {
-      return "Error: Insufficient balance";
-    };
-
-    // Deduct from sender and hold in escrow
-    balances.put(caller, senderBalance - totalAmount);
-
-    let tx : TransactionTypes.Transaction = {
-      id = escrowId;
-      from = caller;
-      to = Array.map<TransactionTypes.ParticipantShare, TransactionTypes.ToEntry>(
-        participants,
-        func(p) {
-          {
-            principal = p.principal;
-            name = switch (names.get(p.principal)) { case (?n) n; case null "" };
-            amount = p.amount;
-            status = #pending;
-          };
-        },
-      );
-      timestamp = timestamp;
-      isRead = false;
-      status = "pending";
-      title = title;
-      releasedAt = null;
-    };
-
-    let existing = switch (transactions.get(caller)) {
-      case (?txs) txs;
-      case null [];
-    };
-    transactions.put(caller, Array.append(existing, [tx]));
-
-    logs := Array.append<Text>(
-      logs,
-      [
-        "Escrow created by " # Principal.toText(caller) # " at " # Nat.toText(timestamp),
-        "Escrow ID: " # escrowId,
-        "Awaiting recipient approvals",
-      ],
-    );
-
-    return escrowId;
   };
 
   public shared func recipientApproveEscrow(
@@ -97,75 +43,8 @@ persistent actor class SplitDApp(admin : Principal) {
     txId : Text,
     recipient : Principal,
   ) : async () {
-    let txs = switch (transactions.get(sender)) {
-      case (?list) list;
-      case null return;
-    };
-    // Manual search for index by id
-    var idx : Nat = 0;
-    var found : Bool = false;
-    label search for (i in Iter.range(0, txs.size() - 1)) {
-      if (txs[i].id == txId) {
-        idx := i;
-        found := true;
-        break search;
-      }
-    };
-    if (not found) return;
-    let tx = txs[idx];
-    if (tx.status != "pending") return;
-
-    let newTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(
-      tx.to,
-      func(entry) {
-        if (entry.principal == recipient) {
-          {
-            principal = entry.principal;
-            name = entry.name;
-            amount = entry.amount;
-            status = #approved;
-          };
-        } else {
-          entry;
-        };
-      },
-    );
-
-    let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(
-      newTo,
-      true,
-      func(acc, entry) {
-        acc and (entry.status == #approved)
-      },
-    );
-
-    let updated = Array.tabulate<TransactionTypes.Transaction>(
-      txs.size(),
-      func(i) {
-        if (i == idx) {
-          {
-            id = tx.id;
-            from = tx.from;
-            to = newTo;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = if (allApproved) "confirmed" else tx.status;
-            title = tx.title;
-            releasedAt = null;
-          };
-        } else {
-          txs[i];
-        };
-      },
-    );
-
-    transactions.put(sender, updated);
-
-    if (allApproved) {
-      logs := Array.append<Text>(logs, ["All recipients approved escrow for " # Principal.toText(sender)]);
-    } else {
-      logs := Array.append<Text>(logs, ["Recipient " # Principal.toText(recipient) # " approved escrow for " # Principal.toText(sender)]);
-    };
+    let result = Escrow.approveEscrow(sender, txId, recipient, transactions, logs);
+    logs := result.newLogs;
   };
 
   public shared func recipientDeclineEscrow(
@@ -173,219 +52,21 @@ persistent actor class SplitDApp(admin : Principal) {
     idx : Nat,
     recipient : Principal,
   ) : async () {
-    let txs = switch (transactions.get(sender)) {
-      case (?list) list;
-      case null return;
-    };
-    if (idx >= txs.size()) return;
-    let tx = txs[idx];
-    if (tx.status != "pending" and tx.status != "confirmed") return;
-    if (tx.status == "declined" or tx.status == "released" or tx.status == "cancelled") return;
-    let newTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(
-      tx.to,
-      func(entry) {
-        if (entry.principal == recipient) {
-          {
-            principal = entry.principal;
-            name = entry.name;
-            amount = entry.amount;
-            status = #declined;
-          };
-        } else {
-          entry;
-        };
-      },
-    );
-    let currentBal = switch (balances.get(sender)) {
-      case (?b) b;
-      case null 0;
-    };
-    balances.put(sender, currentBal + tx.to[idx].amount); // Refund the declined amount
-    let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
-    let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });
-    let newStatus = if (anyDeclined) "declined" else if (allApproved) "confirmed" else tx.status;
-    let updated = Array.tabulate<TransactionTypes.Transaction>(
-      txs.size(),
-      func(i) {
-        if (i == idx) {
-          {
-            id = tx.id;
-            from = tx.from;
-            to = newTo;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = newStatus;
-            title = tx.title;
-            releasedAt = null;
-          };
-        } else {
-          txs[i];
-        };
-      },
-    );
-    transactions.put(sender, updated);
-    logs := Array.append<Text>(logs, ["Escrow declined by recipient " # Principal.toText(recipient) # " for " # Principal.toText(sender)]);
-
-    let recipientTxs = switch (transactions.get(recipient)) {
-      case (?list) list;
-      case null [];
-    };
-    let updatedRecipientTxs = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
-      recipientTxs,
-      func(tx) {
-        if (tx.from == sender and tx.timestamp == txs[idx].timestamp) {
-          let newTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(
-            tx.to,
-            func(entry) {
-              if (entry.principal == recipient) {
-                {
-                  principal = entry.principal;
-                  name = entry.name;
-                  amount = entry.amount;
-                  status = #declined;
-                };
-              } else {
-                entry;
-              };
-            },
-          );
-          let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
-          let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });
-          let newStatus = if (anyDeclined) "declined" else if (allApproved) "confirmed" else tx.status;
-          {
-            id = tx.id;
-            from = tx.from;
-            to = newTo;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = newStatus;
-            title = tx.title;
-            releasedAt = null;
-          };
-        } else {
-          tx;
-        };
-      },
-    );
-    transactions.put(recipient, updatedRecipientTxs);
+    let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, reputation, fraudHistory, logs);
+    logs := result.newLogs;
   };
 
-  // Update cancelSplit to allow cancelling #locked and #pending
   public shared func cancelSplit(caller : Principal) : async () {
-    // Remove all #locked transactions (drafts)
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null [];
-    };
-    let filtered = Array.filter<TransactionTypes.Transaction>(
-      txs,
-      func(tx) {
-        if (tx.status == "cancelled") {
-          // Log cancellation of draft
-          logs := Array.append<Text>(logs, ["Cancelled draft escrow by " # Principal.toText(caller)]);
-          false // Remove draft
-        } else {
-          true // Keep others
-        };
-      },
-    );
-    transactions.put(caller, filtered);
-    // For #pending, refund and update status as before
-    let txs2 = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null [];
-    };
-    let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
-      txs2,
-      func(tx) {
-        if (tx.status == "pending") {
-          {
-            id = tx.id;
-            from = tx.from;
-            to = tx.to;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = "cancelled";
-            title = tx.title;
-            releasedAt = null;
-          };
-        } else {
-          tx;
-        };
-      },
-    );
-    transactions.put(caller, updated);
-    logs := Array.append<Text>(logs, ["Cancelled by " # Principal.toText(caller)]);
+    let result = Escrow.cancelSplit(caller, transactions, balances, logs);
+    logs := result.newLogs;
   };
 
   public shared func releaseSplit(
     caller : Principal,
     txId : Text,
   ) : async () {
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null return;
-    };
-
-    var found = false;
-
-    let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
-      txs,
-      func(tx) {
-        if (tx.id == txId and tx.status == "confirmed") {
-          // Check if all recipients are approved
-          let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(
-            tx.to,
-            true,
-            func(acc, entry) {
-              acc and (entry.status == #approved)
-            },
-          );
-
-          if (not allApproved) {
-            Debug.print("❌ Not all recipients approved. Transfer aborted.");
-            return tx;
-          };
-
-          // Perform the transfer
-          for (toEntry in tx.to.vals()) {
-            if (toEntry.status == #approved) {
-              let currentBalance = switch (balances.get(toEntry.principal)) {
-                case (?b) b;
-                case null 0;
-              };
-              balances.put(toEntry.principal, currentBalance + toEntry.amount);
-            };
-          };
-
-          Debug.print("✅ Escrow released for txId: " # txId);
-          Debug.print("✅ ReleasedAt: " # Nat.toText(TimeUtil.now()));
-
-          found := true;
-
-          {
-            id = tx.id;
-            from = tx.from;
-            to = tx.to;
-            timestamp = tx.timestamp;
-            isRead = tx.isRead;
-            status = "released";
-            title = tx.title;
-            releasedAt = ?TimeUtil.now();
-          };
-        } else {
-          tx;
-        };
-      },
-    );
-
-    if (found) {
-      transactions.put(caller, updated);
-      logs := Array.append<Text>(
-        logs,
-        ["Escrow released by " # Principal.toText(caller) # " with txId: " # txId],
-      );
-    };
+    let result = Escrow.releaseSplit(caller, txId, transactions, balances, reputation, logs);
+    logs := result.newLogs;
   };
 
   public query func getBalance(p : Principal) : async Nat {
@@ -401,116 +82,110 @@ persistent actor class SplitDApp(admin : Principal) {
     totalCount : Nat;
     totalPages : Nat;
   } {
-    var allTxs : [TransactionTypes.Transaction] = [];
-
-    // Get transactions where user is the sender
-    let sentTxs = switch (transactions.get(p)) { case (?txs) txs; case null [] };
-    allTxs := Array.append(allTxs, sentTxs);
-
-    // Get transactions where user is a recipient
-    for ((_, txs) in transactions.entries()) {
-      for (tx in txs.vals()) {
-        // Check if user is in the recipients list
-        for (toEntry in tx.to.vals()) {
-          if (toEntry.principal == p) {
-            allTxs := Array.append(allTxs, [tx]);
-          };
-        };
-      };
-    };
-
-    let totalCount = allTxs.size();
-    let totalPages = if (pageSize == 0) { 0 } else {
-      (totalCount + pageSize - 1) / pageSize : Nat;
-    }; // Ceiling division
-    let startIndex = page * pageSize;
-    let endIndex = Nat.min(startIndex + pageSize, totalCount);
-
-    let paginatedTxs = if (startIndex < totalCount) {
-      Array.tabulate<TransactionTypes.Transaction>(
-        endIndex - startIndex,
-        func(i) { allTxs[startIndex + i] },
-      );
-    } else { [] };
-
-    {
-      transactions = paginatedTxs;
-      totalCount = totalCount;
-      totalPages = totalPages;
-    };
+    Transactions.getTransactionsPaginated(transactions, balances, p, page, pageSize);
   };
 
   public shared (_msg) func getTransaction(id : Text, caller : Principal) : async ?TransactionTypes.Transaction {
-    // First check if transaction exists
-    var foundTx : ?TransactionTypes.Transaction = null;
-    for ((_, txs) in transactions.entries()) {
-      for (tx in txs.vals()) {
-        if (tx.id == id) {
-          foundTx := ?tx;
-        };
-      };
-    };
-
-    // If transaction not found, return 404
-    switch (foundTx) {
-      case null { return null };
-      case (?tx) {
-        // Check if caller is authorized to view this transaction
-        // Authorized if: caller is the sender OR caller is a recipient
-        let isOwner = tx.from == caller;
-        let isRecipient = Array.find<TransactionTypes.ToEntry>(
-          tx.to,
-          func(toEntry) { toEntry.principal == caller },
-        );
-
-        // Return 404 if not authorized
-        if (not isOwner and isRecipient == null) {
-          return null; // 404 - Unauthorized access
-        };
-
-        return ?tx;
-      };
-    };
+    Transactions.getTransaction(transactions, balances, id, caller);
   };
 
   public shared func setInitialBalance(p : Principal, amount : Nat, caller : Principal) : async () {
-    if (caller == admin) {
-      balances.put(p, amount);
-    };
+    let _ = Admin.setInitialBalance(balances, admin, caller, p, amount);
   };
 
   public shared func markTransactionsAsRead(caller : Principal) : async () {
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null return;
-    };
-    let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
-      txs,
-      func(tx) {
-        {
-          id = tx.id;
-          from = tx.from;
-          to = tx.to;
-          timestamp = tx.timestamp;
-          isRead = true;
-          status = tx.status;
-          title = tx.title;
-          releasedAt = null;
-        };
-      },
-    );
-    transactions.put(caller, updated);
+    Transactions.markTransactionsAsRead(transactions, caller, TimeUtil.now());
   };
 
   public shared func setNickname(p : Principal, name : Text) : async () {
-    names.put(p, name);
+    Users.setNickname(names, p, name);
   };
 
   public query func getNickname(p : Principal) : async ?Text {
-    return names.get(p);
+    Users.getNickname(names, p);
+  };
+
+  public shared func setCustomNickname(
+    principal : Principal,
+    nickname : Text
+  ) : async () {
+    Users.setCustomNickname(names, principal, nickname);
+  };
+
+  public query func getCustomNickname(principal : Principal) : async ?Text {
+    Users.getCustomNickname(names, principal);
+  };
+
+  public shared func removeNickname(principal : Principal) : async () {
+    Users.removeNickname(names, principal);
+  };
+
+  public query func getAllNicknames() : async [(Principal, Text)] {
+    Users.getAllNicknames(names);
   };
 
   public query func getAdmin() : async Principal {
     return admin;
+  };
+
+  // Reputation system public functions
+  public query func getUserReputationScore(user : Principal) : async Nat {
+    return Reputation.getUserReputation(reputation, user);
+  };
+
+  public query func isUserFlaggedForFraud(user : Principal) : async Bool {
+    return Reputation.detectFraudPattern(fraudHistory, user);
+  };
+
+  public query func canUserCreateEscrow(user : Principal) : async Bool {
+    return Reputation.canCreateEscrow(reputation, fraudHistory, user);
+  };
+
+  public query func getFraudHistory(user : Principal) : async [Reputation.FraudActivity] {
+    switch (fraudHistory.get(user)) {
+      case (?history) history;
+      case null [];
+    };
+  };
+
+  public query func getReputationStats(user : Principal) : async {
+    reputation : Nat;
+    isFlagged : Bool;
+    canCreateEscrow : Bool;
+    fraudCount : Nat;
+  } {
+    let userRep = Reputation.getUserReputation(reputation, user);
+    let isFlagged = Reputation.detectFraudPattern(fraudHistory, user);
+    let canCreate = Reputation.canCreateEscrow(reputation, fraudHistory, user);
+    let fraudHistoryList = switch (fraudHistory.get(user)) {
+      case (?history) history;
+      case null [];
+    };
+    
+    {
+      reputation = userRep;
+      isFlagged = isFlagged;
+      canCreateEscrow = canCreate;
+      fraudCount = fraudHistoryList.size();
+    };
+  };
+
+  // Admin function to reset reputation (for testing/debugging)
+  public shared func resetUserReputation(user : Principal, caller : Principal) : async () {
+    let result = Admin.resetUserReputation(reputation, fraudHistory, admin, caller, user, logs);
+    logs := result.newLogs;
+  };
+
+  // Bitcoin transaction hash functions
+  public shared func getBitcoinTransactionHash(escrowId : Text, caller : Principal) : async ?Text {
+    // TODO: Implement real Bitcoin transaction hash lookup when on mainnet
+    // For now, return null as placeholder
+    null
+  };
+
+  public shared func updateBitcoinTransactionHash(escrowId : Text, txHash : Text, caller : Principal) : async Bool {
+    // TODO: Implement real Bitcoin transaction hash update when on mainnet
+    // For now, return false as placeholder
+    false
   };
 };

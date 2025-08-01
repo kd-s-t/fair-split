@@ -10,6 +10,7 @@ import { Typography } from "@/components/ui/typography";
 import { Card } from "@/components/ui/card";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
+import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetails";
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import type { Transaction } from "@/declarations/split_dapp.did";
@@ -74,6 +75,29 @@ export default function TransactionDetailsPage() {
     } catch (err) {
       console.error("Release error:", err);
       toast.error("Failed to release escrow");
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    setIsLoading("refund");
+    try {
+      const actor = await createSplitDappActor();
+      await actor.cancelSplit(Principal.fromText(
+        typeof transaction?.from === "string"
+          ? transaction.from
+          : transaction?.from?.toText?.() || ""
+      ));
+      toast.success("Escrow cancelled!");
+      // Refresh the transaction data
+      const updated = await actor.getTransaction(String(txid), principal);
+      if (Array.isArray(updated) && updated.length > 0) {
+        setTransaction(updated[0]);
+      }
+    } catch (err) {
+      console.error("Cancel error:", err);
+      toast.error("Failed to cancel escrow");
     } finally {
       setIsLoading(null);
     }
@@ -153,20 +177,54 @@ export default function TransactionDetailsPage() {
           )}
 
           {statusKey === "pending" && (
-            <PendingEscrowDetails transaction={{
-              ...transaction,
-              from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
-              to: Array.isArray(transaction.to)
-                ? transaction.to.map((toEntry: any) => ({
-                    ...toEntry,
-                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
-                  }))
-                : [],
-              status: (transaction.status as "released" | "confirmed" | "pending"),
-              releasedAt: Array.isArray(transaction.releasedAt)
-                ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                : transaction.releasedAt
-            }} />
+            <PendingEscrowDetails 
+              transaction={{
+                ...transaction,
+                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: any) => ({
+                      ...toEntry,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                    }))
+                  : [],
+                status: "pending",
+                releasedAt: Array.isArray(transaction.releasedAt)
+                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                  : transaction.releasedAt,
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
+                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
+                  : transaction.bitcoinAddress,
+                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
+                  : transaction.bitcoinTransactionHash
+              }}
+              onCancel={handleCancel}
+            />
+          )}
+
+          {statusKey === "cancelled" && (
+            <CancelledEscrowDetails 
+              transaction={{
+                ...transaction,
+                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: any) => ({
+                      ...toEntry,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                    }))
+                  : [],
+                status: "cancelled",
+                releasedAt: Array.isArray(transaction.releasedAt)
+                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                  : transaction.releasedAt,
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
+                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
+                  : transaction.bitcoinAddress,
+                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
+                  : transaction.bitcoinTransactionHash
+              }}
+            />
           )}
 
           {statusKey === "confirmed" && (

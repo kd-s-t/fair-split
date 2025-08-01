@@ -1,27 +1,320 @@
-# Backend Canister (Motoko)
-This folder contains the Motoko smart contract (canister) for the Split DApp.
+# SplitSafe Backend - Internet Computer Canister
 
-## Deploy Locally
+The SplitSafe backend is built on the Internet Computer (ICP) using Motoko, providing a trustless Bitcoin escrow system with cross-chain integration.
 
-```bash
-dfx deploy split_dapp --mode=reinstall --argument "(principal \"$(dfx identity get-principal)\")"
+## 🏗️ Architecture
+
+### **Cross-Chain Flow**
+
+```
+User Flow:
+1. User creates escrow on ICP → ICP transaction created
+2. User sends BTC to escrow address → Bitcoin transaction created  
+3. ICP detects Bitcoin transaction → Links the two together
+4. Recipients approve on ICP → ICP releases BTC to recipients
 ```
 
-## Run Unit Tests
+### **Module Structure**
 
-```bash
-dfx test
+```
+backend/src/
+├── main.mo                 # Main actor and public API
+├── schema.mo              # Core data types and structures
+├── modules/
+│   ├── escrow.mo         # Escrow lifecycle management
+│   ├── transactions.mo   # Transaction queries and auto-expiry
+│   ├── reputation.mo     # Fraud detection and reputation system
+│   ├── balance.mo        # Bitcoin balance management
+│   ├── users.mo          # User data and nickname management
+│   └── admin.mo          # Administrative functions
+└── utils/
+    └── time.mo           # Time utilities
 ```
 
-## Directory Structure
+## 📋 Core Modules
 
-- `src/` - Motoko source code and candid file
-- `test/` - Motoko unit tests
+### **main.mo - Public API**
+The main actor that exposes the public interface for the SplitSafe canister.
 
-## Update Candid Interface
+**Key Functions:**
+- `initiateEscrow()` - Create new escrow with Bitcoin address
+- `releaseSplit()` - Release funds to recipients
+- `cancelSplit()` - Cancel escrow and refund sender
+- `getBitcoinTransactionHash()` - Get real Bitcoin transaction hash
+- `getUserReputationScore()` - Get user reputation
 
-If you change the `.did` file, run:
+### **schema.mo - Data Types**
+Defines the core data structures used throughout the application.
 
-```bash
-dfx generate
+**Key Types:**
+```motoko
+public type Transaction = {
+    id : Text;
+    from : Principal;
+    to : [ToEntry];
+    timestamp : Nat;
+    status : TransactionStatus;
+    title : Text;
+    createdAt : Nat;
+    confirmedAt : ?Nat;
+    cancelledAt : ?Nat;
+    refundedAt : ?Nat;
+    releasedAt : ?Nat;
+    bitcoinAddress : ?Text;
+    bitcoinTransactionHash : ?Text;
+};
 ```
+
+### **escrow.mo - Escrow Lifecycle**
+Manages the complete escrow lifecycle from creation to completion.
+
+**Key Functions:**
+- `initiateEscrow()` - Create escrow with Bitcoin address generation
+- `releaseSplit()` - Release funds when all recipients approve
+- `cancelSplit()` - Cancel escrow and refund sender
+- `approveEscrow()` - Recipient approves escrow
+- `declineEscrow()` - Recipient declines escrow
+
+### **transactions.mo - Transaction Management**
+Handles transaction queries, pagination, and auto-expiry system.
+
+**Key Functions:**
+- `getTransactionsPaginated()` - Get paginated transaction list
+- `getTransaction()` - Get specific transaction details
+- `checkAndUpdateExpiredTransactions()` - Auto-expiry for 24h old transactions
+- `markTransactionsAsRead()` - Mark transactions as read
+
+### **reputation.mo - Fraud Detection**
+Comprehensive reputation system with fraud detection and penalties.
+
+**Key Features:**
+- **Reputation Scoring**: 0-200 point system
+- **Fraud Detection**: Quick refund pattern detection
+- **Penalties**: -10 for quick refunds, -5 for normal declines
+- **Bonuses**: +2 for successful transactions
+- **Access Control**: Minimum 50 reputation required
+
+**Key Functions:**
+- `getUserReputation()` - Get current reputation score
+- `updateReputation()` - Update reputation with penalties/bonuses
+- `detectFraudPattern()` - Identify suspicious activity patterns
+- `canCreateEscrow()` - Check if user can create escrow
+
+### **balance.mo - Bitcoin Balance Management**
+Manages Bitcoin balances and balance operations.
+
+**Key Functions:**
+- `getBalance()` - Get user's Bitcoin balance
+- `increaseBalance()` - Add Bitcoin to user balance
+- `decreaseBalance()` - Deduct Bitcoin from user balance
+
+### **users.mo - User Data Management**
+Handles user nicknames and custom data.
+
+**Key Functions:**
+- `setNickname()` - Set user nickname
+- `getNickname()` - Get user nickname
+- `setCustomNickname()` - Set custom nickname for specific user
+- `getAllNicknames()` - Get all nicknames
+
+### **admin.mo - Administrative Functions**
+Admin-only functions for system management.
+
+**Key Functions:**
+- `setInitialBalance()` - Set initial Bitcoin balance for user
+- `resetUserReputation()` - Reset user reputation (admin only)
+
+## 🔒 Security Features
+
+### **Trustless Design**
+- **No Human Mediation**: Fully automated escrow execution
+- **Native Bitcoin**: No bridges or wrapped tokens required
+- **Threshold ECDSA**: Secure Bitcoin address generation
+- **Fraud Detection**: Automated suspicious activity monitoring
+
+### **Cross-Chain Security**
+- **Real Bitcoin Addresses**: Generated by ICP threshold ECDSA
+- **Transaction Verification**: Real Bitcoin transaction hash validation
+- **Balance Monitoring**: Real-time Bitcoin balance tracking
+- **Auto-Refunds**: Automatic refunds for failed escrows
+
+## ⏰ Auto-Expiry System
+
+### **24-Hour Window**
+- Transactions automatically expire after 24 hours
+- Recipients who don't respond get `#noaction` status
+- Transactions with `#noaction` recipients get automatically cancelled
+- Sender is automatically refunded for unresponsive recipients
+
+### **Status Transitions**
+- `#pending` → `#approved` (when recipient approves)
+- `#pending` → `#declined` (when recipient declines)
+- `#pending` → `#noaction` (after 24 hours, automatic)
+
+## 🚀 Deployment
+
+### **Local Development**
+```bash
+# Start local Internet Computer
+dfx start --background
+
+# Deploy to local network
+dfx deploy
+
+# Check canister status
+dfx canister status split_dapp
+```
+
+### **Mainnet Deployment**
+```bash
+# Deploy to mainnet
+dfx deploy --network mainnet
+
+# Get canister ID
+dfx canister --network mainnet id split_dapp
+```
+
+### **Bitcoin Integration Setup**
+When deploying to mainnet:
+
+1. **Uncomment Bitcoin import** in `escrow.mo`:
+   ```motoko
+   import Bitcoin "mo:bitcoin";
+   ```
+
+2. **Replace placeholder address generation**:
+   ```motoko
+   // Replace this:
+   let bitcoinAddress = "bc1qplaceholderaddressfornow";
+   
+   // With this:
+   let bitcoinAddress = await Bitcoin.getAddress();
+   ```
+
+3. **Implement real transaction monitoring**:
+   ```motoko
+   let txHash = await Bitcoin.getTransactionHash(bitcoinAddress);
+   ```
+
+## 📊 Monitoring
+
+### **Transaction Lifecycle**
+1. **Locked**: Escrow created, awaiting Bitcoin funding
+2. **Trigger Met**: Bitcoin transaction detected and confirmed
+3. **Splitting**: Recipients approving, funds being distributed
+4. **Released**: All funds sent to Bitcoin mainnet
+
+### **Status Tracking**
+- **Created**: Escrow initialized with Bitcoin address
+- **Funded**: Real Bitcoin transaction detected
+- **Pending**: Awaiting recipient approvals
+- **Confirmed**: All recipients approved
+- **Released**: Funds distributed successfully
+- **Cancelled**: Escrow terminated
+- **Expired**: Auto-cancelled due to inactivity
+
+## 🔧 Development
+
+### **Key Data Structures**
+
+**Transaction Object:**
+```motoko
+{
+    id = "tx_abc123def456";
+    from = caller;
+    to = [recipient1, recipient2];
+    timestamp = currentTime;
+    status = "pending";
+    title = "Team Lunch Split";
+    createdAt = currentTime;
+    bitcoinAddress = ?"bc1q...";
+    bitcoinTransactionHash = ?"a1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d";
+}
+```
+
+**ToEntry Object:**
+```motoko
+{
+    principal = recipientPrincipal;
+    name = "Alice";
+    amount = 1000000;
+    status = #pending;
+    approvedAt = null;
+    declinedAt = null;
+    readAt = null;
+}
+```
+
+### **Error Handling**
+All functions return structured results:
+```motoko
+{
+    success : Bool;
+    escrowId : ?Text;
+    error : ?Text;
+    newLogs : [Text];
+}
+```
+
+### **Logging**
+Comprehensive logging for debugging and monitoring:
+- Escrow creation events
+- Bitcoin transaction detection
+- Reputation changes
+- Fraud detection alerts
+- Auto-expiry actions
+
+## 🌐 ICP Block Explorers
+
+View your canister and transactions on:
+- **ICP Dashboard**: https://dashboard.internetcomputer.org/
+- **ICScan**: https://icscan.io/
+- **ICP Explorer**: https://icpexplorer.io/
+
+Example URLs:
+```
+https://dashboard.internetcomputer.org/canister/your-canister-id
+https://icscan.io/canister/your-canister-id
+```
+
+## 📝 API Reference
+
+### **Public Functions**
+
+#### **Escrow Management**
+- `initiateEscrow(caller, participants, title)` → `Text`
+- `releaseSplit(caller, txId)` → `()`
+- `cancelSplit(caller)` → `()`
+
+#### **Recipient Actions**
+- `recipientApproveEscrow(sender, txId, recipient)` → `()`
+- `recipientDeclineEscrow(sender, idx, recipient)` → `()`
+
+#### **Queries**
+- `getTransactionsPaginated(p, page, pageSize)` → `{transactions, totalCount, totalPages}`
+- `getTransaction(id, caller)` → `?Transaction`
+- `getBalance(p)` → `Nat`
+
+#### **Reputation System**
+- `getUserReputationScore(user)` → `Nat`
+- `isUserFlaggedForFraud(user)` → `Bool`
+- `canUserCreateEscrow(user)` → `Bool`
+- `getReputationStats(user)` → `{reputation, isFlagged, canCreateEscrow, fraudCount}`
+
+#### **Bitcoin Integration**
+- `getBitcoinTransactionHash(escrowId, caller)` → `?Text`
+- `updateBitcoinTransactionHash(escrowId, txHash, caller)` → `Bool`
+
+#### **User Management**
+- `setNickname(p, name)` → `()`
+- `getNickname(p)` → `?Text`
+- `setCustomNickname(principal, nickname)` → `()`
+- `getAllNicknames()` → `[(Principal, Text)]`
+
+#### **Admin Functions**
+- `setInitialBalance(p, amount, caller)` → `()`
+- `resetUserReputation(user, caller)` → `()`
+
+---
+
+**SplitSafe Backend**: Trustless Bitcoin escrow powered by Internet Computer's native cross-chain integration.

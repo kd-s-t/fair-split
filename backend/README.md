@@ -52,7 +52,6 @@ public type Transaction = {
     id : Text;
     from : Principal;
     to : [ToEntry];
-    timestamp : Nat;
     status : TransactionStatus;
     title : Text;
     createdAt : Nat;

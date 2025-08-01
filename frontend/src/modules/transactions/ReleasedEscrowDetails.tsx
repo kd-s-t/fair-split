@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, CalendarCheck2, Hash, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
+import { TransactionHash } from "@/components/ui/transaction-hash";
 import { ReleasedEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 
@@ -34,6 +35,26 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
       <RecipientsList recipients={transaction.to || []} showTimestamps={false} />
 
       <hr className="my-6 text-[#424444] h-[1px]" />
+      
+      {/* Main Transaction Hash */}
+      {transaction.id && (
+        <TransactionHash
+          title="Transaction Hash"
+          hash={transaction.id}
+          description="Main escrow transaction hash"
+          explorerLinks={[
+            {
+              label: "View on ICP Dashboard",
+              url: `${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`
+            },
+            {
+              label: "View on ICScan",
+              url: `${process.env.NEXT_PUBLIC_ICSCAN_URL || 'https://icscan.io'}/canister/${transaction.id}`
+            }
+          ]}
+          className="mb-6"
+        />
+      )}
       
       {/* Escrow overview */}
       <div className="mb-6 bg-[#181818] rounded-2xl p-6">
@@ -77,10 +98,22 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
                 <div>
                   <Typography variant="base" className="text-white font-semibold">Recipient {idx + 1}</Typography>
                   <Typography variant="small" className="text-[#9F9F9F]">{String(toEntry.address || toEntry.principal)}</Typography>
-                  <Typography variant="small" className="text-[#9F9F9F] mt-1">Transaction hash</Typography>
-                  <Typography variant="small" className="text-white font-mono">
-                    {toEntry.txHash ? `${toEntry.txHash.slice(0, 18)}...` : 'N/A'}
-                  </Typography>
+                  {toEntry.txHash && (
+                    <div className="mt-1">
+                      <Typography variant="small" className="text-[#9F9F9F]">Transaction hash</Typography>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Typography variant="small" className="text-white font-mono">
+                          {toEntry.txHash.slice(0, 18)}...
+                        </Typography>
+                        <button 
+                          onClick={() => window.open(`https://blockstream.info/tx/${toEntry.txHash}`, '_blank')}
+                          className="text-[#4F3F27] hover:text-[#FEB64D] text-xs underline"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2 min-w-[160px]">

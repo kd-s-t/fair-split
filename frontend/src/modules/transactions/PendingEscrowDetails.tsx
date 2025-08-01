@@ -4,6 +4,7 @@ import { Copy, Shield, CircleX, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
 import { Button } from "@/components/ui/button";
+import { TransactionHash } from "@/components/ui/transaction-hash";
 import { PendingEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
@@ -70,69 +71,39 @@ export default function PendingEscrowDetails({
       </div>
 
       {/* ICP Transaction Hash */}
-      <div className="container-gray mt-4">
-        <Typography variant="small" className="text-[#fff] font-semibold">
-          ICP Transaction Hash
-        </Typography>
-        <div className="grid grid-cols-12 gap-3 mt-2">
-          <div className="container-gray col-span-11 break-all">
-            {transaction.id}
-          </div>
-          <div className="container-gray cursor-pointer">
-            <Copy />
-          </div>
-        </div>
-        <div className="flex gap-2 mt-2">
-          <button 
-            onClick={() => window.open(`${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`, '_blank')}
-            className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-          >
-            View on ICP Dashboard
-          </button>
-          <button 
-            onClick={() => window.open(`${process.env.NEXT_PUBLIC_ICSCAN_URL || 'https://icscan.io'}/canister/${transaction.id}`, '_blank')}
-            className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-          >
-            View on ICScan
-          </button>
-        </div>
-        <Typography variant="p" className="text-[#9F9F9F] mt-2">
-          Internet Computer transaction hash for this escrow
-        </Typography>
-      </div>
+      <TransactionHash
+        title="ICP Transaction Hash"
+        hash={transaction.id}
+        description="Internet Computer transaction hash for this escrow"
+        explorerLinks={[
+          {
+            label: "View on ICP Dashboard",
+            url: `${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`
+          },
+          {
+            label: "View on ICScan",
+            url: `${process.env.NEXT_PUBLIC_ICSCAN_URL || 'https://icscan.io'}/canister/${transaction.id}`
+          }
+        ]}
+      />
 
       {/* Bitcoin Transaction Hash */}
       {transaction.bitcoinTransactionHash && (
-        <div className="container-gray mt-4">
-          <Typography variant="small" className="text-[#fff] font-semibold">
-            Bitcoin Transaction Hash
-          </Typography>
-          <div className="grid grid-cols-12 gap-3 mt-2">
-            <div className="container-gray col-span-11 break-all">
-              {transaction.bitcoinTransactionHash}
-            </div>
-            <div className="container-gray cursor-pointer">
-              <Copy />
-            </div>
-          </div>
-          <div className="flex gap-2 mt-2">
-            <button 
-              onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info'}/tx/${transaction.bitcoinTransactionHash}`, '_blank')}
-              className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-            >
-              View on Blockstream
-            </button>
-            <button 
-              onClick={() => window.open(`${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/tx/${transaction.bitcoinTransactionHash}`, '_blank')}
-              className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-            >
-              View on Mempool
-            </button>
-          </div>
-          <Typography variant="p" className="text-[#9F9F9F] mt-2">
-            Real Bitcoin transaction detected and confirmed
-          </Typography>
-        </div>
+        <TransactionHash
+          title="Bitcoin Transaction Hash"
+          hash={transaction.bitcoinTransactionHash}
+          description="Real Bitcoin transaction detected and confirmed"
+          explorerLinks={[
+            {
+              label: "View on Blockstream",
+              url: `${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info'}/tx/${transaction.bitcoinTransactionHash}`
+            },
+            {
+              label: "View on Mempool",
+              url: `${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/tx/${transaction.bitcoinTransactionHash}`
+            }
+          ]}
+        />
       )}
 
       <div className="container-primary mt-4">
@@ -164,21 +135,48 @@ export default function PendingEscrowDetails({
       <hr className="my-8 text-[#424444] h-[1px]" />
 
       {transaction.status === "pending" && !transaction.releasedAt && onCancel && (
-        <div className="flex items-center gap-4 mt-4">
-          <Button 
-            variant="outline" 
-            className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent"
-            onClick={onCancel}
+        <motion.div 
+          className="flex items-center gap-4 mt-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.1 }}
           >
-            <CircleX size={16} /> Cancel escrow
-          </Button>
-          <div className="flex items-center gap-2">
-            <CircleAlert size={16} color="#FEB64D" />
+            <Button 
+              variant="outline" 
+              className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
+              onClick={onCancel}
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, 0] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+              >
+                <CircleX size={16} />
+              </motion.div>
+              Cancel escrow
+            </Button>
+          </motion.div>
+          <motion.div 
+            className="flex items-center gap-2"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <CircleAlert size={16} color="#FEB64D" />
+            </motion.div>
             <Typography variant="small" className="text-white font-normal">
               This action cannot be undone. Only available while pending.
             </Typography>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </>
   );

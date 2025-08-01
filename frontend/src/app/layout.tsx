@@ -84,6 +84,12 @@ function BalanceAndNameSyncer() {
               refundedAt: serializeTimestamp(tx.refundedAt),
               releasedAt: serializeArrayTimestamp(tx.releasedAt),
               readAt: serializeTimestamp(tx.readAt),
+              bitcoinTransactionHash: Array.isArray(tx.bitcoinTransactionHash) && tx.bitcoinTransactionHash.length > 0
+                ? tx.bitcoinTransactionHash[0]
+                : tx.bitcoinTransactionHash,
+              bitcoinAddress: Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0
+                ? tx.bitcoinAddress[0]
+                : tx.bitcoinAddress,
               to: tx.to.map((toEntry: any) => ({
                 ...toEntry,
                 principal: typeof toEntry.principal === 'object' && toEntry.principal.toText

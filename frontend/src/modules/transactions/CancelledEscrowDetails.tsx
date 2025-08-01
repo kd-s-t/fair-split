@@ -3,6 +3,7 @@
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
+import { TransactionHash } from "@/components/ui/transaction-hash";
 import { CancelledEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 
@@ -55,36 +56,21 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
       </div>
 
       {transaction.bitcoinTransactionHash && (
-        <div className="container-gray mt-4">
-          <Typography variant="small" className="text-[#fff] font-semibold">
-            Bitcoin Transaction Hash
-          </Typography>
-          <div className="grid grid-cols-12 gap-3 mt-2">
-            <div className="container-gray col-span-11 break-all">
-              {transaction.bitcoinTransactionHash}
-            </div>
-            <div className="container-gray cursor-pointer">
-              <Copy />
-            </div>
-          </div>
-          <div className="flex gap-2 mt-2">
-            <button 
-              onClick={() => window.open(`https://blockstream.info/tx/${transaction.bitcoinTransactionHash}`, '_blank')}
-              className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-            >
-              View on Blockstream
-            </button>
-            <button 
-              onClick={() => window.open(`https://mempool.space/tx/${transaction.bitcoinTransactionHash}`, '_blank')}
-              className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-            >
-              View on Mempool
-            </button>
-          </div>
-          <Typography variant="p" className="text-[#9F9F9F] mt-2">
-            Bitcoin transaction was detected but escrow was cancelled
-          </Typography>
-        </div>
+        <TransactionHash
+          title="Bitcoin Transaction Hash"
+          hash={transaction.bitcoinTransactionHash}
+          description="Bitcoin transaction was detected but escrow was cancelled"
+          explorerLinks={[
+            {
+              label: "View on Blockstream",
+              url: `https://blockstream.info/tx/${transaction.bitcoinTransactionHash}`
+            },
+            {
+              label: "View on Mempool",
+              url: `https://mempool.space/tx/${transaction.bitcoinTransactionHash}`
+            }
+          ]}
+        />
       )}
 
       <div className="container-gray mt-6">

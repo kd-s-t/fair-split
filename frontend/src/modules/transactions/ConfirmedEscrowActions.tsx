@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { CheckCircle, RotateCcw, CircleAlert, Shield, ExternalLink } from "lucide-react";
 import { TransactionStats } from "@/components/ui/transaction-stats";
+import { TransactionHash } from "@/components/ui/transaction-hash";
 import { ConfirmedEscrowActionsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 
@@ -38,23 +39,12 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
       <hr className="my-6 text-[#424444] h-[1px]" />
 
       {/* Transaction Hash */}
-      <div className="mb-6">
-        <Typography variant="small" className="text-white font-semibold mb-2">
-          Transaction hash
-        </Typography>
-        <div className="flex gap-3">
-          <div className="flex-1 bg-[#232323] border border-[#393939] rounded-lg px-4 py-3 text-white">
-            {txHash.slice(0, 20)}...
-          </div>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 border-[#393939] bg-transparent text-white hover:bg-[#393939]"
-          >
-            <ExternalLink size={16} />
-            View on explorer
-          </Button>
-        </div>
-      </div>
+      <TransactionHash
+        title="Transaction hash"
+        hash={txHash}
+        truncate={true}
+        className="mb-6"
+      />
 
       {/* Recipients Breakdown */}
       <div className="mb-6">

@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, CalendarCheck2, Hash, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
+import { ReleasedEscrowDetailsProps } from "./types";
+import RecipientsList from "./RecipientsList";
 
-export default function ReleasedEscrowDetails({ transaction }: { transaction: any }) {
+export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
   // Calculate total released BTC
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
@@ -26,6 +28,12 @@ export default function ReleasedEscrowDetails({ transaction }: { transaction: an
         recipientCount={recipientCount}
         status={transaction.status}
       />
+      
+      <hr className="my-6 text-[#424444] h-[1px]" />
+
+      <RecipientsList recipients={transaction.to || []} showTimestamps={false} />
+
+      <hr className="my-6 text-[#424444] h-[1px]" />
       
       {/* Escrow overview */}
       <div className="mb-6 bg-[#181818] rounded-2xl p-6">

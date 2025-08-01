@@ -119,7 +119,6 @@ module {
                     };
                 },
             );
-            timestamp = timestamp;
             readAt = null;
             status = "pending";
             title = title;
@@ -209,7 +208,6 @@ module {
                         id = tx.id;
                         from = tx.from;
                         to = tx.to;
-                        timestamp = tx.timestamp;
                         readAt = tx.readAt;
                         status = "released";
                         title = tx.title;
@@ -295,7 +293,6 @@ module {
                         id = tx.id;
                         from = tx.from;
                         to = tx.to;
-                        timestamp = tx.timestamp;
                         readAt = tx.readAt;
                         status = "cancelled";
                         title = tx.title;
@@ -382,7 +379,6 @@ module {
                         id = tx.id;
                         from = tx.from;
                         to = newTo;
-                        timestamp = tx.timestamp;
                         readAt = tx.readAt;
                         status = if (allApproved) "confirmed" else tx.status;
                         title = tx.title;
@@ -436,8 +432,8 @@ module {
         
         // Fraud detection for quick refunds
         let currentTime = TimeUtil.now();
-        let timeSinceCreation = if (currentTime > tx.timestamp) {
-            currentTime - tx.timestamp : Nat
+        let timeSinceCreation = if (currentTime > tx.createdAt) {
+            currentTime - tx.createdAt : Nat
         } else {
             0 : Nat
         };
@@ -485,7 +481,6 @@ module {
                         id = tx.id;
                         from = tx.from;
                         to = newTo;
-                        timestamp = tx.timestamp;
                         readAt = tx.readAt;
                         status = newStatus;
                         title = tx.title;

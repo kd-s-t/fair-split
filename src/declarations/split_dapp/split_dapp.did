@@ -12,7 +12,6 @@ type Transaction =
    refundedAt: opt nat;
    releasedAt: opt nat;
    status: TransactionStatus;
-   timestamp: nat;
    title: text;
    to: vec ToEntry;
  };

@@ -30,7 +30,6 @@ export const idlFactory = ({ IDL }) => {
     'refundedAt' : IDL.Opt(IDL.Nat),
     'cancelledAt' : IDL.Opt(IDL.Nat),
     'bitcoinTransactionHash' : IDL.Opt(IDL.Text),
-    'timestamp' : IDL.Nat,
     'bitcoinAddress' : IDL.Opt(IDL.Text),
     'releasedAt' : IDL.Opt(IDL.Nat),
     'readAt' : IDL.Opt(IDL.Nat),

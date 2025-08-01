@@ -230,7 +230,6 @@ module {
                             id = tx.id;
                             from = tx.from;
                             to = updatedTo;
-                            timestamp = tx.timestamp;
                             readAt = tx.readAt;
                             status = "cancelled";
                             title = tx.title;
@@ -265,7 +264,6 @@ module {
                             id = tx.id;
                             from = tx.from;
                             to = tx.to;
-                            timestamp = tx.timestamp;
                             readAt = ?currentTime;
                             status = tx.status;
                             title = tx.title;

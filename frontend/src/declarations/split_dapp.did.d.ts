@@ -89,7 +89,6 @@ export interface Transaction {
   'refundedAt' : [] | [bigint],
   'cancelledAt' : [] | [bigint],
   'bitcoinTransactionHash' : [] | [string],
-  'timestamp' : bigint,
   'bitcoinAddress' : [] | [string],
   'releasedAt' : [] | [bigint],
   'readAt' : [] | [bigint],

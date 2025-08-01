@@ -165,10 +165,6 @@ export default function EscrowPage() {
       return {
         ...txObj,
         from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
-        timestamp:
-          typeof txObj.timestamp === "bigint"
-            ? txObj.timestamp.toString()
-            : txObj.timestamp,
         createdAt:
           typeof txObj.createdAt === "bigint"
             ? txObj.createdAt.toString()

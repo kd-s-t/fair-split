@@ -3,29 +3,10 @@
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
+import { CancelledEscrowDetailsProps } from "./types";
+import RecipientsList from "./RecipientsList";
 
-type ToEntry = {
-  principal: string;
-  name: string;
-  amount: bigint;
-  status: { [key: string]: null }; // e.g., { approved: null } or { pending: null }
-};
-
-type EscrowTransaction = {
-  id: string;
-  from: string;
-  to: ToEntry[];
-  status: "pending" | "confirmed" | "released" | "cancelled";
-  timestamp: bigint;
-  title: string;
-  depositAddress?: string;
-  isRead?: boolean;
-  releasedAt?: bigint;
-  bitcoinAddress?: string;
-  bitcoinTransactionHash?: string;
-};
-
-export default function CancelledEscrowDetails({ transaction }: { transaction: EscrowTransaction }) {
+export default function CancelledEscrowDetails({ transaction }: CancelledEscrowDetailsProps) {
   const depositAddress = transaction?.depositAddress ||
     Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
@@ -45,6 +26,10 @@ export default function CancelledEscrowDetails({ transaction }: { transaction: E
       />
 
       <hr className="my-10 text-[#424444] h-[1px]" />
+
+      <RecipientsList recipients={transaction.to || []} showTimestamps={false} />
+
+      <hr className="my-6 text-[#424444] h-[1px]" />
 
       <Typography variant="large" className="text-[#F64C4C]">Escrow Cancelled</Typography>
 

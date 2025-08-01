@@ -14,11 +14,31 @@ import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetail
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import type { Transaction } from "@/declarations/split_dapp.did";
+
+// Extended type for serialized transaction data
+type SerializedTransaction = Omit<Transaction, 'timestamp' | 'createdAt' | 'confirmedAt' | 'cancelledAt' | 'refundedAt' | 'releasedAt' | 'readAt'> & {
+  timestamp: string;
+  createdAt: string;
+  confirmedAt?: string;
+  cancelledAt?: string;
+  refundedAt?: string;
+  releasedAt?: string;
+  readAt?: string;
+  to: Array<{
+    principal: any;
+    name: string;
+    amount: bigint;
+    status: { [key: string]: null };
+    approvedAt?: string;
+    declinedAt?: string;
+    readAt?: string;
+  }>;
+};
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [transaction, setTransaction] = useState<SerializedTransaction | null>(null);
   const [isTxLoading, setIsTxLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const { txid } = useParams();
@@ -47,8 +67,27 @@ export default function TransactionDetailsPage() {
           router.push('/transactions');
           return;
         }
-        console.log("transaction", result[0]);
-        setTransaction(result[0]);
+        
+        // Serialize BigInt values to strings for Redux compatibility
+        const serializedTransaction = {
+          ...result[0],
+          timestamp: result[0].timestamp?.toString() || "0",
+          createdAt: result[0].createdAt?.toString() || "0",
+          confirmedAt: result[0].confirmedAt ? result[0].confirmedAt.toString() : undefined,
+          cancelledAt: result[0].cancelledAt ? result[0].cancelledAt.toString() : undefined,
+          refundedAt: result[0].refundedAt ? result[0].refundedAt.toString() : undefined,
+          releasedAt: result[0].releasedAt ? result[0].releasedAt.toString() : undefined,
+          readAt: result[0].readAt ? result[0].readAt.toString() : undefined,
+          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: any) => ({
+            ...toEntry,
+            approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
+            declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
+            readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
+          })) : []
+        };
+        
+        console.log("transaction", serializedTransaction);
+        setTransaction(serializedTransaction);
         setIsAuthorized(true);
         setIsTxLoading(false);
       } catch (err) {
@@ -68,7 +107,24 @@ export default function TransactionDetailsPage() {
       // Fetch updated transaction and update state
       const updated = await actor.getTransaction(String(id), principal);
       if (Array.isArray(updated) && updated.length > 0) {
-        setTransaction(updated[0]);
+        // Serialize BigInt values to strings for Redux compatibility
+        const serializedUpdated = {
+          ...updated[0],
+          timestamp: updated[0].timestamp?.toString() || "0",
+          createdAt: updated[0].createdAt?.toString() || "0",
+          confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
+          cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,
+          refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
+          releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
+          readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+            ...toEntry,
+            approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
+            declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
+            readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
+          })) : []
+        };
+        setTransaction(serializedUpdated);
         setIsAuthorized(true);
         setIsTxLoading(false);
       }
@@ -93,7 +149,24 @@ export default function TransactionDetailsPage() {
       // Refresh the transaction data
       const updated = await actor.getTransaction(String(txid), principal);
       if (Array.isArray(updated) && updated.length > 0) {
-        setTransaction(updated[0]);
+        // Serialize BigInt values to strings for Redux compatibility
+        const serializedUpdated = {
+          ...updated[0],
+          timestamp: updated[0].timestamp?.toString() || "0",
+          createdAt: updated[0].createdAt?.toString() || "0",
+          confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
+          cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,
+          refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
+          releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
+          readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+            ...toEntry,
+            approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
+            declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
+            readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
+          })) : []
+        };
+        setTransaction(serializedUpdated);
       }
     } catch (err) {
       console.error("Cancel error:", err);
@@ -130,16 +203,12 @@ export default function TransactionDetailsPage() {
   }
 
   const statusKey = transaction.status || "unknown";
-  const now = Date.now() / 1000;
-  const txTimestamp = Number(transaction.timestamp);
-  const twoHours = 2 * 60 * 60;
-  const elapsed = now - txTimestamp;
-
+  
   let currentStep = 0;
-  let isReleased = statusKey === "released";
-  if (isReleased) currentStep = 3;
-  else if (statusKey === "confirmed") currentStep = 1;
-  else if (statusKey === "pending") currentStep = elapsed < twoHours ? 0 : 2;
+  if (statusKey === "released") currentStep = 3;
+  else if (statusKey === "confirmed") currentStep = 2;
+  else if (statusKey === "pending") currentStep = 0;
+  else if (statusKey === "cancelled") currentStep = 0;
 
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8

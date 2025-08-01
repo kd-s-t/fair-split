@@ -13,7 +13,6 @@ module {
         id : Text;
         from : Principal;
         to : [ToEntry];
-        timestamp : Nat;
         readAt : ?Nat;
         status : TransactionStatus;
         title : Text;

@@ -4,13 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { CheckCircle, RotateCcw, CircleAlert, Shield, ExternalLink } from "lucide-react";
 import { TransactionStats } from "@/components/ui/transaction-stats";
-
-interface ConfirmedEscrowActionsProps {
-  onRelease: (id: unknown) => void;
-  onRefund: () => void;
-  isLoading: "release" | "refund" | null;
-  transaction: any;
-}
+import { ConfirmedEscrowActionsProps } from "./types";
+import RecipientsList from "./RecipientsList";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
   // Generate a random transaction hash for display
@@ -35,6 +30,12 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         recipientCount={recipientCount}
         status={transaction.status}
       />
+
+      <hr className="my-6 text-[#424444] h-[1px]" />
+
+      <RecipientsList recipients={transaction.to || []} />
+
+      <hr className="my-6 text-[#424444] h-[1px]" />
 
       {/* Transaction Hash */}
       <div className="mb-6">

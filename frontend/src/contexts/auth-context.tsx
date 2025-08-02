@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthClient(client)
 
       const isAuthenticated = await client.isAuthenticated()
-      console.log('isAuthenticated', isAuthenticated)
 
       if (!isAuthenticated) {
         await client.logout()

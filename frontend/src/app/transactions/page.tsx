@@ -30,7 +30,7 @@ export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
-
+  console.log("transactions", transactions);
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
     dispatch(setSubtitle('View all your escrow transactions'));
@@ -49,21 +49,21 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     if (transactions && transactions.length > 0) {
-      const sorted = [...transactions].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+      const sorted = [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
       setLocalTransactions(sorted);
     }
   }, [transactions]);
+
+  // Mark unread transactions as read when transactions are loaded
+  useEffect(() => {
+    if (localTransactions.length > 0 && principal) {
+      markUnreadTransactionsAsRead();
+    }
+  }, [localTransactions, principal]); // eslint-disable-line react-hooks/exhaustive-deps
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
 
-  function generateRandomHash(): string {
-    const chars = '0123456789abcdef';
-    let hash = '';
-    for (let i = 0; i < 64; i++) {
-      hash += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return hash;
-  }
+
 
   function truncateHash(hash: string): string {
     if (hash.length <= 16) return hash;
@@ -73,7 +73,7 @@ export default function TransactionsPage() {
   function getTxId(tx: any) {
     return `${tx.from}_${tx.to
       .map((toEntry: any) => toEntry.principal)
-      .join("-")}_${tx.timestamp}`;
+      .join("-")}_${tx.createdAt}`;
   }
 
   function isPendingApproval(tx: any): boolean {
@@ -177,12 +177,38 @@ export default function TransactionsPage() {
 
   async function handleRowClick(tx: Transaction) {
     if (!principal) return;
-    if (!tx.isRead) {
-      const actor = await createSplitDappActor();
-      await actor.markTransactionsAsRead(principal);
-      dispatch(markAllAsRead());
-    }
+    const actor = await createSplitDappActor();
+    await actor.markTransactionsAsRead(principal);
+    dispatch(markAllAsRead());
     router.push(`/transactions/${tx.id}`);
+  }
+
+  // Function to mark unread transactions as read for the current recipient
+  async function markUnreadTransactionsAsRead() {
+    if (!principal) return;
+    
+    // Find transactions where current user is a recipient and hasn't read them
+    const unreadTransactionIds = localTransactions
+      .filter(tx => {
+        // Check if user is a recipient in this transaction
+        const recipientEntry = tx.to.find((entry: any) => 
+          String(entry.principal) === String(principal)
+        );
+        
+        // Return true if user is a recipient and hasn't read the transaction
+        return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
+      })
+      .map(tx => tx.id);
+    
+    if (unreadTransactionIds.length > 0) {
+      try {
+        const actor = await createSplitDappActor();
+        await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
+        console.log(`Marked ${unreadTransactionIds.length} transactions as read`, unreadTransactionIds);
+      } catch (error) {
+        console.error('Failed to mark transactions as read:', error);
+      }
+    }
   }
 
   const filteredTransactions = localTransactions.filter(tx => {
@@ -330,7 +356,7 @@ export default function TransactionsPage() {
                                 variant="small"
                                 className="text-[#9F9F9F]"
                               >
-                                {new Date(Number(tx.timestamp) * 1000).toLocaleString()}
+                                {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
                               </Typography>
                               {getTransactionCategory(tx) === "sent" ? (
                                 <div className="flex items-center gap-1 text-[#007AFF]">
@@ -359,7 +385,7 @@ export default function TransactionsPage() {
                                   variant="small"
                                   className="text-[#9F9F9F] ml-2"
                                 >
-                                  • Approved
+                                  • You approved
                                 </Typography>
                               )}
                             </div>
@@ -374,7 +400,7 @@ export default function TransactionsPage() {
                               <Wallet /> Manage escrow
                             </Button>
                           )}
-                          {pendingApproval && !isSentByUser(tx) ? (
+                          {pendingApproval && !isSentByUser(tx) && tx.status !== 'cancelled' ? (
                             <div className="flex justify-end w-full gap-2 mt-2">
                               <Button
                                 className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
@@ -427,33 +453,56 @@ export default function TransactionsPage() {
                             <div className="flex items-center gap-1">
                               <Bitcoin size={16} color="#F97415" />
                               <Typography variant="base" className="font-semibold">
-                                {tx.to && Array.isArray(tx.to)
-                                  ? (tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
-                                  : '0.00000000'} BTC
+                                {(() => {
+                                  if (isSentByUser(tx)) {
+                                    // If sender, show total amount
+                                    return tx.to && Array.isArray(tx.to)
+                                      ? (tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                                      : '0.00000000';
+                                  } else {
+                                    // If receiver, show their specific amount
+                                    const recipientEntry = tx.to.find((entry: any) => 
+                                      String(entry.principal) === String(principal)
+                                    );
+                                    return recipientEntry 
+                                      ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
+                                      : '0.00000000';
+                                  }
+                                })()} BTC
                               </Typography>
                             </div>
                           </div>
 
                           <div className="flex flex-col gap-1">
                             <Typography variant="small" className="text-[#9F9F9F]">
-                              To
+                              {isSentByUser(tx) ? "To" : "Your Share"}
                             </Typography>
                             <Typography variant="base" className="font-semibold">
-                              {tx.to.length} recipient
-                              {tx.to.length !== 1 ? "s" : ""}
+                              {isSentByUser(tx) ? (
+                                `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
+                              ) : (
+                                (() => {
+                                  const recipientEntry = tx.to.find((entry: any) => 
+                                    String(entry.principal) === String(principal)
+                                  );
+                                  return recipientEntry && recipientEntry.percentage 
+                                    ? `${recipientEntry.percentage}%`
+                                    : 'N/A';
+                                })()
+                              )}
                             </Typography>
                           </div>
 
                           <div className="flex flex-col gap-1">
                             <Typography variant="small" className="text-[#9F9F9F]">
-                              Transaction hash
+                              Bitcoin Address
                             </Typography>
                             <Typography
                               variant="base"
                               className="font-semibold text-[#FEB64D] truncate"
-                              title={generateRandomHash()} 
+                              title={tx.bitcoinAddress || 'No address available'} 
                             >
-                              {truncateHash(generateRandomHash())}
+                              {tx.bitcoinAddress ? truncateHash(tx.bitcoinAddress) : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
                             </Typography>
                           </div>
                         </div>

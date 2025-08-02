@@ -3,29 +3,12 @@
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
+import { TransactionHash } from "@/components/ui/transaction-hash";
+import { CancelledEscrowDetailsProps } from "./types";
+import RecipientsList from "./RecipientsList";
+import TransactionExplorerLinks from "./TransactionExplorerLinks";
 
-type ToEntry = {
-  principal: string;
-  name: string;
-  amount: bigint;
-  status: { [key: string]: null }; // e.g., { approved: null } or { pending: null }
-};
-
-type EscrowTransaction = {
-  id: string;
-  from: string;
-  to: ToEntry[];
-  status: "pending" | "confirmed" | "released" | "cancelled";
-  timestamp: bigint;
-  title: string;
-  depositAddress?: string;
-  isRead?: boolean;
-  releasedAt?: bigint;
-  bitcoinAddress?: string;
-  bitcoinTransactionHash?: string;
-};
-
-export default function CancelledEscrowDetails({ transaction }: { transaction: EscrowTransaction }) {
+export default function CancelledEscrowDetails({ transaction }: CancelledEscrowDetailsProps) {
   const depositAddress = transaction?.depositAddress ||
     Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
@@ -45,6 +28,10 @@ export default function CancelledEscrowDetails({ transaction }: { transaction: E
       />
 
       <hr className="my-10 text-[#424444] h-[1px]" />
+
+      <RecipientsList recipients={transaction.to || []} showTimestamps={false} />
+
+      <hr className="my-6 text-[#424444] h-[1px]" />
 
       <Typography variant="large" className="text-[#F64C4C]">Escrow Cancelled</Typography>
 
@@ -69,38 +56,7 @@ export default function CancelledEscrowDetails({ transaction }: { transaction: E
         </Typography>
       </div>
 
-      {transaction.bitcoinTransactionHash && (
-        <div className="container-gray mt-4">
-          <Typography variant="small" className="text-[#fff] font-semibold">
-            Bitcoin Transaction Hash
-          </Typography>
-          <div className="grid grid-cols-12 gap-3 mt-2">
-            <div className="container-gray col-span-11 break-all">
-              {transaction.bitcoinTransactionHash}
-            </div>
-            <div className="container-gray cursor-pointer">
-              <Copy />
-            </div>
-          </div>
-          <div className="flex gap-2 mt-2">
-            <button 
-              onClick={() => window.open(`https://blockstream.info/tx/${transaction.bitcoinTransactionHash}`, '_blank')}
-              className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-            >
-              View on Blockstream
-            </button>
-            <button 
-              onClick={() => window.open(`https://mempool.space/tx/${transaction.bitcoinTransactionHash}`, '_blank')}
-              className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-            >
-              View on Mempool
-            </button>
-          </div>
-          <Typography variant="p" className="text-[#9F9F9F] mt-2">
-            Bitcoin transaction was detected but escrow was cancelled
-          </Typography>
-        </div>
-      )}
+      <TransactionExplorerLinks transaction={transaction} depositAddress={depositAddress} />
 
       <div className="container-gray mt-6">
         <div className="flex items-start gap-3">

@@ -12,7 +12,6 @@ type Transaction =
    refundedAt: opt nat;
    releasedAt: opt nat;
    status: TransactionStatus;
-   timestamp: nat;
    title: text;
    to: vec ToEntry;
  };
@@ -22,6 +21,7 @@ type ToEntry =
    approvedAt: opt nat;
    declinedAt: opt nat;
    name: text;
+   percentage: nat;
    "principal": principal;
    readAt: opt nat;
    status: variant {
@@ -41,7 +41,7 @@ type SplitDApp =
                                  text;
                                }) query;
    getBalance: (p: principal) -> (nat) query;
-   getBitcoinTransactionHash: (escrowId: text, caller: principal) ->
+   getBitcoinTransactionHash: (_escrowId: text, _caller: principal) ->
     (opt text);
    getCustomNickname: ("principal": principal) -> (opt text) query;
    getFraudHistory: (user: principal) -> (vec FraudActivity) query;
@@ -69,19 +69,22 @@ type SplitDApp =
     principal) -> ();
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
     principal) -> ();
+   recipientMarkAsReadBatch: (transactionIds: vec text, recipientId:
+    principal) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
    removeNickname: ("principal": principal) -> ();
    resetUserReputation: (user: principal, caller: principal) -> ();
    setCustomNickname: ("principal": principal, nickname: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setNickname: (p: principal, name: text) -> ();
-   updateBitcoinTransactionHash: (escrowId: text, txHash: text, caller:
+   updateBitcoinTransactionHash: (_escrowId: text, _txHash: text, _caller:
     principal) -> (bool);
  };
 type ParticipantShare = 
  record {
    amount: nat;
    nickname: text;
+   percentage: nat;
    "principal": principal;
  };
 type FraudActivity = 

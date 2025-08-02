@@ -3,6 +3,7 @@ module {
         principal : Principal;
         name : Text;
         amount : Nat;
+        percentage : Nat;
         status : { #pending; #approved; #declined; #noaction };
         approvedAt : ?Nat;
         declinedAt : ?Nat;
@@ -13,7 +14,6 @@ module {
         id : Text;
         from : Principal;
         to : [ToEntry];
-        timestamp : Nat;
         readAt : ?Nat;
         status : TransactionStatus;
         title : Text;
@@ -29,5 +29,6 @@ module {
         principal : Principal;
         amount : Nat;
         nickname : Text;
+        percentage : Nat;
     };
 }; 

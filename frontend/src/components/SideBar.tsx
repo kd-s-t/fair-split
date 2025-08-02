@@ -24,7 +24,7 @@ export default function Sidebar() {
           width={160}
           height={40}
           priority
-          className="object-contain w-auto h-auto"
+          className="object-contain w-40 h-10"
         />
       </div>
 

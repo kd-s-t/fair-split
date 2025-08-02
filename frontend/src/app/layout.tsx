@@ -22,7 +22,7 @@ function BalanceAndNameSyncer() {
   useEffect(() => {
     if (!principal || !authClient) return
 
-    ;(async () => {
+    (async () => {
       try {
         const isAuthenticated = await authClient.isAuthenticated()
         if (!isAuthenticated) {
@@ -62,22 +62,47 @@ function BalanceAndNameSyncer() {
         // Fetch Transactions
         try {
           const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(10)) as any
-          const normalizeTx = (tx: any) => ({
-            ...tx,
-            from: typeof tx.from === 'object' && tx.from.toText ? tx.from.toText() : String(tx.from),
-            timestamp: typeof tx.timestamp === 'bigint' ? tx.timestamp.toString() : String(tx.timestamp),
-            releasedAt: Array.isArray(tx.releasedAt) && tx.releasedAt.length > 0
-              ? tx.releasedAt[0].toString()
-              : null,
-            to: tx.to.map((toEntry: any) => ({
-              ...toEntry,
-              principal:
-                typeof toEntry.principal === 'object' && toEntry.principal.toText
+          const normalizeTx = (tx: any) => {
+            const serializeTimestamp = (value: any) => {
+              if (!value) return undefined;
+              return typeof value === 'bigint' ? value.toString() : String(value);
+            };
+
+            const serializeArrayTimestamp = (value: any) => {
+              if (Array.isArray(value) && value.length > 0) {
+                return value[0].toString();
+              }
+              return serializeTimestamp(value);
+            };
+
+            return {
+              ...tx,
+              from: typeof tx.from === 'object' && tx.from.toText ? tx.from.toText() : String(tx.from),
+              createdAt: serializeTimestamp(tx.createdAt || '0'),
+              confirmedAt: serializeTimestamp(tx.confirmedAt),
+              cancelledAt: serializeTimestamp(tx.cancelledAt),
+              refundedAt: serializeTimestamp(tx.refundedAt),
+              releasedAt: serializeArrayTimestamp(tx.releasedAt),
+              readAt: serializeTimestamp(tx.readAt),
+              bitcoinTransactionHash: Array.isArray(tx.bitcoinTransactionHash) && tx.bitcoinTransactionHash.length > 0
+                ? tx.bitcoinTransactionHash[0]
+                : tx.bitcoinTransactionHash,
+              bitcoinAddress: Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0
+                ? tx.bitcoinAddress[0]
+                : tx.bitcoinAddress,
+              to: tx.to.map((toEntry: any) => ({
+                ...toEntry,
+                principal: typeof toEntry.principal === 'object' && toEntry.principal.toText
                   ? toEntry.principal.toText()
                   : String(toEntry.principal),
-              amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : String(toEntry.amount),
-            })),
-          })
+                amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : String(toEntry.amount),
+                percentage: typeof toEntry.percentage === 'bigint' ? toEntry.percentage.toString() : String(toEntry.percentage),
+                approvedAt: serializeTimestamp(toEntry.approvedAt),
+                declinedAt: serializeTimestamp(toEntry.declinedAt),
+                readAt: serializeTimestamp(toEntry.readAt),
+              })),
+            };
+          };
           const normalizedTxs = (result.transactions as any[]).map(normalizeTx)
           dispatch(setTransactions(normalizedTxs))
         } catch (err) {

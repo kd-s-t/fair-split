@@ -16,6 +16,7 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'declinedAt' : IDL.Opt(IDL.Nat),
     'amount' : IDL.Nat,
+    'percentage' : IDL.Nat,
     'readAt' : IDL.Opt(IDL.Nat),
   });
   const TransactionStatus = IDL.Text;
@@ -30,7 +31,6 @@ export const idlFactory = ({ IDL }) => {
     'refundedAt' : IDL.Opt(IDL.Nat),
     'cancelledAt' : IDL.Opt(IDL.Nat),
     'bitcoinTransactionHash' : IDL.Opt(IDL.Text),
-    'timestamp' : IDL.Nat,
     'bitcoinAddress' : IDL.Opt(IDL.Text),
     'releasedAt' : IDL.Opt(IDL.Nat),
     'readAt' : IDL.Opt(IDL.Nat),
@@ -39,6 +39,7 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'nickname' : IDL.Text,
     'amount' : IDL.Nat,
+    'percentage' : IDL.Nat,
   });
   const SplitDApp = IDL.Service({
     'canUserCreateEscrow' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
@@ -109,6 +110,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'recipientDeclineEscrow' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Principal],
+        [],
+        [],
+      ),
+    'recipientMarkAsReadBatch' : IDL.Func(
+        [IDL.Vec(IDL.Text), IDL.Principal],
         [],
         [],
       ),

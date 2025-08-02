@@ -13,6 +13,7 @@ module {
             principal = recipient;
             name = "";
             amount = 0;
+            percentage = 0;
             status = #pending;
             approvedAt = null;
             declinedAt = null;
@@ -41,6 +42,7 @@ module {
                                 principal = entry.principal;
                                 name = entry.name;
                                 amount = entry.amount;
+                                percentage = entry.percentage;
                                 status = #approved;
                                 approvedAt = ?timestamp;
                                 declinedAt = entry.declinedAt;
@@ -52,6 +54,7 @@ module {
                                 principal = entry.principal;
                                 name = entry.name;
                                 amount = entry.amount;
+                                percentage = entry.percentage;
                                 status = #declined;
                                 approvedAt = entry.approvedAt;
                                 declinedAt = ?timestamp;
@@ -79,6 +82,7 @@ module {
                         principal = entry.principal;
                         name = entry.name;
                         amount = entry.amount;
+                        percentage = entry.percentage;
                         status = entry.status;
                         approvedAt = entry.approvedAt;
                         declinedAt = entry.declinedAt;
@@ -193,7 +197,7 @@ module {
     public func getRecipientStatus(
         recipients : [TransactionTypes.ToEntry],
         recipient : Principal
-    ) : ?{ #pending; #approved; #declined } {
+    ) : ?{ #pending; #approved; #declined; #noaction } {
         switch (findRecipientIndex(recipients, recipient)) {
             case (?index) { ?recipients[index].status };
             case null { null };

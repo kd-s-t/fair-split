@@ -22,9 +22,8 @@ export default function EscrowPage() {
   const idCounter = useRef(2);
 
   const generateUniqueId = () => {
-    const uniqueId = `recipient-${idCounter.current}`;
-    idCounter.current += 1;
-    return { uniqueId, newId: idCounter.current - 1 };
+    const uniqueId = `recipient-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return { uniqueId, newId: idCounter.current };
   };
   const [isLoading, setIsLoading] = useState(false);
   const [btcAmount, setBtcAmount] = useState<string>("");
@@ -55,7 +54,7 @@ export default function EscrowPage() {
   };
 
   const handleAddRecipient = () => {
-    const { uniqueId, newId } = generateUniqueId();
+    const { uniqueId } = generateUniqueId();
     setRecipients((prev) => {
       const newRecipients = [
         { id: uniqueId, principal: "", percentage: 0 },
@@ -69,7 +68,6 @@ export default function EscrowPage() {
         percentage: autoPercent + (idx === 0 ? remainder : 0),
       }));
     });
-
   };
   const handleRemoveRecipient = (idx: number) => {
     setRecipients((prev) => {
@@ -88,6 +86,12 @@ export default function EscrowPage() {
   const handleInitiateEscrow = async () => {
     if (!btcAmountNum || btcAmountNum <= 0) {
       toast.error("Enter a valid BTC amount");
+      return;
+    }
+
+    // Check if any percentage is outside 1-100 range
+    if (recipients.some((r) => r.percentage < 1 || r.percentage > 100)) {
+      toast.error("Each percentage must be between 1-100%");
       return;
     }
 
@@ -119,6 +123,7 @@ export default function EscrowPage() {
           principal: Principal.fromText(r.principal),
           amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
           nickname: r.principal, // Use principal as default nickname
+          percentage: BigInt(r.percentage),
         })),
         title || ""
       );
@@ -162,32 +167,34 @@ export default function EscrowPage() {
     const txs = result.transactions || [];
     const serializableTxs = txs.map((tx: unknown) => {
       const txObj = tx as Record<string, unknown>;
-      return {
-        ...txObj,
-        from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
-        timestamp:
-          typeof txObj.timestamp === "bigint"
-            ? txObj.timestamp.toString()
-            : txObj.timestamp,
-        createdAt:
-          typeof txObj.createdAt === "bigint"
-            ? txObj.createdAt.toString()
-            : txObj.createdAt,
-        confirmedAt: Array.isArray(txObj.confirmedAt) && txObj.confirmedAt.length > 0
-          ? txObj.confirmedAt[0].toString()
-          : null,
-        cancelledAt: Array.isArray(txObj.cancelledAt) && txObj.cancelledAt.length > 0
-          ? txObj.cancelledAt[0].toString()
-          : null,
-        refundedAt: Array.isArray(txObj.refundedAt) && txObj.refundedAt.length > 0
-          ? txObj.refundedAt[0].toString()
-          : null,
-        releasedAt: Array.isArray(txObj.releasedAt) && txObj.releasedAt.length > 0
-          ? txObj.releasedAt[0].toString()
-          : null,
-        readAt: Array.isArray(txObj.readAt) && txObj.readAt.length > 0
-          ? txObj.readAt[0].toString()
-          : null,
+              return {
+          ...txObj,
+          from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
+          createdAt:
+            typeof txObj.createdAt === "bigint"
+              ? txObj.createdAt.toString()
+              : txObj.createdAt,
+          confirmedAt: Array.isArray(txObj.confirmedAt) && txObj.confirmedAt.length > 0
+            ? txObj.confirmedAt[0].toString()
+            : null,
+          cancelledAt: Array.isArray(txObj.cancelledAt) && txObj.cancelledAt.length > 0
+            ? txObj.cancelledAt[0].toString()
+            : null,
+          refundedAt: Array.isArray(txObj.refundedAt) && txObj.refundedAt.length > 0
+            ? txObj.refundedAt[0].toString()
+            : null,
+          releasedAt: Array.isArray(txObj.releasedAt) && txObj.releasedAt.length > 0
+            ? txObj.releasedAt[0].toString()
+            : null,
+          readAt: Array.isArray(txObj.readAt) && txObj.readAt.length > 0
+            ? txObj.readAt[0].toString()
+            : null,
+          bitcoinTransactionHash: Array.isArray(txObj.bitcoinTransactionHash) && txObj.bitcoinTransactionHash.length > 0
+            ? txObj.bitcoinTransactionHash[0]
+            : txObj.bitcoinTransactionHash,
+          bitcoinAddress: Array.isArray(txObj.bitcoinAddress) && txObj.bitcoinAddress.length > 0
+            ? txObj.bitcoinAddress[0]
+            : txObj.bitcoinAddress,
         to: (txObj.to as unknown[]).map((toEntry: unknown) => {
           const entry = toEntry as Record<string, unknown>;
           return {

@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { CheckCircle, RotateCcw, CircleAlert, Shield, ExternalLink } from "lucide-react";
 import { TransactionStats } from "@/components/ui/transaction-stats";
-
-interface ConfirmedEscrowActionsProps {
-  onRelease: (id: unknown) => void;
-  onRefund: () => void;
-  isLoading: "release" | "refund" | null;
-  transaction: any;
-}
+import { TransactionHash } from "@/components/ui/transaction-hash";
+import { ConfirmedEscrowActionsProps } from "./types";
+import RecipientsList from "./RecipientsList";
+import TimeRemaining from "./TimeRemaining";
+import TransactionExplorerLinks from "./TransactionExplorerLinks";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
   // Generate a random transaction hash for display
@@ -36,49 +34,70 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         status={transaction.status}
       />
 
-      {/* Transaction Hash */}
-      <div className="mb-6">
-        <Typography variant="small" className="text-white font-semibold mb-2">
-          Transaction hash
-        </Typography>
-        <div className="flex gap-3">
-          <div className="flex-1 bg-[#232323] border border-[#393939] rounded-lg px-4 py-3 text-white">
-            {txHash.slice(0, 20)}...
-          </div>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 border-[#393939] bg-transparent text-white hover:bg-[#393939]"
-          >
-            <ExternalLink size={16} />
-            View on explorer
-          </Button>
-        </div>
-      </div>
+      <TimeRemaining createdAt={transaction.createdAt} />
 
-      {/* Recipients Breakdown */}
+      <hr className="my-6 text-[#424444] h-[1px]" />
+
+      {/* Combined Recipients List and Breakdown */}
       <div className="mb-6">
-        <Typography variant="large" className="mb-4">Recipients breakdown</Typography>
+        <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
         <div className="space-y-3">
-          {transaction.to?.map((toEntry: any, idx: number) => {
-            const amount = Number(toEntry.amount) / 1e8;
+          {Array.isArray(transaction.to) && transaction.to.map((recipient: any, index: number) => {
+            const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
+            const statusColor = statusKey === 'approved' ? 'text-green-400' : 
+                               statusKey === 'pending' ? 'text-yellow-400' : 
+                               statusKey === 'declined' ? 'text-red-400' : 'text-gray-400';
+            
+            const amount = Number(recipient.amount) / 1e8;
             const totalAmount = Array.isArray(transaction.to)
               ? transaction.to.reduce((sum: number, entry: any) => sum + Number(entry.amount), 0) / 1e8
               : 0;
             const percentage = totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(0) : 0;
             
             return (
-              <div key={idx} className="flex justify-between items-center bg-[#232323] border border-[#393939] rounded-lg px-4 py-3">
-                <div className="text-white">
-                  {toEntry.principal ? String(toEntry.principal).slice(0, 20) + '...' : `Recipient ${idx + 1}`}
-                </div>
-                <div className="text-white font-semibold">
-                  {percentage}% • {amount.toFixed(8)} BTC
+              <div key={index} className="bg-[#2a2a2a] rounded-lg p-4 border border-[#303434]">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <Typography variant="base" className="text-white font-semibold">
+                      {recipient.name || `Recipient ${index + 1}`}
+                    </Typography>
+                    <Typography variant="small" className="text-[#FEB64D] mt-1">
+                      {(Number(recipient.amount) / 1e8).toFixed(8)} BTC
+                    </Typography>
+                    <Typography variant="small" className="text-[#9F9F9F] mt-1">
+                      {percentage}%
+                    </Typography>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${statusColor}`}>
+                      {statusKey}
+                    </span>
+                    {recipient.approvedAt && (
+                      <Typography variant="small" className="text-gray-500 mt-1">
+                        {new Date(Number(recipient.approvedAt) / 1_000_000).toLocaleString()}
+                      </Typography>
+                    )}
+                    {recipient.declinedAt && (
+                      <Typography variant="small" className="text-gray-500 mt-1">
+                        {new Date(Number(recipient.declinedAt) / 1_000_000).toLocaleString()}
+                      </Typography>
+                    )}
+                    {statusKey === 'pending' && !recipient.approvedAt && !recipient.declinedAt && (
+                      <Typography variant="small" className="text-gray-500 mt-1">
+                        No action taken yet
+                      </Typography>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      <hr className="my-6 text-[#424444] h-[1px]" />
+
+      <TransactionExplorerLinks transaction={transaction} />
 
       {/* Escrow Actions */}
       <div className="mb-4">

@@ -11,6 +11,7 @@ export interface ParticipantShare {
   'principal' : Principal,
   'nickname' : string,
   'amount' : bigint,
+  'percentage' : bigint,
 }
 export interface SplitDApp {
   'canUserCreateEscrow' : ActorMethod<[Principal], boolean>,
@@ -55,6 +56,10 @@ export interface SplitDApp {
     [Principal, bigint, Principal],
     undefined
   >,
+  'recipientMarkAsReadBatch' : ActorMethod<
+    [Array<string>, Principal],
+    undefined
+  >,
   'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'removeNickname' : ActorMethod<[Principal], undefined>,
   'resetUserReputation' : ActorMethod<[Principal, Principal], undefined>,
@@ -76,6 +81,7 @@ export interface ToEntry {
   'name' : string,
   'declinedAt' : [] | [bigint],
   'amount' : bigint,
+  'percentage' : bigint,
   'readAt' : [] | [bigint],
 }
 export interface Transaction {
@@ -89,7 +95,6 @@ export interface Transaction {
   'refundedAt' : [] | [bigint],
   'cancelledAt' : [] | [bigint],
   'bitcoinTransactionHash' : [] | [string],
-  'timestamp' : bigint,
   'bitcoinAddress' : [] | [string],
   'releasedAt' : [] | [bigint],
   'readAt' : [] | [bigint],

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import type { Transaction, ToEntry } from '@/declarations/split_dapp.did';
+import { TransactionDetailsModalProps, ToEntry } from './types';
 
-export default function TransactionDetailsModal({ transaction, onClose }: { transaction: Transaction | null, onClose: () => void }) {
+export default function TransactionDetailsModal({ transaction, onClose }: TransactionDetailsModalProps) {
   if (!transaction) return null;
   return (
     <motion.div

@@ -2,6 +2,7 @@ import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
+import Debug "mo:base/Debug";
 
 import TransactionTypes "schema";
 import Balance "modules/balance";
@@ -72,6 +73,18 @@ persistent actor class SplitDApp(admin : Principal) {
   ) : async () {
     let result = Escrow.releaseSplit(caller, txId, transactions, balances, reputation, logs);
     logs := result.newLogs;
+  };
+
+  public shared func updateEscrow(
+    caller : Principal,
+    txId : Text,
+    updatedParticipants : [TransactionTypes.ParticipantShare]
+  ) : async () {
+    let result = Escrow.updateEscrow(caller, txId, updatedParticipants, transactions);
+    if (not result.success) {
+      // Handle error - could throw or log
+      Debug.print("Failed to update escrow: " # (switch (result.error) { case (?e) e; case null "Unknown error" }));
+    };
   };
 
   public query func getBalance(p : Principal) : async Nat {

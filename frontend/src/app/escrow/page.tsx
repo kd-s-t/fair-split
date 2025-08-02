@@ -13,8 +13,11 @@ import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
 import { setTitle as setPageTitle, setSubtitle } from '@/lib/redux/store';
 import { setBtcBalance } from "@/lib/redux/userSlice";
+import { useSearchParams } from "next/navigation";
 
 export default function EscrowPage() {
+  const searchParams = useSearchParams();
+  const editTxId = searchParams.get('edit');
   const [title, setTitle] = useState<string>("");
   const [recipients, setRecipients] = useState<Recipient[]>([
     { id: "recipient-1", principal: "", percentage: 100 },
@@ -31,9 +34,50 @@ export default function EscrowPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle('Create new escrow'));
-    dispatch(setSubtitle('Configure your secure Bitcoin transaction'));
-  }, [dispatch]);
+    if (editTxId) {
+      dispatch(setPageTitle('Edit escrow'));
+      dispatch(setSubtitle('Update your escrow configuration'));
+    } else {
+      dispatch(setPageTitle('Create new escrow'));
+      dispatch(setSubtitle('Configure your secure Bitcoin transaction'));
+    }
+  }, [dispatch, editTxId]);
+
+  // Load existing transaction data if in edit mode
+  useEffect(() => {
+    const loadTransactionForEdit = async () => {
+      if (!editTxId || !principal) return;
+      
+      try {
+        const actor = await createSplitDappActor();
+        const result = await actor.getTransaction(editTxId, principal);
+        
+        if (Array.isArray(result) && result.length > 0) {
+          const tx = result[0];
+          setTitle(tx.title);
+          
+          // Convert recipients to the form format
+          const formRecipients = tx.to.map((recipient: any, index: number) => ({
+            id: `recipient-${index + 1}`,
+            principal: typeof recipient.principal === "string" ? recipient.principal : recipient.principal.toText(),
+            percentage: Number(recipient.percentage),
+            name: recipient.name || ""
+          }));
+          
+          setRecipients(formRecipients);
+          
+          // Calculate total BTC amount
+          const totalAmount = tx.to.reduce((sum: number, recipient: any) => sum + Number(recipient.amount), 0);
+          setBtcAmount((totalAmount / 1e8).toString());
+        }
+      } catch (error) {
+        console.error('Failed to load transaction for editing:', error);
+        toast.error('Failed to load transaction for editing');
+      }
+    };
+
+    loadTransactionForEdit();
+  }, [editTxId, principal]);
   const [showDialog, setShowDialog] = useState(false);
   const [newTxId, setNewTxId] = useState<string | null>(null);
 
@@ -83,39 +127,44 @@ export default function EscrowPage() {
     });
   };
 
-  const handleInitiateEscrow = async () => {
+  const validateForm = () => {
     if (!btcAmountNum || btcAmountNum <= 0) {
       toast.error("Enter a valid BTC amount");
-      return;
+      return false;
     }
 
     // Check if any percentage is outside 1-100 range
     if (recipients.some((r) => r.percentage < 1 || r.percentage > 100)) {
       toast.error("Each percentage must be between 1-100%");
-      return;
+      return false;
     }
 
     if (totalPercentage !== 100) {
       toast.error("Total percentage must be 100%");
-      return;
+      return false;
     }
 
     if (recipients.some((r) => !r.principal)) {
       toast.error("All recipients must have a Principal address");
-      return;
+      return false;
     }
 
     if (!principal) {
       toast.error("You must be logged in to proceed.");
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleCreateEscrow = async () => {
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
       const actor = await createSplitDappActor();
-
-      const callerPrincipal = Principal.fromText(principal.toText());
+      const callerPrincipal = Principal.fromText(principal!.toText());
 
       const txId = await actor.initiateEscrow(
         callerPrincipal,
@@ -135,23 +184,87 @@ export default function EscrowPage() {
 
       setNewTxId(String(txId));
       setShowDialog(true);
+
       await fetchAndStoreTransactions();
-      if (principal && authClient) {
-        try {
-          const actor = await createSplitDappActor();
-          const balance = await actor.getBalance(Principal.fromText(principal.toText()));
-          const formatted = (Number(balance) / 1e8).toFixed(8);
-          dispatch(setBtcBalance(formatted));
-        } catch (err) {
-          dispatch(setBtcBalance(null));
-        }
-      }
+      await updateBalance();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      toast.error(`Error initiating escrow: ${errorMessage}`);
-      console.error("Initiate escrow failed:", err);
+      toast.error(`Error creating escrow: ${errorMessage}`);
+      console.error("Create escrow failed:", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdateEscrow = async () => {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+
+    try {
+      const actor = await createSplitDappActor();
+      const callerPrincipal = Principal.fromText(principal!.toText());
+
+      // Check if transaction is still editable before updating
+      try {
+        const currentTx = await actor.getTransaction(editTxId!, principal);
+        if (Array.isArray(currentTx) && currentTx.length > 0) {
+          const tx = currentTx[0];
+          if (tx.status !== "pending") {
+            toast.error("Cannot update: Transaction is no longer in pending status");
+            window.location.href = `/transactions/${editTxId}`;
+            return;
+          }
+          
+          // Check if any recipients have taken action
+          const hasRecipientAction = tx.to.some((recipient: any) => 
+            recipient.status && Object.keys(recipient.status)[0] !== "pending"
+          );
+          
+          if (hasRecipientAction) {
+            toast.error("Cannot update: Some recipients have already taken action");
+            window.location.href = `/transactions/${editTxId}`;
+            return;
+          }
+        }
+      } catch (error) {
+        toast.error("Failed to verify transaction status");
+        window.location.href = `/transactions/${editTxId}`;
+        return;
+      }
+
+      // Update existing escrow
+      const updatedParticipants = recipients.map((r) => ({
+        principal: Principal.fromText(r.principal),
+        amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
+        nickname: r.principal, // Use principal as default nickname
+        percentage: BigInt(r.percentage),
+      }));
+
+      await actor.updateEscrow(callerPrincipal, editTxId!, updatedParticipants);
+      toast.success("Escrow updated successfully!");
+      
+      // Navigate back to transaction details
+      window.location.href = `/transactions/${editTxId}`;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      toast.error(`Error updating escrow: ${errorMessage}`);
+      console.error("Update escrow failed:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateBalance = async () => {
+    if (principal && authClient) {
+      try {
+        const actor = await createSplitDappActor();
+        const balance = await actor.getBalance(Principal.fromText(principal.toText()));
+        const formatted = (Number(balance) / 1e8).toFixed(8);
+        dispatch(setBtcBalance(formatted));
+      } catch (err) {
+        dispatch(setBtcBalance(null));
+      }
     }
   };
 
@@ -250,10 +363,11 @@ export default function EscrowPage() {
           btcAmount={btcAmount}
           recipients={recipients}
           isLoading={isLoading}
-          handleInitiateEscrow={handleInitiateEscrow}
+          handleInitiateEscrow={editTxId ? handleUpdateEscrow : handleCreateEscrow}
           showDialog={showDialog}
           setShowDialog={setShowDialog}
           newTxId={newTxId}
+          isEditMode={!!editTxId}
         />
       </motion.div>
     </>

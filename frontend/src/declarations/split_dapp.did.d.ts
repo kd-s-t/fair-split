@@ -71,6 +71,10 @@ export interface SplitDApp {
     [string, string, Principal],
     boolean
   >,
+  'updateEscrow' : ActorMethod<
+    [Principal, string, Array<ParticipantShare>],
+    undefined
+  >,
 }
 export interface ToEntry {
   'status' : { 'pending' : null } |

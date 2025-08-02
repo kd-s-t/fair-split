@@ -10,6 +10,7 @@ import { Typography } from "@/components/ui/typography";
 import { Card } from "@/components/ui/card";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
+import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
 import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetails";
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
@@ -205,6 +206,11 @@ export default function TransactionDetailsPage() {
     }
   };
 
+  const handleEdit = async () => {
+    // Navigate to escrow page with current transaction data for editing
+    router.push(`/escrow?edit=${txid}`);
+  };
+
   if (isTxLoading) {
     return <div className="p-6">Loading...</div>;
   }
@@ -258,8 +264,9 @@ export default function TransactionDetailsPage() {
           )}
 
           {statusKey === "pending" && (
-            <PendingEscrowDetails 
-              transaction={{
+            (() => {
+              const isSender = principal && String(transaction.from) === String(principal);
+              const transactionData = {
                 ...transaction,
                 from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
                 to: Array.isArray(transaction.to)
@@ -268,7 +275,7 @@ export default function TransactionDetailsPage() {
                       principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
                     }))
                   : [],
-                status: "pending",
+                status: "pending" as const,
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
                   : transaction.releasedAt,
@@ -278,9 +285,21 @@ export default function TransactionDetailsPage() {
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
                   ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
                   : transaction.bitcoinTransactionHash
-              }}
-              onCancel={handleCancel}
-            />
+              };
+
+              return isSender ? (
+                <EditEscrowDetails 
+                  transaction={transactionData}
+                  onCancel={handleCancel}
+                  onEdit={handleEdit}
+                />
+              ) : (
+                <PendingEscrowDetails 
+                  transaction={transactionData}
+                  onCancel={handleCancel}
+                />
+              );
+            })()
           )}
 
           {(statusKey === "cancelled" || statusKey === "declined") && (

@@ -16,6 +16,7 @@ const TransactionSummary = ({
   showDialog,
   setShowDialog,
   newTxId,
+  isEditMode = false,
 }: TransactionSummaryProps) => {
   const router = useRouter();
   return (
@@ -90,7 +91,7 @@ const TransactionSummary = ({
               onClick={handleInitiateEscrow}
             >
               <Send size={16} />
-              {isLoading ? "Processing..." : "Initiate escrow"}
+              {isLoading ? "Processing..." : isEditMode ? "Update escrow" : "Initiate escrow"}
             </Button>
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"

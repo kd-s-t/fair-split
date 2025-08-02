@@ -41,3 +41,30 @@ yarn-error.log*
 # Misc
 *.swp
 *.swo
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.env
+.env.docker
+.docker/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.backup
+.terraform.tfstate.lock.info
+crash.log
+crash.*.log
+*.hcl
+.terraformrc
+terraform.rc
+
+# Build artifacts
+*.tar
+*.tar.gz
+*.zip

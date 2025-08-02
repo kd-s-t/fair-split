@@ -20,12 +20,12 @@ import {
   RotateCw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { statusMap } from "@/modules/dashboard/Activities";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { setTitle, setSubtitle } from '../../lib/redux/store';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -115,6 +115,23 @@ export default function TransactionsPage() {
   function getTransactionCategory(tx: any): "sent" | "received" {
     return isSentByUser(tx) ? "sent" : "received";
   }
+
+  const getTransactionStatusBadge = (status: string) => {
+    const variant = (TRANSACTION_STATUS_MAP[status]?.variant ?? "default") as
+      | "secondary"
+      | "success"
+      | "primary"
+      | "error"
+      | "default"
+      | "outline"
+      | "warning";
+
+    return (
+      <Badge variant={variant}>
+        {TRANSACTION_STATUS_MAP[status]?.label || status}
+      </Badge>
+    );
+  };
 
   async function handleApprove(tx: any, idx: number) {
     if (!principal) return;
@@ -356,25 +373,7 @@ export default function TransactionsPage() {
                                 {tx.title}
                               </Typography>
 
-                              {(() => {
-                                const statusKey = tx.status;
-                                return (
-                                  <Badge
-                                    variant={
-                                      (statusMap[statusKey]?.variant ?? "default") as
-                                      | "secondary"
-                                      | "success"
-                                      | "primary"
-                                      | "error"
-                                      | "default"
-                                      | "outline"
-                                      | "warning"
-                                    }
-                                  >
-                                    {statusMap[statusKey]?.label || statusKey}
-                                  </Badge>
-                                );
-                              })()}
+                              {getTransactionStatusBadge(tx.status)}
                             </div>
                             <div className="flex items-center gap-2 text-xs mb-2">
                               <Typography

@@ -7,6 +7,7 @@ import type { Transaction } from "@/declarations/split_dapp.did";
 import { motion } from "framer-motion";
 import {
   markAllAsRead,
+  setTransactions,
 } from "../../lib/redux/transactionsSlice";
 import { useRouter } from "next/navigation";
 import { Principal } from "@dfinity/principal";
@@ -41,6 +42,7 @@ export default function TransactionsPage() {
   const [localTransactions, setLocalTransactions] = useState<any[]>([]);
   const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
+  const [isDeclining, setIsDeclining] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -96,6 +98,16 @@ export default function TransactionsPage() {
     );
   }
 
+  function hasUserDeclined(tx: any): boolean {
+    if (!principal) return false;
+    return tx.to.some(
+      (toEntry: any) =>
+        String(toEntry.principal) === String(principal) &&
+        toEntry.status &&
+        Object.keys(toEntry.status)[0] === "declined"
+    );
+  }
+
   function isSentByUser(tx: any): boolean {
     return String(tx.from) === String(principal);
   }
@@ -124,7 +136,9 @@ export default function TransactionsPage() {
       
       await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
       toast.success('Approved successfully!');
-      setTimeout(() => window.location.reload(), 1000);
+      // Refresh transaction data
+      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      dispatch(setTransactions(updatedTxs.transactions));
     } catch (err: any) {
       toast.error(err.message || 'Failed to approve');
       setIsApproving(null);
@@ -133,7 +147,7 @@ export default function TransactionsPage() {
 
   async function handleDecline(tx: any, idx: number) {
     if (!principal) return;
-    setIsApproving(getTxId(tx));
+    setIsDeclining(getTxId(tx));
     try {
       const actor = await createSplitDappActor();
       const senderPrincipal =
@@ -145,7 +159,7 @@ export default function TransactionsPage() {
       );
       if (!recipientEntry) {
         toast.error("Recipient entry not found.");
-        setIsApproving(null);
+        setIsDeclining(null);
         return;
       }
       const recipientPrincipal =
@@ -153,12 +167,14 @@ export default function TransactionsPage() {
           ? Principal.fromText(recipientEntry.principal)
           : recipientEntry.principal;
 
-      const txs = await actor.getTransactionsPaginated(Principal.fromText(principalStr), BigInt(0), BigInt(100)) as any;
+      // Get the sender's transactions to find the correct index
+      const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
+      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as any;
       const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
       
       if (txIndex === -1) {
         toast.error('Transaction not found.');
-        setIsApproving(null);
+        setIsDeclining(null);
         return;
       }
 
@@ -168,10 +184,12 @@ export default function TransactionsPage() {
         recipientPrincipal
       );
       toast.success('Declined successfully!');
-      setTimeout(() => window.location.reload(), 1000);
+      // Refresh transaction data
+      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      dispatch(setTransactions(updatedTxs.transactions));
     } catch (err: any) {
       toast.error(err.message || 'Failed to decline');
-      setIsApproving(null);
+      setIsDeclining(null);
     }
   }
 
@@ -388,6 +406,15 @@ export default function TransactionsPage() {
                                   • You approved
                                 </Typography>
                               )}
+                              {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') && 
+                                !isSentByUser(tx) && hasUserDeclined(tx)) && (
+                                <Typography
+                                  variant="small"
+                                  className="text-[#9F9F9F] ml-2"
+                                >
+                                  • You declined
+                                </Typography>
+                              )}
                             </div>
                           </div>
 
@@ -436,11 +463,37 @@ export default function TransactionsPage() {
                                 )}
                               </Button>
                               <Button
-                                className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 onClick={() => handleDecline(tx, idx)}
-                                disabled={isApproving === getTxId(tx)}
+                                disabled={isDeclining === getTxId(tx)}
                               >
-                                Decline
+                                {isDeclining === getTxId(tx) ? (
+                                  <span className="flex items-center gap-2">
+                                    <svg
+                                      className="animate-spin h-4 w-4 text-white"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                      />
+                                      <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v8z"
+                                      />
+                                    </svg>
+                                    Declining...
+                                  </span>
+                                ) : (
+                                  'Decline'
+                                )}
                               </Button>
                             </div>
                           ) : null}

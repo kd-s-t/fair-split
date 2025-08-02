@@ -13,7 +13,7 @@ import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetails";
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
-import type { Transaction } from "@/declarations/split_dapp.did";
+import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
 import type { SerializedTransaction } from "@/modules/transactions/types";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -158,19 +158,49 @@ export default function TransactionDetailsPage() {
   };
 
   const handleRefund = async () => {
+    console.log("handleRefund called");
     setIsLoading("refund");
     try {
+      console.log("Creating actor");
       const actor = await createSplitDappActor();
-      await actor.cancelSplit(Principal.fromText(
+      console.log("Calling refundSplit with principal:", transaction?.from);
+      await actor.refundSplit(Principal.fromText(
         typeof transaction?.from === "string"
           ? transaction.from
           : transaction?.from?.toText?.() || ""
       ));
+      console.log("refundSplit successful");
       toast.success("Escrow refunded!");
+      // Refresh the transaction data
+      console.log("Refreshing transaction data");
+      const updated = await actor.getTransaction(String(txid), principal);
+      console.log("Updated transaction:", updated);
+      if (Array.isArray(updated) && updated.length > 0) {
+        // Serialize BigInt values to strings for Redux compatibility
+        const serializedUpdated = {
+          ...updated[0],
+          timestamp: updated[0].createdAt?.toString() || "0",
+          createdAt: updated[0].createdAt?.toString() || "0",
+          confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
+          cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,
+          refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
+          releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
+          readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+            ...toEntry,
+            approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
+            declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
+            readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
+          })) : []
+        };
+        console.log("Setting updated transaction:", serializedUpdated);
+        setTransaction(serializedUpdated);
+      }
     } catch (err) {
       console.error("Refund error:", err);
       toast.error("Failed to refund escrow");
     } finally {
+      console.log("Clearing loading state");
       setIsLoading(null);
     }
   };
@@ -190,6 +220,7 @@ export default function TransactionDetailsPage() {
   else if (statusKey === "confirmed") currentStep = 2;
   else if (statusKey === "pending") currentStep = 0;
   else if (statusKey === "cancelled") currentStep = 0;
+  else if (statusKey === "refund") currentStep = 0;
 
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
@@ -252,7 +283,7 @@ export default function TransactionDetailsPage() {
             />
           )}
 
-          {statusKey === "cancelled" && (
+          {(statusKey === "cancelled" || statusKey === "declined") && (
             <CancelledEscrowDetails 
               transaction={{
                 ...transaction,
@@ -263,7 +294,32 @@ export default function TransactionDetailsPage() {
                       principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
                     }))
                   : [],
-                status: "cancelled",
+                status: statusKey,
+                releasedAt: Array.isArray(transaction.releasedAt)
+                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                  : transaction.releasedAt,
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
+                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
+                  : transaction.bitcoinAddress,
+                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
+                  : transaction.bitcoinTransactionHash
+              }}
+            />
+          )}
+
+          {statusKey === "refund" && (
+            <RefundedEscrowDetails 
+              transaction={{
+                ...transaction,
+                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: any) => ({
+                      ...toEntry,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                    }))
+                  : [],
+                status: "refund",
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
                   : transaction.releasedAt,

@@ -71,6 +71,7 @@ type SplitDApp =
     principal) -> ();
    recipientMarkAsReadBatch: (transactionIds: vec text, recipientId:
     principal) -> ();
+   refundSplit: (caller: principal) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
    removeNickname: ("principal": principal) -> ();
    resetUserReputation: (user: principal, caller: principal) -> ();

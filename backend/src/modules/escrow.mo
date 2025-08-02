@@ -653,4 +653,58 @@ module {
         
         { success = true; error = null };
     };
+
+    public func refundSplit(
+        caller : Principal,
+        transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
+        balances : HashMap.HashMap<Principal, Nat>,
+        logs : [Text]
+    ) : {
+        success : Bool;
+        newLogs : [Text];
+    } {
+        let txs = switch (transactions.get(caller)) {
+            case (?list) list;
+            case null return { success = false; newLogs = logs };
+        };
+        
+        let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
+            txs,
+            func(tx) {
+                if (tx.status == "confirmed") {
+                    // Calculate total amount to refund
+                    let totalAmount = Array.foldLeft<TransactionTypes.ToEntry, Nat>(
+                        tx.to,
+                        0,
+                        func(acc, entry) { acc + entry.amount }
+                    );
+                    
+                    // Refund the amount to sender
+                    Balance.increaseBalance(balances, caller, totalAmount);
+                    
+                    {
+                        id = tx.id;
+                        from = tx.from;
+                        to = tx.to;
+                        readAt = tx.readAt;
+                        status = "refund";
+                        title = tx.title;
+                        createdAt = tx.createdAt;
+                        confirmedAt = tx.confirmedAt;
+                        cancelledAt = ?TimeUtil.now();
+                        refundedAt = ?TimeUtil.now();
+                        releasedAt = tx.releasedAt;
+                        bitcoinAddress = tx.bitcoinAddress;
+                        bitcoinTransactionHash = tx.bitcoinTransactionHash;
+                    };
+                } else {
+                    tx;
+                };
+            },
+        );
+        
+        transactions.put(caller, updated);
+        let newLogs = Array.append<Text>(logs, ["Refunded by " # Principal.toText(caller)]);
+        { success = true; newLogs = newLogs };
+    };
 }; 

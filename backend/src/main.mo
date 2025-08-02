@@ -61,6 +61,11 @@ persistent actor class SplitDApp(admin : Principal) {
     logs := result.newLogs;
   };
 
+  public shared func refundSplit(caller : Principal) : async () {
+    let result = Escrow.refundSplit(caller, transactions, balances, logs);
+    logs := result.newLogs;
+  };
+
   public shared func releaseSplit(
     caller : Principal,
     txId : Text,

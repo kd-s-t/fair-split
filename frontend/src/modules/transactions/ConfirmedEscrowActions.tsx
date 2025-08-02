@@ -9,6 +9,9 @@ import { ConfirmedEscrowActionsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
+import { createSplitDappActor } from "@/lib/icp/splitDapp";
+import { Principal } from "@dfinity/principal";
+import { toast } from "sonner";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
   // Generate a random transaction hash for display
@@ -18,6 +21,17 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
   };
 
   const txHash = generateRandomHash();
+
+  const handleCancelSplit = async () => {
+    console.log("handleCancelSplit called");
+    // Just call the parent's onRefund function which handles everything
+    if (onRefund) {
+      console.log("Calling onRefund");
+      onRefund();
+    } else {
+      console.log("onRefund is not defined");
+    }
+  };
 
   // Calculate total BTC and recipient count for TransactionStats
   const totalBTC = Array.isArray(transaction.to)
@@ -142,7 +156,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
           <Button
             variant="secondary"
             className="w-1/2 flex items-center justify-center gap-2 text-base font-semibold"
-            onClick={onRefund}
+            onClick={handleCancelSplit}
             disabled={isLoading === "release" || isLoading === "refund"}
           >
             {isLoading === "refund" ? (

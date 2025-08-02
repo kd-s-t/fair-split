@@ -12,6 +12,7 @@ export interface TransactionSummaryProps {
   showDialog: boolean;
   setShowDialog: (open: boolean) => void;
   newTxId: string | null;
+  isEditMode?: boolean;
 }
 
 export interface TransactionDialogProps {

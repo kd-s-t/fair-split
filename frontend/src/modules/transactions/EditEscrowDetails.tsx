@@ -1,20 +1,21 @@
 "use client";
 
-import { Copy, Shield, CircleX, CircleAlert } from "lucide-react";
+import { Copy, Shield, Edit, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
 import { Button } from "@/components/ui/button";
 import { TransactionHash } from "@/components/ui/transaction-hash";
-import { PendingEscrowDetailsProps } from "./types";
+import { EditEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 
-export default function PendingEscrowDetails({ 
+export default function EditEscrowDetails({ 
   transaction, 
-  onCancel
-}: PendingEscrowDetailsProps) {
+  onCancel,
+  onEdit
+}: EditEscrowDetailsProps) {
   const depositAddress = transaction?.depositAddress ||
     Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
@@ -85,32 +86,57 @@ export default function PendingEscrowDetails({
 
       <hr className="my-8 text-[#424444] h-[1px]" />
 
-      {transaction.status === "pending" && !transaction.releasedAt && onCancel && (
+      {transaction.status === "pending" && !transaction.releasedAt && (onCancel || onEdit) && (
         <motion.div 
           className="flex items-center gap-4 mt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.1 }}
-          >
-            <Button 
-              variant="outline" 
-              className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
-              onClick={onCancel}
+          {(() => {
+            // Check if any recipients have taken action
+            const hasRecipientAction = transaction.to?.some((recipient: any) => 
+              recipient.status && Object.keys(recipient.status)[0] !== "pending"
+            ) || false;
+
+            return !hasRecipientAction && onEdit;
+          })() && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
             >
-              <motion.div
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+              <Button 
+                variant="outline" 
+                className="gap-2 text-[#FEB64D] !border-[#303434] !bg-transparent hover:!border-[#FEB64D] hover:!bg-[#FEB64D]/10"
+                onClick={onEdit}
               >
-                <CircleX size={16} />
-              </motion.div>
-              Cancel escrow
-            </Button>
-          </motion.div>
+                <Edit size={16} />
+                Edit escrow
+              </Button>
+            </motion.div>
+          )}
+          {onCancel && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
+            >
+              <Button 
+                variant="outline" 
+                className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
+                onClick={onCancel}
+              >
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                >
+                  <CircleAlert size={16} />
+                </motion.div>
+                Cancel escrow
+              </Button>
+            </motion.div>
+          )}
           <motion.div 
             className="flex items-center gap-2"
             initial={{ opacity: 0, x: -10 }}
@@ -124,11 +150,11 @@ export default function PendingEscrowDetails({
               <CircleAlert size={16} color="#FEB64D" />
             </motion.div>
             <Typography variant="small" className="text-white font-normal">
-              This action cannot be undone. Only available while pending.
+              Only available while pending and no recipients have taken action.
             </Typography>
           </motion.div>
         </motion.div>
       )}
     </>
   );
-}
+} 

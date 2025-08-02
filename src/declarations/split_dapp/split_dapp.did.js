@@ -134,6 +134,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'updateEscrow' : IDL.Func(
+        [IDL.Principal, IDL.Text, IDL.Vec(ParticipantShare)],
+        [],
+        [],
+      ),
   });
   return SplitDApp;
 };

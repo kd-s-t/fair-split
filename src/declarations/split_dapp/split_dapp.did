@@ -80,6 +80,8 @@ type SplitDApp =
    setNickname: (p: principal, name: text) -> ();
    updateBitcoinTransactionHash: (_escrowId: text, _txHash: text, _caller:
     principal) -> (bool);
+   updateEscrow: (caller: principal, txId: text, updatedParticipants:
+    vec ParticipantShare) -> ();
  };
 type ParticipantShare = 
  record {

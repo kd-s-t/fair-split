@@ -44,6 +44,12 @@ export interface PendingEscrowDetailsProps {
   onCancel?: () => void;
 }
 
+export interface EditEscrowDetailsProps {
+  transaction: EscrowTransaction;
+  onCancel?: () => void;
+  onEdit?: () => void;
+}
+
 export interface CancelledEscrowDetailsProps {
   transaction: EscrowTransaction;
 }

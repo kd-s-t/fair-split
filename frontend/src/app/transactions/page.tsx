@@ -238,13 +238,21 @@ export default function TransactionsPage() {
 
   const currentTransactions = filteredTransactions;
 
-  // Simulate fetchTransactions (replace with actual fetch logic as needed)
+  // Fetch transactions from backend
   const fetchTransactions = async () => {
+    if (!principal) return;
     setRefreshing(true);
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    // Here you would fetch transactions based on searchTerm and statusFilter
-    setRefreshing(false);
+    try {
+      const actor = await createSplitDappActor();
+      const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      dispatch(setTransactions(result.transactions));
+      toast.success('Transactions refreshed!');
+    } catch (error) {
+      console.error('Failed to refresh transactions:', error);
+      toast.error('Failed to refresh transactions');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (

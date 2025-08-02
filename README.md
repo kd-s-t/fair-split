@@ -58,6 +58,62 @@ npm i
 npm run dev
 ```
 
+### Docker Deployment
+
+#### Quick Start with Docker
+```bash
+# Production deployment
+docker-compose -f frontend/docker/docker-compose.yml up --build
+
+# Development with hot reloading
+docker-compose -f frontend/docker/docker-compose.yml --profile dev up --build
+
+# Manual builds
+docker build -f frontend/docker/Dockerfile -t splitsafe:latest .
+docker build -f frontend/docker/Dockerfile.dev -t splitsafe:dev .
+```
+
+#### Docker Commands
+```bash
+# Build production image
+docker build -f frontend/docker/Dockerfile -t splitsafe:latest .
+
+# Run production container
+docker run -p 3000:3000 -p 8080:8080 splitsafe:latest
+
+# Build development image
+docker build -f frontend/docker/Dockerfile.dev -t splitsafe:dev .
+
+# Run development container with volume mounts
+docker run -p 3001:3000 -v $(pwd)/frontend:/app/frontend -v $(pwd)/backend:/app/backend splitsafe:dev
+```
+
+#### Docker Compose Services
+- **Production**: `splitsafe` - Full production build with health checks
+- **Development**: `splitsafe-dev` - Hot reloading for development
+
+For detailed Docker documentation, see [frontend/docker/DOCKER.md](frontend/docker/DOCKER.md).
+
+### AWS Infrastructure with Terraform
+
+#### Deploy EC2 Instance
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+#### Destroy Infrastructure
+```bash
+cd terraform
+terraform destroy
+```
+
+#### Terraform Outputs
+- `public_ip` - EC2 instance public IP
+- `instance_id` - EC2 instance ID
+
 Use principals.json to transfer to someone else.
 
 After setting up a `principals.json` will be generated these are sample user for sending money

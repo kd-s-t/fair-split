@@ -1,0 +1,52 @@
+# Development Dockerfile for SplitSafe
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DFX_VERSION=0.20.2
+ENV NODE_VERSION=20.13.1
+ENV NODE_ENV=development
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Install DFINITY SDK
+RUN sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+
+# Add dfx to PATH
+ENV PATH="/root/.local/bin:$PATH"
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./frontend/
+COPY backend/ ./backend/
+COPY dfx.json ./
+
+# Install dependencies
+RUN cd frontend && npm install
+
+# Copy source code
+COPY frontend/ ./frontend/
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Expose ports
+EXPOSE 3000 8080
+
+# Default command for development
+CMD ["sh", "-c", "cd frontend && npm run dev"] 

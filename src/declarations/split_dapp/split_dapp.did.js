@@ -16,6 +16,7 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'declinedAt' : IDL.Opt(IDL.Nat),
     'amount' : IDL.Nat,
+    'percentage' : IDL.Nat,
     'readAt' : IDL.Opt(IDL.Nat),
   });
   const TransactionStatus = IDL.Text;
@@ -38,6 +39,7 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'nickname' : IDL.Text,
     'amount' : IDL.Nat,
+    'percentage' : IDL.Nat,
   });
   const SplitDApp = IDL.Service({
     'canUserCreateEscrow' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),

@@ -85,6 +85,37 @@ module {
             func(acc, p) { acc + p.amount }
         );
 
+        // Validate that percentages are between 1-100 and add up to 100%
+        let totalPercentage = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
+            participants,
+            0,
+            func(acc, p) { acc + p.percentage }
+        );
+        
+        // Check if any percentage is outside 1-100 range
+        let hasInvalidPercentage = Array.find<TransactionTypes.ParticipantShare>(
+            participants,
+            func(p) { p.percentage < 1 or p.percentage > 100 }
+        );
+        
+        if (hasInvalidPercentage != null) {
+            return {
+                success = false;
+                escrowId = null;
+                error = ?("Error: Each percentage must be between 1-100%");
+                newLogs = logs;
+            };
+        };
+        
+        if (totalPercentage != 100) {
+            return {
+                success = false;
+                escrowId = null;
+                error = ?("Error: Total percentage must be 100%. Current total: " # Nat.toText(totalPercentage) # "%");
+                newLogs = logs;
+            };
+        };
+
         // Check sender's balance
         let senderBalance = Balance.getBalance(balances, caller);
         if (senderBalance < totalAmount) {
@@ -112,6 +143,7 @@ module {
                         principal = p.principal;
                         name = if (p.nickname != "") { p.nickname } else { switch (names.get(p.principal)) { case (?n) n; case null "" } };
                         amount = p.amount;
+                        percentage = p.percentage;
                         status = #pending;
                         approvedAt = null;
                         declinedAt = null;
@@ -352,6 +384,7 @@ module {
                         principal = entry.principal;
                         name = entry.name;
                         amount = entry.amount;
+                        percentage = entry.percentage;
                         status = #approved;
                         approvedAt = ?TimeUtil.now();
                         declinedAt = entry.declinedAt;
@@ -456,6 +489,7 @@ module {
                         principal = entry.principal;
                         name = entry.name;
                         amount = entry.amount;
+                        percentage = entry.percentage;
                         status = #declined;
                         approvedAt = entry.approvedAt;
                         declinedAt = ?TimeUtil.now();
@@ -501,5 +535,108 @@ module {
         
         let newLogs = Array.append<Text>(logs, ["Escrow declined by recipient " # Principal.toText(recipient) # " for " # Principal.toText(sender)]);
         { success = true; newLogs = newLogs };
+    };
+
+    public func updateEscrow(
+        caller : Principal,
+        txId : Text,
+        updatedParticipants : [TransactionTypes.ParticipantShare],
+        transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>
+    ) : {
+        success : Bool;
+        error : ?Text;
+    } {
+        let txs = switch (transactions.get(caller)) {
+            case (?list) list;
+            case null return { success = false; error = ?("Transaction not found") };
+        };
+        
+        // Find the transaction by ID
+        var txIndex : Nat = 0;
+        var found : Bool = false;
+        label search for (i in Iter.range(0, txs.size() - 1)) {
+            if (txs[i].id == txId) {
+                txIndex := i;
+                found := true;
+                break search;
+            }
+        };
+        if (not found) return { success = false; error = ?("Transaction not found") };
+        
+        let tx = txs[txIndex];
+        
+        // Check if escrow can be updated (only pending status)
+        if (tx.status != "pending") {
+            return { 
+                success = false; 
+                error = ?("Cannot update escrow: Transaction is not in pending status")
+            };
+        };
+        
+        // Check if any recipients have already taken action
+        let canUpdate = Array.foldLeft<TransactionTypes.ToEntry, Bool>(
+            tx.to,
+            true,
+            func(acc, entry) {
+                acc and (entry.status == #pending)
+            }
+        );
+        
+        if (not canUpdate) {
+            return { 
+                success = false; 
+                error = ?("Cannot update escrow: Some recipients have already taken action")
+            };
+        };
+        
+        // Create new ToEntry array from updated participants
+        let newTo = Array.map<TransactionTypes.ParticipantShare, TransactionTypes.ToEntry>(
+            updatedParticipants,
+            func(p) {
+                {
+                    principal = p.principal;
+                    name = if (p.nickname != "") { p.nickname } else { "" };
+                    amount = p.amount;
+                    percentage = p.percentage;
+                    status = #pending;
+                    approvedAt = null;
+                    declinedAt = null;
+                    readAt = null;
+                };
+            }
+        );
+        
+        // Update the transaction
+        let updatedTx : TransactionTypes.Transaction = {
+            id = tx.id;
+            from = tx.from;
+            to = newTo;
+            readAt = tx.readAt;
+            status = "pending";
+            title = tx.title;
+            createdAt = tx.createdAt;
+            confirmedAt = null;
+            cancelledAt = null;
+            refundedAt = null;
+            releasedAt = null;
+            bitcoinAddress = tx.bitcoinAddress;
+            bitcoinTransactionHash = tx.bitcoinTransactionHash;
+        };
+        
+        // Update the transactions array
+        let updated = Array.tabulate<TransactionTypes.Transaction>(
+            txs.size(),
+            func(i) {
+                if (i == txIndex) {
+                    updatedTx
+                } else {
+                    txs[i]
+                };
+            }
+        );
+        
+        transactions.put(caller, updated);
+        
+        { success = true; error = null };
     };
 }; 

@@ -75,18 +75,24 @@ module {
         
         // First check if transaction exists
         var foundTx : ?TransactionTypes.Transaction = null;
-        for ((_, txs) in transactions.entries()) {
+        var foundSender : ?Principal = null;
+        var foundIndex : ?Nat = null;
+        for ((sender, txs) in transactions.entries()) {
+            var index : Nat = 0;
             for (tx in txs.vals()) {
                 if (tx.id == id) {
                     foundTx := ?tx;
+                    foundSender := ?sender;
+                    foundIndex := ?index;
                 };
+                index := index + 1;
             };
         };
 
         // If transaction not found, return null
-        switch (foundTx) {
-            case null { return null };
-            case (?tx) {
+        switch (foundTx, foundSender, foundIndex) {
+            case (null, _, _) { return null };
+            case (?tx, ?sender, ?index) {
                 // Check if caller is authorized to view this transaction
                 // Authorized if: caller is the sender OR caller is a recipient
                 let isOwner = tx.from == caller;
@@ -100,8 +106,50 @@ module {
                     return null; // Unauthorized access
                 };
 
+                // If caller is the sender and senderReadAt is not set, update it
+                if (isOwner and tx.senderReadAt == null) {
+                    let currentTime = TimeUtil.now();
+                    let updatedTx = {
+                        id = tx.id;
+                        from = tx.from;
+                        to = tx.to;
+                        readAt = tx.readAt;
+                        senderReadAt = ?currentTime;
+                        status = tx.status;
+                        title = tx.title;
+                        createdAt = tx.createdAt;
+                        confirmedAt = tx.confirmedAt;
+                        cancelledAt = tx.cancelledAt;
+                        refundedAt = tx.refundedAt;
+                        releasedAt = tx.releasedAt;
+                        bitcoinAddress = tx.bitcoinAddress;
+                        bitcoinTransactionHash = tx.bitcoinTransactionHash;
+                    };
+                    
+                    // Update the transaction in the HashMap
+                    switch (transactions.get(sender)) {
+                        case (?txs) {
+                            let updatedTxs = Array.tabulate<TransactionTypes.Transaction>(
+                                txs.size(),
+                                func(i) {
+                                    if (i == index) {
+                                        updatedTx
+                                    } else {
+                                        txs[i]
+                                    }
+                                }
+                            );
+                            transactions.put(sender, updatedTxs);
+                        };
+                        case null { };
+                    };
+                    
+                    return ?updatedTx;
+                };
+
                 return ?tx;
             };
+            case (_, _, _) { return null };
         };
     };
 
@@ -197,6 +245,7 @@ module {
                                         principal = entry.principal;
                                         name = entry.name;
                                         amount = entry.amount;
+                                        percentage = entry.percentage;
                                         status = #noaction;
                                         approvedAt = entry.approvedAt;
                                         declinedAt = entry.declinedAt;
@@ -231,6 +280,7 @@ module {
                             from = tx.from;
                             to = updatedTo;
                             readAt = tx.readAt;
+                            senderReadAt = tx.senderReadAt;
                             status = "cancelled";
                             title = tx.title;
                             createdAt = tx.createdAt;
@@ -265,6 +315,7 @@ module {
                             from = tx.from;
                             to = tx.to;
                             readAt = ?currentTime;
+                            senderReadAt = tx.senderReadAt;
                             status = tx.status;
                             title = tx.title;
                             createdAt = tx.createdAt;
@@ -280,6 +331,71 @@ module {
                 transactions.put(user, updated);
             };
             case null { };
+        };
+    };
+
+    public func recipientMarkAsReadBatch(
+        transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
+        transactionIds : [Text],
+        recipientId : Principal,
+        currentTime : Nat
+    ) {
+        // Iterate through all transactions to find matching ones
+        for ((sender, txs) in transactions.entries()) {
+            let updatedTxs = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
+                txs,
+                func(tx) {
+                    // Check if this transaction ID is in our list
+                    let shouldUpdate = Array.find<Text>(
+                        transactionIds,
+                        func(id) { id == tx.id }
+                    );
+                    
+                    switch (shouldUpdate) {
+                        case (?_) {
+                            // Update recipient's readAt in the to array
+                            let updatedTo = Array.map<TransactionTypes.ToEntry, TransactionTypes.ToEntry>(
+                                tx.to,
+                                func(entry) {
+                                    if (entry.principal == recipientId and entry.readAt == null) {
+                                        {
+                                            principal = entry.principal;
+                                            name = entry.name;
+                                            amount = entry.amount;
+                                            percentage = entry.percentage;
+                                            status = entry.status;
+                                            approvedAt = entry.approvedAt;
+                                            declinedAt = entry.declinedAt;
+                                            readAt = ?currentTime;
+                                        }
+                                    } else {
+                                        entry
+                                    }
+                                }
+                            );
+                            
+                            {
+                                id = tx.id;
+                                from = tx.from;
+                                to = updatedTo;
+                                readAt = tx.readAt;
+                                senderReadAt = tx.senderReadAt;
+                                status = tx.status;
+                                title = tx.title;
+                                createdAt = tx.createdAt;
+                                confirmedAt = tx.confirmedAt;
+                                cancelledAt = tx.cancelledAt;
+                                refundedAt = tx.refundedAt;
+                                releasedAt = tx.releasedAt;
+                                bitcoinAddress = tx.bitcoinAddress;
+                                bitcoinTransactionHash = tx.bitcoinTransactionHash;
+                            }
+                        };
+                        case null { tx };
+                    }
+                }
+            );
+            transactions.put(sender, updatedTxs);
         };
     };
 }; 

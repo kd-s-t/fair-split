@@ -4,7 +4,7 @@ import Nat "mo:base/Nat";
 
 import SplitDApp "canister:split_dapp";
 
-actor {
+persistent actor {
   public func run() : async () {
     Debug.print("🏁 Running SplitDApp basic test...");
 
@@ -24,7 +24,7 @@ actor {
     
     let escrowId = await SplitDApp.initiateEscrow(
       alice,
-      [{ principal = bob; amount = 100 }],
+      [{ principal = bob; amount = 100; nickname = "Bob"; percentage = 100 }],
       "Test Escrow"
     );
     Debug.print("Created escrow with ID: " # escrowId);

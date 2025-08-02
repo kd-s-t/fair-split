@@ -89,6 +89,12 @@ export default function EscrowPage() {
       return;
     }
 
+    // Check if any percentage is outside 1-100 range
+    if (recipients.some((r) => r.percentage < 1 || r.percentage > 100)) {
+      toast.error("Each percentage must be between 1-100%");
+      return;
+    }
+
     if (totalPercentage !== 100) {
       toast.error("Total percentage must be 100%");
       return;
@@ -117,6 +123,7 @@ export default function EscrowPage() {
           principal: Principal.fromText(r.principal),
           amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
           nickname: r.principal, // Use principal as default nickname
+          percentage: BigInt(r.percentage),
         })),
         title || ""
       );

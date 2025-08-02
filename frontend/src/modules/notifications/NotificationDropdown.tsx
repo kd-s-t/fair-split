@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 function getTxId(tx: Transaction) {
   // If tx.to is an array of Principal, join their text representations
-  return `${tx.from}_${tx.to.map((toEntry: any) => toEntry.principal).join('-')}_${tx.timestamp}`;
+  return `${tx.from}_${tx.to.map((toEntry: any) => toEntry.principal).join('-')}_${tx.createdAt}`;
 }
 
 export default function TransactionNotificationDropdown({ principalId }: { principalId: string }) {
@@ -43,7 +43,15 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
     }
   }, [open, transactions]);
 
-  const unreadCount = transactions.filter(tx => !tx.isRead).length;
+  const unreadCount = transactions.filter(tx => {
+    // Check if current user is a recipient in this transaction
+    const recipientEntry = tx.to.find((entry: any) => 
+      String(entry.principal) === String(principalId)
+    );
+    
+    // Count as unread if user is a recipient and hasn't read it
+    return recipientEntry && recipientEntry.readAt === null;
+  }).length;
   const [bellRing, setBellRing] = useState(false);
 
   // Ring bell every 5 seconds when there are unread notifications
@@ -60,7 +68,13 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
 
   const handleRowClick = async (tx: any) => {
     const txId = getTxId(tx);
-    if (!readIds.includes(txId)) {
+    
+    // Check if current user is a recipient and hasn't read this transaction
+    const recipientEntry = tx.to.find((entry: any) => 
+      String(entry.principal) === String(principalId)
+    );
+    
+    if (recipientEntry && recipientEntry.readAt === null) {
       setReadIds(prev => {
         const updated = [...prev, txId];
         localStorage.setItem('readTxIds', JSON.stringify(updated));
@@ -68,8 +82,19 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       });
       dispatch(markTransactionAsRead(txId));
     }
+    
     setSelectedTx(tx);
     setModalOpen(true);
+  };
+
+  const handleBellClick = async () => {
+    try {
+      const actor = await createSplitDappActor();
+      await actor.markTransactionsAsRead(Principal.fromText(principalId));
+      console.log('Marked all transactions as read');
+    } catch (error) {
+      console.error('Failed to mark transactions as read:', error);
+    }
   };
 
   return (
@@ -81,6 +106,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
             className="relative text-muted-foreground hover:text-foreground transition cursor-pointer"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleBellClick}
             animate={bellRing ? { 
               rotate: [0, -15, 15, -15, 15, 0],
               scale: [1, 1.2, 1]
@@ -142,7 +168,12 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                     transition={{ duration: 0.3, delay: idx * 0.05 }}
                   >
                     <DropdownMenuItem
-                      className={!readIds.includes(getTxId(tx)) ? 'bg-yellow-100 text-black' : ''}
+                      className={(() => {
+                        const recipientEntry = tx.to.find((entry: any) => 
+                          String(entry.principal) === String(principalId)
+                        );
+                        return recipientEntry && recipientEntry.readAt === null ? 'bg-yellow-100 text-black' : '';
+                      })()}
                       onClick={() => handleRowClick(tx)}
                     >
                       <div className="flex flex-col w-full">
@@ -151,7 +182,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                         <span className="text-xs font-semibold text-yellow-600">
                           {tx.to.reduce((sum: any, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8} BTC
                         </span>
-                        <span className="text-xs text-muted-foreground">{new Date(Number(tx.timestamp) / 1_000_000).toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}</span>
                       </div>
                     </DropdownMenuItem>
                   </motion.div>

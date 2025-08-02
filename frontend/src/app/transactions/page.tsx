@@ -53,6 +53,13 @@ export default function TransactionsPage() {
       setLocalTransactions(sorted);
     }
   }, [transactions]);
+
+  // Mark unread transactions as read when transactions are loaded
+  useEffect(() => {
+    if (localTransactions.length > 0 && principal) {
+      markUnreadTransactionsAsRead();
+    }
+  }, [localTransactions, principal]); // eslint-disable-line react-hooks/exhaustive-deps
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
 
@@ -170,12 +177,38 @@ export default function TransactionsPage() {
 
   async function handleRowClick(tx: Transaction) {
     if (!principal) return;
-    if (!tx.isRead) {
-      const actor = await createSplitDappActor();
-      await actor.markTransactionsAsRead(principal);
-      dispatch(markAllAsRead());
-    }
+    const actor = await createSplitDappActor();
+    await actor.markTransactionsAsRead(principal);
+    dispatch(markAllAsRead());
     router.push(`/transactions/${tx.id}`);
+  }
+
+  // Function to mark unread transactions as read for the current recipient
+  async function markUnreadTransactionsAsRead() {
+    if (!principal) return;
+    
+    // Find transactions where current user is a recipient and hasn't read them
+    const unreadTransactionIds = localTransactions
+      .filter(tx => {
+        // Check if user is a recipient in this transaction
+        const recipientEntry = tx.to.find((entry: any) => 
+          String(entry.principal) === String(principal)
+        );
+        
+        // Return true if user is a recipient and hasn't read the transaction
+        return recipientEntry && recipientEntry.readAt === null;
+      })
+      .map(tx => tx.id);
+    
+    if (unreadTransactionIds.length > 0) {
+      try {
+        const actor = await createSplitDappActor();
+        await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
+        console.log(`Marked ${unreadTransactionIds.length} transactions as read`);
+      } catch (error) {
+        console.error('Failed to mark transactions as read:', error);
+      }
+    }
   }
 
   const filteredTransactions = localTransactions.filter(tx => {
@@ -442,11 +475,21 @@ export default function TransactionsPage() {
 
                           <div className="flex flex-col gap-1">
                             <Typography variant="small" className="text-[#9F9F9F]">
-                              To
+                              {isSentByUser(tx) ? "To" : "Your Share"}
                             </Typography>
                             <Typography variant="base" className="font-semibold">
-                              {tx.to.length} recipient
-                              {tx.to.length !== 1 ? "s" : ""}
+                              {isSentByUser(tx) ? (
+                                `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
+                              ) : (
+                                (() => {
+                                  const recipientEntry = tx.to.find((entry: any) => 
+                                    String(entry.principal) === String(principal)
+                                  );
+                                  return recipientEntry && recipientEntry.percentage 
+                                    ? `${recipientEntry.percentage}%`
+                                    : 'N/A';
+                                })()
+                              )}
                             </Typography>
                           </div>
 

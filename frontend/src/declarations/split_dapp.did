@@ -9,6 +9,7 @@ type Transaction =
    from: principal;
    id: text;
    readAt: opt nat;
+   senderReadAt: opt nat;
    refundedAt: opt nat;
    releasedAt: opt nat;
    status: TransactionStatus;
@@ -21,6 +22,7 @@ type ToEntry =
    approvedAt: opt nat;
    declinedAt: opt nat;
    name: text;
+   percentage: nat;
    "principal": principal;
    readAt: opt nat;
    status: variant {
@@ -40,7 +42,7 @@ type SplitDApp =
                                  text;
                                }) query;
    getBalance: (p: principal) -> (nat) query;
-   getBitcoinTransactionHash: (escrowId: text, caller: principal) ->
+   getBitcoinTransactionHash: (_escrowId: text, _caller: principal) ->
     (opt text);
    getCustomNickname: ("principal": principal) -> (opt text) query;
    getFraudHistory: (user: principal) -> (vec FraudActivity) query;
@@ -64,6 +66,7 @@ type SplitDApp =
     title: text) -> (text);
    isUserFlaggedForFraud: (user: principal) -> (bool) query;
    markTransactionsAsRead: (caller: principal) -> ();
+   recipientMarkAsReadBatch: (transactionIds: vec text, recipientId: principal) -> ();
    recipientApproveEscrow: (sender: principal, txId: text, recipient:
     principal) -> ();
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
@@ -74,13 +77,14 @@ type SplitDApp =
    setCustomNickname: ("principal": principal, nickname: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setNickname: (p: principal, name: text) -> ();
-   updateBitcoinTransactionHash: (escrowId: text, txHash: text, caller:
+   updateBitcoinTransactionHash: (_escrowId: text, _txHash: text, _caller:
     principal) -> (bool);
  };
 type ParticipantShare = 
  record {
    amount: nat;
    nickname: text;
+   percentage: nat;
    "principal": principal;
  };
 type FraudActivity = 

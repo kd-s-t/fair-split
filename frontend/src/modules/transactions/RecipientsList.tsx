@@ -41,17 +41,17 @@ export default function RecipientsList({ recipients, showTimestamps = true }: Re
                     <>
                       {recipient.approvedAt && (
                         <Typography variant="small" className="text-gray-500 mt-1">
-                          {new Date(recipient.approvedAt).toLocaleString()}
+                          {new Date(Number(recipient.approvedAt) / 1_000_000).toLocaleString()}
                         </Typography>
                       )}
                       {recipient.declinedAt && (
                         <Typography variant="small" className="text-gray-500 mt-1">
-                          {new Date(recipient.declinedAt).toLocaleString()}
+                          {new Date(Number(recipient.declinedAt) / 1_000_000).toLocaleString()}
                         </Typography>
                       )}
                       {recipient.readAt && (
                         <Typography variant="small" className="text-gray-500 mt-1">
-                          {new Date(recipient.readAt).toLocaleString()}
+                          {new Date(Number(recipient.readAt) / 1_000_000).toLocaleString()}
                         </Typography>
                       )}
                       {statusKey === 'pending' && !recipient.approvedAt && !recipient.declinedAt && !recipient.readAt && (

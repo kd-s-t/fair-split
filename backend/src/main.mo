@@ -97,6 +97,13 @@ persistent actor class SplitDApp(admin : Principal) {
     Transactions.markTransactionsAsRead(transactions, caller, TimeUtil.now());
   };
 
+  public shared func recipientMarkAsReadBatch(
+    transactionIds : [Text],
+    recipientId : Principal
+  ) : async () {
+    Transactions.recipientMarkAsReadBatch(transactions, transactionIds, recipientId, TimeUtil.now());
+  };
+
   public shared func setNickname(p : Principal, name : Text) : async () {
     Users.setNickname(names, p, name);
   };
@@ -177,13 +184,13 @@ persistent actor class SplitDApp(admin : Principal) {
   };
 
   // Bitcoin transaction hash functions
-  public shared func getBitcoinTransactionHash(escrowId : Text, caller : Principal) : async ?Text {
+  public shared func getBitcoinTransactionHash(_escrowId : Text, _caller : Principal) : async ?Text {
     // TODO: Implement real Bitcoin transaction hash lookup when on mainnet
     // For now, return null as placeholder
     null
   };
 
-  public shared func updateBitcoinTransactionHash(escrowId : Text, txHash : Text, caller : Principal) : async Bool {
+  public shared func updateBitcoinTransactionHash(_escrowId : Text, _txHash : Text, _caller : Principal) : async Bool {
     // TODO: Implement real Bitcoin transaction hash update when on mainnet
     // For now, return false as placeholder
     false

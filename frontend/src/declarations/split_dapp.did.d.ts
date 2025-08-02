@@ -11,6 +11,7 @@ export interface ParticipantShare {
   'principal' : Principal,
   'nickname' : string,
   'amount' : bigint,
+  'percentage' : bigint,
 }
 export interface SplitDApp {
   'canUserCreateEscrow' : ActorMethod<[Principal], boolean>,
@@ -76,6 +77,7 @@ export interface ToEntry {
   'name' : string,
   'declinedAt' : [] | [bigint],
   'amount' : bigint,
+  'percentage' : bigint,
   'readAt' : [] | [bigint],
 }
 export interface Transaction {

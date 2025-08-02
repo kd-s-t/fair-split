@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
@@ -7,7 +6,7 @@ import { CircleCheck, Clock8, Eye, EyeOff, Plus, Shield, Zap } from "lucide-reac
 import React, { useState, useEffect } from "react";
 import type { Transaction } from '@/declarations/split_dapp.did'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardStats({ transactions }: { transactions: Transaction[] }) {
   const btcBalance = useAppSelector((state: any) => state.user.btcBalance);
@@ -136,10 +135,9 @@ export default function DashboardStats({ transactions }: { transactions: Transac
         </div>
         <Button
           variant="default"
-          className="font-medium rounded-md bg-[#FEB64D] text-[#0D0D0D]"
           onClick={handleNewEscrow}
         >
-          <Plus className="text-xs mr-2" /> New escrow
+          <Plus className="text-xs" /> New escrow
         </Button>
       </div>
 

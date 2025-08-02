@@ -57,7 +57,7 @@ export default function TransactionDialog({
         
         <div className="relative overflow-hidden w-full">
           <Button
-            className="w-full relative cursor-pointer"
+            className="w-full"
             onClick={onDone}
           >
             Done

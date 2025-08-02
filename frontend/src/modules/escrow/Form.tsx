@@ -216,7 +216,6 @@ const TransactionForm = ({
               size="sm"
               onClick={handleAddRecipient}
               type="button"
-              className="cursor-pointer"
             >
               + Add recipient
             </Button>

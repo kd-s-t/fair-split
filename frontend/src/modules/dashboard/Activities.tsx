@@ -80,7 +80,6 @@ export default function RecentActivities({
           </TabsList>
           <Button
             variant="ghost"
-            className="font-medium"
             onClick={() => (window.location.href = "/transactions")}
           >
             View all transactions <ChevronRight />
@@ -187,7 +186,7 @@ export default function RecentActivities({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="font-medium border-[#7A7A7A]"
+                        className="border-[#7A7A7A]"
                         onClick={() => router.push(txUrl)}
                       >
                         <Eye className="mr-2" /> View escrow
@@ -327,7 +326,7 @@ export default function RecentActivities({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="font-medium border-[#7A7A7A]"
+                          className="border-[#7A7A7A]"
                           onClick={() => router.push(txUrl)}
                         >
                           <Eye className="mr-2" /> View escrow
@@ -467,7 +466,7 @@ export default function RecentActivities({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="font-medium border-[#7A7A7A]"
+                          className="border-[#7A7A7A]"
                           onClick={() => router.push(txUrl)}
                         >
                           <Eye className="mr-2" /> View escrow

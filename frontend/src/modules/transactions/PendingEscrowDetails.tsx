@@ -99,7 +99,7 @@ export default function PendingEscrowDetails({
           >
             <Button 
               variant="outline" 
-              className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
+              className="text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
               onClick={onCancel}
             >
               <motion.div

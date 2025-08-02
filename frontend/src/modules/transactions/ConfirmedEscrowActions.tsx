@@ -119,7 +119,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         <div className="flex gap-4 mb-4">
           <Button
             variant="default"
-            className="w-1/2 flex items-center justify-center gap-2 text-base font-semibold"
+            className="w-1/2 text-base font-semibold"
             onClick={() => onRelease(transaction.id)}
             disabled={isLoading === "release" || isLoading === "refund"}
           >
@@ -155,7 +155,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
           </Button>
           <Button
             variant="secondary"
-            className="w-1/2 flex items-center justify-center gap-2 text-base font-semibold"
+            className="w-1/2 text-base font-semibold"
             onClick={handleCancelSplit}
             disabled={isLoading === "release" || isLoading === "refund"}
           >

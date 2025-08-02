@@ -8,6 +8,7 @@ import { TransactionHash } from "@/components/ui/transaction-hash";
 import { PendingEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
+import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 
 export default function PendingEscrowDetails({ 
@@ -54,57 +55,7 @@ export default function PendingEscrowDetails({
         </div>
       </div>
 
-      {/* Bitcoin Address Block Explorer Links */}
-      <div className="flex gap-2 mt-2">
-        <button 
-          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info'}/address/${depositAddress}`, '_blank')}
-          className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-        >
-          View on Blockstream
-        </button>
-        <button 
-          onClick={() => window.open(`${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/address/${depositAddress}`, '_blank')}
-          className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-        >
-          View on Mempool
-        </button>
-      </div>
-
-      {/* ICP Transaction Hash */}
-      <TransactionHash
-        title="ICP Transaction Hash"
-        hash={transaction.id}
-        description="Internet Computer transaction hash for this escrow"
-        explorerLinks={[
-          {
-            label: "View on ICP Dashboard",
-            url: `${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`
-          },
-          {
-            label: "View on ICScan",
-            url: `${process.env.NEXT_PUBLIC_ICSCAN_URL || 'https://icscan.io'}/canister/${transaction.id}`
-          }
-        ]}
-      />
-
-      {/* Bitcoin Transaction Hash */}
-      {transaction.bitcoinTransactionHash && (
-        <TransactionHash
-          title="Bitcoin Transaction Hash"
-          hash={transaction.bitcoinTransactionHash}
-          description="Real Bitcoin transaction detected and confirmed"
-          explorerLinks={[
-            {
-              label: "View on Blockstream",
-              url: `${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info'}/tx/${transaction.bitcoinTransactionHash}`
-            },
-            {
-              label: "View on Mempool",
-              url: `${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/tx/${transaction.bitcoinTransactionHash}`
-            }
-          ]}
-        />
-      )}
+      <TransactionExplorerLinks transaction={transaction} depositAddress={depositAddress} />
 
       <div className="container-primary mt-4">
         <Typography variant="p" className="text-[#FEB64D] font-semibold">

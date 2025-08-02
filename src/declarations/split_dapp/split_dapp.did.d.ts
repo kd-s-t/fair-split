@@ -56,6 +56,10 @@ export interface SplitDApp {
     [Principal, bigint, Principal],
     undefined
   >,
+  'recipientMarkAsReadBatch' : ActorMethod<
+    [Array<string>, Principal],
+    undefined
+  >,
   'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'removeNickname' : ActorMethod<[Principal], undefined>,
   'resetUserReputation' : ActorMethod<[Principal, Principal], undefined>,

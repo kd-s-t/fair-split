@@ -14,26 +14,7 @@ import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetail
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import type { Transaction } from "@/declarations/split_dapp.did";
-
-// Extended type for serialized transaction data
-type SerializedTransaction = Omit<Transaction, 'timestamp' | 'createdAt' | 'confirmedAt' | 'cancelledAt' | 'refundedAt' | 'releasedAt' | 'readAt'> & {
-  timestamp: string;
-  createdAt: string;
-  confirmedAt?: string;
-  cancelledAt?: string;
-  refundedAt?: string;
-  releasedAt?: string;
-  readAt?: string;
-  to: Array<{
-    principal: any;
-    name: string;
-    amount: bigint;
-    status: { [key: string]: null };
-    approvedAt?: string;
-    declinedAt?: string;
-    readAt?: string;
-  }>;
-};
+import type { SerializedTransaction } from "@/modules/transactions/types";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function TransactionDetailsPage() {
@@ -71,7 +52,7 @@ export default function TransactionDetailsPage() {
         // Serialize BigInt values to strings for Redux compatibility
         const serializedTransaction = {
           ...result[0],
-          timestamp: result[0].timestamp?.toString() || "0",
+          timestamp: result[0].createdAt?.toString() || "0",
           createdAt: result[0].createdAt?.toString() || "0",
           confirmedAt: result[0].confirmedAt ? result[0].confirmedAt.toString() : undefined,
           cancelledAt: result[0].cancelledAt ? result[0].cancelledAt.toString() : undefined,
@@ -110,7 +91,7 @@ export default function TransactionDetailsPage() {
         // Serialize BigInt values to strings for Redux compatibility
         const serializedUpdated = {
           ...updated[0],
-          timestamp: updated[0].timestamp?.toString() || "0",
+          timestamp: updated[0].createdAt?.toString() || "0",
           createdAt: updated[0].createdAt?.toString() || "0",
           confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
           cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,
@@ -152,7 +133,7 @@ export default function TransactionDetailsPage() {
         // Serialize BigInt values to strings for Redux compatibility
         const serializedUpdated = {
           ...updated[0],
-          timestamp: updated[0].timestamp?.toString() || "0",
+          timestamp: updated[0].createdAt?.toString() || "0",
           createdAt: updated[0].createdAt?.toString() || "0",
           confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
           cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,

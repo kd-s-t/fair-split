@@ -42,7 +42,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       localStorage.setItem('readTxIds', JSON.stringify(ids));
     }
   }, [open, transactions]);
-
+  console.log("transactions bell", transactions);
   const unreadCount = transactions.filter(tx => {
     // Check if current user is a recipient in this transaction
     const recipientEntry = tx.to.find((entry: any) => 
@@ -50,7 +50,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
     );
     
     // Count as unread if user is a recipient and hasn't read it
-    return recipientEntry && recipientEntry.readAt === null;
+    return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
   }).length;
   const [bellRing, setBellRing] = useState(false);
 
@@ -74,7 +74,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       String(entry.principal) === String(principalId)
     );
     
-    if (recipientEntry && recipientEntry.readAt === null) {
+    if (recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "")) {
       setReadIds(prev => {
         const updated = [...prev, txId];
         localStorage.setItem('readTxIds', JSON.stringify(updated));
@@ -172,7 +172,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                         const recipientEntry = tx.to.find((entry: any) => 
                           String(entry.principal) === String(principalId)
                         );
-                        return recipientEntry && recipientEntry.readAt === null ? 'bg-yellow-100 text-black' : '';
+                        return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "") ? 'bg-yellow-100 text-black' : '';
                       })()}
                       onClick={() => handleRowClick(tx)}
                     >

@@ -6,6 +6,7 @@ import { TransactionStats } from "@/components/ui/transaction-stats";
 import { TransactionHash } from "@/components/ui/transaction-hash";
 import { CancelledEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
+import TransactionExplorerLinks from "./TransactionExplorerLinks";
 
 export default function CancelledEscrowDetails({ transaction }: CancelledEscrowDetailsProps) {
   const depositAddress = transaction?.depositAddress ||
@@ -55,23 +56,7 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
         </Typography>
       </div>
 
-      {transaction.bitcoinTransactionHash && (
-        <TransactionHash
-          title="Bitcoin Transaction Hash"
-          hash={transaction.bitcoinTransactionHash}
-          description="Bitcoin transaction was detected but escrow was cancelled"
-          explorerLinks={[
-            {
-              label: "View on Blockstream",
-              url: `https://blockstream.info/tx/${transaction.bitcoinTransactionHash}`
-            },
-            {
-              label: "View on Mempool",
-              url: `https://mempool.space/tx/${transaction.bitcoinTransactionHash}`
-            }
-          ]}
-        />
-      )}
+      <TransactionExplorerLinks transaction={transaction} depositAddress={depositAddress} />
 
       <div className="container-gray mt-6">
         <div className="flex items-start gap-3">

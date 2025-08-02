@@ -49,12 +49,7 @@ export default function RecipientsList({ recipients, showTimestamps = true }: Re
                           {new Date(Number(recipient.declinedAt) / 1_000_000).toLocaleString()}
                         </Typography>
                       )}
-                      {recipient.readAt && (
-                        <Typography variant="small" className="text-gray-500 mt-1">
-                          {new Date(Number(recipient.readAt) / 1_000_000).toLocaleString()}
-                        </Typography>
-                      )}
-                      {statusKey === 'pending' && !recipient.approvedAt && !recipient.declinedAt && !recipient.readAt && (
+                      {statusKey === 'pending' && !recipient.approvedAt && !recipient.declinedAt && (
                         <Typography variant="small" className="text-gray-500 mt-1">
                           No action taken yet
                         </Typography>

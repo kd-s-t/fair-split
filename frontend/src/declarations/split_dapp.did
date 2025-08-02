@@ -9,7 +9,6 @@ type Transaction =
    from: principal;
    id: text;
    readAt: opt nat;
-   senderReadAt: opt nat;
    refundedAt: opt nat;
    releasedAt: opt nat;
    status: TransactionStatus;
@@ -66,10 +65,11 @@ type SplitDApp =
     title: text) -> (text);
    isUserFlaggedForFraud: (user: principal) -> (bool) query;
    markTransactionsAsRead: (caller: principal) -> ();
-   recipientMarkAsReadBatch: (transactionIds: vec text, recipientId: principal) -> ();
    recipientApproveEscrow: (sender: principal, txId: text, recipient:
     principal) -> ();
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
+    principal) -> ();
+   recipientMarkAsReadBatch: (transactionIds: vec text, recipientId:
     principal) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
    removeNickname: ("principal": principal) -> ();

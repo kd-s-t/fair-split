@@ -15,7 +15,6 @@ module {
         from : Principal;
         to : [ToEntry];
         readAt : ?Nat;
-        senderReadAt : ?Nat;
         status : TransactionStatus;
         title : Text;
         createdAt : Nat;

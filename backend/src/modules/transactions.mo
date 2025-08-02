@@ -106,15 +106,14 @@ module {
                     return null; // Unauthorized access
                 };
 
-                // If caller is the sender and senderReadAt is not set, update it
-                if (isOwner and tx.senderReadAt == null) {
+                // If caller is the sender and readAt is not set, update it
+                if (isOwner and tx.readAt == null) {
                     let currentTime = TimeUtil.now();
                     let updatedTx = {
                         id = tx.id;
                         from = tx.from;
                         to = tx.to;
-                        readAt = tx.readAt;
-                        senderReadAt = ?currentTime;
+                        readAt = ?currentTime;
                         status = tx.status;
                         title = tx.title;
                         createdAt = tx.createdAt;
@@ -279,9 +278,8 @@ module {
                             id = tx.id;
                             from = tx.from;
                             to = updatedTo;
-                            readAt = tx.readAt;
-                            senderReadAt = tx.senderReadAt;
-                            status = "cancelled";
+                                                    readAt = tx.readAt;
+                        status = "cancelled";
                             title = tx.title;
                             createdAt = tx.createdAt;
                             confirmedAt = tx.confirmedAt;
@@ -315,7 +313,6 @@ module {
                             from = tx.from;
                             to = tx.to;
                             readAt = ?currentTime;
-                            senderReadAt = tx.senderReadAt;
                             status = tx.status;
                             title = tx.title;
                             createdAt = tx.createdAt;
@@ -378,9 +375,8 @@ module {
                                 id = tx.id;
                                 from = tx.from;
                                 to = updatedTo;
-                                readAt = tx.readAt;
-                                senderReadAt = tx.senderReadAt;
-                                status = tx.status;
+                                                            readAt = tx.readAt;
+                            status = tx.status;
                                 title = tx.title;
                                 createdAt = tx.createdAt;
                                 confirmedAt = tx.confirmedAt;

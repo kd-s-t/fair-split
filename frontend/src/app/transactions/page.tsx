@@ -73,7 +73,7 @@ export default function TransactionsPage() {
   function getTxId(tx: any) {
     return `${tx.from}_${tx.to
       .map((toEntry: any) => toEntry.principal)
-      .join("-")}_${tx.timestamp}`;
+      .join("-")}_${tx.createdAt}`;
   }
 
   function isPendingApproval(tx: any): boolean {
@@ -196,7 +196,7 @@ export default function TransactionsPage() {
         );
         
         // Return true if user is a recipient and hasn't read the transaction
-        return recipientEntry && recipientEntry.readAt === null;
+        return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
       })
       .map(tx => tx.id);
     
@@ -204,7 +204,7 @@ export default function TransactionsPage() {
       try {
         const actor = await createSplitDappActor();
         await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
-        console.log(`Marked ${unreadTransactionIds.length} transactions as read`);
+        console.log(`Marked ${unreadTransactionIds.length} transactions as read`, unreadTransactionIds);
       } catch (error) {
         console.error('Failed to mark transactions as read:', error);
       }
@@ -356,7 +356,7 @@ export default function TransactionsPage() {
                                 variant="small"
                                 className="text-[#9F9F9F]"
                               >
-                                {new Date(Number(tx.timestamp) * 1000).toLocaleString()}
+                                {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
                               </Typography>
                               {getTransactionCategory(tx) === "sent" ? (
                                 <div className="flex items-center gap-1 text-[#007AFF]">
@@ -385,7 +385,7 @@ export default function TransactionsPage() {
                                   variant="small"
                                   className="text-[#9F9F9F] ml-2"
                                 >
-                                  • Approved
+                                  • You approved
                                 </Typography>
                               )}
                             </div>

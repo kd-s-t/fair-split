@@ -57,4 +57,30 @@ export interface ConfirmedEscrowActionsProps {
 
 export interface ReleasedEscrowDetailsProps {
   transaction: any;
-} 
+}
+
+// Extended type for serialized transaction data
+export type SerializedTransaction = {
+  id: string;
+  from: any;
+  to: Array<{
+    principal: any;
+    name: string;
+    amount: bigint;
+    status: { [key: string]: null };
+    approvedAt?: string;
+    declinedAt?: string;
+    readAt?: string;
+  }>;
+  status: string;
+  title: string;
+  timestamp: string;
+  createdAt: string;
+  confirmedAt?: string;
+  cancelledAt?: string;
+  refundedAt?: string;
+  releasedAt?: string;
+  readAt?: string;
+  bitcoinAddress?: string;
+  bitcoinTransactionHash?: string;
+}; 

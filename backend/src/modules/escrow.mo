@@ -501,7 +501,21 @@ module {
             },
         );
         
-        Balance.increaseBalance(balances, sender, tx.to[idx].amount); // Refund the declined amount
+        // Find the recipient's amount to refund
+        let recipientAmount = Array.find<TransactionTypes.ToEntry>(
+            tx.to,
+            func(entry) { entry.principal == recipient }
+        );
+        
+        switch (recipientAmount) {
+            case (?entry) {
+                Balance.increaseBalance(balances, sender, entry.amount); // Refund the declined amount
+            };
+            case null {
+                // Recipient not found, this shouldn't happen but handle gracefully
+                Debug.print("Warning: Recipient not found in transaction for decline");
+            };
+        };
         
         let allApproved = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, true, func(acc, entry) { acc and (entry.status == #approved) });
         let anyDeclined = Array.foldLeft<TransactionTypes.ToEntry, Bool>(newTo, false, func(acc, entry) { acc or (entry.status == #declined) });

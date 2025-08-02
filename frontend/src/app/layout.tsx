@@ -22,7 +22,7 @@ function BalanceAndNameSyncer() {
   useEffect(() => {
     if (!principal || !authClient) return
 
-    ;(async () => {
+    (async () => {
       try {
         const isAuthenticated = await authClient.isAuthenticated()
         if (!isAuthenticated) {
@@ -96,6 +96,7 @@ function BalanceAndNameSyncer() {
                   ? toEntry.principal.toText()
                   : String(toEntry.principal),
                 amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : String(toEntry.amount),
+                percentage: typeof toEntry.percentage === 'bigint' ? toEntry.percentage.toString() : String(toEntry.percentage),
                 approvedAt: serializeTimestamp(toEntry.approvedAt),
                 declinedAt: serializeTimestamp(toEntry.declinedAt),
                 readAt: serializeTimestamp(toEntry.readAt),

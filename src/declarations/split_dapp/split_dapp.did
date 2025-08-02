@@ -69,6 +69,8 @@ type SplitDApp =
     principal) -> ();
    recipientDeclineEscrow: (sender: principal, idx: nat, recipient:
     principal) -> ();
+   recipientMarkAsReadBatch: (transactionIds: vec text, recipientId:
+    principal) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
    removeNickname: ("principal": principal) -> ();
    resetUserReputation: (user: principal, caller: principal) -> ();

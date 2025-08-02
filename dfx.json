@@ -11,7 +11,8 @@
     },
     "split_dapp_test": {
       "main": "backend/test/main_test.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "dependencies": ["split_dapp"]
     }
   },
   "defaults": {

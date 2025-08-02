@@ -113,6 +113,11 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'recipientMarkAsReadBatch' : IDL.Func(
+        [IDL.Vec(IDL.Text), IDL.Principal],
+        [],
+        [],
+      ),
     'releaseSplit' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'removeNickname' : IDL.Func([IDL.Principal], [], []),
     'resetUserReputation' : IDL.Func([IDL.Principal, IDL.Principal], [], []),

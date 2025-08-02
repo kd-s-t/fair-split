@@ -83,6 +83,7 @@ export default function Home() {
           alt="SplitDApp Logo"
           width={800}
           height={64}
+          style={{ height: "auto" }}
         />
       </div>
       <motion.div
@@ -96,6 +97,7 @@ export default function Home() {
           alt="SplitDApp Logo"
           width={150}
           height={64}
+          style={{ height: "auto" }}
         />
         <Typography variant="h2" className="text-center mt-6">
           Secure. Trustless. On-chain.
@@ -140,6 +142,7 @@ export default function Home() {
           alt="SplitDApp Logo"
           width={450}
           height={64}
+          style={{ height: "auto" }}
         />
       </div>
       <div className="flex items-center gap-8 w-full justify-center">

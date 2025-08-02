@@ -7,6 +7,8 @@ import { TransactionStats } from "@/components/ui/transaction-stats";
 import { TransactionHash } from "@/components/ui/transaction-hash";
 import { ReleasedEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
+import TimeRemaining from "./TimeRemaining";
+import TransactionExplorerLinks from "./TransactionExplorerLinks";
 
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
   // Calculate total released BTC
@@ -30,31 +32,64 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
         status={transaction.status}
       />
       
+      <TimeRemaining createdAt={transaction.createdAt} />
+      
       <hr className="my-6 text-[#424444] h-[1px]" />
 
-      <RecipientsList recipients={transaction.to || []} showTimestamps={false} />
+      {/* Combined Recipients List and Breakdown */}
+      <div className="mb-6">
+        <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
+        <div className="space-y-3">
+          {Array.isArray(transaction.to) && transaction.to.map((recipient: any, index: number) => {
+            const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
+            const statusColor = statusKey === 'approved' ? 'text-green-400' : 
+                               statusKey === 'pending' ? 'text-yellow-400' : 
+                               statusKey === 'declined' ? 'text-red-400' : 'text-gray-400';
+            
+            return (
+              <div key={index} className="bg-[#2a2a2a] rounded-lg p-4 border border-[#303434]">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <Typography variant="base" className="text-white font-semibold">
+                      {recipient.name || `Recipient ${index + 1}`}
+                    </Typography>
+                    <Typography variant="small" className="text-[#FEB64D] mt-1">
+                      {(Number(recipient.amount) / 1e8).toFixed(8)} BTC
+                    </Typography>
+                    <Typography variant="small" className="text-[#9F9F9F] mt-1">
+                      {recipient.percentage || ''}{recipient.percentage ? '%' : ''}
+                    </Typography>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${statusColor}`}>
+                      {statusKey}
+                    </span>
+                    {recipient.approvedAt && (
+                      <Typography variant="small" className="text-gray-500 mt-1">
+                        {new Date(Number(recipient.approvedAt) / 1_000_000).toLocaleString()}
+                      </Typography>
+                    )}
+                    {recipient.declinedAt && (
+                      <Typography variant="small" className="text-gray-500 mt-1">
+                        {new Date(Number(recipient.declinedAt) / 1_000_000).toLocaleString()}
+                      </Typography>
+                    )}
+                    {statusKey === 'pending' && !recipient.approvedAt && !recipient.declinedAt && (
+                      <Typography variant="small" className="text-gray-500 mt-1">
+                        No action taken yet
+                      </Typography>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <hr className="my-6 text-[#424444] h-[1px]" />
       
-      {/* Main Transaction Hash */}
-      {transaction.id && (
-        <TransactionHash
-          title="Transaction Hash"
-          hash={transaction.id}
-          description="Main escrow transaction hash"
-          explorerLinks={[
-            {
-              label: "View on ICP Dashboard",
-              url: `${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`
-            },
-            {
-              label: "View on ICScan",
-              url: `${process.env.NEXT_PUBLIC_ICSCAN_URL || 'https://icscan.io'}/canister/${transaction.id}`
-            }
-          ]}
-          className="mb-6"
-        />
-      )}
+      <TransactionExplorerLinks transaction={transaction} />
       
       {/* Escrow overview */}
       <div className="mb-6 bg-[#181818] rounded-2xl p-6">

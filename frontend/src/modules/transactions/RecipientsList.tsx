@@ -41,12 +41,32 @@ export default function RecipientsList({ recipients, showTimestamps = true }: Re
                     <>
                       {recipient.approvedAt && (
                         <Typography variant="small" className="text-gray-500 mt-1">
-                          {new Date(Number(recipient.approvedAt) / 1_000_000).toLocaleString()}
+                          {(() => {
+                            try {
+                              const timestamp = Number(recipient.approvedAt);
+                              // Check if it's already in milliseconds or nanoseconds
+                              const date = timestamp > 1e12 ? new Date(timestamp / 1_000_000) : new Date(timestamp);
+                              return date.toLocaleString();
+                            } catch (error) {
+                              console.error('Error parsing approvedAt:', recipient.approvedAt, error);
+                              return 'Invalid date';
+                            }
+                          })()}
                         </Typography>
                       )}
                       {recipient.declinedAt && (
                         <Typography variant="small" className="text-gray-500 mt-1">
-                          {new Date(Number(recipient.declinedAt) / 1_000_000).toLocaleString()}
+                          {(() => {
+                            try {
+                              const timestamp = Number(recipient.declinedAt);
+                              // Check if it's already in milliseconds or nanoseconds
+                              const date = timestamp > 1e12 ? new Date(timestamp / 1_000_000) : new Date(timestamp);
+                              return date.toLocaleString();
+                            } catch (error) {
+                              console.error('Error parsing declinedAt:', recipient.declinedAt, error);
+                              return 'Invalid date';
+                            }
+                          })()}
                         </Typography>
                       )}
                       {statusKey === 'pending' && !recipient.approvedAt && !recipient.declinedAt && (

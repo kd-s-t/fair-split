@@ -28,7 +28,7 @@ export type EscrowTransaction = {
   id: string;
   from: string;
   to: ToEntry[];
-  status: "pending" | "confirmed" | "released" | "cancelled";
+  status: "pending" | "confirmed" | "released" | "cancelled" | "refund" | "declined";
   createdAt: string;
   title: string;
   depositAddress?: string;
@@ -45,6 +45,10 @@ export interface PendingEscrowDetailsProps {
 }
 
 export interface CancelledEscrowDetailsProps {
+  transaction: EscrowTransaction;
+}
+
+export interface RefundedEscrowDetailsProps {
   transaction: EscrowTransaction;
 }
 

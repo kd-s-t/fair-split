@@ -60,6 +60,7 @@ export interface SplitDApp {
     [Array<string>, Principal],
     undefined
   >,
+  'refundSplit' : ActorMethod<[Principal], undefined>,
   'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'removeNickname' : ActorMethod<[Principal], undefined>,
   'resetUserReputation' : ActorMethod<[Principal, Principal], undefined>,

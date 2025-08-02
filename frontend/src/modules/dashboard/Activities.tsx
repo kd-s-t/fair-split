@@ -37,7 +37,7 @@ export default function RecentActivities({
   const router = useRouter();
   const principal = useSelector((state: RootState) => state.user?.principal);
   const activities = transactions && transactions.length > 0 
-    ? [...transactions].sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+    ? [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
     : [];
   const sentCount = activities.filter(
     (activity: any) => principal && String(activity.from) === String(principal)

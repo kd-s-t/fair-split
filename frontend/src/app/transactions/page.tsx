@@ -370,7 +370,6 @@ export default function TransactionsPage() {
                                       | "outline"
                                       | "warning"
                                     }
-                                    className="text-xs"
                                   >
                                     {statusMap[statusKey]?.label || statusKey}
                                   </Badge>
@@ -430,7 +429,7 @@ export default function TransactionsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="font-medium border-[#7A7A7A] gap-1"
+                              className="border-[#7A7A7A]"
                             >
                               <Wallet /> Manage escrow
                             </Button>

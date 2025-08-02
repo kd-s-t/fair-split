@@ -120,7 +120,7 @@ export default function Home() {
             <Button
               onClick={logout}
               variant="secondary"
-              className="gap-2 text-sm mt-4"
+              className="text-sm mt-4"
             >
               <LogOut size={14} /> Logout
             </Button>
@@ -129,7 +129,7 @@ export default function Home() {
           <Button
             variant="secondary"
             onClick={login}
-            className="gap-2 text-sm mt-4"
+            className="text-sm mt-4"
           >
             <KeyRound size={14} color="#FEB64D" /> Login with Internet Identity
           </Button>

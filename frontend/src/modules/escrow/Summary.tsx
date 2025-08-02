@@ -48,7 +48,7 @@ const TransactionSummary = ({
             </Typography>
             <Badge
               variant="outline"
-              className="!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D] text-xs font-semibold"
+              className="!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D]"
             >
               Pending
             </Badge>
@@ -86,7 +86,7 @@ const TransactionSummary = ({
           >
             <Button
               variant="default"
-              className="w-full text-sm text-[#0D0D0D] font-medium gap-2 relative cursor-pointer"
+              className="w-full text-sm"
               disabled={isLoading}
               onClick={handleInitiateEscrow}
             >

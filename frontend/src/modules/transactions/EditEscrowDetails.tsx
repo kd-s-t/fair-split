@@ -108,7 +108,7 @@ export default function EditEscrowDetails({
             >
               <Button 
                 variant="outline" 
-                className="gap-2 text-[#FEB64D] !border-[#303434] !bg-transparent hover:!border-[#FEB64D] hover:!bg-[#FEB64D]/10"
+                className="text-[#FEB64D] !border-[#303434] !bg-transparent hover:!border-[#FEB64D] hover:!bg-[#FEB64D]/10"
                 onClick={onEdit}
               >
                 <Edit size={16} />
@@ -124,7 +124,7 @@ export default function EditEscrowDetails({
             >
               <Button 
                 variant="outline" 
-                className="gap-2 text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
+                className="text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
                 onClick={onCancel}
               >
                 <motion.div

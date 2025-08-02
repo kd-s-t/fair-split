@@ -97,7 +97,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
               <div className="flex flex-col items-end gap-2 min-w-[160px]">
                 <Typography variant="base" className="text-white font-semibold">{(Number(toEntry.amount) / 1e8).toFixed(8)} BTC</Typography>
                 <Typography variant="small" className="text-[#9F9F9F]">{toEntry.percentage || ''}{toEntry.percentage ? '%' : ''}</Typography>
-                <Button variant="outline" size="sm" className="mt-2 flex items-center gap-1">
+                <Button variant="outline" size="sm" className="mt-2">
                   <ExternalLink className="w-4 h-4" /> View
                 </Button>
               </div>

@@ -16,7 +16,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Bitcoin,
-  Wallet,
   RotateCw,
   Eye,
 } from "lucide-react";
@@ -61,7 +60,7 @@ export default function TransactionsPage() {
     if (localTransactions.length > 0 && principal) {
       markUnreadTransactionsAsRead();
     }
-  }, [localTransactions, principal]);
+  }, [localTransactions, principal, markUnreadTransactionsAsRead]);
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
 
@@ -168,7 +167,7 @@ export default function TransactionsPage() {
       // Get the sender's transactions to find the correct index
       const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
       const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      const txIndex = txs.transactions.findIndex((t) => (t as any).id === tx.id);
+      const txIndex = txs.transactions.findIndex((t) => (t as { id: string }).id === tx.id);
       
       if (txIndex === -1) {
         toast.error('Transaction not found.');

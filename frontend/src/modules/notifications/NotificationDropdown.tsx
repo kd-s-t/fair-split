@@ -190,7 +190,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
             declinedAt: entry.declinedAt ? String(entry.declinedAt) : undefined,
             readAt: entry.readAt ? String(entry.readAt) : undefined
           })),
-          status: selectedTx.status as any,
+          status: selectedTx.status as "pending" | "declined" | "confirmed" | "released" | "cancelled" | "refund",
           createdAt: String(selectedTx.createdAt),
           title: selectedTx.title,
           bitcoinAddress: Array.isArray(selectedTx.bitcoinAddress) && selectedTx.bitcoinAddress.length > 0 ? selectedTx.bitcoinAddress[0] : undefined,

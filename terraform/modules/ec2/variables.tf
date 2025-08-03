@@ -8,13 +8,8 @@ variable "instance_type" {
   type        = string
 }
 
-variable "key_pair_name" {
-  description = "Name of the SSH key pair"
-  type        = string
-}
-
-variable "security_group_id" {
-  description = "ID of the security group"
+variable "public_key_path" {
+  description = "Path to the public SSH key"
   type        = string
 }
 
@@ -37,9 +32,4 @@ variable "environment" {
   description = "Environment (staging, production)"
   type        = string
   default     = "staging"
-}
-
-variable "parameter_prefix" {
-  description = "SSM parameter prefix for this environment"
-  type        = string
 } 

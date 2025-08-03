@@ -8,7 +8,7 @@ output "instance_id" {
   value       = aws_instance.splitsafe_server.id
 }
 
-output "application_url" {
-  description = "URL to access the SplitSafe application"
-  value       = "http://${aws_instance.splitsafe_server.public_ip}:3000"
+output "ssh_command" {
+  description = "SSH command to connect to the EC2 instance"
+  value       = "ssh -i ${var.private_key_path} ubuntu@${aws_instance.splitsafe_server.public_ip}"
 } 

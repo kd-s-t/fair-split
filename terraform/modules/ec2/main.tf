@@ -1,20 +1,81 @@
 # EC2 Module
-# Handles EC2 instance and application deployment
+# Handles EC2 instance and basic setup
 
-data "aws_ami" "amazon_linux_2" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+# Ubuntu 22.04 LTS AMI - using a reliable AMI ID
+# ami-0c7217cdde317cfec (Ubuntu 22.04 LTS in us-east-1)
+# If this doesn't work, find your region's AMI at: https://cloud-images.ubuntu.com/locator/ec2/
+locals {
+  ubuntu_ami_id = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS us-east-1
+}
+
+# Create a default security group
+resource "aws_security_group" "splitsafe_sg" {
+  name        = "splitsafe-sg-${var.environment}"
+  description = "Security group for SplitSafe EC2 instance"
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Custom port 3000"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "splitsafe-sg-${var.environment}"
+    Project = "SplitSafe"
+    Environment = var.environment
+  }
+}
+
+# Create a key pair
+resource "aws_key_pair" "splitsafe_key" {
+  key_name   = "splitsafe-key-${var.environment}"
+  public_key = file(var.public_key_path)
+
+  tags = {
+    Name = "splitsafe-key-${var.environment}"
+    Project = "SplitSafe"
+    Environment = var.environment
   }
 }
 
 resource "aws_instance" "splitsafe_server" {
-  ami                    = var.ami_id
+  ami                    = local.ubuntu_ami_id
   instance_type          = var.instance_type
-  key_name              = var.key_pair_name
-  vpc_security_group_ids = [var.security_group_id]
+  key_name              = aws_key_pair.splitsafe_key.key_name
+  vpc_security_group_ids = [aws_security_group.splitsafe_sg.id]
 
   root_block_device {
     volume_size = 30
@@ -33,79 +94,56 @@ resource "aws_instance" "splitsafe_server" {
 
     connection {
       type        = "ssh"
-      user        = "ec2-user"
+      user        = "ubuntu"
       private_key = file(var.private_key_path)
       host        = self.public_ip
+      timeout     = "30m"
     }
 
     inline = [
       "echo '======================================================================================'",
-      "echo 'Updating OS and installing dependencies...'",
+      "echo '🚀 SplitSafe EC2 Instance Setup (Ubuntu)'",
       "echo '======================================================================================'",
-      "sudo yum update -y",
-      "sudo yum install -y git curl wget unzip aws-cli",
+      "echo 'Disabling automatic updates to speed up provisioning...'",
+      "sudo systemctl disable unattended-upgrades",
+      "sudo systemctl stop unattended-upgrades",
+      "echo 'Updating OS and installing dependencies...'",
+      "sudo apt update -qq",
+      "sudo apt install -y git curl wget unzip",
+      "echo '✅ System packages installed'",
       "echo '======================================================================================'",
       "echo 'Installing Docker...'",
-      "echo '======================================================================================'",
-      "sudo amazon-linux-extras enable docker",
-      "sudo yum install -y docker",
+      "sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release",
+      "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg",
+      "echo \"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+      "sudo apt update -qq",
+      "sudo apt install -y docker-ce docker-ce-cli containerd.io",
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
-      "sudo usermod -aG docker ec2-user",
+      "sudo usermod -aG docker ubuntu",
+      "echo '✅ Docker installed and configured'",
       "echo '======================================================================================'",
       "echo 'Installing Docker Compose...'",
-      "echo '======================================================================================'",
       "mkdir -p ~/.docker/cli-plugins/",
       "curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose",
       "chmod +x ~/.docker/cli-plugins/docker-compose",
       "docker compose version",
+      "echo '✅ Docker Compose installed'",
       "echo '======================================================================================'",
-      "echo 'Done installing dependencies. Rebooting now...'",
-      "echo '======================================================================================'",
-      "sudo reboot || true"
-    ]
-  }
-}
-
-resource "null_resource" "deploy_splitsafe" {
-  depends_on = [aws_instance.splitsafe_server]
-
-  provisioner "remote-exec" {
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = file(var.private_key_path)
-      host        = aws_instance.splitsafe_server.public_ip
-    }
-
-    inline = [
-      "echo '======================================================================================'",
-      "echo 'Waiting for system to stabilize after reboot...'",
-      "echo '======================================================================================'",
-      "sleep 60",
-      "echo '======================================================================================'",
-      "echo 'Cloning SplitSafe repository...'",
-      "echo '======================================================================================'",
+      "echo '📦 Cloning SplitSafe repository...'",
       "cd ~",
-      "if [ -d splitsafe ]; then cd splitsafe && git pull; else git clone ${var.repo_url} splitsafe && cd splitsafe; fi",
+      "if [ -d splitsafe ]; then",
+      "  echo 'Repository exists, updating...'",
+      "  cd splitsafe && git pull",
+      "else",
+      "  echo 'Cloning new repository...'",
+      "  git clone ${var.repo_url} splitsafe && cd splitsafe",
+      "fi",
+      "echo '✅ Repository ready'",
       "echo '======================================================================================'",
-      "echo 'Getting environment variables from AWS Parameter Store...'",
-      "echo '======================================================================================'",
-      "export CANISTER_ID=$(aws ssm get-parameter --name '${var.parameter_prefix}/canister-id' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export DFX_HOST=$(aws ssm get-parameter --name '${var.parameter_prefix}/dfx-host' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export NODE_ENV=$(aws ssm get-parameter --name '${var.parameter_prefix}/node-env' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export PORT=$(aws ssm get-parameter --name '${var.parameter_prefix}/port' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export BLOCKSTREAM_URL=$(aws ssm get-parameter --name '${var.parameter_prefix}/blockstream-url' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export MEMPOOL_URL=$(aws ssm get-parameter --name '${var.parameter_prefix}/mempool-url' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export ICP_DASHBOARD_URL=$(aws ssm get-parameter --name '${var.parameter_prefix}/icp-dashboard-url' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "export ICSCAN_URL=$(aws ssm get-parameter --name '${var.parameter_prefix}/icscan-url' --query 'Parameter.Value' --output text --region ${var.aws_region})",
-      "echo '======================================================================================'",
-      "echo 'Deploying SplitSafe with Docker Compose...'",
-      "echo '======================================================================================'",
-      "docker compose -f frontend/docker/docker-compose.yml up --build -d splitsafe",
-      "echo '======================================================================================'",
-      "echo 'SplitSafe is now running!'",
-      "echo \"Your application should be accessible at http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000\"",
+      "echo '✅ Setup complete!'",
+      "echo \"📱 Repository cloned to: ~/splitsafe\"",
+      "echo \"🐳 Docker and Docker Compose installed\"",
       "echo '======================================================================================'"
     ]
   }

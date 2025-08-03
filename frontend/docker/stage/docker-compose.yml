@@ -16,10 +16,6 @@ services:
       - NEXT_PUBLIC_MEMPOOL_URL=${NEXT_PUBLIC_MEMPOOL_URL:-https://mempool.space}
       - NEXT_PUBLIC_ICP_DASHBOARD_URL=${NEXT_PUBLIC_ICP_DASHBOARD_URL:-https://dashboard.internetcomputer.org}
       - NEXT_PUBLIC_ICSCAN_URL=${NEXT_PUBLIC_ICSCAN_URL:-https://icscan.io}
-    volumes:
-      # Mount for development (optional)
-      - ../../frontend/src:/app/frontend/src:ro
-      - ../../backend/src:/app/backend/src:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
@@ -27,7 +23,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    command: ["./start.sh"]
 
 networks:
   default:

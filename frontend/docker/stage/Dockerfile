@@ -29,12 +29,12 @@ COPY frontend/postcss.config.mjs ./frontend/
 COPY frontend/tsconfig.json ./frontend/
 
 # Install dependencies
-RUN cd frontend && npm ci
+RUN cd frontend && npm install
 
 # Copy frontend source
 COPY frontend/ ./frontend/
 
-# Build the frontend (will be rebuilt at runtime with proper env vars)
+# Build the frontend
 RUN cd frontend && npm run build
 
 # Stage 3: Production runtime
@@ -52,15 +52,7 @@ COPY --from=frontend-builder /app/frontend/postcss.config.mjs ./frontend/
 COPY --from=frontend-builder /app/frontend/tsconfig.json ./frontend/
 
 # Install production dependencies only
-RUN cd frontend && npm ci --only=production && npm cache clean --force
-
-# Copy startup scripts and config files from project root
-COPY start.sh ./start.sh
-COPY deploy.sh ./deploy.sh
-COPY dfx.json ./dfx.json
-COPY principals.json ./principals.json
-COPY frontend/docker/wait-for-dfx.sh ./wait-for-dfx.sh
-RUN chmod +x ./start.sh ./wait-for-dfx.sh
+RUN cd frontend && npm install --only=production && npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -74,5 +66,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Default command - will be overridden by docker-compose
-CMD ["./start.sh"] 
+# Start the application
+CMD ["cd", "frontend", "&&", "npm", "start"] 

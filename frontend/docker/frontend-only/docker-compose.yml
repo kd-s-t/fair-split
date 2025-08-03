@@ -1,0 +1,14 @@
+services:
+  splitsafe-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=staging
+      - PORT=3000
+      - NEXT_PUBLIC_DFX_HOST=http://host.docker.internal:4943
+      - NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP=${NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP:-}
+    restart: unless-stopped
+    command: ["npm", "run", "dev"] 

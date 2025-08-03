@@ -34,6 +34,14 @@ resource "aws_security_group" "splitsafe_sg" {
     description = "Next.js application"
   }
 
+  ingress {
+    from_port   = 4943
+    to_port     = 4943
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "DFX local replica (ICP development)"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

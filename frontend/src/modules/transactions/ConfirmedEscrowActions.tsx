@@ -53,16 +53,16 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         <div className="space-y-3">
           {Array.isArray(transaction.to) && transaction.to.map((recipient: any, index: number) => {
             const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
-            const statusColor = statusKey === 'approved' ? 'text-green-400' : 
-                               statusKey === 'pending' ? 'text-yellow-400' : 
-                               statusKey === 'declined' ? 'text-red-400' : 'text-gray-400';
-            
+            const statusColor = statusKey === 'approved' ? 'text-green-400' :
+              statusKey === 'pending' ? 'text-yellow-400' :
+                statusKey === 'declined' ? 'text-red-400' : 'text-gray-400';
+
             const amount = Number(recipient.amount) / 1e8;
             const totalAmount = Array.isArray(transaction.to)
               ? transaction.to.reduce((sum: number, entry: any) => sum + Number(entry.amount), 0) / 1e8
               : 0;
             const percentage = totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(0) : 0;
-            
+
             return (
               <div key={index} className="bg-[#2a2a2a] rounded-lg p-4 border border-[#303434]">
                 <div className="flex justify-between items-start">
@@ -109,7 +109,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
       <TransactionExplorerLinks transaction={transaction} />
 
       {/* Escrow Actions */}
-      <div className="mb-4">
+      <div className="mb-4 mt-4">
         <Typography variant="large" className="mb-4">Escrow actions</Typography>
         <div className="flex gap-4 mb-4">
           <Button
@@ -190,15 +190,19 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
       {/* Warning Note */}
       <div className="w-full mb-4 flex items-center gap-2 rounded-xl bg-[#6B4A1B] border border-[#B8862A] px-4 py-2">
         <CircleAlert size={18} color="#B8862A" />
-        <span className="text-white font-medium">Note: Release payment only when you're satisfied with the delivered work or received goods.</span>
+        <Typography variant="small" className="font-normal">Note: Release payment only when you're satisfied with the delivered work or received goods.</Typography>
       </div>
 
       {/* Smart Contract Execution Info */}
-      <div className="bg-[#232323] border border-[#393939] rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Shield color="#FEB64D" size={20} />
+      <div className="container-gray">
+        <div className="flex items-center gap-3">
+
+          <div className="bg-[#FEB64D]/20 rounded-full p-2">
+            <Shield color="#FEB64D" size={20} />
+          </div>
+
           <div>
-            <Typography variant="base" className="text-white font-semibold">
+            <Typography variant="base" className="font-semibold">
               Smart contract execution
             </Typography>
             <Typography className="text-[#9F9F9F] mt-1">

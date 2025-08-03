@@ -49,7 +49,7 @@ export default function TransactionDetailsPage() {
           router.push('/transactions');
           return;
         }
-        
+
         // Serialize BigInt values to strings for Redux compatibility
         const serializedTransaction = {
           ...result[0],
@@ -67,7 +67,7 @@ export default function TransactionDetailsPage() {
             readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
           })) : []
         };
-        
+
         console.log("transaction", serializedTransaction);
         setTransaction(serializedTransaction);
         setIsAuthorized(true);
@@ -220,7 +220,7 @@ export default function TransactionDetailsPage() {
   }
 
   const statusKey = transaction.status || "unknown";
-  
+
   let currentStep = 0;
   if (statusKey === "released") currentStep = 3;
   else if (statusKey === "confirmed") currentStep = 2;
@@ -255,7 +255,7 @@ export default function TransactionDetailsPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-6 items-start">
         <div className="container flex-1 rounded-2xl px-6 py-4 text-white">
           <Typography variant="large">Escrow overview</Typography>
 
@@ -271,15 +271,15 @@ export default function TransactionDetailsPage() {
                 from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: any) => ({
-                      ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
-                    }))
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
                   : [],
                 status: "pending" as const,
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
                   : transaction.releasedAt,
-                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
                   ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
                   : transaction.bitcoinAddress,
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
@@ -288,13 +288,13 @@ export default function TransactionDetailsPage() {
               };
 
               return isSender ? (
-                <EditEscrowDetails 
+                <EditEscrowDetails
                   transaction={transactionData}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
                 />
               ) : (
-                <PendingEscrowDetails 
+                <PendingEscrowDetails
                   transaction={transactionData}
                   onCancel={handleCancel}
                 />
@@ -303,21 +303,21 @@ export default function TransactionDetailsPage() {
           )}
 
           {(statusKey === "cancelled" || statusKey === "declined") && (
-            <CancelledEscrowDetails 
+            <CancelledEscrowDetails
               transaction={{
                 ...transaction,
                 from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: any) => ({
-                      ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
-                    }))
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
                   : [],
                 status: statusKey,
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
                   : transaction.releasedAt,
-                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
                   ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
                   : transaction.bitcoinAddress,
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
@@ -328,21 +328,21 @@ export default function TransactionDetailsPage() {
           )}
 
           {statusKey === "refund" && (
-            <RefundedEscrowDetails 
+            <RefundedEscrowDetails
               transaction={{
                 ...transaction,
                 from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: any) => ({
-                      ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
-                    }))
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
                   : [],
                 status: "refund",
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
                   : transaction.releasedAt,
-                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
                   ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
                   : transaction.bitcoinAddress,
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)

@@ -19,6 +19,8 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const dispatch = useDispatch();
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [open, setOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
 
 

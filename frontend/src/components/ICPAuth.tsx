@@ -17,6 +17,7 @@ export default function Home() {
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const [authClient, setAuthClient] = useState<AuthClient | null>(null);
+  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
 
 
 

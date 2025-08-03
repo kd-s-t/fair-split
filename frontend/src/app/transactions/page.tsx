@@ -40,6 +40,8 @@ export default function TransactionsPage() {
   const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
   const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isDeclining, setIsDeclining] = useState<string | null>(null);

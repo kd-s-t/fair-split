@@ -3,7 +3,7 @@ services:
   splitsafe-staging:
     build:
       context: ../..
-      dockerfile: frontend/docker/stage/Dockerfile
+      dockerfile: docker/stage/Dockerfile
     ports:
       - "3001:3000"  # Staging frontend
     environment:

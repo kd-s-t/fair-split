@@ -135,25 +135,52 @@ const ActivityContent = ({
               ))}
             </div>
             {/* Total escrow */}
-            <div className="container-error flex justify-between items-center mt-2">
-              <Typography variant="small" className="text-[#FEB64D]">
-                Total escrow:
-              </Typography>
-              <Typography variant="small" className="text-[#FEB64D] gap-1 flex items-center">
-                <Bitcoin size={16} />
-                {formatBTC(
-                  activity.to.reduce(
-                    (sum: number, recipient: any) =>
-                      sum + Number(recipient.amount),
-                    0
-                  )
-                )}
-                BTC
-              </Typography>
-            </div>
+            {category === "sent" && (
+              <div className="container-error flex justify-between items-center mt-2">
+                <Typography variant="small" className="text-[#FEB64D]">
+                  Total escrow:
+                </Typography>
+                <Typography variant="small" className="text-[#FEB64D] gap-1 flex items-center">
+                  <Bitcoin size={16} />
+                  {formatBTC(
+                    activity.to.reduce(
+                      (sum: number, recipient: any) =>
+                        sum + Number(recipient.amount),
+                      0
+                    )
+                  )}
+                  BTC
+                </Typography>
+              </div>
+            )}
+
+            {category === "received" && (
+              <div className="container-success mt-2">
+                <Typography variant="small">
+                  You’ll receive:
+                </Typography>
+                <div className="flex items-center gap-2">
+                  <Bitcoin size={16} />
+                  <Typography>
+                    {formatBTC(
+                      activity.to.reduce(
+                        (sum: number, recipient: any) =>
+                          sum + Number(recipient.amount),
+                        0
+                      )
+                    )}
+                    BTC
+                  </Typography>
+                  <Typography variant="small" className="text-[rgba(159, 159, 159, 1)]">
+                    (100%)
+                  </Typography>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-    </Card>
+        )
+      }
+    </Card >
   )
 }
 

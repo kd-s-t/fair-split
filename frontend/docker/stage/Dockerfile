@@ -21,6 +21,10 @@ FROM base AS frontend-builder
 
 WORKDIR /app
 
+# Set environment variables for lightningcss (x64 for EC2)
+ENV LIGHTNING_CSS_BINARY_TARGET=linux-x64-musl
+ENV NODE_OPTIONS="--max-old-space-size=512"
+
 # Copy package files
 COPY package*.json ./
 COPY next.config.ts ./
@@ -29,14 +33,17 @@ COPY postcss.config.mjs ./
 COPY tsconfig.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
-# Use --max-old-space-size to limit memory usage for Node.js
-RUN npm install --include=dev --no-optional
+# Force rebuild of native modules for the correct architecture
+RUN npm install --include=dev --no-optional --force
 
 # Copy frontend source
 COPY . .
 
+# Rebuild native modules for the current platform
+RUN npm rebuild
+
 # Build the frontend with memory optimization for EC2
-RUN NODE_OPTIONS="--max-old-space-size=512" npm run build
+RUN npm run build
 
 # Stage 3: Production runtime
 FROM base AS production
@@ -58,6 +65,7 @@ RUN npm install --only=production && npm cache clean --force
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
+
 USER nextjs
 
 # Expose port

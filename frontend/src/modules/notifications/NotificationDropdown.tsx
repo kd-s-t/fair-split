@@ -9,6 +9,7 @@ import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
 import TransactionDetailsModal from '@/modules/transactions/DetailsModal';
 import type { Transaction } from '@/declarations/split_dapp.did';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ToEntry } from '../transactions/types';
 
 function getTxId(tx: Transaction) {
   // If tx.to is an array of Principal, join their text representations
@@ -19,7 +20,9 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const dispatch = useDispatch();
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [open, setOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [modalOpen, setModalOpen] = useState(false);
 
 
@@ -32,12 +35,12 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
   console.log("transactions bell", transactions);
   const unreadCount = transactions.filter(tx => {
     // Check if current user is a recipient in this transaction
-    const recipientEntry = tx.to.find((entry) => 
+    const recipientEntry = tx.to.find((entry: ToEntry) => 
       String(entry.principal) === String(principalId)
     );
     
     // Count as unread if user is a recipient and hasn't read it
-    return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
+    return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
   }).length;
   const [bellRing, setBellRing] = useState(false);
 
@@ -61,7 +64,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       String(entry.principal) === String(principalId)
     );
     
-    if (recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "")) {
+    if (recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0)) {
       dispatch(markTransactionAsRead(txId));
     }
     
@@ -151,18 +154,18 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                   >
                     <DropdownMenuItem
                       className={(() => {
-                        const recipientEntry = tx.to.find((entry) => 
+                        const recipientEntry = tx.to.find((entry: ToEntry) => 
                           String(entry.principal) === String(principalId)
                         );
-                        return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "") ? 'bg-yellow-100 text-black' : '';
+                        return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0) ? 'bg-yellow-100 text-black' : '';
                       })()}
                       onClick={() => handleRowClick(tx)}
                     >
                       <div className="flex flex-col w-full">
                         <span className="text-xs font-mono truncate">From: {tx.from}</span>
-                        <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry) => (toEntry.principal ? toEntry.principal : toEntry.toText())).join(', ')}</span>
+                        <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry: ToEntry) => String(toEntry.principal)).join(', ')}</span>
                         <span className="text-xs font-semibold text-yellow-600">
-                          {tx.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC
+                          {tx.to.reduce((sum: number, toEntry: ToEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC
                         </span>
                         <span className="text-xs text-muted-foreground">{new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}</span>
                       </div>
@@ -174,7 +177,26 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
         </DropdownMenuContent>
       </DropdownMenu>
       <TransactionDetailsModal
-        transaction={selectedTx}
+        transaction={selectedTx ? {
+          id: selectedTx.id,
+          from: String(selectedTx.from),
+          to: selectedTx.to.map(entry => ({
+            percentage: Number(entry.percentage),
+            principal: String(entry.principal),
+            name: entry.name,
+            amount: entry.amount,
+            status: entry.status,
+            approvedAt: entry.approvedAt ? String(entry.approvedAt) : undefined,
+            declinedAt: entry.declinedAt ? String(entry.declinedAt) : undefined,
+            readAt: entry.readAt ? String(entry.readAt) : undefined
+          })),
+          status: selectedTx.status as any,
+          createdAt: String(selectedTx.createdAt),
+          title: selectedTx.title,
+          bitcoinAddress: Array.isArray(selectedTx.bitcoinAddress) && selectedTx.bitcoinAddress.length > 0 ? selectedTx.bitcoinAddress[0] : undefined,
+          bitcoinTransactionHash: Array.isArray(selectedTx.bitcoinTransactionHash) && selectedTx.bitcoinTransactionHash.length > 0 ? selectedTx.bitcoinTransactionHash[0] : undefined,
+          releasedAt: Array.isArray(selectedTx.releasedAt) && selectedTx.releasedAt.length > 0 ? String(selectedTx.releasedAt[0]) : undefined
+        } : null}
         onClose={() => {
           setModalOpen(false);
           setSelectedTx(null);

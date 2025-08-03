@@ -17,8 +17,6 @@ export default function Home() {
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const [authClient, setAuthClient] = useState<AuthClient | null>(null);
-  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
-
 
 
   useEffect(() => {
@@ -111,11 +109,6 @@ export default function Home() {
           Built for native Bitcoin escrow — no bridges, no wraps.
         </Typography>
 
-        {isBalanceLoading && (
-          <div className="text-center text-yellow-500 font-semibold">
-            Loading BTC balance...
-          </div>
-        )}
         {principal ? (
           <>
             <p className="text-center break-all">Principal: {principal}</p>

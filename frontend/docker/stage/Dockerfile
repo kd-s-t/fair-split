@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for SplitSafe
 # Stage 1: Base image with Node.js
-FROM node:20-alpine as base
+FROM node:20-alpine AS base
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -17,7 +17,7 @@ RUN apk add --no-cache \
     g++
 
 # Stage 2: Frontend build
-FROM base as frontend-builder
+FROM base AS frontend-builder
 
 WORKDIR /app
 
@@ -28,8 +28,8 @@ COPY tailwind.config.js ./
 COPY postcss.config.mjs ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm install
+# Install all dependencies (including dev dependencies needed for build)
+RUN npm install --include=dev
 
 # Copy frontend source
 COPY . .
@@ -38,7 +38,7 @@ COPY . .
 RUN npm run build
 
 # Stage 3: Production runtime
-FROM base as production
+FROM base AS production
 
 WORKDIR /app
 

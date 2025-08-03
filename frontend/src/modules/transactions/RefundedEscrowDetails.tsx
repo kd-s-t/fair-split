@@ -2,8 +2,8 @@
 
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { TransactionStats } from "@/components/ui/transaction-stats";
-import { TransactionHash } from "@/components/ui/transaction-hash";
+import TransactionStats from "@/components/TransactionStats";
+import TransactionHash from "@/components/TransactionHash";
 import { RefundedEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
@@ -21,7 +21,7 @@ export default function RefundedEscrowDetails({ transaction }: RefundedEscrowDet
 
   return (
     <>
-      <TransactionStats 
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}

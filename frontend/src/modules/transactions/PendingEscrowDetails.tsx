@@ -2,17 +2,16 @@
 
 import { Copy, Shield, CircleX, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { TransactionStats } from "@/components/ui/transaction-stats";
+import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";
-import { TransactionHash } from "@/components/ui/transaction-hash";
 import { PendingEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 
-export default function PendingEscrowDetails({ 
-  transaction, 
+export default function PendingEscrowDetails({
+  transaction,
   onCancel
 }: PendingEscrowDetailsProps) {
   const depositAddress = transaction?.depositAddress ||
@@ -27,7 +26,7 @@ export default function PendingEscrowDetails({
 
   return (
     <>
-      <TransactionStats 
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}

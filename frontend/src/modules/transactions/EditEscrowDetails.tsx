@@ -2,17 +2,16 @@
 
 import { Copy, Shield, Edit, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { TransactionStats } from "@/components/ui/transaction-stats";
+import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";
-import { TransactionHash } from "@/components/ui/transaction-hash";
 import { EditEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 
-export default function EditEscrowDetails({ 
-  transaction, 
+export default function EditEscrowDetails({
+  transaction,
   onCancel,
   onEdit
 }: EditEscrowDetailsProps) {
@@ -28,7 +27,7 @@ export default function EditEscrowDetails({
 
   return (
     <>
-      <TransactionStats 
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}

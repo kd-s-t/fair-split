@@ -3,11 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { ExternalLink, CalendarCheck2, Hash, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { TransactionStats } from "@/components/ui/transaction-stats";
-import { TransactionHash } from "@/components/ui/transaction-hash";
+import TransactionStats from "@/components/TransactionStats";
 import { ReleasedEscrowDetailsProps } from "./types";
-import RecipientsList from "./RecipientsList";
-import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
@@ -15,9 +12,9 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
-  
+
   const recipientCount = transaction.to?.length || 0;
-  
+
   // Use releasedAt if present, otherwise fallback to timestamp
   const releasedAt = transaction.releasedAt;
   const completedDate = releasedAt
@@ -26,14 +23,14 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
 
   return (
     <div className="mb-8">
-      <TransactionStats 
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}
       />
-      
+
       <hr className="my-6 text-[#424444] h-[1px]" />
-      
+
       {/* Escrow overview */}
       <div className="mb-6 bg-[#181818] rounded-2xl p-6">
         <Typography variant="large" className="mb-4">Escrow overview</Typography>
@@ -83,7 +80,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
                         <Typography variant="small" className="text-white font-mono">
                           {toEntry.txHash.slice(0, 18)}...
                         </Typography>
-                        <button 
+                        <button
                           onClick={() => window.open(`https://blockstream.info/tx/${toEntry.txHash}`, '_blank')}
                           className="text-[#4F3F27] hover:text-[#FEB64D] text-xs underline"
                         >
@@ -104,8 +101,8 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
             </div>
           ))}
         </div>
-      
-      <TransactionExplorerLinks transaction={transaction} />
+
+        <TransactionExplorerLinks transaction={transaction} />
         {/* Info box */}
         <div className="bg-[#232323] border border-[#393939] rounded-xl p-4 mt-6">
           <Typography variant="base" className="text-white font-semibold">

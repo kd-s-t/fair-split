@@ -2,16 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import { CheckCircle, RotateCcw, CircleAlert, Shield, ExternalLink } from "lucide-react";
-import { TransactionStats } from "@/components/ui/transaction-stats";
-import { TransactionHash } from "@/components/ui/transaction-hash";
+import { CheckCircle, RotateCcw, CircleAlert, Shield } from "lucide-react";
+import TransactionStats from "@/components/TransactionStats";
 import { ConfirmedEscrowActionsProps } from "./types";
-import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
-import { createSplitDappActor } from "@/lib/icp/splitDapp";
-import { Principal } from "@dfinity/principal";
-import { toast } from "sonner";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
   // Generate a random transaction hash for display
@@ -37,12 +32,12 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
-  
+
   const recipientCount = transaction.to?.length || 0;
 
   return (
     <>
-      <TransactionStats 
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}

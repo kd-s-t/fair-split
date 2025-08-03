@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { KeyRound, LogIn, LogOut } from "lucide-react";
+import { KeyRound, LogOut } from "lucide-react";
 import { AuthClient } from "@dfinity/auth-client";
 import Image from "next/image";
 import { useDispatch } from "react-redux";
@@ -11,13 +11,14 @@ import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
 import { setUser, clearUser, setBtcBalance } from "@/lib/redux/userSlice";
 import { Typography } from "./ui/typography";
-import Logo3D from "./Logo3D";
+
 
 export default function Home() {
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const [authClient, setAuthClient] = useState<AuthClient | null>(null);
   const [isBalanceLoading, setIsBalanceLoading] = useState(false);
+
 
   useEffect(() => {
     AuthClient.create().then((client) => {

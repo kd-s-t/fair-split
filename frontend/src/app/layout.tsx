@@ -15,7 +15,7 @@ import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
 
 function BalanceAndNameSyncer() {
-  const principal = useAppSelector((state: any) => state.user.principal)
+  const principal = useAppSelector((state: RootState) => state.user.principal)
   const { authClient } = useAuth()
   const dispatch = useDispatch()
 
@@ -41,8 +41,8 @@ function BalanceAndNameSyncer() {
           const balance = await actor.getBalance(principalObj)
           const formatted = (Number(balance) / 1e8).toFixed(8)
           dispatch(setBtcBalance(formatted))
-        } catch (err) {
-          console.error('❌ Could not fetch balance:', err)
+        } catch {
+          console.error('❌ Could not fetch balance')
           dispatch(setBtcBalance(null))
         }
 
@@ -54,26 +54,26 @@ function BalanceAndNameSyncer() {
           } else {
             dispatch(setUserName(null))
           }
-        } catch (err) {
-          console.error('❌ Could not fetch nickname:', err)
+        } catch {
+          console.error('❌ Could not fetch nickname')
           dispatch(setUserName(null))
         }
 
         // Fetch Transactions
         try {
-          const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(10)) as any
-          const normalizeTx = (tx: any) => {
-            const serializeTimestamp = (value: any) => {
-              if (!value) return undefined;
-              return typeof value === 'bigint' ? value.toString() : String(value);
-            };
+                  const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(10)) as { transactions: unknown[] }
+        const normalizeTx = (tx: unknown) => {
+          const serializeTimestamp = (value: unknown) => {
+            if (!value) return undefined;
+            return typeof value === 'bigint' ? value.toString() : String(value);
+          };
 
-            const serializeArrayTimestamp = (value: any) => {
-              if (Array.isArray(value) && value.length > 0) {
-                return value[0].toString();
-              }
-              return serializeTimestamp(value);
-            };
+          const serializeArrayTimestamp = (value: unknown) => {
+            if (Array.isArray(value) && value.length > 0) {
+              return value[0].toString();
+            }
+            return serializeTimestamp(value);
+          };
 
             return {
               ...tx,
@@ -90,7 +90,7 @@ function BalanceAndNameSyncer() {
               bitcoinAddress: Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0
                 ? tx.bitcoinAddress[0]
                 : tx.bitcoinAddress,
-              to: tx.to.map((toEntry: any) => ({
+              to: (tx as any).to.map((toEntry: unknown) => ({
                 ...toEntry,
                 principal: typeof toEntry.principal === 'object' && toEntry.principal.toText
                   ? toEntry.principal.toText()
@@ -103,10 +103,10 @@ function BalanceAndNameSyncer() {
               })),
             };
           };
-          const normalizedTxs = (result.transactions as any[]).map(normalizeTx)
+          const normalizedTxs = (result.transactions as unknown[]).map(normalizeTx)
           dispatch(setTransactions(normalizedTxs))
-        } catch (err) {
-          console.error('❌ Could not fetch transactions:', err)
+        } catch {
+          console.error('❌ Could not fetch transactions')
           dispatch(setTransactions([]))
         }
       } catch (error) {

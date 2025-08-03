@@ -4,8 +4,8 @@ import { Copy, Shield, Edit, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
 import { Button } from "@/components/ui/button";
-import { TransactionHash } from "@/components/ui/transaction-hash";
-import { EditEscrowDetailsProps } from "./types";
+
+import { EditEscrowDetailsProps, ToEntry } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
@@ -95,7 +95,7 @@ export default function EditEscrowDetails({
         >
           {(() => {
             // Check if any recipients have taken action
-            const hasRecipientAction = transaction.to?.some((recipient: any) => 
+            const hasRecipientAction = transaction.to?.some((recipient: ToEntry) => 
               recipient.status && Object.keys(recipient.status)[0] !== "pending"
             ) || false;
 

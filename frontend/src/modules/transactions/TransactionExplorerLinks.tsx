@@ -1,9 +1,10 @@
 "use client";
 
 import { TransactionHash } from "@/components/ui/transaction-hash";
+import { EscrowTransaction } from "./types";
 
 interface TransactionExplorerLinksProps {
-  transaction: any;
+  transaction: EscrowTransaction;
   depositAddress?: string;
 }
 

@@ -4,7 +4,7 @@ import { Copy, Shield, CircleX, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
 import { Button } from "@/components/ui/button";
-import { TransactionHash } from "@/components/ui/transaction-hash";
+
 import { PendingEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";

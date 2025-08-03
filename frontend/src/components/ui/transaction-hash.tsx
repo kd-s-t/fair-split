@@ -1,6 +1,5 @@
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy } from "lucide-react";
 import { Typography } from "./typography";
-import { Button } from "./button";
 import { toast } from "sonner";
 
 interface TransactionHashProps {
@@ -29,7 +28,7 @@ export function TransactionHash({
     try {
       await navigator.clipboard.writeText(hash);
       toast.success("Hash copied to clipboard");
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy hash");
     }
   };

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const typographyVariants = cva("", {
@@ -62,7 +62,7 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
           }),
           className
         )}
-        ref={ref as any}
+        ref={ref as React.Ref<HTMLElement>}
         {...props}
       />
     );

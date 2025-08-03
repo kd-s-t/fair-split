@@ -37,10 +37,10 @@ export default function TransactionsPage() {
     dispatch(setSubtitle('View all your escrow transactions'));
   }, [dispatch]);
 
+  const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [localTransactions, setLocalTransactions] = useState<any[]>([]);
-  const router = useRouter();
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isDeclining, setIsDeclining] = useState<string | null>(null);
 
@@ -72,51 +72,51 @@ export default function TransactionsPage() {
     return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
   }
 
-  function getTxId(tx: any) {
+  function getTxId(tx: Transaction) {
     return `${tx.from}_${tx.to
-      .map((toEntry: any) => toEntry.principal)
+      .map((toEntry) => toEntry.principal)
       .join("-")}_${tx.createdAt}`;
   }
 
-  function isPendingApproval(tx: any): boolean {
+  function isPendingApproval(tx: Transaction): boolean {
     if (!principal) return false;
     return tx.to.some(
-      (toEntry: any) =>
+      (toEntry) =>
         String(toEntry.principal) === String(principal) &&
         toEntry.status &&
         Object.keys(toEntry.status)[0] === "pending"
     );
   }
 
-  function hasUserApproved(tx: any): boolean {
+  function hasUserApproved(tx: Transaction): boolean {
     if (!principal) return false;
     return tx.to.some(
-      (toEntry: any) =>
+      (toEntry) =>
         String(toEntry.principal) === String(principal) &&
         toEntry.status &&
         Object.keys(toEntry.status)[0] === "approved"
     );
   }
 
-  function hasUserDeclined(tx: any): boolean {
+  function hasUserDeclined(tx: Transaction): boolean {
     if (!principal) return false;
     return tx.to.some(
-      (toEntry: any) =>
+      (toEntry) =>
         String(toEntry.principal) === String(principal) &&
         toEntry.status &&
         Object.keys(toEntry.status)[0] === "declined"
     );
   }
 
-  function isSentByUser(tx: any): boolean {
+  function isSentByUser(tx: Transaction): boolean {
     return String(tx.from) === String(principal);
   }
 
-  function getTransactionCategory(tx: any): "sent" | "received" {
+  function getTransactionCategory(tx: Transaction): "sent" | "received" {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
-  async function handleApprove(tx: any, idx: number) {
+  async function handleApprove(tx: Transaction, idx: number) {
     if (!principal) return;
     setIsApproving(getTxId(tx));
     try {
@@ -124,7 +124,7 @@ export default function TransactionsPage() {
       const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
       // Always compare principal as string
       const principalStr = typeof principal === "string" ? principal : principal.toText();
-      const recipientEntry = tx.to.find((entry: any) => entry.principal === principalStr);
+      const recipientEntry = tx.to.find((entry) => entry.principal === principalStr);
       if (!recipientEntry) {
         toast.error('Recipient entry not found.');
         setIsApproving(null);

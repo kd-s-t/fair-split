@@ -29,13 +29,14 @@ COPY postcss.config.mjs ./
 COPY tsconfig.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
-RUN npm install --include=dev
+# Use --max-old-space-size to limit memory usage for Node.js
+RUN npm install --include=dev --no-optional
 
 # Copy frontend source
 COPY . .
 
-# Build the frontend
-RUN npm run build
+# Build the frontend with memory optimization for EC2
+RUN NODE_OPTIONS="--max-old-space-size=512" npm run build
 
 # Stage 3: Production runtime
 FROM base AS production

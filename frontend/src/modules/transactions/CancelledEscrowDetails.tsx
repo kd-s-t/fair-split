@@ -3,7 +3,7 @@
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { TransactionStats } from "@/components/ui/transaction-stats";
-import { TransactionHash } from "@/components/ui/transaction-hash";
+
 import { CancelledEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";

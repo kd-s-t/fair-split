@@ -9,7 +9,7 @@ export interface TransactionLifecycleProps {
 }
 
 export interface TransactionDetailsModalProps {
-  transaction: any | null;
+  transaction: EscrowTransaction | null;
   onClose: () => void;
 }
 
@@ -59,22 +59,22 @@ export interface RefundedEscrowDetailsProps {
 }
 
 export interface ConfirmedEscrowActionsProps {
-  transaction: any;
+  transaction: EscrowTransaction;
   isLoading: "release" | "refund" | null;
   onRelease: (id: unknown) => void;
   onRefund: () => void;
 }
 
 export interface ReleasedEscrowDetailsProps {
-  transaction: any;
+  transaction: EscrowTransaction;
 }
 
 // Extended type for serialized transaction data
 export type SerializedTransaction = {
   id: string;
-  from: any;
+  from: string;
   to: Array<{
-    principal: any;
+    principal: string;
     name: string;
     amount: bigint;
     status: { [key: string]: null };

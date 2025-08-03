@@ -77,7 +77,7 @@ const TransactionSummary = ({
           </div>
 
           <Typography variant="muted" className="text-[#9F9F9F]">
-            Powered by Internet Computer's native Bitcoin integration. No
+            Powered by Internet Computer&apos;s native Bitcoin integration. No
             bridges, no wrapped BTC.
           </Typography>
 

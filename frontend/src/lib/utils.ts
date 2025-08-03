@@ -22,3 +22,9 @@ export const formatBTC = (satoshis: number | string): string => {
   const satoshisNum = typeof satoshis === 'string' ? Number(satoshis) : satoshis;
   return (satoshisNum / 1e8).toFixed(8);
 };
+
+// Generate a random transaction hash for display
+export const generateRandomHash = () => {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({ length: 40 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+};

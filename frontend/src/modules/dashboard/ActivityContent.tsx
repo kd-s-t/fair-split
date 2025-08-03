@@ -132,7 +132,7 @@ const ActivityContent = ({
                         {recipient.principal}
                       </span>
                       <span className="text-xs text-[#bdbdbd]">
-                        {recipient.percent ? recipient.percent + "%" : ""} •{" "}
+                        {recipient.percentage ? recipient.percentage + "%" : ""} • {" "}
                         {formatBTC(recipient.amount)} BTC
                       </span>
                     </div>

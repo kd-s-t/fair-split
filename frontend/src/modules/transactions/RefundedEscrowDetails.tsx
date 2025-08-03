@@ -3,7 +3,6 @@
 import { Copy, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import TransactionStats from "@/components/TransactionStats";
-import TransactionHash from "@/components/TransactionHash";
 import { RefundedEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
@@ -20,7 +19,7 @@ export default function RefundedEscrowDetails({ transaction }: RefundedEscrowDet
   const recipientCount = transaction?.to?.length || 0;
 
   return (
-    <>
+    <div className="container rounded-2xl p-6">
       <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
@@ -74,6 +73,6 @@ export default function RefundedEscrowDetails({ transaction }: RefundedEscrowDet
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 } 

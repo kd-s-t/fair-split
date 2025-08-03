@@ -25,7 +25,7 @@ export default function PendingEscrowDetails({
   const recipientCount = transaction?.to?.length || 0;
 
   return (
-    <>
+    <div className="container rounded-2xl p-6">
       <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
@@ -85,7 +85,7 @@ export default function PendingEscrowDetails({
       <hr className="my-8 text-[#424444] h-[1px]" />
 
       {transaction.status === "pending" && !transaction.releasedAt && onCancel && (
-        <motion.div 
+        <motion.div
           className="flex items-center gap-4 mt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -96,8 +96,8 @@ export default function PendingEscrowDetails({
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.1 }}
           >
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
               onClick={onCancel}
             >
@@ -110,7 +110,7 @@ export default function PendingEscrowDetails({
               Cancel escrow
             </Button>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="flex items-center gap-2"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -128,6 +128,6 @@ export default function PendingEscrowDetails({
           </motion.div>
         </motion.div>
       )}
-    </>
+    </div>
   );
 }

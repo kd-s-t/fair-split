@@ -9,3 +9,13 @@ export const TRANSACTION_STATUS_MAP: Record<string, { label: string; variant: st
     active: { label: "Active", variant: "secondary" },
     completed: { label: "Completed", variant: "success" },
 };
+
+// Transaction Status Constants
+export const TRANSACTION_STATUS = {
+    RELEASED: "released",
+    CONFIRMED: "confirmed",
+    PENDING: "pending",
+    CANCELLED: "cancelled",
+    REFUND: "refund",
+    DECLINED: "declined",
+} as const;

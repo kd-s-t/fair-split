@@ -1,22 +1,25 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createSplitDappActor } from "@/lib/icp/splitDapp";
-import { Principal } from "@dfinity/principal";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth-context";
-import { Typography } from "@/components/ui/typography";
 import { Card } from "@/components/ui/card";
-import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
-import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
-import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { useAuth } from "@/contexts/auth-context";
+import { TRANSACTION_STATUS } from "@/lib/constants";
+import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetails";
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
-import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
+import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
+import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
+import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
+import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import type { SerializedTransaction } from "@/modules/transactions/types";
+import { Principal } from "@dfinity/principal";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
@@ -222,11 +225,11 @@ export default function TransactionDetailsPage() {
   const statusKey = transaction.status || "unknown";
 
   let currentStep = 0;
-  if (statusKey === "released") currentStep = 3;
-  else if (statusKey === "confirmed") currentStep = 2;
-  else if (statusKey === "pending") currentStep = 0;
-  else if (statusKey === "cancelled") currentStep = 0;
-  else if (statusKey === "refund") currentStep = 0;
+  if (statusKey === TRANSACTION_STATUS.RELEASED) currentStep = 3;
+  else if (statusKey === TRANSACTION_STATUS.CONFIRMED) currentStep = 2;
+  else if (statusKey === TRANSACTION_STATUS.PENDING) currentStep = 0;
+  else if (statusKey === TRANSACTION_STATUS.CANCELLED) currentStep = 0;
+  else if (statusKey === TRANSACTION_STATUS.REFUND) currentStep = 0;
 
   const totalBTC = Array.isArray(transaction.to)
     ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
@@ -234,8 +237,12 @@ export default function TransactionDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start">
+        <ChevronLeft /> Back to dashboard
+      </Button>
+
       <AnimatePresence>
-        {statusKey === "released" && (
+        {statusKey === TRANSACTION_STATUS.RELEASED && (
           <motion.div
             key="escrow-completed-banner"
             initial={{ y: -40, opacity: 0 }}
@@ -256,14 +263,13 @@ export default function TransactionDetailsPage() {
         )}
       </AnimatePresence>
       <div className="flex flex-col md:flex-row gap-6 items-start">
-        <div className="container flex-1 rounded-2xl px-6 py-4 text-white">
-          <Typography variant="large">Escrow overview</Typography>
+        <div className="flex-1">
 
-          {statusKey === "released" && (
+          {statusKey === TRANSACTION_STATUS.RELEASED && (
             <ReleasedEscrowDetails transaction={transaction} />
           )}
 
-          {statusKey === "pending" && (
+          {statusKey === TRANSACTION_STATUS.PENDING && (
             (() => {
               const isSender = principal && String(transaction.from) === String(principal);
               const transactionData = {
@@ -302,7 +308,7 @@ export default function TransactionDetailsPage() {
             })()
           )}
 
-          {(statusKey === "cancelled" || statusKey === "declined") && (
+          {(statusKey === TRANSACTION_STATUS.CANCELLED || statusKey === TRANSACTION_STATUS.DECLINED) && (
             <CancelledEscrowDetails
               transaction={{
                 ...transaction,
@@ -327,7 +333,7 @@ export default function TransactionDetailsPage() {
             />
           )}
 
-          {statusKey === "refund" && (
+          {statusKey === TRANSACTION_STATUS.REFUND && (
             <RefundedEscrowDetails
               transaction={{
                 ...transaction,
@@ -352,7 +358,7 @@ export default function TransactionDetailsPage() {
             />
           )}
 
-          {statusKey === "confirmed" && (
+          {statusKey === TRANSACTION_STATUS.CONFIRMED && (
             <ConfirmedEscrowActions
               transaction={transaction}
               isLoading={isLoading}

@@ -26,7 +26,7 @@ export default function EditEscrowDetails({
   const recipientCount = transaction?.to?.length || 0;
 
   return (
-    <>
+    <div className="container rounded-2xl p-6">
       <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
@@ -86,7 +86,7 @@ export default function EditEscrowDetails({
       <hr className="my-8 text-[#424444] h-[1px]" />
 
       {transaction.status === "pending" && !transaction.releasedAt && (onCancel || onEdit) && (
-        <motion.div 
+        <motion.div
           className="flex items-center gap-4 mt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,35 +94,35 @@ export default function EditEscrowDetails({
         >
           {(() => {
             // Check if any recipients have taken action
-            const hasRecipientAction = transaction.to?.some((recipient: any) => 
+            const hasRecipientAction = transaction.to?.some((recipient: any) =>
               recipient.status && Object.keys(recipient.status)[0] !== "pending"
             ) || false;
 
             return !hasRecipientAction && onEdit;
           })() && (
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.1 }}
-            >
-              <Button 
-                variant="outline" 
-                className="text-[#FEB64D] !border-[#303434] !bg-transparent hover:!border-[#FEB64D] hover:!bg-[#FEB64D]/10"
-                onClick={onEdit}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.1 }}
               >
-                <Edit size={16} />
-                Edit escrow
-              </Button>
-            </motion.div>
-          )}
+                <Button
+                  variant="outline"
+                  className="text-[#FEB64D] !border-[#303434] !bg-transparent hover:!border-[#FEB64D] hover:!bg-[#FEB64D]/10"
+                  onClick={onEdit}
+                >
+                  <Edit size={16} />
+                  Edit escrow
+                </Button>
+              </motion.div>
+            )}
           {onCancel && (
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.1 }}
             >
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
                 onClick={onCancel}
               >
@@ -136,7 +136,7 @@ export default function EditEscrowDetails({
               </Button>
             </motion.div>
           )}
-          <motion.div 
+          <motion.div
             className="flex items-center gap-2"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -154,6 +154,6 @@ export default function EditEscrowDetails({
           </motion.div>
         </motion.div>
       )}
-    </>
+    </div>
   );
 } 

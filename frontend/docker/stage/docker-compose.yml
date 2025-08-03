@@ -1,0 +1,34 @@
+services:
+  # Staging/Development service
+  splitsafe-staging:
+    build:
+      context: ../..
+      dockerfile: docker/stage/Dockerfile
+    ports:
+      - "3001:3000"  # Staging frontend
+    environment:
+      # Staging environment variables
+      - NODE_ENV=staging
+      - PORT=3000
+      - NEXT_PUBLIC_DFX_HOST=${NEXT_PUBLIC_DFX_HOST:-https://ic0.app}
+      - NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP=${NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP:-}
+      - NEXT_PUBLIC_BLOCKSTREAM_URL=${NEXT_PUBLIC_BLOCKSTREAM_URL:-https://blockstream.info}
+      - NEXT_PUBLIC_MEMPOOL_URL=${NEXT_PUBLIC_MEMPOOL_URL:-https://mempool.space}
+      - NEXT_PUBLIC_ICP_DASHBOARD_URL=${NEXT_PUBLIC_ICP_DASHBOARD_URL:-https://dashboard.internetcomputer.org}
+      - NEXT_PUBLIC_ICSCAN_URL=${NEXT_PUBLIC_ICSCAN_URL:-https://icscan.io}
+    volumes:
+      # Mount for development (optional)
+      - ../../frontend/src:/app/frontend/src:ro
+      - ../../backend/src:/app/backend/src:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: ["./start.sh"]
+
+networks:
+  default:
+    name: splitsafe-network 

@@ -14,6 +14,30 @@ import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
 
+// Environment variable logging
+const logEnvironmentVariables = () => {
+  console.log('🌍 Environment Variables:')
+  console.log('NODE_ENV:', process.env.NODE_ENV)
+  console.log('NEXT_PUBLIC_* variables:')
+  
+  // Log all NEXT_PUBLIC_ variables
+  Object.keys(process.env).forEach(key => {
+    if (key.startsWith('NEXT_PUBLIC_')) {
+      console.log(`  ${key}:`, process.env[key])
+    }
+  })
+  
+  // Log other important variables (without exposing sensitive data)
+  const safeVars = ['NODE_ENV', 'VERCEL_ENV', 'VERCEL_URL', 'NEXT_PUBLIC_VERCEL_URL']
+  safeVars.forEach(key => {
+    if (process.env[key]) {
+      console.log(`  ${key}:`, process.env[key])
+    }
+  })
+  
+  console.log('🌍 End Environment Variables')
+}
+
 function BalanceAndNameSyncer() {
   const principal = useAppSelector((state: RootState) => state.user.principal)
   const { authClient } = useAuth()
@@ -148,6 +172,11 @@ function LayoutShell({ children }: { children: ReactNode }) {
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // Log environment variables on app startup
+  useEffect(() => {
+    logEnvironmentVariables()
+  }, [])
+
   return (
     <html lang="en">
       <body>

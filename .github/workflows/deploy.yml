@@ -2,9 +2,11 @@ name: CI/CD Build and Deploy to EC2
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   pull_request:
-    branches: [main]
+    branches: [main, staging]
+    types: [closed]
+  workflow_dispatch: # Manual trigger
 
 jobs:
   test:
@@ -34,10 +36,42 @@ jobs:
           cd frontend
           npm run build
 
-  deploy:
+  build-and-push-ecr:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "🐳 Building Docker image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG frontend/docker/stage/
+          echo "📤 Pushing to ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+  deploy:
+    needs: [test, build-and-push-ecr]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     
     steps:
       - name: Checkout code
@@ -53,6 +87,10 @@ jobs:
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
@@ -63,14 +101,31 @@ jobs:
             
             # Pull latest changes
             echo "📥 Pulling latest changes..."
-            git pull origin main
+            git pull origin ${{ github.ref_name }}
             
             # Set environment variable for canister ID
             export CANISTER_ID=${{ secrets.CANISTER_ID }}
             
-            # Deploy with Docker Compose (from project root)
-            echo "🐳 Deploying with Docker Compose..."
-            docker compose -f frontend/docker/docker-compose.yml up --build -d splitsafe
+            # Login to ECR
+            echo "🔐 Logging into ECR..."
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            
+            # Pull latest image from ECR
+            echo "📥 Pulling latest image from ECR..."
+            docker pull ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}
+            
+            # Stop existing container
+            echo "🛑 Stopping existing container..."
+            docker stop splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} || true
+            docker rm splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} || true
+            
+            # Run new container
+            echo "🚀 Starting new container..."
+            docker run -d \
+              --name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
+              -p 3000:3000 \
+              -e CANISTER_ID=${{ secrets.CANISTER_ID }} \
+              ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}
             
             echo "✅ Deployment completed successfully!"
             echo "🌐 Application should be accessible at http://${{ secrets.EC2_HOST }}:3000"
@@ -86,6 +141,7 @@ jobs:
         run: |
           echo "✅ Deployment to EC2 completed successfully!"
           echo "🌐 Application URL: http://${{ secrets.EC2_HOST }}:3000"
+          echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}"
 
       - name: Notify deployment failure
         if: failure()

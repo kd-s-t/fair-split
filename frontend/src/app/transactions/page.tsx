@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { Transaction } from "@/declarations/split_dapp.did";
@@ -55,14 +55,43 @@ export default function TransactionsPage() {
     }
   }, [transactions]);
 
+  const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
+  const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
+
+  // Function to mark unread transactions as read for the current recipient
+  const markUnreadTransactionsAsRead = useCallback(async () => {
+    if (!principal) return;
+    
+    // Find transactions where current user is a recipient and hasn't read them
+    const unreadTransactionIds = localTransactions
+      .filter(tx => {
+        // Check if user is a recipient in this transaction
+        const recipientEntry = tx.to.find((entry) => 
+          String(entry.principal) === String(principal)
+        );
+        
+        // Return true if user is a recipient and hasn't read the transaction
+        return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
+      })
+      .map(tx => tx.id);
+    
+    if (unreadTransactionIds.length > 0) {
+      try {
+        const actor = await createSplitDappActor();
+        await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
+        console.log(`Marked ${unreadTransactionIds.length} transactions as read`, unreadTransactionIds);
+      } catch (error) {
+        console.error('Failed to mark transactions as read:', error);
+      }
+    }
+  }, [localTransactions, principal]);
+
   // Mark unread transactions as read when transactions are loaded
   useEffect(() => {
     if (localTransactions.length > 0 && principal) {
       markUnreadTransactionsAsRead();
     }
   }, [localTransactions, principal, markUnreadTransactionsAsRead]);
-  const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
-  const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
 
   function truncateHash(hash: string): string {
     if (hash.length <= 16) return hash;
@@ -196,34 +225,6 @@ export default function TransactionsPage() {
     await actor.markTransactionsAsRead(principal);
     dispatch(markAllAsRead());
     router.push(`/transactions/${tx.id}`);
-  }
-
-  // Function to mark unread transactions as read for the current recipient
-  async function markUnreadTransactionsAsRead() {
-    if (!principal) return;
-    
-    // Find transactions where current user is a recipient and hasn't read them
-    const unreadTransactionIds = localTransactions
-      .filter(tx => {
-        // Check if user is a recipient in this transaction
-        const recipientEntry = tx.to.find((entry) => 
-          String(entry.principal) === String(principal)
-        );
-        
-        // Return true if user is a recipient and hasn't read the transaction
-        return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
-      })
-      .map(tx => tx.id);
-    
-    if (unreadTransactionIds.length > 0) {
-      try {
-        const actor = await createSplitDappActor();
-        await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
-        console.log(`Marked ${unreadTransactionIds.length} transactions as read`, unreadTransactionIds);
-      } catch (error) {
-        console.error('Failed to mark transactions as read:', error);
-      }
-    }
   }
 
   const filteredTransactions = localTransactions.filter(tx => {

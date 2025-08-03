@@ -90,7 +90,7 @@ function BalanceAndNameSyncer() {
               bitcoinAddress: Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0
                 ? tx.bitcoinAddress[0]
                 : tx.bitcoinAddress,
-              to: (tx as any).to.map((toEntry: unknown) => ({
+              to: (tx as Record<string, unknown>).to.map((toEntry: unknown) => ({
                 ...toEntry,
                 principal: typeof toEntry.principal === 'object' && toEntry.principal.toText
                   ? toEntry.principal.toText()
@@ -122,10 +122,10 @@ function BalanceAndNameSyncer() {
 }
 
 function LayoutShell({ children }: { children: ReactNode }) {
-  const principal = useAppSelector((state: any) => state.user.principal)
-  const name = useAppSelector((state: any) => state.user.name)
-  const title = useSelector((state: any) => state.layout.title)
-  const subtitle = useSelector((state: any) => state.layout.subtitle)
+  const principal = useAppSelector((state: RootState) => state.user.principal)
+  const name = useAppSelector((state: RootState) => state.user.name)
+  const title = useSelector((state: RootState) => state.layout.title)
+  const subtitle = useSelector((state: RootState) => state.layout.subtitle)
 
   return (
     <div className="relative w-screen h-screen overflow-hidden flex">

@@ -5,47 +5,32 @@ import { createSplitDappActor } from '@/lib/icp/splitDapp';
 import { Principal } from '@dfinity/principal';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/redux/store';
-import { setTransactions, markTransactionAsRead } from '@/lib/redux/transactionsSlice';
+import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
 import TransactionDetailsModal from '@/modules/transactions/DetailsModal';
-import { useAppSelector } from '@/lib/redux/store';
 import type { Transaction } from '@/declarations/split_dapp.did';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getTxId(tx: Transaction) {
   // If tx.to is an array of Principal, join their text representations
-  return `${tx.from}_${tx.to.map((toEntry: any) => toEntry.principal).join('-')}_${tx.createdAt}`;
+  return `${tx.from}_${tx.to.map((toEntry) => toEntry.principal).join('-')}_${tx.createdAt}`;
 }
 
 export default function TransactionNotificationDropdown({ principalId }: { principalId: string }) {
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const dispatch = useDispatch();
-  const [readIds, setReadIds] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-  const [selectedTx, setSelectedTx] = useState<any>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const principal = useAppSelector(state => state.user.principal);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
-  // Load read IDs from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('readTxIds');
-    if (stored) setReadIds(JSON.parse(stored));
-  }, []);
+
+
   // Fetch transactions and update Redux
   // Transactions are now fetched centrally in layout.tsx
   // No need to fetch them here anymore
 
-  // Mark all as read when dropdown opens
-  useEffect(() => {
-    if (open && transactions.length > 0) {
-      const ids = transactions.map(getTxId);
-      setReadIds(ids);
-      localStorage.setItem('readTxIds', JSON.stringify(ids));
-    }
-  }, [open, transactions]);
+
   console.log("transactions bell", transactions);
   const unreadCount = transactions.filter(tx => {
     // Check if current user is a recipient in this transaction
-    const recipientEntry = tx.to.find((entry: any) => 
+    const recipientEntry = tx.to.find((entry) => 
       String(entry.principal) === String(principalId)
     );
     
@@ -66,20 +51,15 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
     return () => clearInterval(interval);
   }, [unreadCount]);
 
-  const handleRowClick = async (tx: any) => {
+  const handleRowClick = async (tx: Transaction) => {
     const txId = getTxId(tx);
     
     // Check if current user is a recipient and hasn't read this transaction
-    const recipientEntry = tx.to.find((entry: any) => 
+    const recipientEntry = tx.to.find((entry) => 
       String(entry.principal) === String(principalId)
     );
     
     if (recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "")) {
-      setReadIds(prev => {
-        const updated = [...prev, txId];
-        localStorage.setItem('readTxIds', JSON.stringify(updated));
-        return updated;
-      });
       dispatch(markTransactionAsRead(txId));
     }
     
@@ -169,7 +149,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                   >
                     <DropdownMenuItem
                       className={(() => {
-                        const recipientEntry = tx.to.find((entry: any) => 
+                        const recipientEntry = tx.to.find((entry) => 
                           String(entry.principal) === String(principalId)
                         );
                         return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "") ? 'bg-yellow-100 text-black' : '';
@@ -178,9 +158,9 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                     >
                       <div className="flex flex-col w-full">
                         <span className="text-xs font-mono truncate">From: {tx.from}</span>
-                        <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry: any) => (toEntry.principal ? toEntry.principal : toEntry.toText())).join(', ')}</span>
+                        <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry) => (toEntry.principal ? toEntry.principal : toEntry.toText())).join(', ')}</span>
                         <span className="text-xs font-semibold text-yellow-600">
-                          {tx.to.reduce((sum: any, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8} BTC
+                          {tx.to.reduce((sum, toEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC
                         </span>
                         <span className="text-xs text-muted-foreground">{new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}</span>
                       </div>

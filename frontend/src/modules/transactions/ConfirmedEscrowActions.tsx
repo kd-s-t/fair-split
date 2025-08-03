@@ -9,11 +9,7 @@ import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
-  // Generate a random transaction hash for display
-  const generateRandomHash = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    return Array.from({ length: 40 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  };
+
 
   const handleCancelSplit = async () => {
     console.log("handleCancelSplit called");

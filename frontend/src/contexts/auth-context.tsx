@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
 import { Principal } from '@dfinity/principal'
 import { useDispatch } from 'react-redux'
-import { setUser, clearUser } from '../lib/redux/userSlice'
+import { clearUser } from '../lib/redux/userSlice'
 
 interface AuthContextType {
   principal: Principal | null
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setPrincipal(principalObj)
 
     })
-  }, [])
+  }, [dispatch])
 
   return (
     <AuthContext.Provider value={{ principal, authClient }}>

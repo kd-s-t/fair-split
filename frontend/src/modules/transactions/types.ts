@@ -15,6 +15,7 @@ export interface TransactionDetailsModalProps {
 
 // Core transaction types
 export type ToEntry = {
+  percentage: number;
   principal: string;
   name: string;
   amount: bigint;

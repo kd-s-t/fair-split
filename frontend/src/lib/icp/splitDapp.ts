@@ -1,5 +1,5 @@
 
-import { Actor, HttpAgent, Identity } from '@dfinity/agent'
+import { Actor, HttpAgent } from '@dfinity/agent'
 import { idlFactory } from '@/declarations'
 import { AuthClient } from '@dfinity/auth-client'
 

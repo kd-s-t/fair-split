@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -9,15 +8,13 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Eye,
-  Wallet,
-  UserRound,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { truncateAddress } from "@/lib/utils";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
 import { useRouter } from "next/navigation";
 import { RecentActivitiesProps } from './types';
+import { ToEntry } from "../transactions/types";
 
 export const statusMap: Record<string, { label: string; variant: string }> = {
   released: { label: "Completed", variant: "success" },
@@ -40,11 +37,11 @@ export default function RecentActivities({
     ? [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
     : [];
   const sentCount = activities.filter(
-    (activity: any) => principal && String(activity.from) === String(principal)
+    (activity) => principal && String(activity.from) === String(principal)
   ).length;
   const receivedCount = activities.filter(
-    (activity: any) => principal && activity.to && activity.to.some(
-      (recipient: any) => String(recipient.principal) === String(principal)
+    (activity) => principal && activity.to && activity.to.some(
+      (recipient: { principal: string }) => String(recipient.principal) === String(principal)
     )
   ).length;
   return (
@@ -87,12 +84,8 @@ export default function RecentActivities({
         </div>
 
         <TabsContent value="all" className="flex flex-col gap-6 mt-6">
-          {activities.map((activity: any, idx: number) => {
-            const isSender =
-              principal &&
-              activity.from &&
-              String(activity.from) === String(principal);
-            const category = isSender ? "sent" : "received";
+          {activities.map((activity, idx: number) => {
+
             // Build transaction details URL
             const txUrl = activity.id
               ? `/transactions/${activity.id}`
@@ -108,7 +101,7 @@ export default function RecentActivities({
                             variant="large"
                             className="font-semibold leading-none"
                           >
-                            {activity.title || activity.description}
+                            {activity.title}
                           </Typography>
                           {(() => {
                             const statusKey =
@@ -149,33 +142,18 @@ export default function RecentActivities({
                             variant="muted"
                             className="text-xs text[rgba(159, 159, 159, 1)]"
                           >
-                            {activity.date ||
-                              (activity.timestamp && !isNaN(Number(activity.timestamp))
-                                ? new Date(Number(activity.timestamp) * 1000).toLocaleString()
-                                : new Date().toLocaleString())}
+                            {new Date(Number(activity.createdAt) * 1000).toLocaleString()}
                           </Typography>
                           <span className="text-white">•</span>
-                          {category === "sent" ? (
-                            <div className="flex items-center gap-1 text-[#007AFF]">
-                              <ArrowUpRight size={14} />
-                              <Typography
-                                variant="muted"
-                                className="!text-[#007AFF]"
-                              >
-                                Sent
-                              </Typography>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-[#00C287]">
-                              <ArrowDownLeft size={14} />
-                              <Typography
-                                variant="muted"
-                                className="!text-[#00C287]"
-                              >
-                                Receiving
-                              </Typography>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-1 text-[#007AFF]">
+                            <ArrowUpRight size={14} />
+                            <Typography
+                              variant="muted"
+                              className="!text-[#007AFF]"
+                            >
+                              Sent
+                            </Typography>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -203,7 +181,7 @@ export default function RecentActivities({
                         <UsersRound size={18} /> Recipients (
                         {activity.to.length})
                       </div>
-                      {activity.to.map((recipient: any, idx: number) => (
+                      {activity.to.map((recipient, idx: number) => (
                         <div
                           key={idx}
                           className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white"
@@ -212,7 +190,7 @@ export default function RecentActivities({
                             {recipient.principal}
                           </span>
                           <span className="text-xs text-[#bdbdbd]">
-                            {recipient.percent ? recipient.percent + "%" : ""} •{" "}
+                            {recipient.percentage ? recipient.percentage + "%" : ""} •{" "}
                             {(Number(recipient.amount) / 1e8).toFixed(8)} BTC
                           </span>
                         </div>
@@ -226,7 +204,7 @@ export default function RecentActivities({
                           <Bitcoin size={16} />
                           {(
                             activity.to.reduce(
-                              (sum: number, recipient: any) =>
+                              (sum: number, recipient) =>
                                 sum + Number(recipient.amount),
                               0
                             ) / 1e8
@@ -243,12 +221,10 @@ export default function RecentActivities({
 
         <TabsContent value="active" className="flex flex-col gap-6 mt-6">
           {activities
-            .filter((activity: any) => 
+            .filter((activity) => 
               principal && String(activity.from) === String(principal)
             )
-            .map((activity: any, idx: number) => {
-              const isSender = true; // We know it's sent since we filtered
-              const category = "sent";
+            .map((activity, idx: number) => {
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
                 <Card key={idx}>
@@ -261,7 +237,7 @@ export default function RecentActivities({
                               variant="large"
                               className="font-semibold leading-none"
                             >
-                              {activity.title || activity.description}
+                              {activity.title}
                             </Typography>
                             {(() => {
                               const statusKey =
@@ -302,10 +278,7 @@ export default function RecentActivities({
                               variant="muted"
                               className="text-xs text[rgba(159, 159, 159, 1)]"
                             >
-                              {activity.date ||
-                                (activity.timestamp && !isNaN(Number(activity.timestamp))
-                                  ? new Date(Number(activity.timestamp) * 1000).toLocaleString()
-                                  : new Date().toLocaleString())}
+                              {new Date(Number(activity.createdAt) * 1000).toLocaleString()}
                             </Typography>
                             <span className="text-white">•</span>
                             <div className="flex items-center gap-1 text-[#007AFF]">
@@ -342,7 +315,7 @@ export default function RecentActivities({
                           <UsersRound size={18} /> Recipients (
                           {activity.to.length})
                         </div>
-                        {activity.to.map((recipient: any, idx: number) => (
+                        {activity.to.map((recipient: ToEntry, idx: number) => (
                           <div
                             key={idx}
                             className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white"
@@ -351,7 +324,7 @@ export default function RecentActivities({
                               {recipient.principal}
                             </span>
                             <span className="text-xs text-[#bdbdbd]">
-                              {recipient.percent ? recipient.percent + "%" : ""} •{" "}
+                              {recipient.percentage ? recipient.percentage + "%" : ""} •{" "}
                               {(Number(recipient.amount) / 1e8).toFixed(8)} BTC
                             </span>
                           </div>
@@ -364,7 +337,7 @@ export default function RecentActivities({
                             <Bitcoin size={16} />
                             {(
                               activity.to.reduce(
-                                (sum: number, recipient: any) =>
+                                (sum: number, recipient: ToEntry) =>
                                   sum + Number(recipient.amount),
                                 0
                               ) / 1e8
@@ -381,17 +354,15 @@ export default function RecentActivities({
 
         <TabsContent value="completed" className="flex flex-col gap-6 mt-6">
           {activities
-            .filter((activity: any) => 
+            .filter((activity) => 
               principal && activity.to && activity.to.some(
-                (recipient: any) => String(recipient.principal) === String(principal)
+                (recipient) => String(recipient.principal) === String(principal)
               )
             )
-            .map((activity: any, idx: number) => {
-              const isSender = false; // We know it's received since we filtered
-              const category = "received";
+            .map((activity) => {
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
-                <Card key={idx}>
+                <Card key={activity.id}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex justify-between flex-1">
                       <div className="flex gap-2">
@@ -401,7 +372,7 @@ export default function RecentActivities({
                               variant="large"
                               className="font-semibold leading-none"
                             >
-                              {activity.title || activity.description}
+                              {activity.title}
                             </Typography>
                             {(() => {
                               const statusKey =
@@ -442,10 +413,7 @@ export default function RecentActivities({
                               variant="muted"
                               className="text-xs text[rgba(159, 159, 159, 1)]"
                             >
-                              {activity.date ||
-                                (activity.timestamp && !isNaN(Number(activity.timestamp))
-                                  ? new Date(Number(activity.timestamp) * 1000).toLocaleString()
-                                  : new Date().toLocaleString())}
+                              {new Date(Number(activity.createdAt) * 1000).toLocaleString()}
                             </Typography>
                             <span className="text-white">•</span>
                             <div className="flex items-center gap-1 text-[#00C287]">
@@ -482,7 +450,7 @@ export default function RecentActivities({
                           <UsersRound size={18} /> Recipients (
                           {activity.to.length})
                         </div>
-                        {activity.to.map((recipient: any, idx: number) => (
+                        {activity.to.map((recipient: ToEntry, idx: number) => (
                           <div
                             key={idx}
                             className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white"
@@ -491,7 +459,7 @@ export default function RecentActivities({
                               {recipient.principal}
                             </span>
                             <span className="text-xs text-[#bdbdbd]">
-                              {recipient.percent ? recipient.percent + "%" : ""} •{" "}
+                              {recipient.percentage ? recipient.percentage + "%" : ""} •{" "}
                               {(Number(recipient.amount) / 1e8).toFixed(8)} BTC
                             </span>
                           </div>
@@ -504,7 +472,7 @@ export default function RecentActivities({
                             <Bitcoin size={16} />
                             {(
                               activity.to.reduce(
-                                (sum: number, recipient: any) =>
+                                (sum: number, recipient: ToEntry) =>
                                   sum + Number(recipient.amount),
                                 0
                               ) / 1e8

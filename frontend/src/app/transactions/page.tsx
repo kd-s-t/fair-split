@@ -39,8 +39,8 @@ export default function TransactionsPage() {
 
   const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isDeclining, setIsDeclining] = useState<string | null>(null);
 
@@ -116,7 +116,7 @@ export default function TransactionsPage() {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
-  async function handleApprove(tx: Transaction, idx: number) {
+  async function handleApprove(tx: Transaction) {
     if (!principal) return;
     setIsApproving(getTxId(tx));
     try {
@@ -137,15 +137,15 @@ export default function TransactionsPage() {
       await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
       toast.success('Approved successfully!');
       // Refresh transaction data
-      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(updatedTxs.transactions));
-    } catch (err: any) {
+    } catch (err) {
       toast.error(err.message || 'Failed to approve');
       setIsApproving(null);
     }
   }
 
-  async function handleDecline(tx: any, idx: number) {
+  async function handleDecline(tx: Transaction) {
     if (!principal) return;
     setIsDeclining(getTxId(tx));
     try {
@@ -155,7 +155,7 @@ export default function TransactionsPage() {
       const principalStr =
         typeof principal === "string" ? principal : principal.toText();
       const recipientEntry = tx.to.find(
-        (entry: any) => entry.principal === principalStr
+        (entry) => entry.principal === principalStr
       );
       if (!recipientEntry) {
         toast.error("Recipient entry not found.");
@@ -169,8 +169,8 @@ export default function TransactionsPage() {
 
       // Get the sender's transactions to find the correct index
       const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
-      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as any;
-      const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
+      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
+      const txIndex = txs.transactions.findIndex((t) => t.id === tx.id);
       
       if (txIndex === -1) {
         toast.error('Transaction not found.');
@@ -185,9 +185,9 @@ export default function TransactionsPage() {
       );
       toast.success('Declined successfully!');
       // Refresh transaction data
-      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(updatedTxs.transactions));
-    } catch (err: any) {
+    } catch (err) {
       toast.error(err.message || 'Failed to decline');
       setIsDeclining(null);
     }
@@ -209,7 +209,7 @@ export default function TransactionsPage() {
     const unreadTransactionIds = localTransactions
       .filter(tx => {
         // Check if user is a recipient in this transaction
-        const recipientEntry = tx.to.find((entry: any) => 
+        const recipientEntry = tx.to.find((entry) => 
           String(entry.principal) === String(principal)
         );
         
@@ -244,7 +244,7 @@ export default function TransactionsPage() {
     setRefreshing(true);
     try {
       const actor = await createSplitDappActor();
-      const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(result.transactions));
       toast.success('Transactions refreshed!');
     } catch (error) {
@@ -335,7 +335,7 @@ export default function TransactionsPage() {
               </div>
 
               <div className="space-y-4">
-                {currentTransactions.map((tx: any, idx: number) => {
+                {currentTransactions.map((tx, idx: number) => {
                   const pendingApproval = isPendingApproval(tx);
                   const isRowClickable = !pendingApproval && getTransactionCategory(tx) === "sent";
 
@@ -517,11 +517,11 @@ export default function TransactionsPage() {
                                   if (isSentByUser(tx)) {
                                     // If sender, show total amount
                                     return tx.to && Array.isArray(tx.to)
-                                      ? (tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                                      ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
                                       : '0.00000000';
                                   } else {
                                     // If receiver, show their specific amount
-                                    const recipientEntry = tx.to.find((entry: any) => 
+                                    const recipientEntry = tx.to.find((entry) => 
                                       String(entry.principal) === String(principal)
                                     );
                                     return recipientEntry 
@@ -542,7 +542,7 @@ export default function TransactionsPage() {
                                 `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
                               ) : (
                                 (() => {
-                                  const recipientEntry = tx.to.find((entry: any) => 
+                                  const recipientEntry = tx.to.find((entry) => 
                                     String(entry.principal) === String(principal)
                                   );
                                   return recipientEntry && recipientEntry.percentage 

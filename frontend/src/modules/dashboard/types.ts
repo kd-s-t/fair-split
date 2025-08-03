@@ -1,5 +1,7 @@
+import { EscrowTransaction } from '../transactions/types';
+
 export interface RecentActivitiesProps {
-  transactions?: any[];
+  transactions?: EscrowTransaction[];
 }
 
 export interface StatCardProps {
@@ -9,5 +11,5 @@ export interface StatCardProps {
 }
 
 export interface DashboardStatsProps {
-  transactions: any[];
+  transactions: EscrowTransaction[];
 }

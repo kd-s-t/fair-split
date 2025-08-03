@@ -22,20 +22,20 @@ FROM base as frontend-builder
 WORKDIR /app
 
 # Copy package files
-COPY frontend/package*.json ./frontend/
-COPY frontend/next.config.ts ./frontend/
-COPY frontend/tailwind.config.js ./frontend/
-COPY frontend/postcss.config.mjs ./frontend/
-COPY frontend/tsconfig.json ./frontend/
+COPY package*.json ./
+COPY next.config.ts ./
+COPY tailwind.config.js ./
+COPY postcss.config.mjs ./
+COPY tsconfig.json ./
 
 # Install dependencies
-RUN cd frontend && npm install
+RUN npm install
 
 # Copy frontend source
-COPY frontend/ ./frontend/
+COPY . .
 
 # Build the frontend
-RUN cd frontend && npm run build
+RUN npm run build
 
 # Stage 3: Production runtime
 FROM base as production
@@ -43,16 +43,16 @@ FROM base as production
 WORKDIR /app
 
 # Copy built frontend
-COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
-COPY --from=frontend-builder /app/frontend/public ./frontend/public
-COPY --from=frontend-builder /app/frontend/package*.json ./frontend/
-COPY --from=frontend-builder /app/frontend/next.config.ts ./frontend/
-COPY --from=frontend-builder /app/frontend/tailwind.config.js ./frontend/
-COPY --from=frontend-builder /app/frontend/postcss.config.mjs ./frontend/
-COPY --from=frontend-builder /app/frontend/tsconfig.json ./frontend/
+COPY --from=frontend-builder /app/.next ./.next
+COPY --from=frontend-builder /app/public ./public
+COPY --from=frontend-builder /app/package*.json ./
+COPY --from=frontend-builder /app/next.config.ts ./
+COPY --from=frontend-builder /app/tailwind.config.js ./
+COPY --from=frontend-builder /app/postcss.config.mjs ./
+COPY --from=frontend-builder /app/tsconfig.json ./
 
 # Install production dependencies only
-RUN cd frontend && npm install --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -67,4 +67,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start the application
-CMD ["cd", "frontend", "&&", "npm", "start"] 
+CMD ["npm", "start"] 

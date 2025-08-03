@@ -15,7 +15,7 @@ import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetail
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
-import type { SerializedTransaction } from "@/modules/transactions/types";
+import type { SerializedTransaction, ToEntry } from "@/modules/transactions/types";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function TransactionDetailsPage() {
@@ -60,7 +60,7 @@ export default function TransactionDetailsPage() {
           refundedAt: result[0].refundedAt ? result[0].refundedAt.toString() : undefined,
           releasedAt: result[0].releasedAt ? result[0].releasedAt.toString() : undefined,
           readAt: result[0].readAt ? result[0].readAt.toString() : undefined,
-          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: any) => ({
+          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: ToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -99,7 +99,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -125,7 +125,7 @@ export default function TransactionDetailsPage() {
       await actor.cancelSplit(Principal.fromText(
         typeof transaction?.from === "string"
           ? transaction.from
-          : transaction?.from?.toText?.() || ""
+          : (transaction?.from as Principal | undefined)?.toText?.() || ""
       ));
       toast.success("Escrow cancelled!");
       // Refresh the transaction data
@@ -141,7 +141,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -168,7 +168,7 @@ export default function TransactionDetailsPage() {
       await actor.refundSplit(Principal.fromText(
         typeof transaction?.from === "string"
           ? transaction.from
-          : transaction?.from?.toText?.() || ""
+          : (transaction?.from as Principal | undefined)?.toText?.() || ""
       ));
       console.log("refundSplit successful");
       toast.success("Escrow refunded!");
@@ -187,7 +187,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -229,7 +229,7 @@ export default function TransactionDetailsPage() {
   else if (statusKey === "refund") currentStep = 0;
 
   const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
+    ? transaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
 
   return (
@@ -260,7 +260,14 @@ export default function TransactionDetailsPage() {
           <Typography variant="large">Escrow overview</Typography>
 
           {statusKey === "released" && (
-            <ReleasedEscrowDetails transaction={transaction} />
+            <ReleasedEscrowDetails transaction={{
+              ...transaction,
+              status: transaction.status as "released" | "confirmed" | "pending" | "cancelled" | "refund" | "declined",
+              to: transaction.to.map(toEntry => ({
+                ...toEntry,
+                percentage: 0
+              }))
+            }} />
           )}
 
           {statusKey === "pending" && (
@@ -268,11 +275,12 @@ export default function TransactionDetailsPage() {
               const isSender = principal && String(transaction.from) === String(principal);
               const transactionData = {
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as Principal | undefined)?.toText?.() || "",
                 to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry: any) => ({
+                  ? transaction.to.map((toEntry) => ({
                       ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                      percentage: 0,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as Principal | undefined)?.toText?.() || "",
                     }))
                   : [],
                 status: "pending" as const,
@@ -306,11 +314,12 @@ export default function TransactionDetailsPage() {
             <CancelledEscrowDetails 
               transaction={{
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as Principal | undefined)?.toText?.() || "",
                 to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry: any) => ({
+                  ? transaction.to.map((toEntry) => ({
                       ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                      percentage: 0,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as Principal | undefined)?.toText?.() || "",
                     }))
                   : [],
                 status: statusKey,
@@ -331,11 +340,12 @@ export default function TransactionDetailsPage() {
             <RefundedEscrowDetails 
               transaction={{
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as Principal | undefined)?.toText?.() || "",
                 to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry: any) => ({
+                  ? transaction.to.map((toEntry) => ({
                       ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                      percentage: 0,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as Principal | undefined)?.toText?.() || "",
                     }))
                   : [],
                 status: "refund",
@@ -354,7 +364,14 @@ export default function TransactionDetailsPage() {
 
           {statusKey === "confirmed" && (
             <ConfirmedEscrowActions
-              transaction={transaction}
+              transaction={{
+                ...transaction,
+                status: transaction.status as "released" | "confirmed" | "pending" | "cancelled" | "refund" | "declined",
+                to: transaction.to.map(toEntry => ({
+                  ...toEntry,
+                  percentage: 0
+                }))
+              }}
               isLoading={isLoading}
               onRelease={handleRelease}
               onRefund={handleRefund}

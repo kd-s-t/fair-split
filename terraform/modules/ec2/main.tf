@@ -8,6 +8,58 @@ locals {
   ubuntu_ami_id = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS us-east-1
 }
 
+# IAM Role for EC2 to access ECR
+resource "aws_iam_role" "ec2_role" {
+  name = "splitsafe-ec2-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "splitsafe-ec2-role-${var.environment}"
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+# IAM Policy for ECR access
+resource "aws_iam_role_policy" "ecr_policy" {
+  name = "splitsafe-ecr-policy-${var.environment}"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Instance Profile
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "splitsafe-ec2-profile-${var.environment}"
+  role = aws_iam_role.ec2_role.name
+}
+
 # Create a default security group
 resource "aws_security_group" "splitsafe_sg" {
   name        = "splitsafe-sg-${var.environment}"
@@ -76,6 +128,7 @@ resource "aws_instance" "splitsafe_server" {
   instance_type          = var.instance_type
   key_name              = aws_key_pair.splitsafe_key.key_name
   vpc_security_group_ids = [aws_security_group.splitsafe_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   root_block_device {
     volume_size = 30

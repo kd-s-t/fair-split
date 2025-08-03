@@ -57,7 +57,7 @@ export default function EscrowPage() {
           setTitle(tx.title);
           
           // Convert recipients to the form format
-          const formRecipients = tx.to.map((recipient: any, index: number) => ({
+          const formRecipients = tx.to.map((recipient, index: number) => ({
             id: `recipient-${index + 1}`,
             principal: typeof recipient.principal === "string" ? recipient.principal : recipient.principal.toText(),
             percentage: Number(recipient.percentage),
@@ -67,7 +67,7 @@ export default function EscrowPage() {
           setRecipients(formRecipients);
           
           // Calculate total BTC amount
-          const totalAmount = tx.to.reduce((sum: number, recipient: any) => sum + Number(recipient.amount), 0);
+          const totalAmount = tx.to.reduce((sum: number, recipient) => sum + Number(recipient.amount), 0);
           setBtcAmount((totalAmount / 1e8).toString());
         }
       } catch (error) {
@@ -217,7 +217,7 @@ export default function EscrowPage() {
           }
           
           // Check if any recipients have taken action
-          const hasRecipientAction = tx.to.some((recipient: any) => 
+          const hasRecipientAction = tx.to.some((recipient) => 
             recipient.status && Object.keys(recipient.status)[0] !== "pending"
           );
           
@@ -227,7 +227,7 @@ export default function EscrowPage() {
             return;
           }
         }
-      } catch (error) {
+      } catch {
         toast.error("Failed to verify transaction status");
         window.location.href = `/transactions/${editTxId}`;
         return;
@@ -262,7 +262,7 @@ export default function EscrowPage() {
         const balance = await actor.getBalance(Principal.fromText(principal.toText()));
         const formatted = (Number(balance) / 1e8).toFixed(8);
         dispatch(setBtcBalance(formatted));
-      } catch (err) {
+      } catch {
         dispatch(setBtcBalance(null));
       }
     }

@@ -18,6 +18,7 @@ import {
   Bitcoin,
   Wallet,
   RotateCw,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { statusMap } from "@/modules/dashboard/Activities";
@@ -37,10 +38,9 @@ export default function TransactionsPage() {
     dispatch(setSubtitle('View all your escrow transactions'));
   }, [dispatch]);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [localTransactions, setLocalTransactions] = useState<any[]>([]);
+  const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
   const router = useRouter();
+
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isDeclining, setIsDeclining] = useState<string | null>(null);
 
@@ -61,62 +61,60 @@ export default function TransactionsPage() {
     if (localTransactions.length > 0 && principal) {
       markUnreadTransactionsAsRead();
     }
-  }, [localTransactions, principal]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [localTransactions, principal]);
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
-
-
 
   function truncateHash(hash: string): string {
     if (hash.length <= 16) return hash;
     return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
   }
 
-  function getTxId(tx: any) {
+  function getTxId(tx: Transaction) {
     return `${tx.from}_${tx.to
-      .map((toEntry: any) => toEntry.principal)
+      .map((toEntry) => toEntry.principal)
       .join("-")}_${tx.createdAt}`;
   }
 
-  function isPendingApproval(tx: any): boolean {
+  function isPendingApproval(tx: Transaction): boolean {
     if (!principal) return false;
     return tx.to.some(
-      (toEntry: any) =>
+      (toEntry) =>
         String(toEntry.principal) === String(principal) &&
         toEntry.status &&
         Object.keys(toEntry.status)[0] === "pending"
     );
   }
 
-  function hasUserApproved(tx: any): boolean {
+  function hasUserApproved(tx: Transaction): boolean {
     if (!principal) return false;
     return tx.to.some(
-      (toEntry: any) =>
+      (toEntry) =>
         String(toEntry.principal) === String(principal) &&
         toEntry.status &&
         Object.keys(toEntry.status)[0] === "approved"
     );
   }
 
-  function hasUserDeclined(tx: any): boolean {
+  function hasUserDeclined(tx: Transaction): boolean {
     if (!principal) return false;
     return tx.to.some(
-      (toEntry: any) =>
+      (toEntry) =>
         String(toEntry.principal) === String(principal) &&
         toEntry.status &&
         Object.keys(toEntry.status)[0] === "declined"
     );
   }
 
-  function isSentByUser(tx: any): boolean {
+  function isSentByUser(tx: Transaction): boolean {
     return String(tx.from) === String(principal);
   }
 
-  function getTransactionCategory(tx: any): "sent" | "received" {
+  function getTransactionCategory(tx: Transaction): "sent" | "received" {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
-  async function handleApprove(tx: any, idx: number) {
+  async function handleApprove(tx: Transaction) {
     if (!principal) return;
     setIsApproving(getTxId(tx));
     try {
@@ -124,7 +122,7 @@ export default function TransactionsPage() {
       const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
       // Always compare principal as string
       const principalStr = typeof principal === "string" ? principal : principal.toText();
-      const recipientEntry = tx.to.find((entry: any) => entry.principal === principalStr);
+      const recipientEntry = tx.to.find((entry) => String(entry.principal) === principalStr);
       if (!recipientEntry) {
         toast.error('Recipient entry not found.');
         setIsApproving(null);
@@ -137,15 +135,15 @@ export default function TransactionsPage() {
       await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
       toast.success('Approved successfully!');
       // Refresh transaction data
-      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(updatedTxs.transactions));
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to approve');
+    } catch (err) {
+      toast.error((err as Error).message || 'Failed to approve');
       setIsApproving(null);
     }
   }
 
-  async function handleDecline(tx: any, idx: number) {
+  async function handleDecline(tx: Transaction) {
     if (!principal) return;
     setIsDeclining(getTxId(tx));
     try {
@@ -155,7 +153,7 @@ export default function TransactionsPage() {
       const principalStr =
         typeof principal === "string" ? principal : principal.toText();
       const recipientEntry = tx.to.find(
-        (entry: any) => entry.principal === principalStr
+        (entry) => String(entry.principal) === principalStr
       );
       if (!recipientEntry) {
         toast.error("Recipient entry not found.");
@@ -169,8 +167,8 @@ export default function TransactionsPage() {
 
       // Get the sender's transactions to find the correct index
       const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
-      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as any;
-      const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
+      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
+      const txIndex = txs.transactions.findIndex((t) => (t as any).id === tx.id);
       
       if (txIndex === -1) {
         toast.error('Transaction not found.');
@@ -185,10 +183,10 @@ export default function TransactionsPage() {
       );
       toast.success('Declined successfully!');
       // Refresh transaction data
-      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(updatedTxs.transactions));
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to decline');
+    } catch (err) {
+      toast.error((err as Error).message || 'Failed to decline');
       setIsDeclining(null);
     }
   }
@@ -209,12 +207,12 @@ export default function TransactionsPage() {
     const unreadTransactionIds = localTransactions
       .filter(tx => {
         // Check if user is a recipient in this transaction
-        const recipientEntry = tx.to.find((entry: any) => 
+        const recipientEntry = tx.to.find((entry) => 
           String(entry.principal) === String(principal)
         );
         
         // Return true if user is a recipient and hasn't read the transaction
-        return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
+        return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
       })
       .map(tx => tx.id);
     
@@ -244,7 +242,7 @@ export default function TransactionsPage() {
     setRefreshing(true);
     try {
       const actor = await createSplitDappActor();
-      const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as any;
+      const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(result.transactions));
       toast.success('Transactions refreshed!');
     } catch (error) {
@@ -257,194 +255,180 @@ export default function TransactionsPage() {
 
   return (
     <>
-    {isLoading && (
-      <div className="text-center">
-        <div className="flex flex-col gap-2 items-center">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="w-full max-w-3xl h-10 bg-gray-200 animate-pulse rounded"
-            />
-          ))}
+      {/* Search, Filter Section, and Refresh Icon in the same row */}
+      <div className="flex items-center gap-4 mb-6 w-full">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search transactions"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#FEB64D]"
+          />
+        </div>
+        <div className="w-1/5">
+          <select className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]">
+            <option value="all">All transactions</option>
+            {availableCategories.includes('sent') && <option value="sent">Sent</option>}
+            {availableCategories.includes('received') && <option value="received">Received</option>}
+          </select>
+        </div>
+        <div className="w-1/5">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]"
+          >
+            <option value="all">All status</option>
+            {availableStatuses.includes('pending') && <option value="pending">Pending</option>}
+            {availableStatuses.includes('confirmed') && <option value="confirmed">Confirmed</option>}
+            {availableStatuses.includes('released') && <option value="released">Released</option>}
+            {availableStatuses.includes('cancelled') && <option value="cancelled">Cancelled</option>}
+            {availableStatuses.includes('declined') && <option value="declined">Declined</option>}
+          </select>
+        </div>
+        {/* Refresh icon at the end */}
+        <div className="flex items-center ml-4 min-w-[40px]">
+          <button
+            ref={refreshIconRef}
+            onClick={fetchTransactions}
+            className="p-2 rounded-full hover:bg-[#2a2a2a] transition-colors"
+            aria-label="Refresh"
+            disabled={refreshing}
+          >
+            <RotateCw className={`h-5 w-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
-    )}
-    {/* Search, Filter Section, and Refresh Icon in the same row */}
-    <div className="flex items-center gap-4 mb-6 w-full">
-      <div className="flex-1">
-        <input
-          type="text"
-          placeholder="Search transactions"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#FEB64D]"
-        />
-      </div>
-      <div className="w-1/5">
-        <select className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]">
-          <option value="all">All transactions</option>
-          {availableCategories.includes('sent') && <option value="sent">Sent</option>}
-          {availableCategories.includes('received') && <option value="received">Received</option>}
-        </select>
-      </div>
-      <div className="w-1/5">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]"
-        >
-          <option value="all">All status</option>
-          {availableStatuses.includes('pending') && <option value="pending">Pending</option>}
-          {availableStatuses.includes('confirmed') && <option value="confirmed">Confirmed</option>}
-          {availableStatuses.includes('released') && <option value="released">Released</option>}
-          {availableStatuses.includes('cancelled') && <option value="cancelled">Cancelled</option>}
-          {availableStatuses.includes('declined') && <option value="declined">Declined</option>}
-        </select>
-      </div>
-      {/* Refresh icon at the end */}
-      <div className="flex items-center ml-4 min-w-[40px]">
-        <button
-          ref={refreshIconRef}
-          onClick={fetchTransactions}
-          className="p-2 rounded-full hover:bg-[#2a2a2a] transition-colors"
-          aria-label="Refresh"
-          disabled={refreshing}
-        >
-          <RotateCw className={`h-5 w-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
-    </div>
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {!isLoading && !error && (
-        <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Show 'No transactions found.' below filters if there are no transactions */}
+        {localTransactions.length === 0 && (
+          <div className="text-center text-muted-foreground mb-4">No transactions found.</div>
+        )}
 
-          {/* Show 'No transactions found.' below filters if there are no transactions */}
-          {localTransactions.length === 0 && (
-            <div className="text-center text-muted-foreground mb-4">No transactions found.</div>
-          )}
+        {/* Only show transaction count and list if there are transactions */}
+        {localTransactions.length > 0 && (
+          <>
+            <div className="text-sm text-gray-400 mb-4">
+              Showing {currentTransactions.length} of {localTransactions.length} transactions
+            </div>
 
-          {/* Only show transaction count and list if there are transactions */}
-          {localTransactions.length > 0 && (
-            <>
-              <div className="text-sm text-gray-400 mb-4">
-                Showing {currentTransactions.length} of {localTransactions.length} transactions
-              </div>
+            <div className="space-y-4">
+              {currentTransactions.map((tx, idx: number) => {
+                const pendingApproval = isPendingApproval(tx);
+                const isRowClickable = !pendingApproval && getTransactionCategory(tx) === "sent";
 
-              <div className="space-y-4">
-                {currentTransactions.map((tx: any, idx: number) => {
-                  const pendingApproval = isPendingApproval(tx);
-                  const isRowClickable = !pendingApproval && getTransactionCategory(tx) === "sent";
+                return (
+                  <motion.div
+                    key={tx.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.05 }}
+                    className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors' : ''}`}
+                    onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Typography variant="large" className="text-xl">
+                              {tx.title}
+                            </Typography>
 
-                  return (
-                    <motion.div
-                      key={tx.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors' : ''}`}
-                      onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
-                    >
-                      <div key={tx.id} className="flex-1 min-w-0">
-                        <div className="flex justify-between">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Typography variant="large" className="text-xl">
-                                {tx.title}
-                              </Typography>
-
-                              {(() => {
-                                const statusKey = tx.status;
-                                return (
-                                  <Badge
-                                    variant={
-                                      (statusMap[statusKey]?.variant ?? "default") as
-                                      | "secondary"
-                                      | "success"
-                                      | "primary"
-                                      | "error"
-                                      | "default"
-                                      | "outline"
-                                      | "warning"
-                                    }
-                                  >
-                                    {statusMap[statusKey]?.label || statusKey}
-                                  </Badge>
-                                );
-                              })()}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs mb-2">
+                            {(() => {
+                              const statusKey = tx.status;
+                              return (
+                                <Badge
+                                  variant={
+                                    (statusMap[statusKey]?.variant ?? "default") as
+                                    | "secondary"
+                                    | "success"
+                                    | "primary"
+                                    | "error"
+                                    | "default"
+                                    | "outline"
+                                    | "warning"
+                                  }
+                                >
+                                  {statusMap[statusKey]?.label || statusKey}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs mb-2">
+                            <Typography
+                              variant="small"
+                              className="text-[#9F9F9F]"
+                            >
+                              {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
+                            </Typography>
+                            {getTransactionCategory(tx) === "sent" ? (
+                              <div className="flex items-center gap-1 text-[#007AFF]">
+                                <ArrowUpRight size={14} />
+                                <Typography
+                                  variant="muted"
+                                  className="!text-[#007AFF]"
+                                >
+                                  Sent
+                                </Typography>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-[#00C287]">
+                                <ArrowDownLeft size={14} />
+                                <Typography
+                                  variant="muted"
+                                  className="!text-[#00C287]"
+                                >
+                                  Receiving
+                                </Typography>
+                              </div>
+                            )}
+                            {((tx.status === 'pending' || tx.status === 'confirmed') && 
+                              !isSentByUser(tx) && hasUserApproved(tx)) && (
                               <Typography
                                 variant="small"
-                                className="text-[#9F9F9F]"
+                                className="text-[#9F9F9F] ml-2"
                               >
-                                {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
+                                • You approved
                               </Typography>
-                              {getTransactionCategory(tx) === "sent" ? (
-                                <div className="flex items-center gap-1 text-[#007AFF]">
-                                  <ArrowUpRight size={14} />
-                                  <Typography
-                                    variant="muted"
-                                    className="!text-[#007AFF]"
-                                  >
-                                    Sent
-                                  </Typography>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-[#00C287]">
-                                  <ArrowDownLeft size={14} />
-                                  <Typography
-                                    variant="muted"
-                                    className="!text-[#00C287]"
-                                  >
-                                    Receiving
-                                  </Typography>
-                                </div>
-                              )}
-                              {((tx.status === 'pending' || tx.status === 'confirmed') && 
-                                !isSentByUser(tx) && hasUserApproved(tx)) && (
-                                <Typography
-                                  variant="small"
-                                  className="text-[#9F9F9F] ml-2"
-                                >
-                                  • You approved
-                                </Typography>
-                              )}
-                              {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') && 
-                                !isSentByUser(tx) && hasUserDeclined(tx)) && (
-                                <Typography
-                                  variant="small"
-                                  className="text-[#9F9F9F] ml-2"
-                                >
-                                  • You declined
-                                </Typography>
-                              )}
-                            </div>
+                            )}
+                            {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') && 
+                              !isSentByUser(tx) && hasUserDeclined(tx)) && (
+                              <Typography
+                                variant="small"
+                                className="text-[#9F9F9F] ml-2"
+                              >
+                                • You declined
+                              </Typography>
+                            )}
                           </div>
-
-                          {getTransactionCategory(tx) === "sent" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#7A7A7A]"
-                            >
-                              <Wallet /> Manage escrow
-                            </Button>
-                          )}
-                          {pendingApproval && !isSentByUser(tx) && tx.status !== 'cancelled' ? (
-                            <div className="flex justify-end w-full gap-2 mt-2">
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowClick(tx);
+                            }}
+                          >
+                            <Eye size={14} />
+                          </Button>
+                          {pendingApproval && (
+                            <div className="flex gap-2">
                               <Button
                                 className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                onClick={() => handleApprove(tx, idx)}
+                                onClick={() => handleApprove(tx)}
                                 disabled={isApproving === getTxId(tx)}
                               >
                                 {isApproving === getTxId(tx) ? (
                                   <span className="flex items-center gap-2">
                                     <svg
-                                      className="animate-spin h-4 w-4 text-white"
+                                      className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
                                       xmlns="http://www.w3.org/2000/svg"
                                       fill="none"
                                       viewBox="0 0 24 24"
@@ -471,13 +455,13 @@ export default function TransactionsPage() {
                               </Button>
                               <Button
                                 className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                onClick={() => handleDecline(tx, idx)}
+                                onClick={() => handleDecline(tx)}
                                 disabled={isDeclining === getTxId(tx)}
                               >
                                 {isDeclining === getTxId(tx) ? (
                                   <span className="flex items-center gap-2">
                                     <svg
-                                      className="animate-spin h-4 w-4 text-white"
+                                      className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
                                       xmlns="http://www.w3.org/2000/svg"
                                       fill="none"
                                       viewBox="0 0 24 24"
@@ -503,80 +487,78 @@ export default function TransactionsPage() {
                                 )}
                               </Button>
                             </div>
-                          ) : null}
-                        </div>
-                        <div className="grid grid-cols-3 mt-2">
-                          <div>
-                            <Typography variant="small" className="text-[#9F9F9F]">
-                              Amount
-                            </Typography>
-                            <div className="flex items-center gap-1">
-                              <Bitcoin size={16} color="#F97415" />
-                              <Typography variant="base" className="font-semibold">
-                                {(() => {
-                                  if (isSentByUser(tx)) {
-                                    // If sender, show total amount
-                                    return tx.to && Array.isArray(tx.to)
-                                      ? (tx.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
-                                      : '0.00000000';
-                                  } else {
-                                    // If receiver, show their specific amount
-                                    const recipientEntry = tx.to.find((entry: any) => 
-                                      String(entry.principal) === String(principal)
-                                    );
-                                    return recipientEntry 
-                                      ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
-                                      : '0.00000000';
-                                  }
-                                })()} BTC
-                              </Typography>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-1">
-                            <Typography variant="small" className="text-[#9F9F9F]">
-                              {isSentByUser(tx) ? "To" : "Your Share"}
-                            </Typography>
-                            <Typography variant="base" className="font-semibold">
-                              {isSentByUser(tx) ? (
-                                `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
-                              ) : (
-                                (() => {
-                                  const recipientEntry = tx.to.find((entry: any) => 
-                                    String(entry.principal) === String(principal)
-                                  );
-                                  return recipientEntry && recipientEntry.percentage 
-                                    ? `${recipientEntry.percentage}%`
-                                    : 'N/A';
-                                })()
-                              )}
-                            </Typography>
-                          </div>
-
-                          <div className="flex flex-col gap-1">
-                            <Typography variant="small" className="text-[#9F9F9F]">
-                              Bitcoin Address
-                            </Typography>
-                            <Typography
-                              variant="base"
-                              className="font-semibold text-[#FEB64D] truncate"
-                              title={tx.bitcoinAddress || 'No address available'} 
-                            >
-                              {tx.bitcoinAddress ? truncateHash(tx.bitcoinAddress) : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
-                            </Typography>
-                          </div>
+                          )}
                         </div>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </>
-      )}
-      {error && <div className="text-red-500 text-center">{error}</div>}
-    </motion.div>
+                      <div className="grid grid-cols-3 mt-2">
+                        <div>
+                          <Typography variant="small" className="text-[#9F9F9F]">
+                            Amount
+                          </Typography>
+                          <div className="flex items-center gap-1">
+                            <Bitcoin size={16} color="#F97415" />
+                            <Typography variant="base" className="font-semibold">
+                              {(() => {
+                                if (isSentByUser(tx)) {
+                                  // If sender, show total amount
+                                  return tx.to && Array.isArray(tx.to)
+                                    ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                                    : '0.00000000';
+                                } else {
+                                  // If receiver, show their specific amount
+                                  const recipientEntry = tx.to.find((entry) => 
+                                    String(entry.principal) === String(principal)
+                                  );
+                                  return recipientEntry 
+                                    ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
+                                    : '0.00000000';
+                                }
+                              })()} BTC
+                            </Typography>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <Typography variant="small" className="text-[#9F9F9F]">
+                            {isSentByUser(tx) ? "To" : "Your Share"}
+                          </Typography>
+                          <Typography variant="base" className="font-semibold">
+                            {isSentByUser(tx) ? (
+                              `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
+                            ) : (
+                              (() => {
+                                const recipientEntry = tx.to.find((entry) => 
+                                  String(entry.principal) === String(principal)
+                                );
+                                return recipientEntry && recipientEntry.percentage 
+                                  ? `${recipientEntry.percentage}%`
+                                  : 'N/A';
+                              })()
+                            )}
+                          </Typography>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <Typography variant="small" className="text-[#9F9F9F]">
+                            Bitcoin Address
+                          </Typography>
+                          <Typography
+                            variant="base"
+                            className="font-semibold text-[#FEB64D] truncate"
+                            title={Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? tx.bitcoinAddress[0] : 'No address available'}
+                          >
+                            {Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? truncateHash(tx.bitcoinAddress[0] || '') : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
+                          </Typography>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </motion.div>
     </>
   );
 }

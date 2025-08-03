@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for SplitSafe
 # Stage 1: Base image with Node.js
-FROM node:20-alpine as base
+FROM node:20-alpine AS base
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -17,54 +17,55 @@ RUN apk add --no-cache \
     g++
 
 # Stage 2: Frontend build
-FROM base as frontend-builder
+FROM base AS frontend-builder
 
 WORKDIR /app
 
-# Copy package files
-COPY frontend/package*.json ./frontend/
-COPY frontend/next.config.ts ./frontend/
-COPY frontend/tailwind.config.js ./frontend/
-COPY frontend/postcss.config.mjs ./frontend/
-COPY frontend/tsconfig.json ./frontend/
+# Set environment variables for lightningcss (x64 for EC2)
+ENV LIGHTNING_CSS_BINARY_TARGET=linux-x64-musl
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
-# Install dependencies
-RUN cd frontend && npm ci
+# Copy package files
+COPY package*.json ./
+COPY next.config.ts ./
+COPY tailwind.config.js ./
+COPY postcss.config.mjs ./
+COPY tsconfig.json ./
+
+# Install all dependencies (including dev dependencies needed for build)
+# Force rebuild of native modules for the correct architecture
+RUN npm install --include=dev --no-optional --force
 
 # Copy frontend source
-COPY frontend/ ./frontend/
+COPY . .
 
-# Build the frontend (will be rebuilt at runtime with proper env vars)
-RUN cd frontend && npm run build
+# Rebuild native modules for the current platform
+RUN npm rebuild
+
+# Build the frontend with memory optimization for EC2
+RUN npm run build
 
 # Stage 3: Production runtime
-FROM base as production
+FROM base AS production
 
 WORKDIR /app
 
 # Copy built frontend
-COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
-COPY --from=frontend-builder /app/frontend/public ./frontend/public
-COPY --from=frontend-builder /app/frontend/package*.json ./frontend/
-COPY --from=frontend-builder /app/frontend/next.config.ts ./frontend/
-COPY --from=frontend-builder /app/frontend/tailwind.config.js ./frontend/
-COPY --from=frontend-builder /app/frontend/postcss.config.mjs ./frontend/
-COPY --from=frontend-builder /app/frontend/tsconfig.json ./frontend/
+COPY --from=frontend-builder /app/.next ./.next
+COPY --from=frontend-builder /app/public ./public
+COPY --from=frontend-builder /app/package*.json ./
+COPY --from=frontend-builder /app/next.config.ts ./
+COPY --from=frontend-builder /app/tailwind.config.js ./
+COPY --from=frontend-builder /app/postcss.config.mjs ./
+COPY --from=frontend-builder /app/tsconfig.json ./
 
 # Install production dependencies only
-RUN cd frontend && npm ci --only=production && npm cache clean --force
-
-# Copy startup scripts and config files from project root
-COPY start.sh ./start.sh
-COPY deploy.sh ./deploy.sh
-COPY dfx.json ./dfx.json
-COPY principals.json ./principals.json
-COPY frontend/docker/wait-for-dfx.sh ./wait-for-dfx.sh
-RUN chmod +x ./start.sh ./wait-for-dfx.sh
+RUN npm install --only=production && npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
+
 USER nextjs
 
 # Expose port
@@ -74,5 +75,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Default command - will be overridden by docker-compose
-CMD ["./start.sh"] 
+# Start the application
+CMD ["npm", "start"] 

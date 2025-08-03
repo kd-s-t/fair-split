@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { House, Wallet } from "lucide-react";
-import { motion } from "framer-motion";
+
 
 export default function Sidebar() {
   const pathname = usePathname();

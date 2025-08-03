@@ -24,4 +24,12 @@ module "ec2" {
   repo_url          = var.repo_url
   aws_region        = var.aws_region
   environment       = var.environment
+}
+
+# ECR Module
+module "ecr" {
+  source = "./modules/ecr"
+  
+  environment   = var.environment
+  ec2_role_arn = module.ec2.ec2_role_arn
 } 

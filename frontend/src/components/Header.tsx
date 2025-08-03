@@ -3,7 +3,7 @@
 import ProfileDropdown from '@/modules/settings/Dropdown'
 import TransactionNotificationDropdown from '@/modules/notifications/NotificationDropdown'
 import { Typography } from '@/components/ui/typography'
-import { motion } from 'framer-motion'
+
 
 type HeaderProps = {
   title: string

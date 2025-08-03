@@ -2,25 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import { CheckCircle, RotateCcw, CircleAlert, Shield, ExternalLink } from "lucide-react";
+import { CheckCircle, RotateCcw, CircleAlert, Shield } from "lucide-react";
 import { TransactionStats } from "@/components/ui/transaction-stats";
-import { TransactionHash } from "@/components/ui/transaction-hash";
-import { ConfirmedEscrowActionsProps } from "./types";
-import RecipientsList from "./RecipientsList";
+import { ConfirmedEscrowActionsProps, ToEntry } from "./types";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
-import { createSplitDappActor } from "@/lib/icp/splitDapp";
-import { Principal } from "@dfinity/principal";
-import { toast } from "sonner";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
-  // Generate a random transaction hash for display
-  const generateRandomHash = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    return Array.from({ length: 40 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  };
 
-  const txHash = generateRandomHash();
 
   const handleCancelSplit = async () => {
     console.log("handleCancelSplit called");
@@ -35,7 +24,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
 
   // Calculate total BTC and recipient count for TransactionStats
   const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
+    ? transaction.to.reduce((sum: number, toEntry: ToEntry) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
   
   const recipientCount = transaction.to?.length || 0;
@@ -56,7 +45,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
       <div className="mb-6">
         <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
         <div className="space-y-3">
-          {Array.isArray(transaction.to) && transaction.to.map((recipient: any, index: number) => {
+          {Array.isArray(transaction.to) && transaction.to.map((recipient: ToEntry, index: number) => {
             const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
             const statusColor = statusKey === 'approved' ? 'text-green-400' : 
                                statusKey === 'pending' ? 'text-yellow-400' : 
@@ -64,7 +53,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
             
             const amount = Number(recipient.amount) / 1e8;
             const totalAmount = Array.isArray(transaction.to)
-              ? transaction.to.reduce((sum: number, entry: any) => sum + Number(entry.amount), 0) / 1e8
+              ? transaction.to.reduce((sum: number, entry: ToEntry) => sum + Number(entry.amount), 0) / 1e8
               : 0;
             const percentage = totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(0) : 0;
             
@@ -195,7 +184,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
       {/* Warning Note */}
       <div className="w-full mb-4 flex items-center gap-2 rounded-xl bg-[#6B4A1B] border border-[#B8862A] px-4 py-2">
         <CircleAlert size={18} color="#B8862A" />
-        <span className="text-white font-medium">Note: Release payment only when you're satisfied with the delivered work or received goods.</span>
+        <span className="text-white font-medium">Note: Release payment only when you&apos;re satisfied with the delivered work or received goods.</span>
       </div>
 
       {/* Smart Contract Execution Info */}

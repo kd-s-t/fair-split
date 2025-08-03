@@ -1,9 +1,10 @@
 "use client";
 
 import { Typography } from "@/components/ui/typography";
+import { ToEntry } from "./types";
 
 interface RecipientsListProps {
-  recipients: any[];
+  recipients: ToEntry[];
   showTimestamps?: boolean;
 }
 

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { useAppSelector } from "@/lib/redux/store";
+import type { RootState } from "@/lib/redux/store";
 import { CircleCheck, Clock8, Eye, EyeOff, Plus, Shield, Zap } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import type { Transaction } from '@/declarations/split_dapp.did'
@@ -9,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardStats({ transactions }: { transactions: Transaction[] }) {
-  const btcBalance = useAppSelector((state: any) => state.user.btcBalance);
+  const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
   const isLoading =
     btcBalance === null || btcBalance === undefined || btcBalance === "";
   const router = useRouter();

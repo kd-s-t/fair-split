@@ -22,7 +22,8 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
     : (transaction.timestamp ? new Date(Number(transaction.timestamp) / 1_000_000) : new Date());
 
   return (
-    <div className="container rounded-2xl p-6">
+    <div className="container !rounded-2xl !p-6">
+
       {/* <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}

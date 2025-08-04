@@ -34,7 +34,10 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
 
   return (
     <Fragment>
-      <div className="container rounded-2xl p-6">
+      <div className="container !rounded-2xl !p-6">
+
+        <Typography variant="large" className="mb-4">Escrow overview</Typography>
+
         <TransactionStats
           totalBTC={totalBTC}
           recipientCount={recipientCount}
@@ -106,7 +109,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
 
         <TransactionExplorerLinks transaction={transaction} />
       </div>
-      <div className="container rounded-2xl p-6 mt-4">
+      <div className="container !rounded-2xl !p-6 mt-4">
         {/* Escrow Actions */}
         <div className="mb-4 mt-4">
           <Typography variant="large" className="mb-4">Escrow actions</Typography>

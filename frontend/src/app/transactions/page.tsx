@@ -20,17 +20,18 @@ import {
   RotateCw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { statusMap } from "@/modules/dashboard/Activities";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { setTitle, setSubtitle } from '../../lib/redux/store';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
+import { useTransactions } from "@/hooks/transactions";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
-  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+  const { transactions } = useTransactions();
   console.log("transactions", transactions);
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
@@ -64,8 +65,6 @@ export default function TransactionsPage() {
   }, [localTransactions, principal]); // eslint-disable-line react-hooks/exhaustive-deps
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
-
-
 
   function truncateHash(hash: string): string {
     if (hash.length <= 16) return hash;
@@ -116,6 +115,23 @@ export default function TransactionsPage() {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
+  const getTransactionStatusBadge = (status: string) => {
+    const variant = (TRANSACTION_STATUS_MAP[status]?.variant ?? "default") as
+      | "secondary"
+      | "success"
+      | "primary"
+      | "error"
+      | "default"
+      | "outline"
+      | "warning";
+
+    return (
+      <Badge variant={variant}>
+        {TRANSACTION_STATUS_MAP[status]?.label || status}
+      </Badge>
+    );
+  };
+
   async function handleApprove(tx: any, idx: number) {
     if (!principal) return;
     setIsApproving(getTxId(tx));
@@ -133,7 +149,7 @@ export default function TransactionsPage() {
       const recipientPrincipal = typeof recipientEntry.principal === "string"
         ? Principal.fromText(recipientEntry.principal)
         : recipientEntry.principal;
-      
+
       await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
       toast.success('Approved successfully!');
       // Refresh transaction data
@@ -171,7 +187,7 @@ export default function TransactionsPage() {
       const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
       const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as any;
       const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
-      
+
       if (txIndex === -1) {
         toast.error('Transaction not found.');
         setIsDeclining(null);
@@ -204,20 +220,20 @@ export default function TransactionsPage() {
   // Function to mark unread transactions as read for the current recipient
   async function markUnreadTransactionsAsRead() {
     if (!principal) return;
-    
+
     // Find transactions where current user is a recipient and hasn't read them
     const unreadTransactionIds = localTransactions
       .filter(tx => {
         // Check if user is a recipient in this transaction
-        const recipientEntry = tx.to.find((entry: any) => 
+        const recipientEntry = tx.to.find((entry: any) =>
           String(entry.principal) === String(principal)
         );
-        
+
         // Return true if user is a recipient and hasn't read the transaction
         return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
       })
       .map(tx => tx.id);
-    
+
     if (unreadTransactionIds.length > 0) {
       try {
         const actor = await createSplitDappActor();
@@ -356,25 +372,7 @@ export default function TransactionsPage() {
                                 {tx.title}
                               </Typography>
 
-                              {(() => {
-                                const statusKey = tx.status;
-                                return (
-                                  <Badge
-                                    variant={
-                                      (statusMap[statusKey]?.variant ?? "default") as
-                                      | "secondary"
-                                      | "success"
-                                      | "primary"
-                                      | "error"
-                                      | "default"
-                                      | "outline"
-                                      | "warning"
-                                    }
-                                  >
-                                    {statusMap[statusKey]?.label || statusKey}
-                                  </Badge>
-                                );
-                              })()}
+                              {getTransactionStatusBadge(tx.status)}
                             </div>
                             <div className="flex items-center gap-2 text-xs mb-2">
                               <Typography

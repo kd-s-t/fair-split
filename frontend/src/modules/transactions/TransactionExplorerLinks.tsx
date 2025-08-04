@@ -1,6 +1,6 @@
 "use client";
 
-import { TransactionHash } from "@/components/ui/transaction-hash";
+import TransactionHash from "@/components/TransactionHash";
 
 interface TransactionExplorerLinksProps {
   transaction: any;

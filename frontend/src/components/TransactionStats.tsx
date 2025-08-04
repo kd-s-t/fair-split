@@ -10,7 +10,7 @@ interface TransactionStatsProps {
   statusClass?: string;
 }
 
-export function TransactionStats({ totalBTC, recipientCount, status, statusClass }: TransactionStatsProps) {
+export default function TransactionStats({ totalBTC, recipientCount, status, statusClass }: TransactionStatsProps) {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'confirmed':

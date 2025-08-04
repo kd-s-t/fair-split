@@ -55,28 +55,34 @@ export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) 
   }, []);
 
   const generateSuggestions = () => {
-    const newSuggestions = transactions
-      .filter(tx => tx.status === 'pending')
-      .map(tx => {
-        // Check if percentages are equally split
-        const percentages = tx.to.map(r => Number(r.percentage));
-        const isEquallySplit = percentages.every(p => p === percentages[0]);
-        
-        if (isEquallySplit) {
-          return {
-            transactionId: tx.id,
-            suggestion: 'approve' as const,
-            reason: 'Equal split detected - safe to approve'
-          };
-        } else {
-          return {
-            transactionId: tx.id,
-            suggestion: 'review' as const,
-            reason: 'Uneven split - review carefully'
-          };
-        }
-      });
+    console.log('Generating suggestions for transactions:', transactions);
+    
+    const pendingTransactions = transactions.filter(tx => tx.status === 'pending');
+    console.log('Pending transactions:', pendingTransactions);
+    
+    const newSuggestions = pendingTransactions.map(tx => {
+      // Check if percentages are equally split
+      const percentages = tx.to.map(r => Number(r.percentage));
+      const isEquallySplit = percentages.every(p => p === percentages[0]);
+      
+      console.log(`Transaction ${tx.id}: percentages=${percentages}, isEquallySplit=${isEquallySplit}`);
+      
+      if (isEquallySplit) {
+        return {
+          transactionId: tx.id,
+          suggestion: 'approve' as const,
+          reason: 'Equal split detected - safe to approve'
+        };
+      } else {
+        return {
+          transactionId: tx.id,
+          suggestion: 'review' as const,
+          reason: 'Uneven split - review carefully'
+        };
+      }
+    });
 
+    console.log('Generated suggestions:', newSuggestions);
     setSuggestions(newSuggestions);
   };
 

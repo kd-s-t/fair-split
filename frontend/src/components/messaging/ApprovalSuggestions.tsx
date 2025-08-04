@@ -1,21 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { populateTransactionSuggestions } from '@/lib/messaging/formPopulation';
-
-interface Transaction {
-  id: string;
-  status: string;
-  title: string;
-  to: Array<{
-    principal: string;
-    percentage: string;
-    status: unknown;
-  }>;
-}
+import type { NormalizedTransaction } from "@/modules/transactions/types";
 
 interface ApprovalSuggestionsProps {
-  transactions: Transaction[];
+  transactions: NormalizedTransaction[];
 }
 
 export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) {
@@ -28,6 +17,7 @@ export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) 
 
   useEffect(() => {
     console.log('ApprovalSuggestions component mounted');
+    console.log('Initial transactions received:', transactions);
     
     // Check if we should show suggestions (triggered by chat)
     const shouldShow = sessionStorage.getItem('splitsafe_show_approval_suggestions');
@@ -52,10 +42,12 @@ export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) 
     return () => {
       window.removeEventListener('refresh-approval-suggestions', handleRefresh);
     };
-  }, []);
+  }, [transactions]); // Added transactions to dependency array
 
   const generateSuggestions = () => {
     console.log('Generating suggestions for transactions:', transactions);
+    console.log('Transactions length:', transactions.length);
+    console.log('Transaction statuses:', transactions.map(tx => ({ id: tx.id, status: tx.status })));
     
     const pendingTransactions = transactions.filter(tx => tx.status === 'pending');
     console.log('Pending transactions:', pendingTransactions);
@@ -86,58 +78,6 @@ export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) 
     setSuggestions(newSuggestions);
   };
 
-  if (!showSuggestions || suggestions.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mb-6 p-4 bg-[#222] rounded-lg border border-[#333]">
-      <div className="flex items-center gap-2 mb-3">
-        <AlertCircle className="h-5 w-5 text-[#FEB64D]" />
-        <h3 className="font-semibold text-white">AI Approval Suggestions</h3>
-      </div>
-      
-      <div className="space-y-3">
-        {suggestions.map((suggestion) => (
-          <div key={suggestion.transactionId} className="flex items-center gap-3 p-3 bg-[#333] rounded">
-            {suggestion.suggestion === 'approve' && (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            )}
-            {suggestion.suggestion === 'decline' && (
-              <XCircle className="h-5 w-5 text-red-500" />
-            )}
-            {suggestion.suggestion === 'review' && (
-              <AlertCircle className="h-5 w-5 text-yellow-500" />
-            )}
-            
-            <div className="flex-1">
-              <p className="text-sm text-white">
-                <strong>Transaction {suggestion.transactionId}:</strong> {suggestion.reason}
-              </p>
-            </div>
-            
-            <Button
-              size="sm"
-              variant={suggestion.suggestion === 'approve' ? 'default' : 'outline'}
-              className="text-xs"
-            >
-              {suggestion.suggestion === 'approve' ? 'Approve' : 
-               suggestion.suggestion === 'decline' ? 'Decline' : 'Review'}
-            </Button>
-          </div>
-        ))}
-      </div>
-      
-      <div className="mt-3 pt-3 border-t border-[#444]">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowSuggestions(false)}
-          className="text-gray-400 hover:text-white"
-        >
-          Dismiss
-        </Button>
-      </div>
-    </div>
-  );
+  // Don't render anything - we'll handle suggestions inline in the transaction rows
+  return null;
 } 

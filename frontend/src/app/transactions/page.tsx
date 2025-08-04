@@ -54,6 +54,7 @@ import {
   Bitcoin,
   RotateCw,
   Eye,
+  Bot,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { statusMap } from "@/modules/dashboard/Activities";
@@ -63,6 +64,20 @@ import { setTitle, setSubtitle } from '../../lib/redux/store';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { ApprovalSuggestions } from "@/components/messaging/ApprovalSuggestions";
+
+// Helper function to get AI suggestion for a transaction
+function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
+  if (tx.status !== 'pending') return null;
+
+  const percentages = tx.to.map(r => Number(r.percentage));
+  const isEquallySplit = percentages.every(p => p === percentages[0]);
+
+  if (isEquallySplit) {
+    return "AI suggests: Approve - Equal split detected";
+  } else {
+    return "AI suggests: Review - Uneven split detected";
+  }
+}
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -83,14 +98,36 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const refreshIconRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    console.log('Transactions from Redux:', transactions);
+    console.log('Transactions length:', transactions?.length || 0);
     if (transactions && transactions.length > 0) {
       const sorted = [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
+      console.log('Setting localTransactions:', sorted);
       setLocalTransactions(sorted);
     }
   }, [transactions]);
+
+  // Listen for AI suggestion triggers
+  useEffect(() => {
+    const shouldShow = sessionStorage.getItem('splitsafe_show_approval_suggestions');
+    if (shouldShow) {
+      sessionStorage.removeItem('splitsafe_show_approval_suggestions');
+      setShowSuggestions(true);
+    }
+
+    const handleRefresh = () => {
+      setShowSuggestions(true);
+    };
+
+    window.addEventListener('refresh-approval-suggestions', handleRefresh);
+    return () => {
+      window.removeEventListener('refresh-approval-suggestions', handleRefresh);
+    };
+  }, []);
 
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
@@ -98,20 +135,20 @@ export default function TransactionsPage() {
   // Function to mark unread transactions as read for the current recipient
   const markUnreadTransactionsAsRead = useCallback(async () => {
     if (!principal) return;
-    
+
     // Find transactions where current user is a recipient and hasn't read them
     const unreadTransactionIds = localTransactions
       .filter(tx => {
         // Check if user is a recipient in this transaction
-        const recipientEntry = tx.to.find((entry) => 
+        const recipientEntry = tx.to.find((entry) =>
           String(entry.principal) === String(principal)
         );
-        
+
         // Return true if user is a recipient and hasn't read the transaction
         return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
       })
       .map(tx => tx.id);
-    
+
     if (unreadTransactionIds.length > 0) {
       try {
         const actor = await createSplitDappActor();
@@ -196,7 +233,7 @@ export default function TransactionsPage() {
       const recipientPrincipal = typeof recipientEntry.principal === "string"
         ? Principal.fromText(recipientEntry.principal)
         : recipientEntry.principal;
-      
+
       await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
       toast.success('Approved successfully!');
       // Refresh transaction data
@@ -234,7 +271,7 @@ export default function TransactionsPage() {
       const senderPrincipalStr = tx.from;
       const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
       const txIndex = txs.transactions.findIndex((t) => (t as { id: string }).id === tx.id);
-      
+
       if (txIndex === -1) {
         toast.error('Transaction not found.');
         setIsDeclining(null);
@@ -290,11 +327,14 @@ export default function TransactionsPage() {
     }
   };
 
+  console.log('Rendering ApprovalSuggestions with localTransactions:', localTransactions);
+  console.log('localTransactions length:', localTransactions.length);
+
   return (
     <>
       {/* AI Approval Suggestions */}
       <ApprovalSuggestions transactions={localTransactions} />
-      
+
       {/* Search, Filter Section, and Refresh Icon in the same row */}
       <div className="flex items-center gap-4 mb-6 w-full">
         <div className="flex-1">
@@ -427,24 +467,24 @@ export default function TransactionsPage() {
                                 </Typography>
                               </div>
                             )}
-                            {((tx.status === 'pending' || tx.status === 'confirmed') && 
+                            {((tx.status === 'pending' || tx.status === 'confirmed') &&
                               !isSentByUser(tx) && hasUserApproved(tx)) && (
-                              <Typography
-                                variant="small"
-                                className="text-[#9F9F9F] ml-2"
-                              >
-                                • You approved
-                              </Typography>
-                            )}
-                            {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') && 
+                                <Typography
+                                  variant="small"
+                                  className="text-[#9F9F9F] ml-2"
+                                >
+                                  • You approved
+                                </Typography>
+                              )}
+                            {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') &&
                               !isSentByUser(tx) && hasUserDeclined(tx)) && (
-                              <Typography
-                                variant="small"
-                                className="text-[#9F9F9F] ml-2"
-                              >
-                                • You declined
-                              </Typography>
-                            )}
+                                <Typography
+                                  variant="small"
+                                  className="text-[#9F9F9F] ml-2"
+                                >
+                                  • You declined
+                                </Typography>
+                              )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -546,16 +586,17 @@ export default function TransactionsPage() {
                                     : '0.00000000';
                                 } else {
                                   // If receiver, show their specific amount
-                                  const recipientEntry = tx.to.find((entry) => 
+                                  const recipientEntry = tx.to.find((entry) =>
                                     String(entry.principal) === String(principal)
                                   );
-                                  return recipientEntry 
+                                  return recipientEntry
                                     ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
                                     : '0.00000000';
                                 }
                               })()} BTC
                             </Typography>
                           </div>
+
                         </div>
 
                         <div className="flex flex-col gap-1">
@@ -567,10 +608,10 @@ export default function TransactionsPage() {
                               `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
                             ) : (
                               (() => {
-                                const recipientEntry = tx.to.find((entry) => 
+                                const recipientEntry = tx.to.find((entry) =>
                                   String(entry.principal) === String(principal)
                                 );
-                                return recipientEntry && recipientEntry.percentage 
+                                return recipientEntry && recipientEntry.percentage
                                   ? `${recipientEntry.percentage}%`
                                   : 'N/A';
                               })()
@@ -591,6 +632,15 @@ export default function TransactionsPage() {
                           </Typography>
                         </div>
                       </div>
+                                             {/* AI Suggestion below amount */}
+                       {showSuggestions && getTransactionSuggestion(tx) && (
+                         <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300 w-full">
+                           <div className="flex items-center gap-2">
+                             <Bot className="w-3 h-3 text-blue-400" />
+                             {getTransactionSuggestion(tx)}
+                           </div>
+                         </div>
+                       )}
                     </div>
                   </motion.div>
                 );

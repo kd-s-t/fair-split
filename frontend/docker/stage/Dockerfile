@@ -26,18 +26,18 @@ ENV LIGHTNING_CSS_BINARY_TARGET=linux-x64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
-COPY package*.json ./
-COPY next.config.ts ./
-COPY tailwind.config.js ./
-COPY postcss.config.mjs ./
-COPY tsconfig.json ./
+COPY frontend/package*.json ./
+COPY frontend/next.config.ts ./
+COPY frontend/tailwind.config.js ./
+COPY frontend/postcss.config.mjs ./
+COPY frontend/tsconfig.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
 # Force rebuild of native modules for the correct architecture
 RUN npm install --include=dev --no-optional --force
 
 # Copy frontend source
-COPY . .
+COPY frontend/ .
 
 # Rebuild native modules for the current platform
 RUN npm rebuild

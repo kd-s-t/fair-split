@@ -2,17 +2,16 @@
 
 import { Copy, Shield, CircleX, CircleAlert } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { TransactionStats } from "@/components/ui/transaction-stats";
+import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";
-
 import { PendingEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 
-export default function PendingEscrowDetails({ 
-  transaction, 
+export default function PendingEscrowDetails({
+  transaction,
   onCancel
 }: PendingEscrowDetailsProps) {
   const depositAddress = transaction?.depositAddress ||
@@ -26,8 +25,10 @@ export default function PendingEscrowDetails({
   const recipientCount = transaction?.to?.length || 0;
 
   return (
-    <>
-      <TransactionStats 
+    <div className="container !rounded-2xl !p-6">
+      <Typography variant="large" className="mb-4">Escrow overview</Typography>
+
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}
@@ -86,7 +87,7 @@ export default function PendingEscrowDetails({
       <hr className="my-8 text-[#424444] h-[1px]" />
 
       {transaction.status === "pending" && !transaction.releasedAt && onCancel && (
-        <motion.div 
+        <motion.div
           className="flex items-center gap-4 mt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -97,8 +98,8 @@ export default function PendingEscrowDetails({
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.1 }}
           >
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
               onClick={onCancel}
             >
@@ -111,7 +112,7 @@ export default function PendingEscrowDetails({
               Cancel escrow
             </Button>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="flex items-center gap-2"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -129,6 +130,6 @@ export default function PendingEscrowDetails({
           </motion.div>
         </motion.div>
       )}
-    </>
+    </div>
   );
 }

@@ -57,12 +57,10 @@ import {
   Bot,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { statusMap } from "@/modules/dashboard/Activities";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { setTitle, setSubtitle } from '../../lib/redux/store';
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/lib/redux/store";
+import { useDispatch } from "react-redux";
 import { ApprovalSuggestions } from "@/components/messaging/ApprovalSuggestions";
 
 // Helper function to get AI suggestion for a transaction
@@ -78,11 +76,13 @@ function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
     return "AI suggests: Review - Uneven split detected";
   }
 }
+import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
+import { useTransactions } from "@/hooks/transactions";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
-  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+  const { transactions } = useTransactions();
   console.log("transactions", transactions);
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
@@ -165,7 +165,9 @@ export default function TransactionsPage() {
     if (localTransactions.length > 0 && principal) {
       markUnreadTransactionsAsRead();
     }
-  }, [localTransactions, principal, markUnreadTransactionsAsRead]);
+  }, [localTransactions, principal]); // eslint-disable-line react-hooks/exhaustive-deps
+  const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
+  const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
 
   function truncateHash(hash: string): string {
     if (hash.length <= 16) return hash;
@@ -216,7 +218,24 @@ export default function TransactionsPage() {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
-  async function handleApprove(tx: NormalizedTransaction) {
+  const getTransactionStatusBadge = (status: string) => {
+    const variant = (TRANSACTION_STATUS_MAP[status]?.variant ?? "default") as
+      | "secondary"
+      | "success"
+      | "primary"
+      | "error"
+      | "default"
+      | "outline"
+      | "warning";
+
+    return (
+      <Badge variant={variant}>
+        {TRANSACTION_STATUS_MAP[status]?.label || status}
+      </Badge>
+    );
+  };
+
+  async function handleApprove(tx: any, idx: number) {
     if (!principal) return;
     setIsApproving(getTxId(tx));
     try {
@@ -268,9 +287,9 @@ export default function TransactionsPage() {
           : recipientEntry.principal;
 
       // Get the sender's transactions to find the correct index
-      const senderPrincipalStr = tx.from;
-      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      const txIndex = txs.transactions.findIndex((t) => (t as { id: string }).id === tx.id);
+      const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
+      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as any;
+      const txIndex = txs.transactions.findIndex((t: any) => t.id === tx.id);
 
       if (txIndex === -1) {
         toast.error('Transaction not found.');
@@ -299,6 +318,34 @@ export default function TransactionsPage() {
     await actor.markTransactionsAsRead(principal);
     dispatch(markAllAsRead());
     router.push(`/transactions/${tx.id}`);
+  }
+
+  // Function to mark unread transactions as read for the current recipient
+  async function markUnreadTransactionsAsRead() {
+    if (!principal) return;
+
+    // Find transactions where current user is a recipient and hasn't read them
+    const unreadTransactionIds = localTransactions
+      .filter(tx => {
+        // Check if user is a recipient in this transaction
+        const recipientEntry = tx.to.find((entry: any) =>
+          String(entry.principal) === String(principal)
+        );
+
+        // Return true if user is a recipient and hasn't read the transaction
+        return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === "");
+      })
+      .map(tx => tx.id);
+
+    if (unreadTransactionIds.length > 0) {
+      try {
+        const actor = await createSplitDappActor();
+        await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
+        console.log(`Marked ${unreadTransactionIds.length} transactions as read`, unreadTransactionIds);
+      } catch (error) {
+        console.error('Failed to mark transactions as read:', error);
+      }
+    }
   }
 
   const filteredTransactions = localTransactions.filter(tx => {
@@ -419,236 +466,237 @@ export default function TransactionsPage() {
                               {tx.title}
                             </Typography>
 
-                            {(() => {
-                              const statusKey = tx.status;
-                              return (
-                                <Badge
-                                  variant={
-                                    (statusMap[statusKey]?.variant ?? "default") as
-                                    | "secondary"
-                                    | "success"
-                                    | "primary"
-                                    | "error"
-                                    | "default"
-                                    | "outline"
-                                    | "warning"
-                                  }
-                                >
-                                  {statusMap[statusKey]?.label || statusKey}
-                                </Badge>
-                              );
-                            })()}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs mb-2">
-                            <Typography
-                              variant="small"
-                              className="text-[#9F9F9F]"
+                            return (
+                            <motion.div
+                              key={tx.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, delay: idx * 0.05 }}
+                              className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors' : ''}`}
+                              onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
                             >
-                              {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
-                            </Typography>
-                            {getTransactionCategory(tx) === "sent" ? (
-                              <div className="flex items-center gap-1 text-[#007AFF]">
-                                <ArrowUpRight size={14} />
-                                <Typography
-                                  variant="muted"
-                                  className="!text-[#007AFF]"
-                                >
-                                  Sent
-                                </Typography>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-[#00C287]">
-                                <ArrowDownLeft size={14} />
-                                <Typography
-                                  variant="muted"
-                                  className="!text-[#00C287]"
-                                >
-                                  Receiving
-                                </Typography>
-                              </div>
-                            )}
-                            {((tx.status === 'pending' || tx.status === 'confirmed') &&
-                              !isSentByUser(tx) && hasUserApproved(tx)) && (
-                                <Typography
-                                  variant="small"
-                                  className="text-[#9F9F9F] ml-2"
-                                >
-                                  • You approved
-                                </Typography>
-                              )}
-                            {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') &&
-                              !isSentByUser(tx) && hasUserDeclined(tx)) && (
-                                <Typography
-                                  variant="small"
-                                  className="text-[#9F9F9F] ml-2"
-                                >
-                                  • You declined
-                                </Typography>
-                              )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRowClick(tx);
-                            }}
-                          >
-                            <Eye size={14} />
-                          </Button>
-                          {pendingApproval && (
-                            <div className="flex gap-2">
-                              <Button
-                                className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                onClick={() => handleApprove(tx)}
-                                disabled={isApproving === getTxId(tx)}
-                              >
-                                {isApproving === getTxId(tx) ? (
-                                  <span className="flex items-center gap-2">
-                                    <svg
-                                      className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
+                              <div key={tx.id} className="flex-1 min-w-0">
+                                <div className="flex justify-between">
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Typography variant="large" className="text-xl">
+                                        {tx.title}
+                                      </Typography>
+
+                                      {getTransactionStatusBadge(tx.status)}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs mb-2">
+                                      <Typography
+                                        variant="small"
+                                        className="text-[#9F9F9F]"
+                                      >
+                                        {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
+                                      </Typography>
+                                      {getTransactionCategory(tx) === "sent" ? (
+                                        <div className="flex items-center gap-1 text-[#007AFF]">
+                                          <ArrowUpRight size={14} />
+                                          <Typography
+                                            variant="muted"
+                                            className="!text-[#007AFF]"
+                                          >
+                                            Sent
+                                          </Typography>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1 text-[#00C287]">
+                                          <ArrowDownLeft size={14} />
+                                          <Typography
+                                            variant="muted"
+                                            className="!text-[#00C287]"
+                                          >
+                                            Receiving
+                                          </Typography>
+                                        </div>
+                                      )}
+                                      {((tx.status === 'pending' || tx.status === 'confirmed') &&
+                                        !isSentByUser(tx) && hasUserApproved(tx)) && (
+                                          <Typography
+                                            variant="small"
+                                            className="text-[#9F9F9F] ml-2"
+                                          >
+                                            • You approved
+                                          </Typography>
+                                        )}
+                                      {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') &&
+                                        !isSentByUser(tx) && hasUserDeclined(tx)) && (
+                                          <Typography
+                                            variant="small"
+                                            className="text-[#9F9F9F] ml-2"
+                                          >
+                                            • You declined
+                                          </Typography>
+                                        )}
+                                    </div>
+                                  </div >
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRowClick(tx);
+                                      }}
                                     >
-                                      <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                      />
-                                      <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v8z"
-                                      />
-                                    </svg>
-                                    Approving...
-                                  </span>
-                                ) : (
-                                  'Approve'
-                                )}
-                              </Button>
-                              <Button
-                                className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                onClick={() => handleDecline(tx)}
-                                disabled={isDeclining === getTxId(tx)}
-                              >
-                                {isDeclining === getTxId(tx) ? (
-                                  <span className="flex items-center gap-2">
-                                    <svg
-                                      className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
+                                      <Eye size={14} />
+                                    </Button>
+                                    {pendingApproval && (
+                                      <div className="flex gap-2">
+                                        <Button
+                                          className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                          onClick={() => handleApprove(tx)}
+                                          disabled={isApproving === getTxId(tx)}
+                                        >
+                                          {isApproving === getTxId(tx) ? (
+                                            <span className="flex items-center gap-2">
+                                              <svg
+                                                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <circle
+                                                  className="opacity-25"
+                                                  cx="12"
+                                                  cy="12"
+                                                  r="10"
+                                                  stroke="currentColor"
+                                                  strokeWidth="4"
+                                                />
+                                                <path
+                                                  className="opacity-75"
+                                                  fill="currentColor"
+                                                  d="M4 12a8 8 0 018-8v8z"
+                                                />
+                                              </svg>
+                                              Approving...
+                                            </span>
+                                          ) : (
+                                            'Approve'
+                                          )}
+                                        </Button>
+                                        <Button
+                                          className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                          onClick={() => handleDecline(tx)}
+                                          disabled={isDeclining === getTxId(tx)}
+                                        >
+                                          {isDeclining === getTxId(tx) ? (
+                                            <span className="flex items-center gap-2">
+                                              <svg
+                                                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <circle
+                                                  className="opacity-25"
+                                                  cx="12"
+                                                  cy="12"
+                                                  r="10"
+                                                  stroke="currentColor"
+                                                  strokeWidth="4"
+                                                />
+                                                <path
+                                                  className="opacity-75"
+                                                  fill="currentColor"
+                                                  d="M4 12a8 8 0 018-8v8z"
+                                                />
+                                              </svg>
+                                              Declining...
+                                            </span>
+                                          ) : (
+                                            'Decline'
+                                          )}
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div >
+                                <div className="grid grid-cols-3 mt-2">
+                                  <div>
+                                    <Typography variant="small" className="text-[#9F9F9F]">
+                                      Amount
+                                    </Typography>
+                                    <div className="flex items-center gap-1">
+                                      <Bitcoin size={16} color="#F97415" />
+                                      <Typography variant="base" className="font-semibold">
+                                        {(() => {
+                                          if (isSentByUser(tx)) {
+                                            // If sender, show total amount
+                                            return tx.to && Array.isArray(tx.to)
+                                              ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                                              : '0.00000000';
+                                          } else {
+                                            // If receiver, show their specific amount
+                                            const recipientEntry = tx.to.find((entry) =>
+                                              String(entry.principal) === String(principal)
+                                            );
+                                            return recipientEntry
+                                              ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
+                                              : '0.00000000';
+                                          }
+                                        })()} BTC
+                                      </Typography>
+                                    </div>
+
+                                  </div>
+
+                                  <div className="flex flex-col gap-1">
+                                    <Typography variant="small" className="text-[#9F9F9F]">
+                                      {isSentByUser(tx) ? "To" : "Your Share"}
+                                    </Typography>
+                                    <Typography variant="base" className="font-semibold">
+                                      {isSentByUser(tx) ? (
+                                        `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
+                                      ) : (
+                                        (() => {
+                                          const recipientEntry = tx.to.find((entry) =>
+                                            String(entry.principal) === String(principal)
+                                          );
+                                          return recipientEntry && recipientEntry.percentage
+                                            ? `${recipientEntry.percentage}%`
+                                            : 'N/A';
+                                        })()
+                                      )}
+                                    </Typography>
+                                  </div>
+
+                                  <div className="flex flex-col gap-1">
+                                    <Typography variant="small" className="text-[#9F9F9F]">
+                                      Bitcoin Address
+                                    </Typography>
+                                    <Typography
+                                      variant="base"
+                                      className="font-semibold text-[#FEB64D] truncate"
+                                      title={Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? tx.bitcoinAddress[0] : 'No address available'}
                                     >
-                                      <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                      />
-                                      <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v8z"
-                                      />
-                                    </svg>
-                                    Declining...
-                                  </span>
-                                ) : (
-                                  'Decline'
-                                )}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 mt-2">
-                        <div>
-                          <Typography variant="small" className="text-[#9F9F9F]">
-                            Amount
-                          </Typography>
-                          <div className="flex items-center gap-1">
-                            <Bitcoin size={16} color="#F97415" />
-                            <Typography variant="base" className="font-semibold">
-                              {(() => {
-                                if (isSentByUser(tx)) {
-                                  // If sender, show total amount
-                                  return tx.to && Array.isArray(tx.to)
-                                    ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
-                                    : '0.00000000';
-                                } else {
-                                  // If receiver, show their specific amount
-                                  const recipientEntry = tx.to.find((entry) =>
-                                    String(entry.principal) === String(principal)
-                                  );
-                                  return recipientEntry
-                                    ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
-                                    : '0.00000000';
+                                      {Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? truncateHash(tx.bitcoinAddress[0] || '') : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
+                                    </Typography>
+                                  </div>
+                                </div>
+                                {/* AI Suggestion below amount */}
+                                {
+                                  showSuggestions && getTransactionSuggestion(tx) && (
+                                    <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300 w-full">
+                                      <div className="flex items-center gap-2">
+                                        <Bot className="w-3 h-3 text-blue-400" />
+                                        {getTransactionSuggestion(tx)}
+                                      </div>
+                                    </div>
+                                  )
                                 }
-                              })()} BTC
-                            </Typography>
-                          </div>
-
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                          <Typography variant="small" className="text-[#9F9F9F]">
-                            {isSentByUser(tx) ? "To" : "Your Share"}
-                          </Typography>
-                          <Typography variant="base" className="font-semibold">
-                            {isSentByUser(tx) ? (
-                              `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
-                            ) : (
-                              (() => {
-                                const recipientEntry = tx.to.find((entry) =>
-                                  String(entry.principal) === String(principal)
-                                );
-                                return recipientEntry && recipientEntry.percentage
-                                  ? `${recipientEntry.percentage}%`
-                                  : 'N/A';
-                              })()
-                            )}
-                          </Typography>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                          <Typography variant="small" className="text-[#9F9F9F]">
-                            Bitcoin Address
-                          </Typography>
-                          <Typography
-                            variant="base"
-                            className="font-semibold text-[#FEB64D] truncate"
-                            title={Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? tx.bitcoinAddress[0] : 'No address available'}
-                          >
-                            {Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? truncateHash(tx.bitcoinAddress[0] || '') : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
-                          </Typography>
-                        </div>
-                      </div>
-                                             {/* AI Suggestion below amount */}
-                       {showSuggestions && getTransactionSuggestion(tx) && (
-                         <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300 w-full">
-                           <div className="flex items-center gap-2">
-                             <Bot className="w-3 h-3 text-blue-400" />
-                             {getTransactionSuggestion(tx)}
-                           </div>
-                         </div>
-                       )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </>
+                              </div >
+                            </motion.div >
+                            );
+})}
+                          </div >
+                        </>
         )}
-      </motion.div>
-    </>
-  );
+                      </motion.div >
+                    </>
+                    );
 }

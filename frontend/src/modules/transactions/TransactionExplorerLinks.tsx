@@ -14,13 +14,13 @@ export default function TransactionExplorerLinks({ transaction, depositAddress }
       {/* Bitcoin Address Block Explorer Links */}
       {depositAddress && (
         <div className="flex gap-2 mt-2">
-          <button 
+          <button
             onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info'}/address/${depositAddress}`, '_blank')}
             className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
           >
             View on Blockstream
           </button>
-          <button 
+          <button
             onClick={() => window.open(`${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/address/${depositAddress}`, '_blank')}
             className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
           >

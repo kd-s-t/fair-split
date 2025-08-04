@@ -20,8 +20,11 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
   const recipientCount = transaction?.to?.length || 0;
 
   return (
-    <>
-      <TransactionStats 
+    <div className="container !rounded-2xl !p-6">
+
+      <Typography variant="large" className="mb-4">Escrow overview</Typography>
+
+      <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}
@@ -74,6 +77,6 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 } 

@@ -1,5 +1,5 @@
 import { Copy } from "lucide-react";
-import { Typography } from "./typography";
+import { Typography } from "./ui/typography";
 import { toast } from "sonner";
 
 interface TransactionHashProps {
@@ -15,7 +15,7 @@ interface TransactionHashProps {
   className?: string;
 }
 
-export function TransactionHash({
+export default function TransactionHash({
   title,
   hash,
   description,
@@ -33,8 +33,8 @@ export function TransactionHash({
     }
   };
 
-  const displayHash = truncate && hash.length > 20 
-    ? `${hash.slice(0, 20)}...` 
+  const displayHash = truncate && hash.length > 20
+    ? `${hash.slice(0, 20)}...`
     : hash;
 
   return (
@@ -52,11 +52,11 @@ export function TransactionHash({
           </div>
         )}
       </div>
-      
+
       {explorerLinks.length > 0 && (
         <div className="flex gap-2 mt-2">
           {explorerLinks.map((link, index) => (
-            <button 
+            <button
               key={index}
               onClick={() => window.open(link.url, '_blank')}
               className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
@@ -66,7 +66,7 @@ export function TransactionHash({
           ))}
         </div>
       )}
-      
+
       {description && (
         <Typography variant="p" className="text-[#9F9F9F] mt-2">
           {description}

@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 .container {
-  @apply p-3 rounded-[10px] border bg-[#222222] border-[#303434];
+  @apply px-3 py-3 pb-3 pt-3 rounded-[10px] border bg-[#222222] border-[#303434];
 }
 
 .container-error {

@@ -42,7 +42,6 @@ echo "  MEMPOOL_URL: $NEXT_PUBLIC_MEMPOOL_URL"
 case $NODE_ENV in
     "development")
         print_status "Starting in development mode..."
-        cd frontend
         npm run dev
         ;;
     "staging")
@@ -60,17 +59,16 @@ case $NODE_ENV in
             print_status "Canister ID provided: $NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP"
             
             # Check if declarations directory exists and has content
-            if [ ! -d "frontend/src/declarations" ] || [ -z "$(ls -A frontend/src/declarations 2>/dev/null)" ]; then
+            if [ ! -d "src/declarations" ] || [ -z "$(ls -A src/declarations 2>/dev/null)" ]; then
                 print_status "No declarations found, creating placeholder..."
-                mkdir -p frontend/src/declarations
-                echo "// Placeholder declarations - will be updated at runtime" > frontend/src/declarations/index.ts
+                mkdir -p src/declarations
+                echo "// Placeholder declarations - will be updated at runtime" > src/declarations/index.ts
             fi
         else
             print_status "No canister ID provided, using default configuration"
         fi
         
         # Start the application
-        cd frontend
         print_success "Starting Next.js application on port $PORT"
         npm start
         ;;
@@ -78,7 +76,6 @@ case $NODE_ENV in
         print_status "Starting in production mode..."
         
         # Production mode - no DFX waiting, no dynamic declarations
-        cd frontend
         print_success "Starting production Next.js application on port $PORT"
         npm start
         ;;

@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for SplitSafe
 # Stage 1: Base image with Node.js
-FROM node:20-alpine AS base
+FROM node:20.13.1-alpine AS base
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -26,11 +26,11 @@ ENV LIGHTNING_CSS_BINARY_TARGET=linux-arm64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
-COPY frontend/package*.json ./
-COPY frontend/next.config.ts ./
-COPY frontend/tailwind.config.js ./
-COPY frontend/postcss.config.mjs ./
-COPY frontend/tsconfig.json ./
+COPY package*.json ./
+COPY next.config.ts ./
+COPY tailwind.config.js ./
+COPY postcss.config.mjs ./
+COPY tsconfig.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
 # Force rebuild of native modules for the correct architecture
@@ -39,8 +39,8 @@ RUN npm install --include=dev --no-optional --force
 # Ensure TypeScript is available for next.config.ts
 RUN npm install typescript --save-dev
 
-# Copy frontend source
-COPY frontend/ .
+# Copy source files
+COPY . .
 
 # Force reinstall lightningcss with correct binary
 RUN npm uninstall lightningcss && npm install lightningcss --force

@@ -2,7 +2,7 @@
   "canisters": {
     "split_dapp": {
       "type": "motoko",
-      "main": "backend/src/main.mo",
+      "main": "icp/src/main.mo",
       "metadata": [
         {
           "name": "candid:service"
@@ -10,7 +10,7 @@
       ]
     },
     "split_dapp_test": {
-      "main": "backend/test/main_test.mo",
+      "main": "icp/test/main_test.mo",
       "type": "motoko",
       "dependencies": ["split_dapp"]
     }

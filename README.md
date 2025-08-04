@@ -5,10 +5,10 @@
 </div> -->
 
 <div align="center"> 
-	<img src="./frontend/public/githublogo.png" width="20%" />
+	<img src="./public/githublogo.png" width="20%" />
 	by:  
 	<a href="https://dashboard.dorahacks.io/org/3872" target="_blank">
-		<img src="./frontend/public/team.png" width="5%" /> 
+		<img src="./public/team.png" width="5%" /> 
 	</a>
 </div>
 
@@ -24,7 +24,6 @@ A decentralized, trustless Bitcoin escrow and payout system using Internet Compu
 	<img src="https://img.shields.io/badge/Framer Motion-EF008F?style=for-the-badge&logo=framer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" />
 </div>
 
 <div align="center"> 
@@ -45,59 +44,93 @@ A decentralized, trustless Bitcoin escrow and payout system using Internet Compu
 	<img src="https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white" /> 
 </div>
 
-### Deploy Canisters and Sync Declarations
+## Quick Start
+
+### Prerequisites
+- Node.js 20.13.1 (use `nvm use` to switch to the correct version)
+- Docker (for containerized deployment)
+- dfx (for ICP canister deployment)
+
+### Deploy Canisters
 ```bash
-chmod +x nuke.sh
-./nuke.sh
+chmod +x scripts/nuke.sh
+./scripts/nuke.sh
 ```
 
-### Run frontend http://localhost:3000
+### Run Frontend Development Server
 ```bash
-cd frontend
+# Switch to correct Node version
 nvm use
-npm i
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-### Docker Deployment
+The application will be available at http://localhost:3000
 
-#### Quick Start with Docker
+## Docker Deployment
+
+### Local Development with Docker
 ```bash
-# Production deployment
-docker-compose -f frontend/docker/docker-compose.yml up --build
+# Start local development environment
+docker-compose -f docker/local/docker-compose.yml up --build
 
-# Development with hot reloading
-docker-compose -f frontend/docker/docker-compose.yml --profile dev up --build
-
-# Manual builds
-docker build -f frontend/docker/Dockerfile -t splitsafe:latest .
-docker build -f frontend/docker/Dockerfile.dev -t splitsafe:dev .
+# Stop the containers
+docker-compose -f docker/local/docker-compose.yml down
 ```
 
-#### Docker Commands
+### Staging Deployment with Docker
 ```bash
-# Build production image
-docker build -f frontend/docker/Dockerfile -t splitsafe:latest .
+# Start staging environment
+docker-compose -f docker/stage/docker-compose.yml up --build
 
-# Run production container
-docker run -p 3000:3000 -p 8080:8080 splitsafe:latest
-
-# Build development image
-docker build -f frontend/docker/Dockerfile.dev -t splitsafe:dev .
-
-# Run development container with volume mounts
-docker run -p 3001:3000 -v $(pwd)/frontend:/app/frontend -v $(pwd)/backend:/app/backend splitsafe:dev
+# Stop the containers
+docker-compose -f docker/stage/docker-compose.yml down
 ```
 
-#### Docker Compose Services
-- **Production**: `splitsafe` - Full production build with health checks
-- **Development**: `splitsafe-dev` - Hot reloading for development
+### Manual Docker Builds
+```bash
+# Build local development image
+docker build -f docker/local/Dockerfile -t splitsafe:local .
 
-For detailed Docker documentation, see [frontend/docker/DOCKER.md](frontend/docker/DOCKER.md).
+# Build staging image
+docker build -f docker/stage/Dockerfile -t splitsafe:staging .
 
-### AWS Infrastructure with Terraform
+# Run local development container
+docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules splitsafe:local
 
-#### Deploy EC2 Instance
+# Run staging container
+docker run -p 3001:3000 splitsafe:staging
+```
+
+## Development
+
+### Available Scripts
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript type checking
+```
+
+### Git Hooks (Husky)
+The project uses Husky for Git hooks:
+- **Pre-commit**: Runs linting before each commit
+- **Pre-push**: Runs tests before pushing code
+
+### Code Quality
+- ESLint for code linting
+- TypeScript for type checking
+- Husky for Git hooks
+- Prettier for code formatting (if configured)
+
+## AWS Infrastructure with Terraform
+
+### Deploy EC2 Instance
 ```bash
 cd terraform
 terraform init
@@ -105,19 +138,44 @@ terraform plan
 terraform apply
 ```
 
-#### Destroy Infrastructure
+### Destroy Infrastructure
 ```bash
 cd terraform
 terraform destroy
 ```
 
-#### Terraform Outputs
+### Terraform Outputs
 - `public_ip` - EC2 instance public IP
 - `instance_id` - EC2 instance ID
 
-Use principals.json to transfer to someone else.
+## Project Structure
 
-After setting up a `principals.json` will be generated these are sample user for sending money
+```
+splitsafe/
+├── src/                    # Source code
+│   ├── app/               # Next.js app directory
+│   ├── components/        # React components
+│   ├── lib/              # Utilities and services
+│   └── modules/          # Feature modules
+├── public/               # Static assets
+├── docker/              # Docker configurations
+│   ├── local/           # Local development
+│   └── stage/           # Staging deployment
+├── icp/                 # ICP canister code
+├── terraform/           # Infrastructure as code
+└── scripts/             # Utility scripts
+```
+
+## Configuration
+
+### Environment Variables
+Copy the example environment file and configure your settings:
+```bash
+cp env.example .env
+```
+
+### Principals
+After setting up, a `principals.json` will be generated with sample users for testing.
 
 ## Authors
 

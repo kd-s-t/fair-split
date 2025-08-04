@@ -3,13 +3,13 @@ services:
     container_name: splitsafe-local
     build:
       context: ../..
-      dockerfile: docker/local/Dockerfile
+      dockerfile: docker/local/Dockerfile.local
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app/frontend
-      - /app/frontend/node_modules
+      - ../..:/app
+      - /app/node_modules
     env_file:
-      - ../../frontend/.env
+      - ../../.env
     environment:
       - NODE_ENV=development 

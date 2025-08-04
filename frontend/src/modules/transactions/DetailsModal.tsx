@@ -51,7 +51,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
         </div>
         <div className="mb-2">
           <span className="font-semibold">Date:</span>
-          <span className="ml-2 text-xs">{new Date(Number(transaction.timestamp) * 1000).toLocaleString()}</span>
+          <span className="ml-2 text-xs">{new Date(Number(transaction.createdAt) * 1000).toLocaleString()}</span>
         </div>
       </motion.div>
     </motion.div>

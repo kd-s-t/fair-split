@@ -19,7 +19,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
   const releasedAt = transaction.releasedAt;
   const completedDate = releasedAt
     ? new Date(Number(releasedAt) / 1_000_000) // Convert nanoseconds to milliseconds
-    : (transaction.timestamp ? new Date(Number(transaction.timestamp) / 1_000_000) : new Date());
+    : new Date(Number(transaction.createdAt) / 1_000_000);
 
   return (
     <div className="mb-8">
@@ -55,7 +55,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
             <div>
               <Typography variant="small" className="text-[#9F9F9F]">Transaction</Typography>
               <Typography variant="base" className="text-white font-semibold">
-                {transaction.txHash ? `${transaction.txHash.slice(0, 10)}...` : 'N/A'}
+                {transaction.bitcoinTransactionHash ? `${transaction.bitcoinTransactionHash.slice(0, 10)}...` : 'N/A'}
               </Typography>
             </div>
           </div>
@@ -72,23 +72,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
                 </span>
                 <div>
                   <Typography variant="base" className="text-white font-semibold">Recipient {idx + 1}</Typography>
-                  <Typography variant="small" className="text-[#9F9F9F]">{String(toEntry.address || toEntry.principal)}</Typography>
-                  {toEntry.txHash && (
-                    <div className="mt-1">
-                      <Typography variant="small" className="text-[#9F9F9F]">Transaction hash</Typography>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Typography variant="small" className="text-white font-mono">
-                          {toEntry.txHash.slice(0, 18)}...
-                        </Typography>
-                        <button 
-                          onClick={() => window.open(`https://blockstream.info/tx/${toEntry.txHash}`, '_blank')}
-                          className="text-[#4F3F27] hover:text-[#FEB64D] text-xs underline"
-                        >
-                          View
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <Typography variant="small" className="text-[#9F9F9F]">{String(toEntry.principal)}</Typography>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2 min-w-[160px]">

@@ -5,11 +5,11 @@ import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
 import { CircleCheck, Clock8, Eye, EyeOff, Plus, Shield, Zap } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import type { Transaction } from '@/declarations/split_dapp.did'
+import type { NormalizedTransaction } from '@/modules/transactions/types'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function DashboardStats({ transactions }: { transactions: Transaction[] }) {
+export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
   const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
   const isLoading =
     btcBalance === null || btcBalance === undefined || btcBalance === "";

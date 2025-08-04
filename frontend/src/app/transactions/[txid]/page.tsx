@@ -15,12 +15,34 @@ import CancelledEscrowDetails from "@/modules/transactions/CancelledEscrowDetail
 import ConfirmedEscrowActions from "@/modules/transactions/ConfirmedEscrowActions";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
-import type { SerializedTransaction, ToEntry } from "@/modules/transactions/types";
+import type { NormalizedTransaction, ToEntry, EscrowTransaction } from "@/modules/transactions/types";
 import { AnimatePresence, motion } from "framer-motion";
+
+// Helper function to convert NormalizedTransaction to EscrowTransaction
+const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransaction => ({
+  id: tx.id,
+  from: tx.from,
+  to: tx.to.map(entry => ({
+    principal: entry.principal,
+    amount: BigInt(entry.amount),
+    percentage: Number(entry.percentage),
+    status: entry.status as { [key: string]: null },
+    name: entry.name,
+    approvedAt: entry.approvedAt,
+    declinedAt: entry.declinedAt,
+    readAt: entry.readAt,
+  })),
+  status: tx.status as "pending" | "confirmed" | "released" | "cancelled" | "refund" | "declined",
+  createdAt: tx.createdAt,
+  title: tx.title,
+  releasedAt: tx.releasedAt,
+  bitcoinAddress: tx.bitcoinAddress,
+  bitcoinTransactionHash: tx.bitcoinTransactionHash,
+});
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
-  const [transaction, setTransaction] = useState<SerializedTransaction | null>(null);
+  const [transaction, setTransaction] = useState<NormalizedTransaction | null>(null);
   const [isTxLoading, setIsTxLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const { txid } = useParams();
@@ -260,50 +282,22 @@ export default function TransactionDetailsPage() {
           <Typography variant="large">Escrow overview</Typography>
 
           {statusKey === "released" && (
-            <ReleasedEscrowDetails transaction={{
-              ...transaction,
-              status: transaction.status as "released" | "confirmed" | "pending" | "cancelled" | "refund" | "declined",
-              to: transaction.to.map(toEntry => ({
-                ...toEntry,
-                percentage: 0
-              }))
-            }} />
+            <ReleasedEscrowDetails transaction={convertToEscrowTransaction(transaction)} />
           )}
 
           {statusKey === "pending" && (
             (() => {
               const isSender = principal && String(transaction.from) === String(principal);
-              const transactionData = {
-                ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as Principal | undefined)?.toText?.() || "",
-                to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry) => ({
-                      ...toEntry,
-                      percentage: 0,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as Principal | undefined)?.toText?.() || "",
-                    }))
-                  : [],
-                status: "pending" as const,
-                releasedAt: Array.isArray(transaction.releasedAt)
-                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                  : transaction.releasedAt,
-                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
-                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
-                  : transaction.bitcoinAddress,
-                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
-                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
-                  : transaction.bitcoinTransactionHash
-              };
 
               return isSender ? (
                 <EditEscrowDetails 
-                  transaction={transactionData}
+                  transaction={convertToEscrowTransaction(transaction)}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
                 />
               ) : (
                 <PendingEscrowDetails 
-                  transaction={transactionData}
+                  transaction={convertToEscrowTransaction(transaction)}
                   onCancel={handleCancel}
                 />
               );
@@ -312,66 +306,19 @@ export default function TransactionDetailsPage() {
 
           {(statusKey === "cancelled" || statusKey === "declined") && (
             <CancelledEscrowDetails 
-              transaction={{
-                ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as Principal | undefined)?.toText?.() || "",
-                to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry) => ({
-                      ...toEntry,
-                      percentage: 0,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as Principal | undefined)?.toText?.() || "",
-                    }))
-                  : [],
-                status: statusKey,
-                releasedAt: Array.isArray(transaction.releasedAt)
-                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                  : transaction.releasedAt,
-                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
-                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
-                  : transaction.bitcoinAddress,
-                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
-                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
-                  : transaction.bitcoinTransactionHash
-              }}
+              transaction={convertToEscrowTransaction(transaction)}
             />
           )}
 
           {statusKey === "refund" && (
             <RefundedEscrowDetails 
-              transaction={{
-                ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as Principal | undefined)?.toText?.() || "",
-                to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry) => ({
-                      ...toEntry,
-                      percentage: 0,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as Principal | undefined)?.toText?.() || "",
-                    }))
-                  : [],
-                status: "refund",
-                releasedAt: Array.isArray(transaction.releasedAt)
-                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                  : transaction.releasedAt,
-                bitcoinAddress: Array.isArray(transaction.bitcoinAddress) 
-                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
-                  : transaction.bitcoinAddress,
-                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
-                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
-                  : transaction.bitcoinTransactionHash
-              }}
+              transaction={convertToEscrowTransaction(transaction)}
             />
           )}
 
           {statusKey === "confirmed" && (
             <ConfirmedEscrowActions
-              transaction={{
-                ...transaction,
-                status: transaction.status as "released" | "confirmed" | "pending" | "cancelled" | "refund" | "declined",
-                to: transaction.to.map(toEntry => ({
-                  ...toEntry,
-                  percentage: 0
-                }))
-              }}
+              transaction={convertToEscrowTransaction(transaction)}
               isLoading={isLoading}
               onRelease={handleRelease}
               onRefund={handleRefund}

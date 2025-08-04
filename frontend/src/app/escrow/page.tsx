@@ -7,15 +7,16 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Recipient } from "@/modules/escrow/types";
 import { Principal } from "@dfinity/principal";
 import { motion } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
 import { setTitle as setPageTitle, setSubtitle } from '@/lib/redux/store';
 import { setBtcBalance } from "@/lib/redux/userSlice";
 import { useSearchParams } from "next/navigation";
+import { ToEntry } from "@/modules/transactions/types";
 
-export default function EscrowPage() {
+function EscrowPageContent() {
   const searchParams = useSearchParams();
   const editTxId = searchParams.get('edit');
   const [title, setTitle] = useState<string>("");
@@ -57,9 +58,9 @@ export default function EscrowPage() {
           setTitle(tx.title);
           
           // Convert recipients to the form format
-          const formRecipients = tx.to.map((recipient, index: number) => ({
+          const formRecipients = tx.to.map((recipient: ToEntry, index: number) => ({
             id: `recipient-${index + 1}`,
-            principal: typeof recipient.principal === "string" ? recipient.principal : recipient.principal.toText(),
+            principal: typeof recipient.principal === "string" ? recipient.principal : (recipient.principal as { toText: () => string }).toText(),
             percentage: Number(recipient.percentage),
             name: recipient.name || ""
           }));
@@ -67,7 +68,7 @@ export default function EscrowPage() {
           setRecipients(formRecipients);
           
           // Calculate total BTC amount
-          const totalAmount = tx.to.reduce((sum: number, recipient) => sum + Number(recipient.amount), 0);
+          const totalAmount = tx.to.reduce((sum: number, recipient: ToEntry) => sum + Number(recipient.amount), 0);
           setBtcAmount((totalAmount / 1e8).toString());
         }
       } catch (error) {
@@ -217,7 +218,7 @@ export default function EscrowPage() {
           }
           
           // Check if any recipients have taken action
-          const hasRecipientAction = tx.to.some((recipient) => 
+          const hasRecipientAction = tx.to.some((recipient: ToEntry) => 
             recipient.status && Object.keys(recipient.status)[0] !== "pending"
           );
           
@@ -281,12 +282,14 @@ export default function EscrowPage() {
     const serializableTxs = txs.map((tx: unknown) => {
       const txObj = tx as Record<string, unknown>;
               return {
-          ...txObj,
+          id: txObj.id as string,
+          status: txObj.status as string,
+          title: txObj.title as string,
           from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
           createdAt:
             typeof txObj.createdAt === "bigint"
               ? txObj.createdAt.toString()
-              : txObj.createdAt,
+              : String(txObj.createdAt),
           confirmedAt: Array.isArray(txObj.confirmedAt) && txObj.confirmedAt.length > 0
             ? txObj.confirmedAt[0].toString()
             : null,
@@ -323,7 +326,10 @@ export default function EscrowPage() {
             amount:
               typeof entry.amount === "bigint"
                 ? entry.amount.toString()
-                : entry.amount,
+                : String(entry.amount),
+            percentage: typeof entry.percentage === "bigint" ? entry.percentage.toString() : String(entry.percentage),
+            status: entry.status as unknown,
+            name: entry.name as string,
             approvedAt: Array.isArray(entry.approvedAt) && entry.approvedAt.length > 0
               ? entry.approvedAt[0].toString()
               : null,
@@ -371,5 +377,13 @@ export default function EscrowPage() {
         />
       </motion.div>
     </>
+  );
+}
+
+export default function EscrowPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EscrowPageContent />
+    </Suspense>
   );
 }

@@ -7,12 +7,13 @@ import { Toaster } from '@/components/ui/sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
 import { Provider, useDispatch, useSelector } from 'react-redux'
-import { store, useAppSelector } from '../lib/redux/store'
+import { RootState, store, useAppSelector } from '../lib/redux/store'
 import AuthOverlay from '@/components/AuthOverlay'
 import { setBtcBalance, setUserName } from '../lib/redux/userSlice'
 import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
+import type { NormalizedTransaction } from '@/modules/transactions/types'
 
 // Environment variable logging
 const logEnvironmentVariables = () => {
@@ -99,35 +100,46 @@ function BalanceAndNameSyncer() {
             return serializeTimestamp(value);
           };
 
-            return {
-              ...tx,
-              from: typeof tx.from === 'object' && tx.from.toText ? tx.from.toText() : String(tx.from),
-              createdAt: serializeTimestamp(tx.createdAt || '0'),
-              confirmedAt: serializeTimestamp(tx.confirmedAt),
-              cancelledAt: serializeTimestamp(tx.cancelledAt),
-              refundedAt: serializeTimestamp(tx.refundedAt),
-              releasedAt: serializeArrayTimestamp(tx.releasedAt),
-              readAt: serializeTimestamp(tx.readAt),
-              bitcoinTransactionHash: Array.isArray(tx.bitcoinTransactionHash) && tx.bitcoinTransactionHash.length > 0
-                ? tx.bitcoinTransactionHash[0]
-                : tx.bitcoinTransactionHash,
-              bitcoinAddress: Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0
-                ? tx.bitcoinAddress[0]
-                : tx.bitcoinAddress,
-              to: (tx as Record<string, unknown>).to.map((toEntry: unknown) => ({
-                ...toEntry,
-                principal: typeof toEntry.principal === 'object' && toEntry.principal.toText
-                  ? toEntry.principal.toText()
-                  : String(toEntry.principal),
-                amount: typeof toEntry.amount === 'bigint' ? toEntry.amount.toString() : String(toEntry.amount),
-                percentage: typeof toEntry.percentage === 'bigint' ? toEntry.percentage.toString() : String(toEntry.percentage),
-                approvedAt: serializeTimestamp(toEntry.approvedAt),
-                declinedAt: serializeTimestamp(toEntry.declinedAt),
-                readAt: serializeTimestamp(toEntry.readAt),
-              })),
-            };
+          const txObj = tx as Record<string, unknown>;
+          const hasToText = (obj: unknown): obj is { toText: () => string } => {
+            return typeof obj === 'object' && obj !== null && 'toText' in obj && typeof (obj as Record<string, unknown>).toText === 'function';
           };
-          const normalizedTxs = (result.transactions as unknown[]).map(normalizeTx)
+
+          return {
+            ...txObj,
+            id: txObj.id as string,
+            status: txObj.status as string,
+            title: txObj.title as string,
+            from: hasToText(txObj.from) ? txObj.from.toText() : String(txObj.from),
+            createdAt: serializeTimestamp(txObj.createdAt || '0'),
+            confirmedAt: serializeTimestamp(txObj.confirmedAt),
+            cancelledAt: serializeTimestamp(txObj.cancelledAt),
+            refundedAt: serializeTimestamp(txObj.refundedAt),
+            releasedAt: serializeArrayTimestamp(txObj.releasedAt),
+            readAt: serializeTimestamp(txObj.readAt),
+            bitcoinTransactionHash: Array.isArray(txObj.bitcoinTransactionHash) && txObj.bitcoinTransactionHash.length > 0
+              ? txObj.bitcoinTransactionHash[0]
+              : txObj.bitcoinTransactionHash,
+            bitcoinAddress: Array.isArray(txObj.bitcoinAddress) && txObj.bitcoinAddress.length > 0
+              ? txObj.bitcoinAddress[0]
+              : txObj.bitcoinAddress,
+            to: (txObj.to as unknown[]).map((toEntry: unknown) => {
+              const entry = toEntry as Record<string, unknown>;
+              return {
+                ...entry,
+                principal: hasToText(entry.principal) ? entry.principal.toText() : String(entry.principal),
+                amount: typeof entry.amount === 'bigint' ? entry.amount.toString() : String(entry.amount),
+                percentage: typeof entry.percentage === 'bigint' ? entry.percentage.toString() : String(entry.percentage),
+                status: entry.status as unknown,
+                name: entry.name as string,
+                approvedAt: serializeTimestamp(entry.approvedAt),
+                declinedAt: serializeTimestamp(entry.declinedAt),
+                readAt: serializeTimestamp(entry.readAt),
+              };
+            }),
+          };
+        };
+          const normalizedTxs = (result.transactions as unknown[]).map(normalizeTx) as NormalizedTransaction[];
           dispatch(setTransactions(normalizedTxs))
         } catch {
           console.error('❌ Could not fetch transactions')
@@ -159,7 +171,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
           title={title}
           subtitle={subtitle}
           user={{
-            principalId: principal,
+            principalId: principal ?? '',
             name: name || undefined,
           }}
         />

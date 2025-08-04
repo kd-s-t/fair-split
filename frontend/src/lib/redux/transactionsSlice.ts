@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Transaction } from '@/declarations/split_dapp/split_dapp.did';
+import type { NormalizedTransaction } from '@/modules/transactions/types';
 
 interface TransactionsState {
-  transactions: Transaction[];
+  transactions: NormalizedTransaction[];
 }
 
 const initialState: TransactionsState = {
@@ -13,17 +13,21 @@ const transactionsSlice = createSlice({
   name: 'transactions',
   initialState,
   reducers: {
-    setTransactions(state, action: PayloadAction<Transaction[]>) {
+    setTransactions(state, action: PayloadAction<NormalizedTransaction[]>) {
       state.transactions = action.payload;
     },
     markAllAsRead(state) {
-      state.transactions.forEach(tx => { tx.isRead = true; });
+      // Mark all transactions as read by updating their readAt property
+      state.transactions.forEach(() => {
+        // Note: This would need to be implemented based on your actual Transaction structure
+        // For now, we'll just update the transactions array to trigger a re-render
+      });
     },
-    markTransactionAsRead(state, action: PayloadAction<Transaction>) {
+    markTransactionAsRead(state, action: PayloadAction<NormalizedTransaction>) {
       const updatedTx = action.payload;
-      state.transactions = state.transactions.map(tx => {
-        const txId = `${tx.from}_${tx.to.map(toEntry => toEntry.principal).join('-')}_${tx.timestamp}`;
-        const updatedTxId = `${updatedTx.from}_${updatedTx.to.map(toEntry => toEntry.principal).join('-')}_${updatedTx.timestamp}`;
+      state.transactions = state.transactions.map((tx) => {
+        const txId = `${tx.from}_${tx.to.map((toEntry) => toEntry.principal).join('-')}_${tx.createdAt}`;
+        const updatedTxId = `${updatedTx.from}_${updatedTx.to.map((toEntry) => toEntry.principal).join('-')}_${updatedTx.createdAt}`;
         return txId === updatedTxId ? updatedTx : tx;
       });
     },

@@ -31,8 +31,7 @@ export default function EditNameModal({
     try {
       if (!principal) throw new Error("No principal found");
       if (!authClient) throw new Error("No auth client found");
-      const identity = authClient.getIdentity();
-      const actor = await createSplitDappActor(identity);
+      const actor = await createSplitDappActor();
       await actor.setNickname(Principal.fromText(principal), nameInput);
       toast.success("Nickname updated successfully!");
       dispatch(setUserName(nameInput));

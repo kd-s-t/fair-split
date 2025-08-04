@@ -39,6 +39,32 @@ export type EscrowTransaction = {
   bitcoinTransactionHash?: string;
 };
 
+// Normalized transaction interface for Redux storage
+export interface NormalizedTransaction {
+  id: string;
+  status: string;
+  title: string;
+  from: string;
+  createdAt: string;
+  confirmedAt?: string;
+  cancelledAt?: string;
+  refundedAt?: string;
+  releasedAt?: string;
+  readAt?: string;
+  bitcoinTransactionHash?: string;
+  bitcoinAddress?: string;
+  to: Array<{
+    principal: string;
+    amount: string;
+    percentage: string;
+    status: unknown;
+    name: string;
+    approvedAt?: string;
+    declinedAt?: string;
+    readAt?: string;
+  }>;
+}
+
 // Component prop types
 export interface PendingEscrowDetailsProps {
   transaction: EscrowTransaction;
@@ -68,30 +94,4 @@ export interface ConfirmedEscrowActionsProps {
 
 export interface ReleasedEscrowDetailsProps {
   transaction: EscrowTransaction;
-}
-
-// Extended type for serialized transaction data
-export type SerializedTransaction = {
-  id: string;
-  from: string;
-  to: Array<{
-    principal: string;
-    name: string;
-    amount: bigint;
-    status: { [key: string]: null };
-    approvedAt?: string;
-    declinedAt?: string;
-    readAt?: string;
-  }>;
-  status: string;
-  title: string;
-  timestamp: string;
-  createdAt: string;
-  confirmedAt?: string;
-  cancelledAt?: string;
-  refundedAt?: string;
-  releasedAt?: string;
-  readAt?: string;
-  bitcoinAddress?: string;
-  bitcoinTransactionHash?: string;
-}; 
+} 

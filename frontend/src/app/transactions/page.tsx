@@ -3,8 +3,44 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
-import type { Transaction } from "@/declarations/split_dapp.did";
+import type { NormalizedTransaction } from "@/modules/transactions/types";
 import { motion } from "framer-motion";
+
+// Helper function to convert API response to NormalizedTransaction[]
+const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTransaction[] => {
+  return transactions.map((tx: unknown) => {
+    const txObj = tx as Record<string, unknown>;
+    return {
+      id: txObj.id as string,
+      status: txObj.status as string,
+      title: txObj.title as string,
+      from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
+      createdAt: typeof txObj.createdAt === "bigint" ? txObj.createdAt.toString() : String(txObj.createdAt),
+      confirmedAt: Array.isArray(txObj.confirmedAt) && txObj.confirmedAt.length > 0 ? txObj.confirmedAt[0].toString() : undefined,
+      cancelledAt: Array.isArray(txObj.cancelledAt) && txObj.cancelledAt.length > 0 ? txObj.cancelledAt[0].toString() : undefined,
+      refundedAt: Array.isArray(txObj.refundedAt) && txObj.refundedAt.length > 0 ? txObj.refundedAt[0].toString() : undefined,
+      releasedAt: Array.isArray(txObj.releasedAt) && txObj.releasedAt.length > 0 ? txObj.releasedAt[0].toString() : undefined,
+      readAt: Array.isArray(txObj.readAt) && txObj.readAt.length > 0 ? txObj.readAt[0].toString() : undefined,
+      bitcoinTransactionHash: Array.isArray(txObj.bitcoinTransactionHash) && txObj.bitcoinTransactionHash.length > 0 ? txObj.bitcoinTransactionHash[0] : txObj.bitcoinTransactionHash,
+      bitcoinAddress: Array.isArray(txObj.bitcoinAddress) && txObj.bitcoinAddress.length > 0 ? txObj.bitcoinAddress[0] : txObj.bitcoinAddress,
+      to: (txObj.to as unknown[]).map((toEntry: unknown) => {
+        const entry = toEntry as Record<string, unknown>;
+        return {
+          principal: entry.principal && typeof entry.principal === "object" && typeof (entry.principal as { toText: () => string }).toText === "function"
+            ? (entry.principal as { toText: () => string }).toText()
+            : String(entry.principal),
+          amount: typeof entry.amount === "bigint" ? entry.amount.toString() : String(entry.amount),
+          percentage: typeof entry.percentage === "bigint" ? entry.percentage.toString() : String(entry.percentage),
+          status: entry.status as unknown,
+          name: entry.name as string,
+          approvedAt: Array.isArray(entry.approvedAt) && entry.approvedAt.length > 0 ? entry.approvedAt[0].toString() : undefined,
+          declinedAt: Array.isArray(entry.declinedAt) && entry.declinedAt.length > 0 ? entry.declinedAt[0].toString() : undefined,
+          readAt: Array.isArray(entry.readAt) && entry.readAt.length > 0 ? entry.readAt[0].toString() : undefined,
+        };
+      }),
+    };
+  });
+};
 import {
   markAllAsRead,
   setTransactions,
@@ -37,7 +73,7 @@ export default function TransactionsPage() {
     dispatch(setSubtitle('View all your escrow transactions'));
   }, [dispatch]);
 
-  const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
+  const [localTransactions, setLocalTransactions] = useState<NormalizedTransaction[]>([]);
   const router = useRouter();
 
   const [isApproving, setIsApproving] = useState<string | null>(null);
@@ -98,13 +134,13 @@ export default function TransactionsPage() {
     return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
   }
 
-  function getTxId(tx: Transaction) {
+  function getTxId(tx: NormalizedTransaction) {
     return `${tx.from}_${tx.to
       .map((toEntry) => toEntry.principal)
       .join("-")}_${tx.createdAt}`;
   }
 
-  function isPendingApproval(tx: Transaction): boolean {
+  function isPendingApproval(tx: NormalizedTransaction): boolean {
     if (!principal) return false;
     return tx.to.some(
       (toEntry) =>
@@ -114,7 +150,7 @@ export default function TransactionsPage() {
     );
   }
 
-  function hasUserApproved(tx: Transaction): boolean {
+  function hasUserApproved(tx: NormalizedTransaction): boolean {
     if (!principal) return false;
     return tx.to.some(
       (toEntry) =>
@@ -124,7 +160,7 @@ export default function TransactionsPage() {
     );
   }
 
-  function hasUserDeclined(tx: Transaction): boolean {
+  function hasUserDeclined(tx: NormalizedTransaction): boolean {
     if (!principal) return false;
     return tx.to.some(
       (toEntry) =>
@@ -134,15 +170,15 @@ export default function TransactionsPage() {
     );
   }
 
-  function isSentByUser(tx: Transaction): boolean {
+  function isSentByUser(tx: NormalizedTransaction): boolean {
     return String(tx.from) === String(principal);
   }
 
-  function getTransactionCategory(tx: Transaction): "sent" | "received" {
+  function getTransactionCategory(tx: NormalizedTransaction): "sent" | "received" {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
-  async function handleApprove(tx: Transaction) {
+  async function handleApprove(tx: NormalizedTransaction) {
     if (!principal) return;
     setIsApproving(getTxId(tx));
     try {
@@ -164,14 +200,14 @@ export default function TransactionsPage() {
       toast.success('Approved successfully!');
       // Refresh transaction data
       const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      dispatch(setTransactions(updatedTxs.transactions));
+      dispatch(setTransactions(convertToNormalizedTransactions(updatedTxs.transactions)));
     } catch (err) {
       toast.error((err as Error).message || 'Failed to approve');
       setIsApproving(null);
     }
   }
 
-  async function handleDecline(tx: Transaction) {
+  async function handleDecline(tx: NormalizedTransaction) {
     if (!principal) return;
     setIsDeclining(getTxId(tx));
     try {
@@ -194,7 +230,7 @@ export default function TransactionsPage() {
           : recipientEntry.principal;
 
       // Get the sender's transactions to find the correct index
-      const senderPrincipalStr = typeof tx.from === "string" ? tx.from : tx.from.toText();
+      const senderPrincipalStr = tx.from;
       const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
       const txIndex = txs.transactions.findIndex((t) => (t as { id: string }).id === tx.id);
       
@@ -212,14 +248,14 @@ export default function TransactionsPage() {
       toast.success('Declined successfully!');
       // Refresh transaction data
       const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      dispatch(setTransactions(updatedTxs.transactions));
+      dispatch(setTransactions(convertToNormalizedTransactions(updatedTxs.transactions)));
     } catch (err) {
       toast.error((err as Error).message || 'Failed to decline');
       setIsDeclining(null);
     }
   }
 
-  async function handleRowClick(tx: Transaction) {
+  async function handleRowClick(tx: NormalizedTransaction) {
     if (!principal) return;
     const actor = await createSplitDappActor();
     await actor.markTransactionsAsRead(principal);
@@ -243,7 +279,7 @@ export default function TransactionsPage() {
     try {
       const actor = await createSplitDappActor();
       const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      dispatch(setTransactions(result.transactions));
+      dispatch(setTransactions(convertToNormalizedTransactions(result.transactions)));
       toast.success('Transactions refreshed!');
     } catch (error) {
       console.error('Failed to refresh transactions:', error);

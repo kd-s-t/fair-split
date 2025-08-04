@@ -14,7 +14,6 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
 import { useRouter } from "next/navigation";
 import { RecentActivitiesProps } from './types';
-import { ToEntry } from "../transactions/types";
 
 export const statusMap: Record<string, { label: string; variant: string }> = {
   released: { label: "Completed", variant: "success" },
@@ -315,7 +314,7 @@ export default function RecentActivities({
                           <UsersRound size={18} /> Recipients (
                           {activity.to.length})
                         </div>
-                        {activity.to.map((recipient: ToEntry, idx: number) => (
+                        {activity.to.map((recipient, idx: number) => (
                           <div
                             key={idx}
                             className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white"
@@ -337,7 +336,7 @@ export default function RecentActivities({
                             <Bitcoin size={16} />
                             {(
                               activity.to.reduce(
-                                (sum: number, recipient: ToEntry) =>
+                                (sum: number, recipient) =>
                                   sum + Number(recipient.amount),
                                 0
                               ) / 1e8
@@ -450,7 +449,7 @@ export default function RecentActivities({
                           <UsersRound size={18} /> Recipients (
                           {activity.to.length})
                         </div>
-                        {activity.to.map((recipient: ToEntry, idx: number) => (
+                        {activity.to.map((recipient, idx: number) => (
                           <div
                             key={idx}
                             className="flex justify-between items-center px-4 py-2 border-b border-[#333] last:border-b-0 text-white"
@@ -472,7 +471,7 @@ export default function RecentActivities({
                             <Bitcoin size={16} />
                             {(
                               activity.to.reduce(
-                                (sum: number, recipient: ToEntry) =>
+                                (sum: number, recipient) =>
                                   sum + Number(recipient.amount),
                                 0
                               ) / 1e8

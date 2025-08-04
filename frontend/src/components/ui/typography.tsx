@@ -54,18 +54,16 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
         ? "small"
         : "p";
 
-    return (
-      <Comp
-        className={cn(
-          typographyVariants({
-            variant: variant as NonNullable<TypographyProps["variant"]>,
-          }),
-          className
-        )}
-        ref={ref as React.Ref<HTMLElement>}
-        {...props}
-      />
-    );
+    return React.createElement(Comp, {
+      className: cn(
+        typographyVariants({
+          variant: variant as NonNullable<TypographyProps["variant"]>,
+        }),
+        className || ''
+      ),
+      ref,
+      ...props
+    });
   }
 );
 

@@ -1,3 +1,5 @@
+"use client"
+
 import './globals.css'
 import { ReactNode } from 'react'
 import { AuthProvider } from '@/contexts/auth-context'

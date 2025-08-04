@@ -25,11 +25,11 @@ ENV LIGHTNING_CSS_BINARY_TARGET=linux-arm64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
-COPY package*.json ./
-COPY next.config.ts ./
-COPY tailwind.config.js ./
-COPY postcss.config.mjs ./
-COPY tsconfig.json ./
+COPY frontend/package*.json ./
+COPY frontend/next.config.ts ./
+COPY frontend/tailwind.config.js ./
+COPY frontend/postcss.config.mjs ./
+COPY frontend/tsconfig.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
 RUN npm install --include=dev --no-optional
@@ -38,7 +38,7 @@ RUN npm install --include=dev --no-optional
 RUN npm uninstall lightningcss && npm install lightningcss --force
 
 # Copy frontend source
-COPY . .
+COPY frontend/ .
 
 # Rebuild all native modules
 RUN npm rebuild

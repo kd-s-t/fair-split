@@ -62,6 +62,7 @@ import { toast } from "sonner";
 import { setTitle, setSubtitle } from '../../lib/redux/store';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+import { ApprovalSuggestions } from "@/components/messaging/ApprovalSuggestions";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -291,6 +292,9 @@ export default function TransactionsPage() {
 
   return (
     <>
+      {/* AI Approval Suggestions */}
+      <ApprovalSuggestions transactions={localTransactions} />
+      
       {/* Search, Filter Section, and Refresh Icon in the same row */}
       <div className="flex items-center gap-4 mb-6 w-full">
         <div className="flex-1">

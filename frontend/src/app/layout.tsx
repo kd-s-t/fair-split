@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from '@/contexts/auth-context'
 import { Toaster } from '@/components/ui/sonner'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
+import { MessagingSystem } from '@/components/messaging/MessagingSystem'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import { RootState, store, useAppSelector } from '../lib/redux/store'
 import AuthOverlay from '@/components/AuthOverlay'
@@ -179,6 +180,7 @@ function LayoutShell({ children }: { children: ReactNode }) {
       </main>
       <AuthOverlay />
       <BalanceAndNameSyncer />
+      <MessagingSystem />
     </div>
   )
 }

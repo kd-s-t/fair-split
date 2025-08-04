@@ -15,6 +15,7 @@ import { setTitle as setPageTitle, setSubtitle } from '@/lib/redux/store';
 import { setBtcBalance } from "@/lib/redux/userSlice";
 import { useSearchParams } from "next/navigation";
 import { ToEntry } from "@/modules/transactions/types";
+import { populateEscrowForm } from "@/lib/messaging/formPopulation";
 
 function EscrowPageContent() {
   const searchParams = useSearchParams();
@@ -79,6 +80,25 @@ function EscrowPageContent() {
 
     loadTransactionForEdit();
   }, [editTxId, principal]);
+
+  // Populate form with data from chat system
+  useEffect(() => {
+    const chatData = populateEscrowForm();
+    if (chatData && !editTxId) {
+      setBtcAmount(chatData.amount);
+      
+      // Create recipients from the chat data
+      const newRecipients = chatData.recipients.map((recipientId: string, index: number) => ({
+        id: `recipient-${index + 1}`,
+        principal: recipientId,
+        percentage: Math.floor(100 / chatData.recipients.length) + (index === 0 ? 100 % chatData.recipients.length : 0),
+        name: ""
+      }));
+      
+      setRecipients(newRecipients);
+      setTitle("Escrow created via chat");
+    }
+  }, [editTxId]);
   const [showDialog, setShowDialog] = useState(false);
   const [newTxId, setNewTxId] = useState<string | null>(null);
 

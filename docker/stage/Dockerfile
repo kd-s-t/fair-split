@@ -21,8 +21,8 @@ FROM base AS frontend-builder
 
 WORKDIR /app
 
-# Set environment variables for lightningcss (x64 for EC2)
-ENV LIGHTNING_CSS_BINARY_TARGET=linux-x64-musl
+# Set environment variables for lightningcss (arm64 for local Mac builds)
+ENV LIGHTNING_CSS_BINARY_TARGET=linux-arm64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
@@ -36,8 +36,14 @@ COPY frontend/tsconfig.json ./
 # Force rebuild of native modules for the correct architecture
 RUN npm install --include=dev --no-optional --force
 
+# Ensure TypeScript is available for next.config.ts
+RUN npm install typescript --save-dev
+
 # Copy frontend source
 COPY frontend/ .
+
+# Force reinstall lightningcss with correct binary
+RUN npm uninstall lightningcss && npm install lightningcss --force
 
 # Rebuild native modules for the current platform
 RUN npm rebuild

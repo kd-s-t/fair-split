@@ -93,43 +93,6 @@ docker compose -f docker/stage/docker-compose.yml up --build
 docker compose -f docker/stage/docker-compose.yml down
 ```
 
-### Manual Docker Builds
-```bash
-# Build local development image
-docker build -f docker/local/Dockerfile -t splitsafe:local .
-
-# Build staging image
-docker build -f docker/stage/Dockerfile -t splitsafe:staging .
-
-# Run local development container
-docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules splitsafe:local
-
-# Run staging container
-docker run -p 3001:3000 splitsafe:staging
-```
-
-## Development
-
-### Available Scripts
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript type checking
-```
-
-### Git Hooks (Husky)
-The project uses Husky for Git hooks:
-- **Pre-commit**: Runs linting before each commit
-- **Pre-push**: Runs tests before pushing code
-
-### Code Quality
-- ESLint for code linting
-- TypeScript for type checking
-- Husky for Git hooks
-- Prettier for code formatting (if configured)
-
 ## AWS Infrastructure with Terraform
 
 ### Deploy EC2 Instance
@@ -150,23 +113,6 @@ terraform destroy
 - `public_ip` - EC2 instance public IP
 - `instance_id` - EC2 instance ID
 
-## Project Structure
-
-```
-splitsafe/
-├── src/                    # Source code
-│   ├── app/               # Next.js app directory
-│   ├── components/        # React components
-│   ├── lib/              # Utilities and services
-│   └── modules/          # Feature modules
-├── public/               # Static assets
-├── docker/              # Docker configurations
-│   ├── local/           # Local development
-│   └── stage/           # Staging deployment
-├── icp/                 # ICP canister code
-├── terraform/           # Infrastructure as code
-└── scripts/             # Utility scripts
-```
 
 ## Configuration
 

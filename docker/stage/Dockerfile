@@ -1,8 +1,8 @@
-# Production/Staging Dockerfile for SplitSafe
+# Staging Dockerfile for SplitSafe
 FROM node:20.13.1-alpine
 
 # Set environment variables
-ENV NODE_ENV=production
+ENV NODE_ENV=staging
 ENV PORT=3000
 
 # Install system dependencies
@@ -25,7 +25,8 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 COPY package*.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
-RUN npm ci
+# Skip husky prepare script in Docker build
+RUN npm ci --ignore-scripts
 
 # Copy source files
 COPY . .
@@ -34,7 +35,7 @@ COPY . .
 RUN npm run build
 
 # Remove dev dependencies and clean cache
-RUN npm prune --production && npm cache clean --force
+RUN npm prune --staging && npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

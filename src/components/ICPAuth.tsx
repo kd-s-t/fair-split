@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { KeyRound, LogOut } from "lucide-react";
-import { AuthClient } from "@dfinity/auth-client";
 import Image from "next/image";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
-import { setUser, clearUser, setBtcBalance } from "@/lib/redux/userSlice";
+import { clearUser, setBtcBalance } from "@/lib/redux/userSlice";
 import { Typography } from "./ui/typography";
 import { useAuth } from "@/contexts/auth-context";
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -25,7 +25,7 @@ interface BitcoinTransferResult {
 const BitcoinIntegration: React.FC = () => {
   const [account, setAccount] = useState<BitcoinAccount>({
     owner: '',
-    subaccount: null
+    subaccount: undefined
   });
   const [balance, setBalance] = useState<BitcoinBalance | null>(null);
   const [recipient, setRecipient] = useState('');
@@ -65,7 +65,7 @@ const BitcoinIntegration: React.FC = () => {
     try {
       const result = await mockCanister.getBitcoinBalance(account);
       setBalance(result);
-    } catch (err) {
+    } catch {
       setError('Failed to check balance');
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ const BitcoinIntegration: React.FC = () => {
     try {
       const toAccount: BitcoinAccount = {
         owner: recipient,
-        subaccount: null
+        subaccount: undefined
       };
 
       const result = await mockCanister.transferBitcoin(
@@ -105,7 +105,7 @@ const BitcoinIntegration: React.FC = () => {
         setAmount('');
         setRecipient('');
       }
-    } catch (err) {
+    } catch {
       setError('Transfer failed');
     } finally {
       setLoading(false);
@@ -207,7 +207,7 @@ const BitcoinIntegration: React.FC = () => {
               }`}>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Transfer Result:</span>
-                  <Badge variant={transferResult.ok ? "default" : "destructive"}>
+                  <Badge variant={transferResult.ok ? "default" : "error"}>
                     {transferResult.ok ? 'Success' : 'Failed'}
                   </Badge>
                 </div>

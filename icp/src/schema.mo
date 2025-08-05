@@ -8,6 +8,7 @@ module {
         approvedAt : ?Nat;
         declinedAt : ?Nat;
         readAt : ?Nat;
+        bitcoinAddress : ?Text; // Bitcoin address for this recipient
     };
     public type TransactionStatus = Text;
     public type Transaction = {
@@ -30,5 +31,6 @@ module {
         amount : Nat;
         nickname : Text;
         percentage : Nat;
+        bitcoinAddress : ?Text; // Bitcoin address for this recipient
     };
 }; 

@@ -1,8 +1,4 @@
 export const idlFactory = ({ IDL }) => {
-  const Account = IDL.Record({
-    'owner' : IDL.Principal,
-    'subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
-  });
   const FraudActivity = IDL.Record({
     'activityType' : IDL.Text,
     'timestamp' : IDL.Int,
@@ -19,6 +15,7 @@ export const idlFactory = ({ IDL }) => {
     'approvedAt' : IDL.Opt(IDL.Nat),
     'name' : IDL.Text,
     'declinedAt' : IDL.Opt(IDL.Nat),
+    'bitcoinAddress' : IDL.Opt(IDL.Text),
     'amount' : IDL.Nat,
     'percentage' : IDL.Nat,
     'readAt' : IDL.Opt(IDL.Nat),
@@ -42,13 +39,23 @@ export const idlFactory = ({ IDL }) => {
   const ParticipantShare = IDL.Record({
     'principal' : IDL.Principal,
     'nickname' : IDL.Text,
+    'bitcoinAddress' : IDL.Opt(IDL.Text),
     'amount' : IDL.Nat,
     'percentage' : IDL.Nat,
   });
   const SplitDApp = IDL.Service({
+    'addBitcoinBalance' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'canUserCreateEscrow' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'cancelSplit' : IDL.Func([IDL.Principal], [], []),
-    'createBitcoinEscrow' : IDL.Func([IDL.Text], [Account], []),
+    'convertIcpToBitcoin' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'getAdmin' : IDL.Func([], [IDL.Principal], ['query']),
     'getAllNicknames' : IDL.Func(
         [],
@@ -56,10 +63,10 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
-    'getBitcoinBalance' : IDL.Func(
-        [Account],
-        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
-        [],
+    'getBitcoinAddress' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(IDL.Text)],
+        ['query'],
       ),
     'getCustomNickname' : IDL.Func(
         [IDL.Principal],
@@ -100,6 +107,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'getUserBitcoinBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'getUserReputationScore' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'initiateEscrow' : IDL.Func(
         [IDL.Principal, IDL.Vec(ParticipantShare), IDL.Text],
@@ -125,8 +133,15 @@ export const idlFactory = ({ IDL }) => {
       ),
     'refundSplit' : IDL.Func([IDL.Principal], [], []),
     'releaseSplit' : IDL.Func([IDL.Principal, IDL.Text], [], []),
+    'removeBitcoinAddress' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'removeNickname' : IDL.Func([IDL.Principal], [], []),
     'resetUserReputation' : IDL.Func([IDL.Principal, IDL.Principal], [], []),
+    'setBitcoinAddress' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
+    'setBitcoinBalance' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'setCustomNickname' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'setInitialBalance' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Principal],
@@ -134,11 +149,6 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'setNickname' : IDL.Func([IDL.Principal, IDL.Text], [], []),
-    'transferBitcoin' : IDL.Func(
-        [Account, Account, IDL.Nat, IDL.Nat64],
-        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
-        [],
-      ),
     'updateEscrow' : IDL.Func(
         [IDL.Principal, IDL.Text, IDL.Vec(ParticipantShare)],
         [],

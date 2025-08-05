@@ -8,7 +8,7 @@ import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
 import { MessagingSystem } from '@/components/messaging/MessagingSystem'
 import AuthOverlay from '@/components/AuthOverlay'
-import { setBtcBalance, setUserName } from '../lib/redux/userSlice'
+import { setIcpBalance, setBtcBalance, setUserName, setBtcAddress } from '../lib/redux/userSlice'
 import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
@@ -60,13 +60,25 @@ function BalanceAndNameSyncer() {
         const actor = await createSplitDappActorAnonymous()
         const principalObj = Principal.fromText(principal)
 
-        // Fetch BTC Balance
+        // Fetch ICP Balance
         try {
-          const balance = await actor.getBalance(principalObj)
-          const formatted = (Number(balance) / 1e8).toFixed(8)
-          dispatch(setBtcBalance(formatted))
+          const icpBalance = await actor.getBalance(principalObj)
+          console.log('Raw ICP balance from canister:', icpBalance)
+          const formattedIcp = (Number(icpBalance) / 1e8).toFixed(8)
+          console.log('Formatted ICP balance:', formattedIcp)
+          dispatch(setIcpBalance(formattedIcp))
         } catch {
-          console.error('❌ Could not fetch balance')
+          console.error('❌ Could not fetch ICP balance')
+          dispatch(setIcpBalance(null))
+        }
+
+        // Fetch Bitcoin Balance
+        try {
+          const btcBalance = await actor.getUserBitcoinBalance(principalObj)
+          const formattedBtc = (Number(btcBalance) / 1e8).toFixed(8)
+          dispatch(setBtcBalance(formattedBtc))
+        } catch {
+          console.error('❌ Could not fetch Bitcoin balance')
           dispatch(setBtcBalance(null))
         }
 
@@ -81,6 +93,17 @@ function BalanceAndNameSyncer() {
         } catch {
           console.error('❌ Could not fetch nickname')
           dispatch(setUserName(null))
+        }
+
+        // Fetch Bitcoin Address
+        try {
+          const btcAddress = await actor.getBitcoinAddress(principalObj)
+          // btcAddress is an array or opt type, so handle accordingly
+          const address = Array.isArray(btcAddress) ? btcAddress[0] : btcAddress;
+          dispatch(setBtcAddress(address ? String(address) : null))
+        } catch {
+          console.error('❌ Could not fetch Bitcoin address')
+          dispatch(setBtcAddress(null))
         }
 
         // Fetch Transactions

@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, Bitcoin } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, Zap } from "lucide-react"
 
 import {
   Sidebar,
@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Menu items.
+// Menu items (available to all users)
 const items = [
   {
     title: "Home",
@@ -34,9 +34,9 @@ const items = [
     icon: Search,
   },
   {
-    title: "Bitcoin",
-    url: "/bitcoin",
-    icon: Bitcoin,
+    title: "Integrations",
+    url: "/integrations",
+    icon: Zap,
   },
   {
     title: "Settings",

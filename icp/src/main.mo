@@ -3,6 +3,7 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
+import Iter "mo:base/Iter";
 
 import TransactionTypes "schema";
 import Balance "modules/balance";
@@ -21,10 +22,16 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   transient let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
   transient let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
   
+  // Bitcoin balance storage
+  transient let bitcoinBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  
   // Reputation system
   transient let reputation = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   transient let fraudHistory = HashMap.HashMap<Principal, [Reputation.FraudActivity]>(10, Principal.equal, Principal.hash);
   transient let transactionHistory = HashMap.HashMap<Principal, [Text]>(10, Principal.equal, Principal.hash);
+  
+  // User Bitcoin address storage
+  transient let userBitcoinAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
 
   // Bitcoin integration - Dynamic cKBTC canister ID
   // For now, use a placeholder that won't cause initialization errors
@@ -35,7 +42,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     participants : [TransactionTypes.ParticipantShare],
     title : Text,
   ) : async Text {
-    let result = Escrow.initiateEscrow(caller, participants, title, balances, transactions, names, reputation, fraudHistory, transactionHistory, logs);
+    let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);
     logs := result.newLogs;
     switch (result.success, result.escrowId, result.error) {
       case (true, ?escrowId, null) { escrowId };
@@ -58,17 +65,17 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     idx : Nat,
     recipient : Principal,
   ) : async () {
-    let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, reputation, fraudHistory, logs);
+    let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, bitcoinBalances, reputation, fraudHistory, logs);
     logs := result.newLogs;
   };
 
   public shared func cancelSplit(caller : Principal) : async () {
-    let result = Escrow.cancelSplit(caller, transactions, balances, logs);
+    let result = Escrow.cancelSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
   };
 
   public shared func refundSplit(caller : Principal) : async () {
-    let result = Escrow.refundSplit(caller, transactions, balances, logs);
+    let result = Escrow.refundSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
   };
 
@@ -76,7 +83,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     caller : Principal,
     txId : Text,
   ) : async () {
-    let result = Escrow.releaseSplit(caller, txId, transactions, balances, reputation, logs);
+    let result = Escrow.releaseSplit(caller, txId, transactions, balances, bitcoinBalances, reputation, logs);
     logs := result.newLogs;
   };
 
@@ -96,13 +103,13 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     return Balance.getBalance(balances, p);
   };
 
-  // Bitcoin-specific functions
-  public shared func getBitcoinBalance(account : Bitcoin.Account) : async { #ok : Nat; #err : Text } {
+  // Bitcoin integration functions (internal use only)
+  private func getBitcoinBalance(account : Bitcoin.Account) : async { #ok : Nat; #err : Text } {
     let result = await bitcoinIntegration.getBitcoinBalance(account);
     return result;
   };
 
-  public shared func transferBitcoin(
+  private func transferBitcoin(
     fromAccount : Bitcoin.Account,
     toAccount : Bitcoin.Account,
     amount : Nat,
@@ -112,7 +119,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     return result;
   };
 
-  public shared func createBitcoinEscrow(escrowId : Text) : async Bitcoin.Account {
+  private func createBitcoinEscrow(escrowId : Text) : async Bitcoin.Account {
     return bitcoinIntegration.createBitcoinEscrowAccount(escrowId);
   };
 
@@ -196,6 +203,99 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
       case (?history) history;
       case null [];
     };
+  };
+
+  // Bitcoin address management functions
+  public shared func setBitcoinAddress(caller : Principal, address : Text) : async Bool {
+    // Basic Bitcoin address validation
+    if (address.size() < 26 or address.size() > 90) {
+      return false;
+    };
+    
+    // Check if it starts with valid Bitcoin address prefixes
+    if (not (Text.startsWith(address, #text "1") or Text.startsWith(address, #text "3") or Text.startsWith(address, #text "bc1"))) {
+      return false;
+    };
+    
+    userBitcoinAddresses.put(caller, address);
+    true
+  };
+
+  public query func getBitcoinAddress(user : Principal) : async ?Text {
+    userBitcoinAddresses.get(user)
+  };
+
+  public shared func removeBitcoinAddress(caller : Principal) : async Bool {
+    switch (userBitcoinAddresses.get(caller)) {
+      case (?address) {
+        userBitcoinAddresses.delete(caller);
+        true
+      };
+      case null false;
+    };
+  };
+
+  // Bitcoin balance management functions
+  public shared func setBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      bitcoinBalances.put(user, amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  public query func getUserBitcoinBalance(user : Principal) : async Nat {
+    switch (bitcoinBalances.get(user)) {
+      case (?balance) balance;
+      case null 0;
+    }
+  };
+
+  public shared func addBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      let currentBalance = switch (bitcoinBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      bitcoinBalances.put(user, currentBalance + amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  // ICP to Bitcoin conversion function
+  public shared func convertIcpToBitcoin(caller : Principal, user : Principal, icpAmount : Nat) : async Bool {
+    if (caller == admin) {
+      // Get current ICP balance
+      let currentIcpBalance = Balance.getBalance(balances, user);
+      
+      // Check if user has enough ICP
+      if (currentIcpBalance < icpAmount) {
+        return false;
+      };
+      
+      // Convert ICP e8s to Bitcoin satoshis
+      // Using a simplified conversion rate: 1 ICP ≈ 0.000001 BTC
+      // In production, you'd use real-time exchange rates
+      let bitcoinSatoshis = icpAmount / 100_000_000; // Simplified conversion
+      
+      // Deduct ICP from user's balance
+      let newIcpBalance = currentIcpBalance - icpAmount;
+      balances.put(user, newIcpBalance);
+      
+      // Add Bitcoin to user's balance
+      let currentBitcoinBalance = switch (bitcoinBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      bitcoinBalances.put(user, currentBitcoinBalance + bitcoinSatoshis);
+      
+      true
+    } else {
+      false
+    }
   };
 
   public query func getReputationStats(user : Principal) : async {

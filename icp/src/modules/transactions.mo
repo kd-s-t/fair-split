@@ -249,6 +249,7 @@ module {
                                         approvedAt = entry.approvedAt;
                                         declinedAt = entry.declinedAt;
                                         readAt = entry.readAt;
+                                        bitcoinAddress = entry.bitcoinAddress;
                                     }
                                 } else {
                                     entry
@@ -364,6 +365,7 @@ module {
                                             approvedAt = entry.approvedAt;
                                             declinedAt = entry.declinedAt;
                                             readAt = ?currentTime;
+                                            bitcoinAddress = entry.bitcoinAddress;
                                         }
                                     } else {
                                         entry

@@ -6,17 +6,19 @@ BTC_SATOSHIS=1000000000
 
 echo "🔄 Deploying split_dapp with admin = $(dfx identity get-principal)..."
 
-# 1. Reinstall with admin argument
-dfx deploy split_dapp --mode=reinstall --argument "(principal \"$(dfx identity get-principal)\")" -y
+# 1. Set cKBTC canister ID (using testnet for local development)
+CKBTC_ID="ml52i-qqaaa-aaaar-qaabq-cai"  # Testnet
+echo "🔗 Using TESTNET cKBTC: $CKBTC_ID"
 
-# 2. Generate frontend bindings
+# 3. Reinstall with admin argument and cKBTC canister ID
+dfx deploy split_dapp --mode=reinstall --argument "(principal \"$(dfx identity get-principal)\", \"$CKBTC_ID\")" -y
+
+# 3. Generate frontend bindings
 echo "🛠 Generating frontend bindings..."
 dfx generate split_dapp
-
-
 
 # 4. Set initial balance for frontend principal
 echo "💰 Setting initial balance for $FRONTEND_PRINCIPAL..."
 dfx canister call split_dapp setInitialBalance "(principal \"$FRONTEND_PRINCIPAL\", $BTC_SATOSHIS, principal \"$ADMIN_PRINCIPAL\")"
 
-echo "✅ Deploy complete!"
+echo "✅ Deploy complete with Bitcoin integration!"

@@ -2,6 +2,10 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface Account {
+  'owner' : Principal,
+  'subaccount' : [] | [Uint8Array | number[]],
+}
 export interface FraudActivity {
   'activityType' : string,
   'timestamp' : bigint,
@@ -16,10 +20,15 @@ export interface ParticipantShare {
 export interface SplitDApp {
   'canUserCreateEscrow' : ActorMethod<[Principal], boolean>,
   'cancelSplit' : ActorMethod<[Principal], undefined>,
+  'createBitcoinEscrow' : ActorMethod<[string], Account>,
   'getAdmin' : ActorMethod<[], Principal>,
   'getAllNicknames' : ActorMethod<[], Array<[Principal, string]>>,
   'getBalance' : ActorMethod<[Principal], bigint>,
-  'getBitcoinTransactionHash' : ActorMethod<[string, Principal], [] | [string]>,
+  'getBitcoinBalance' : ActorMethod<
+    [Account],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'getCustomNickname' : ActorMethod<[Principal], [] | [string]>,
   'getFraudHistory' : ActorMethod<[Principal], Array<FraudActivity>>,
   'getNickname' : ActorMethod<[Principal], [] | [string]>,
@@ -67,9 +76,10 @@ export interface SplitDApp {
   'setCustomNickname' : ActorMethod<[Principal, string], undefined>,
   'setInitialBalance' : ActorMethod<[Principal, bigint, Principal], undefined>,
   'setNickname' : ActorMethod<[Principal, string], undefined>,
-  'updateBitcoinTransactionHash' : ActorMethod<
-    [string, string, Principal],
-    boolean
+  'transferBitcoin' : ActorMethod<
+    [Account, Account, bigint, bigint],
+    { 'ok' : bigint } |
+      { 'err' : string }
   >,
   'updateEscrow' : ActorMethod<
     [Principal, string, Array<ParticipantShare>],

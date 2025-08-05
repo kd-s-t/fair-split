@@ -1,6 +1,6 @@
 services:
-  splitsafe-staging:
-    container_name: splitsafe-staging
+  safesplit-staging:
+    container_name: safesplit-staging
     build:
       context: ../..
       dockerfile: docker/stage/Dockerfile

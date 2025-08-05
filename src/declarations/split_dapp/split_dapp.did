@@ -35,14 +35,17 @@ type SplitDApp =
  service {
    canUserCreateEscrow: (user: principal) -> (bool) query;
    cancelSplit: (caller: principal) -> ();
+   createBitcoinEscrow: (escrowId: text) -> (Account);
    getAdmin: () -> (principal) query;
    getAllNicknames: () -> (vec record {
                                  principal;
                                  text;
                                }) query;
    getBalance: (p: principal) -> (nat) query;
-   getBitcoinTransactionHash: (_escrowId: text, _caller: principal) ->
-    (opt text);
+   getBitcoinBalance: (account: Account) -> (variant {
+                                               err: text;
+                                               ok: nat;
+                                             });
    getCustomNickname: ("principal": principal) -> (opt text) query;
    getFraudHistory: (user: principal) -> (vec FraudActivity) query;
    getNickname: (p: principal) -> (opt text) query;
@@ -78,8 +81,11 @@ type SplitDApp =
    setCustomNickname: ("principal": principal, nickname: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setNickname: (p: principal, name: text) -> ();
-   updateBitcoinTransactionHash: (_escrowId: text, _txHash: text, _caller:
-    principal) -> (bool);
+   transferBitcoin: (fromAccount: Account, toAccount: Account, amount: 
+    nat, memo: nat64) -> (variant {
+                            err: text;
+                            ok: nat;
+                          });
    updateEscrow: (caller: principal, txId: text, updatedParticipants:
     vec ParticipantShare) -> ();
  };
@@ -96,4 +102,9 @@ type FraudActivity =
    timestamp: int;
    transactionId: text;
  };
-service : (admin: principal) -> SplitDApp
+type Account = 
+ record {
+   owner: principal;
+   subaccount: opt vec nat8;
+ };
+service : (admin: principal, _ckbtcCanisterId: text) -> SplitDApp

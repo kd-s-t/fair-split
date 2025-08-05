@@ -42,6 +42,17 @@ export default function Home() {
         const identity = authClient.getIdentity();
         const principal = identity.getPrincipal();
         dispatch(setUser({ principal: principal.toText(), name: null }));
+        
+        // Trigger a re-check of authentication state
+        setTimeout(() => {
+          authClient.isAuthenticated().then(async (authenticated) => {
+            if (authenticated) {
+              const identity = authClient.getIdentity();
+              const principalObj = identity.getPrincipal();
+              dispatch(setUser({ principal: principalObj.toText(), name: null }));
+            }
+          });
+        }, 1000);
       },
     });
   };
@@ -112,22 +123,44 @@ export default function Home() {
         {principal ? (
           <>
             <p className="text-center break-all">Principal: {principal}</p>
-            <Button
-              onClick={logout}
-              variant="secondary"
-              className="text-sm mt-4"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <LogOut size={14} /> Logout
-            </Button>
+              <Button
+                onClick={logout}
+                variant="secondary"
+                className="text-sm mt-4 relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 animate-pulse" />
+                <div className="relative flex items-center gap-2">
+                  <LogOut size={14} /> 
+                  <span>Logout</span>
+                </div>
+              </Button>
+            </motion.div>
           </>
         ) : (
-          <Button
-            variant="secondary"
-            onClick={login}
-            className="text-sm mt-4"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <KeyRound size={14} color="#FEB64D" /> Login with Internet Identity
-          </Button>
+            <Button
+              variant="secondary"
+              onClick={login}
+              className="text-sm mt-4 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 animate-pulse" />
+              <div className="relative flex items-center gap-2">
+                <KeyRound size={14} color="#FEB64D" /> 
+                <span>Login with Internet Identity</span>
+              </div>
+            </Button>
+          </motion.div>
         )}
       </motion.div>
       <motion.div

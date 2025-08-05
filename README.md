@@ -13,7 +13,7 @@
 </div>
 
 # SplitSafe
-A decentralized, trustless Bitcoin escrow and payout system using Internet Computer (ICP) and modern web technologies. It enables secure cross-chain transactions with native Bitcoin integration, no bridges or wrapped tokens required.
+A decentralized, trustless Bitcoin escrow and payout system using Internet Computer (ICP) and modern web technologies. It enables secure cross-chain transactions with native Bitcoin integration using cKBTC (Chain-Key Bitcoin), no bridges or wrapped tokens required.
 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 
@@ -24,10 +24,12 @@ A decentralized, trustless Bitcoin escrow and payout system using Internet Compu
 	<img src="https://img.shields.io/badge/Framer Motion-EF008F?style=for-the-badge&logo=framer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" /> 
 </div>
 
 <div align="center"> 
   <img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" />
+  <img src="https://img.shields.io/badge/bitcoin-2F3134?style=for-the-badge&logo=bitcoin&logoColor=white" />
 	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 	<img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" /> 
 </div>

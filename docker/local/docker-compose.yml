@@ -1,6 +1,6 @@
 services:
-  splitsafe-local:
-    container_name: splitsafe-local
+  safesplit-services:
+    container_name: safesplit-services
     build:
       context: ../..
       dockerfile: docker/local/Dockerfile.local

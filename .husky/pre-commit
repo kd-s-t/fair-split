@@ -1,1 +1,6 @@
-npm run lint
+# Only run lint if not in CI and Node version is correct
+if [ "$CI" != "true" ] && node --version | grep -q "v20"; then
+  npm run lint
+else
+  echo "Skipping lint in CI or with incompatible Node version"
+fi

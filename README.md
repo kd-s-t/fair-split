@@ -78,19 +78,19 @@ The application will be available at http://localhost:3000
 ### Local Development with Docker
 ```bash
 # Start local development environment
-docker-compose -f docker/local/docker-compose.yml up --build
+docker compose -f docker/local/docker-compose.yml up --build
 
 # Stop the containers
-docker-compose -f docker/local/docker-compose.yml down
+docker compose -f docker/local/docker-compose.yml down
 ```
 
 ### Staging Deployment with Docker
 ```bash
 # Start staging environment
-docker-compose -f docker/stage/docker-compose.yml up --build
+docker compose -f docker/stage/docker-compose.yml up --build
 
 # Stop the containers
-docker-compose -f docker/stage/docker-compose.yml down
+docker compose -f docker/stage/docker-compose.yml down
 ```
 
 ### Manual Docker Builds

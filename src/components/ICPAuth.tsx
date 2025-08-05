@@ -11,48 +11,22 @@ import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
 import { setUser, clearUser, setBtcBalance } from "@/lib/redux/userSlice";
 import { Typography } from "./ui/typography";
+import { useAuth } from "@/contexts/auth-context";
 
 
 export default function Home() {
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
-  const [authClient, setAuthClient] = useState<AuthClient | null>(null);
+  const { authClient, updatePrincipal } = useAuth();
 
-
-  useEffect(() => {
-    AuthClient.create().then((client) => {
-      setAuthClient(client);
-      client.isAuthenticated().then(async (authenticated) => {
-        if (authenticated) {
-          const identity = client.getIdentity();
-          const principalObj = identity.getPrincipal();
-          dispatch(setUser({ principal: principalObj.toText(), name: null }));
-        } else {
-          dispatch(clearUser());
-        }
-      });
-    });
-  }, [dispatch]);
   const login = async () => {
     if (!authClient) return;
     await authClient.login({
       identityProvider: 'https://identity.ic0.app',
       maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000),
       onSuccess: async () => {
-        const identity = authClient.getIdentity();
-        const principal = identity.getPrincipal();
-        dispatch(setUser({ principal: principal.toText(), name: null }));
-        
-        // Trigger a re-check of authentication state
-        setTimeout(() => {
-          authClient.isAuthenticated().then(async (authenticated) => {
-            if (authenticated) {
-              const identity = authClient.getIdentity();
-              const principalObj = identity.getPrincipal();
-              dispatch(setUser({ principal: principalObj.toText(), name: null }));
-            }
-          });
-        }, 1000);
+        // Update the authentication state
+        await updatePrincipal();
       },
     });
   };

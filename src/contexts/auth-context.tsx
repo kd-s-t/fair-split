@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
 import { Principal } from '@dfinity/principal'
 import { useDispatch } from 'react-redux'
-import { clearUser } from '../lib/redux/userSlice'
+import { clearUser, setUser } from '../lib/redux/userSlice'
 
 interface AuthContextType {
   principal: Principal | null
@@ -27,15 +27,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const isAuthenticated = await client.isAuthenticated()
     
     if (!isAuthenticated) {
-      await client.logout()
-      setPrincipal(null)
-      dispatch(clearUser())
+      // Only logout if we actually had a principal before
+      if (principal) {
+        await client.logout()
+        setPrincipal(null)
+        dispatch(clearUser())
+      }
       return
     }
 
     const identity = client.getIdentity()
     const principalObj = identity.getPrincipal()
-    setPrincipal(principalObj)
+    
+    // Only update if the principal has changed
+    if (!principal || principal.toText() !== principalObj.toText()) {
+      setPrincipal(principalObj)
+      dispatch(setUser({ principal: principalObj.toText(), name: null }))
+    }
   }
 
   useEffect(() => {
@@ -53,11 +61,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await updatePrincipal(authClient)
     }
 
-    // Check auth state every 2 seconds
-    const interval = setInterval(checkAuth, 2000)
+    // Check auth state every 5 seconds (reduced frequency to prevent interference)
+    const interval = setInterval(checkAuth, 5000)
     
     return () => clearInterval(interval)
-  }, [authClient, dispatch])
+  }, [authClient, dispatch, principal])
 
   const handleUpdatePrincipal = async () => {
     if (authClient) {

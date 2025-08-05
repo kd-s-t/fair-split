@@ -30,4 +30,4 @@ echo "   - NODE_ENV=production"
 
 echo ""
 echo "🔄 To deploy with new environment variables:"
-echo "   docker compose -f frontend/docker/docker-compose.yml up --build -d splitsafe" 
+echo "   docker compose -f docker/local/docker-compose.yml up --build -d" 

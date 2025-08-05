@@ -7,33 +7,54 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Recipient } from "@/modules/escrow/types";
 import { Principal } from "@dfinity/principal";
 import { motion } from "framer-motion";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { setTransactions } from "../../lib/redux/transactionsSlice";
-import { setTitle as setPageTitle, setSubtitle } from '@/lib/redux/store';
+import { setTitle as setPageTitle, setSubtitle, useAppSelector } from '@/lib/redux/store';
 import { setBtcBalance } from "@/lib/redux/userSlice";
 import { useSearchParams } from "next/navigation";
 import { ToEntry } from "@/modules/transactions/types";
 import { populateEscrowForm } from "@/lib/messaging/formPopulation";
+import {
+  setTitle,
+  setBtcAmount,
+  setRecipients,
+  addRecipient,
+  removeRecipient,
+  updateRecipient,
+  setIsLoading,
+  setShowDialog,
+  setNewTxId,
+  setEditTxId,
+  resetEscrowForm,
+} from "@/lib/redux/escrowSlice";
 
 function EscrowPageContent() {
   const searchParams = useSearchParams();
   const editTxId = searchParams.get('edit');
-  const [title, setTitle] = useState<string>("");
-  const [recipients, setRecipients] = useState<Recipient[]>([
-    { id: "recipient-1", principal: "", percentage: 100 },
-  ]);
   const idCounter = useRef(2);
 
   const generateUniqueId = () => {
     const uniqueId = `recipient-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     return { uniqueId, newId: idCounter.current };
   };
-  const [isLoading, setIsLoading] = useState(false);
-  const [btcAmount, setBtcAmount] = useState<string>("");
+  
   const { principal, authClient } = useAuth();
   const dispatch = useDispatch();
+  
+  // Get state from Redux
+  const {
+    title,
+    btcAmount,
+    recipients,
+    isLoading,
+    showDialog,
+    newTxId,
+  } = useAppSelector((state) => state.escrow);
+  
+  // Get Bitcoin address from Redux
+  const senderBitcoinAddress = useAppSelector((state) => state.user.btcAddress);
 
   useEffect(() => {
     if (editTxId) {
@@ -56,21 +77,21 @@ function EscrowPageContent() {
         
         if (Array.isArray(result) && result.length > 0) {
           const tx = result[0];
-          setTitle(tx.title);
-          
-          // Convert recipients to the form format
-          const formRecipients = tx.to.map((recipient: ToEntry, index: number) => ({
-            id: `recipient-${index + 1}`,
-            principal: typeof recipient.principal === "string" ? recipient.principal : (recipient.principal as { toText: () => string }).toText(),
-            percentage: Number(recipient.percentage),
-            name: recipient.name || ""
-          }));
-          
-          setRecipients(formRecipients);
-          
-          // Calculate total BTC amount
-          const totalAmount = tx.to.reduce((sum: number, recipient: ToEntry) => sum + Number(recipient.amount), 0);
-          setBtcAmount((totalAmount / 1e8).toString());
+                dispatch(setTitle(tx.title));
+      
+      // Convert recipients to the form format
+      const formRecipients = tx.to.map((recipient: ToEntry, index: number) => ({
+        id: `recipient-${index + 1}`,
+        principal: typeof recipient.principal === "string" ? recipient.principal : (recipient.principal as { toText: () => string }).toText(),
+        percentage: Number(recipient.percentage),
+        name: recipient.name || ""
+      }));
+      
+      dispatch(setRecipients(formRecipients));
+      
+      // Calculate total BTC amount
+      const totalAmount = tx.to.reduce((sum: number, recipient: ToEntry) => sum + Number(recipient.amount), 0);
+      dispatch(setBtcAmount((totalAmount / 1e8).toString()));
         }
       } catch (error) {
         console.error('Failed to load transaction for editing:', error);
@@ -85,7 +106,7 @@ function EscrowPageContent() {
   useEffect(() => {
     const chatData = populateEscrowForm();
     if (chatData && !editTxId) {
-      setBtcAmount(chatData.amount);
+      dispatch(setBtcAmount(chatData.amount));
       
       // Create recipients from the chat data
       const newRecipients = chatData.recipients.map((recipientId: string, index: number) => ({
@@ -95,15 +116,20 @@ function EscrowPageContent() {
         name: ""
       }));
       
-      setRecipients(newRecipients);
-      setTitle("Escrow created via chat");
+      dispatch(setRecipients(newRecipients));
+      dispatch(setTitle("Escrow created via chat"));
     }
   }, [editTxId]);
-  const [showDialog, setShowDialog] = useState(false);
-  const [newTxId, setNewTxId] = useState<string | null>(null);
+
+  // Reset form when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(resetEscrowForm());
+    };
+  }, [dispatch]);
 
   const totalPercentage = recipients.reduce(
-    (sum, r) => sum + Number(r.percentage),
+    (sum: number, r: Recipient) => sum + Number(r.percentage),
     0
   );
   const btcAmountNum = Math.round(Number(btcAmount) * 1e8);
@@ -113,39 +139,41 @@ function EscrowPageContent() {
     field: keyof Recipient,
     value: string | number
   ) => {
-    setRecipients((prev) =>
-      prev.map((r, i) => (i === idx ? { ...r, [field]: value } : r))
-    );
+    dispatch(updateRecipient({ index: idx, field, value }));
   };
 
   const handleAddRecipient = () => {
     const { uniqueId } = generateUniqueId();
-    setRecipients((prev) => {
-      const newRecipients = [
-        { id: uniqueId, principal: "", percentage: 0 },
-        ...prev,
-      ];
-      const count = newRecipients.length;
-      const autoPercent = count > 0 ? Math.floor(100 / count) : 0;
-      const remainder = 100 - autoPercent * count;
-      return newRecipients.map((r, idx) => ({
-        ...r,
-        percentage: autoPercent + (idx === 0 ? remainder : 0),
-      }));
-    });
+    const newRecipient: Recipient = { id: uniqueId, principal: "", percentage: 0 };
+    
+    // Calculate auto percentages
+    const newRecipients = [newRecipient, ...recipients];
+    const count = newRecipients.length;
+    const autoPercent = count > 0 ? Math.floor(100 / count) : 0;
+    const remainder = 100 - autoPercent * count;
+    
+    const updatedRecipients = newRecipients.map((r, idx) => ({
+      ...r,
+      percentage: autoPercent + (idx === 0 ? remainder : 0),
+    }));
+    
+    dispatch(setRecipients(updatedRecipients));
   };
+  
   const handleRemoveRecipient = (idx: number) => {
-    setRecipients((prev) => {
-      const filtered =
-        prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev;
+    if (recipients.length > 1) {
+      const filtered = recipients.filter((_, i) => i !== idx);
       const count = filtered.length;
       const autoPercent = count > 0 ? Math.floor(100 / count) : 0;
       const remainder = 100 - autoPercent * count;
-      return filtered.map((r, i) => ({
+      
+      const updatedRecipients = filtered.map((r, i) => ({
         ...r,
         percentage: autoPercent + (i === 0 ? remainder : 0),
       }));
-    });
+      
+      dispatch(setRecipients(updatedRecipients));
+    }
   };
 
   const validateForm = () => {
@@ -178,23 +206,64 @@ function EscrowPageContent() {
     return true;
   };
 
+  // Function to get Bitcoin address for a principal
+  const getBitcoinAddressForPrincipal = async (principalText: string): Promise<string | null> => {
+    try {
+      const actor = await createSplitDappActor();
+      const principalObj = Principal.fromText(principalText);
+      const address = await actor.getBitcoinAddress(principalObj);
+      console.log(`Raw address from canister for ${principalText}:`, address);
+      const result = address ? String(address) : null;
+      console.log(`Processed address for ${principalText}:`, result);
+      return result;
+    } catch (error) {
+      console.error('Failed to get Bitcoin address for principal:', principalText, error);
+      return null;
+    }
+  };
+
   const handleCreateEscrow = async () => {
     if (!validateForm()) return;
 
-    setIsLoading(true);
+    dispatch(setIsLoading(true));
 
     try {
       const actor = await createSplitDappActor();
       const callerPrincipal = Principal.fromText(principal!.toText());
 
+      // Check Bitcoin balance before creating escrow
+      const btcBalance = await actor.getUserBitcoinBalance(callerPrincipal) as bigint;
+      const requiredAmount = BigInt(Math.round(Number(btcAmount) * 1e8));
+      
+              if (btcBalance < requiredAmount) {
+          toast.error(`Insufficient Bitcoin balance. You have ${(Number(btcBalance) / 1e8).toFixed(8)} BTC, but need ${btcAmount} BTC`);
+          dispatch(setIsLoading(false));
+          return;
+        }
+
+      // Use sender's Bitcoin address from Redux
+      const senderAddress = senderBitcoinAddress || null;
+
+      // Get Bitcoin addresses for all recipients
+      const participantsWithBitcoinAddresses = await Promise.all(
+        recipients.map(async (r) => {
+          const bitcoinAddress = await getBitcoinAddressForPrincipal(r.principal);
+          console.log(`Bitcoin address for ${r.principal}:`, bitcoinAddress);
+          return {
+            principal: Principal.fromText(r.principal),
+            amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
+            nickname: r.principal || "Recipient", // Ensure nickname is never empty
+            percentage: BigInt(r.percentage),
+            bitcoinAddress: bitcoinAddress,
+          };
+        })
+      );
+      
+      console.log('Participants with Bitcoin addresses:', participantsWithBitcoinAddresses);
+
       const txId = await actor.initiateEscrow(
         callerPrincipal,
-        recipients.map((r) => ({
-          principal: Principal.fromText(r.principal),
-          amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
-          nickname: r.principal, // Use principal as default nickname
-          percentage: BigInt(r.percentage),
-        })),
+        participantsWithBitcoinAddresses,
         title || ""
       );
 
@@ -203,8 +272,8 @@ function EscrowPageContent() {
         return;
       }
 
-      setNewTxId(String(txId));
-      setShowDialog(true);
+      dispatch(setNewTxId(String(txId)));
+      dispatch(setShowDialog(true));
 
       await fetchAndStoreTransactions();
       await updateBalance();
@@ -213,14 +282,14 @@ function EscrowPageContent() {
       toast.error(`Error creating escrow: ${errorMessage}`);
       console.error("Create escrow failed:", err);
     } finally {
-      setIsLoading(false);
+      dispatch(setIsLoading(false));
     }
   };
 
   const handleUpdateEscrow = async () => {
     if (!validateForm()) return;
 
-    setIsLoading(true);
+    dispatch(setIsLoading(true));
 
     try {
       const actor = await createSplitDappActor();
@@ -255,12 +324,15 @@ function EscrowPageContent() {
       }
 
       // Update existing escrow
-      const updatedParticipants = recipients.map((r) => ({
-        principal: Principal.fromText(r.principal),
-        amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
-        nickname: r.principal, // Use principal as default nickname
-        percentage: BigInt(r.percentage),
-      }));
+      const updatedParticipants = await Promise.all(
+        recipients.map(async (r) => ({
+          principal: Principal.fromText(r.principal),
+          amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
+          nickname: r.principal, // Use principal as default nickname
+          percentage: BigInt(r.percentage),
+          bitcoinAddress: await getBitcoinAddressForPrincipal(r.principal),
+        }))
+      );
 
       await actor.updateEscrow(callerPrincipal, editTxId!, updatedParticipants);
       toast.success("Escrow updated successfully!");
@@ -272,7 +344,7 @@ function EscrowPageContent() {
       toast.error(`Error updating escrow: ${errorMessage}`);
       console.error("Update escrow failed:", err);
     } finally {
-      setIsLoading(false);
+      dispatch(setIsLoading(false));
     }
   };
 
@@ -280,7 +352,7 @@ function EscrowPageContent() {
     if (principal && authClient) {
       try {
         const actor = await createSplitDappActor();
-        const balance = await actor.getBalance(Principal.fromText(principal.toText()));
+        const balance = await actor.getUserBitcoinBalance(Principal.fromText(principal.toText())) as bigint;
         const formatted = (Number(balance) / 1e8).toFixed(8);
         dispatch(setBtcBalance(formatted));
       } catch {
@@ -376,11 +448,11 @@ function EscrowPageContent() {
       >
         <TransactionForm
           title={title}
-          setTitle={setTitle}
+          setTitle={(value: string) => dispatch(setTitle(value))}
           btcAmount={btcAmount}
-          setBtcAmount={setBtcAmount}
+          setBtcAmount={(value: string) => dispatch(setBtcAmount(value))}
           recipients={recipients}
-          setRecipients={setRecipients}
+          setRecipients={(value: Recipient[]) => dispatch(setRecipients(value))}
           handleAddRecipient={handleAddRecipient}
           handleRemoveRecipient={handleRemoveRecipient}
           handleRecipientChange={handleRecipientChange}
@@ -391,7 +463,7 @@ function EscrowPageContent() {
           isLoading={isLoading}
           handleInitiateEscrow={editTxId ? handleUpdateEscrow : handleCreateEscrow}
           showDialog={showDialog}
-          setShowDialog={setShowDialog}
+          setShowDialog={(value: boolean) => dispatch(setShowDialog(value))}
           newTxId={newTxId}
           isEditMode={!!editTxId}
         />

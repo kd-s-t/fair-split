@@ -3,6 +3,7 @@ import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
+import Iter "mo:base/Iter";
 
 import TransactionTypes "schema";
 import Balance "modules/balance";
@@ -12,25 +13,36 @@ import Transactions "modules/transactions";
 import Escrow "modules/escrow";
 import Users "modules/users";
 import Admin "modules/admin";
+import Bitcoin "modules/bitcoin";
 
-persistent actor class SplitDApp(admin : Principal) {
+persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
 
   transient var logs : [Text] = [];
   transient let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   transient let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
   transient let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
   
+  // Bitcoin balance storage
+  transient let bitcoinBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  
   // Reputation system
   transient let reputation = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   transient let fraudHistory = HashMap.HashMap<Principal, [Reputation.FraudActivity]>(10, Principal.equal, Principal.hash);
   transient let transactionHistory = HashMap.HashMap<Principal, [Text]>(10, Principal.equal, Principal.hash);
+  
+  // User Bitcoin address storage
+  transient let userBitcoinAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+
+  // Bitcoin integration - Dynamic cKBTC canister ID
+  // For now, use a placeholder that won't cause initialization errors
+  transient let bitcoinIntegration = Bitcoin.BitcoinIntegration("2vxsx-fae"); // Placeholder
 
   public shared func initiateEscrow(
     caller : Principal,
     participants : [TransactionTypes.ParticipantShare],
     title : Text,
   ) : async Text {
-    let result = Escrow.initiateEscrow(caller, participants, title, balances, transactions, names, reputation, fraudHistory, transactionHistory, logs);
+    let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);
     logs := result.newLogs;
     switch (result.success, result.escrowId, result.error) {
       case (true, ?escrowId, null) { escrowId };
@@ -53,17 +65,17 @@ persistent actor class SplitDApp(admin : Principal) {
     idx : Nat,
     recipient : Principal,
   ) : async () {
-    let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, reputation, fraudHistory, logs);
+    let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, bitcoinBalances, reputation, fraudHistory, logs);
     logs := result.newLogs;
   };
 
   public shared func cancelSplit(caller : Principal) : async () {
-    let result = Escrow.cancelSplit(caller, transactions, balances, logs);
+    let result = Escrow.cancelSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
   };
 
   public shared func refundSplit(caller : Principal) : async () {
-    let result = Escrow.refundSplit(caller, transactions, balances, logs);
+    let result = Escrow.refundSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
   };
 
@@ -71,7 +83,7 @@ persistent actor class SplitDApp(admin : Principal) {
     caller : Principal,
     txId : Text,
   ) : async () {
-    let result = Escrow.releaseSplit(caller, txId, transactions, balances, reputation, logs);
+    let result = Escrow.releaseSplit(caller, txId, transactions, balances, bitcoinBalances, reputation, logs);
     logs := result.newLogs;
   };
 
@@ -89,6 +101,26 @@ persistent actor class SplitDApp(admin : Principal) {
 
   public query func getBalance(p : Principal) : async Nat {
     return Balance.getBalance(balances, p);
+  };
+
+  // Bitcoin integration functions (internal use only)
+  private func getBitcoinBalance(account : Bitcoin.Account) : async { #ok : Nat; #err : Text } {
+    let result = await bitcoinIntegration.getBitcoinBalance(account);
+    return result;
+  };
+
+  private func transferBitcoin(
+    fromAccount : Bitcoin.Account,
+    toAccount : Bitcoin.Account,
+    amount : Nat,
+    memo : Nat64
+  ) : async { #ok : Nat; #err : Text } {
+    let result = await bitcoinIntegration.transferBitcoin(fromAccount, toAccount, amount, memo);
+    return result;
+  };
+
+  private func createBitcoinEscrow(escrowId : Text) : async Bitcoin.Account {
+    return bitcoinIntegration.createBitcoinEscrowAccount(escrowId);
   };
 
   public func getTransactionsPaginated(
@@ -173,6 +205,99 @@ persistent actor class SplitDApp(admin : Principal) {
     };
   };
 
+  // Bitcoin address management functions
+  public shared func setBitcoinAddress(caller : Principal, address : Text) : async Bool {
+    // Basic Bitcoin address validation
+    if (address.size() < 26 or address.size() > 90) {
+      return false;
+    };
+    
+    // Check if it starts with valid Bitcoin address prefixes
+    if (not (Text.startsWith(address, #text "1") or Text.startsWith(address, #text "3") or Text.startsWith(address, #text "bc1"))) {
+      return false;
+    };
+    
+    userBitcoinAddresses.put(caller, address);
+    true
+  };
+
+  public query func getBitcoinAddress(user : Principal) : async ?Text {
+    userBitcoinAddresses.get(user)
+  };
+
+  public shared func removeBitcoinAddress(caller : Principal) : async Bool {
+    switch (userBitcoinAddresses.get(caller)) {
+      case (?address) {
+        userBitcoinAddresses.delete(caller);
+        true
+      };
+      case null false;
+    };
+  };
+
+  // Bitcoin balance management functions
+  public shared func setBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      bitcoinBalances.put(user, amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  public query func getUserBitcoinBalance(user : Principal) : async Nat {
+    switch (bitcoinBalances.get(user)) {
+      case (?balance) balance;
+      case null 0;
+    }
+  };
+
+  public shared func addBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      let currentBalance = switch (bitcoinBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      bitcoinBalances.put(user, currentBalance + amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  // ICP to Bitcoin conversion function
+  public shared func convertIcpToBitcoin(caller : Principal, user : Principal, icpAmount : Nat) : async Bool {
+    if (caller == admin) {
+      // Get current ICP balance
+      let currentIcpBalance = Balance.getBalance(balances, user);
+      
+      // Check if user has enough ICP
+      if (currentIcpBalance < icpAmount) {
+        return false;
+      };
+      
+      // Convert ICP e8s to Bitcoin satoshis
+      // Using a simplified conversion rate: 1 ICP ≈ 0.000001 BTC
+      // In production, you'd use real-time exchange rates
+      let bitcoinSatoshis = icpAmount / 100_000_000; // Simplified conversion
+      
+      // Deduct ICP from user's balance
+      let newIcpBalance = currentIcpBalance - icpAmount;
+      balances.put(user, newIcpBalance);
+      
+      // Add Bitcoin to user's balance
+      let currentBitcoinBalance = switch (bitcoinBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      bitcoinBalances.put(user, currentBitcoinBalance + bitcoinSatoshis);
+      
+      true
+    } else {
+      false
+    }
+  };
+
   public query func getReputationStats(user : Principal) : async {
     reputation : Nat;
     isFlagged : Bool;
@@ -201,16 +326,5 @@ persistent actor class SplitDApp(admin : Principal) {
     logs := result.newLogs;
   };
 
-  // Bitcoin transaction hash functions
-  public shared func getBitcoinTransactionHash(_escrowId : Text, _caller : Principal) : async ?Text {
-    // TODO: Implement real Bitcoin transaction hash lookup when on mainnet
-    // For now, return null as placeholder
-    null
-  };
 
-  public shared func updateBitcoinTransactionHash(_escrowId : Text, _txHash : Text, _caller : Principal) : async Bool {
-    // TODO: Implement real Bitcoin transaction hash update when on mainnet
-    // For now, return false as placeholder
-    false
-  };
 };

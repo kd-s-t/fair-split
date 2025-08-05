@@ -29,12 +29,14 @@ module {
         participants : [TransactionTypes.ParticipantShare],
         title : Text,
         balances : HashMap.HashMap<Principal, Nat>,
+        bitcoinBalances : HashMap.HashMap<Principal, Nat>,
         transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
         names : HashMap.HashMap<Principal, Text>,
         reputation : HashMap.HashMap<Principal, Nat>,
         fraudHistory : HashMap.HashMap<Principal, [Reputation.FraudActivity]>,
         transactionHistory : HashMap.HashMap<Principal, [Text]>,
-        logs : [Text]
+        logs : [Text],
+        userBitcoinAddresses : HashMap.HashMap<Principal, Text>
     ) : {
         success : Bool;
         escrowId : ?Text;
@@ -116,22 +118,37 @@ module {
             };
         };
 
-        // Check sender's balance
-        let senderBalance = Balance.getBalance(balances, caller);
-        if (senderBalance < totalAmount) {
+        // Check sender's Bitcoin balance
+        let senderBitcoinBalance = Balance.getBalance(bitcoinBalances, caller);
+        if (senderBitcoinBalance < totalAmount) {
             return {
                 success = false;
                 escrowId = null;
-                error = ?("Error: Insufficient balance");
+                error = ?("Error: Insufficient Bitcoin balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(senderBitcoinBalance) # " satoshis");
                 newLogs = logs;
             };
         };
 
-        // Deduct from sender and hold in escrow
-        Balance.decreaseBalance(balances, caller, totalAmount);
+        // Deduct from sender's Bitcoin balance and hold in escrow
+        Balance.decreaseBalance(bitcoinBalances, caller, totalAmount);
 
-        // Generate Bitcoin address (placeholder for now, will be real on mainnet)
-        let bitcoinAddress = "bc1qplaceholderaddressfornow"; // TODO: Replace with real Bitcoin address generation
+        // Get recipient Bitcoin addresses from the participants data
+        // The frontend will pass the actual Bitcoin addresses for each recipient
+        let _recipientBitcoinAddresses = Array.map<TransactionTypes.ParticipantShare, Text>(
+            participants,
+            func(p) {
+                switch (p.bitcoinAddress) {
+                    case (?address) address;
+                    case null "bc1qplaceholderaddressfornow"; // Fallback if no address provided
+                }
+            }
+        );
+        
+        // Get sender's Bitcoin address
+        let senderBitcoinAddress = switch (userBitcoinAddresses.get(caller)) {
+            case (?address) address;
+            case null "bc1qplaceholderaddressfornow"; // Fallback if no address set
+        };
         
         let tx : TransactionTypes.Transaction = {
             id = escrowId;
@@ -142,12 +159,13 @@ module {
                     {
                         principal = p.principal;
                         name = if (p.nickname != "") { p.nickname } else { switch (names.get(p.principal)) { case (?n) n; case null "" } };
-                        amount = p.amount;
+                        amount = p.amount; // This is now in satoshis (BTC * 100,000,000)
                         percentage = p.percentage;
                         status = #pending;
                         approvedAt = null;
                         declinedAt = null;
                         readAt = null;
+                        bitcoinAddress = p.bitcoinAddress; // Store recipient's Bitcoin address
                     };
                 },
             );
@@ -159,7 +177,7 @@ module {
             cancelledAt = null;
             refundedAt = null;
             releasedAt = null;
-            bitcoinAddress = ?bitcoinAddress;
+            bitcoinAddress = ?senderBitcoinAddress; // Use sender's actual Bitcoin address
             bitcoinTransactionHash = null;
         };
 
@@ -175,9 +193,12 @@ module {
         let newLogs = Array.append<Text>(
             logs,
             [
-                "Escrow created by " # Principal.toText(caller) # " at " # Nat.toText(timestamp),
+                "Bitcoin escrow created by " # Principal.toText(caller) # " at " # Nat.toText(timestamp),
                 "Escrow ID: " # escrowId,
-                "Awaiting recipient approvals",
+                "Sender Bitcoin address: " # senderBitcoinAddress,
+                "Total Bitcoin amount: " # Nat.toText(totalAmount) # " satoshis",
+                "Recipients: " # Nat.toText(participants.size()) # " recipients with Bitcoin addresses",
+                "Awaiting recipient approvals for Bitcoin transfer",
             ],
         );
 
@@ -193,7 +214,8 @@ module {
         caller : Principal,
         txId : Text,
         transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
-        balances : HashMap.HashMap<Principal, Nat>,
+        _balances : HashMap.HashMap<Principal, Nat>,
+        bitcoinBalances : HashMap.HashMap<Principal, Nat>,
         reputation : HashMap.HashMap<Principal, Nat>,
         logs : [Text]
     ) : {
@@ -227,7 +249,7 @@ module {
                     // Perform the transfer
                     for (toEntry in tx.to.vals()) {
                         if (toEntry.status == #approved) {
-                            Balance.increaseBalance(balances, toEntry.principal, toEntry.amount);
+                            Balance.increaseBalance(bitcoinBalances, toEntry.principal, toEntry.amount);
                         };
                     };
 
@@ -278,7 +300,8 @@ module {
     public func cancelSplit(
         caller : Principal,
         transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
-        balances : HashMap.HashMap<Principal, Nat>,
+        _balances : HashMap.HashMap<Principal, Nat>,
+        bitcoinBalances : HashMap.HashMap<Principal, Nat>,
         logs : [Text]
     ) : {
         success : Bool;
@@ -319,7 +342,7 @@ module {
                     );
                     
                     // Refund the amount to sender
-                    Balance.increaseBalance(balances, caller, totalAmount);
+                    Balance.increaseBalance(bitcoinBalances, caller, totalAmount);
                     
                     {
                         id = tx.id;
@@ -389,6 +412,7 @@ module {
                         approvedAt = ?TimeUtil.now();
                         declinedAt = entry.declinedAt;
                         readAt = entry.readAt;
+                        bitcoinAddress = entry.bitcoinAddress;
                     };
                 } else {
                     entry;
@@ -445,7 +469,8 @@ module {
         idx : Nat,
         recipient : Principal,
         transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
-        balances : HashMap.HashMap<Principal, Nat>,
+        _balances : HashMap.HashMap<Principal, Nat>,
+        bitcoinBalances : HashMap.HashMap<Principal, Nat>,
         reputation : HashMap.HashMap<Principal, Nat>,
         fraudHistory : HashMap.HashMap<Principal, [Reputation.FraudActivity]>,
         logs : [Text]
@@ -494,6 +519,7 @@ module {
                         approvedAt = entry.approvedAt;
                         declinedAt = ?TimeUtil.now();
                         readAt = entry.readAt;
+                        bitcoinAddress = entry.bitcoinAddress;
                     };
                 } else {
                     entry;
@@ -509,7 +535,7 @@ module {
         
         switch (recipientAmount) {
             case (?entry) {
-                Balance.increaseBalance(balances, sender, entry.amount); // Refund the declined amount
+                Balance.increaseBalance(bitcoinBalances, sender, entry.amount); // Refund the declined amount
             };
             case null {
                 // Recipient not found, this shouldn't happen but handle gracefully
@@ -616,6 +642,7 @@ module {
                     approvedAt = null;
                     declinedAt = null;
                     readAt = null;
+                    bitcoinAddress = p.bitcoinAddress;
                 };
             }
         );
@@ -657,7 +684,8 @@ module {
     public func refundSplit(
         caller : Principal,
         transactions : HashMap.HashMap<Principal, [TransactionTypes.Transaction]>,
-        balances : HashMap.HashMap<Principal, Nat>,
+        _balances : HashMap.HashMap<Principal, Nat>,
+        bitcoinBalances : HashMap.HashMap<Principal, Nat>,
         logs : [Text]
     ) : {
         success : Bool;
@@ -680,7 +708,7 @@ module {
                     );
                     
                     // Refund the amount to sender
-                    Balance.increaseBalance(balances, caller, totalAmount);
+                    Balance.increaseBalance(bitcoinBalances, caller, totalAmount);
                     
                     {
                         id = tx.id;

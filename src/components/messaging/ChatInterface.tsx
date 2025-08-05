@@ -5,6 +5,7 @@ import { Send, Bot, User, Loader2, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 export interface Message {
   id: string;
@@ -125,7 +126,11 @@ export function ChatInterface({
                     : 'bg-[#333] text-white'
                 )}
               >
-                {message.content}
+                {message.role === 'assistant' ? (
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                ) : (
+                  message.content
+                )}
               </div>
               {message.role === 'user' && (
                 <div className="flex-shrink-0">

@@ -6,15 +6,19 @@ import { ChatInterface, Message } from './ChatInterface';
 import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
-import { handleEscrowCreation, handleApprovalSuggestion, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
+import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState, updateGlobalChatOpen, clearGlobalChatMessages } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/lib/redux/store';
 import { RootState } from '@/lib/redux/store';
+import { ParsedAction } from '@/lib/messaging/actionParser';
 
 export function MessagingSystem() {
   const router = useRouter();
   const principal = useAppSelector((state: RootState) => state.user.principal);
+  const icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
+  const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
+  const btcAddress = useAppSelector((state: RootState) => state.user.btcAddress);
   
   // Set router for navigation service
   useEffect(() => {
@@ -42,7 +46,7 @@ export function MessagingSystem() {
         // Add welcome message for new users
         const welcomeMessage: Message = {
           id: 'welcome',
-          content: "Hello! I'm your SplitSafe Assistant. I can help you with two things:\n\n1. **Create Escrows** - Just tell me who you want to send money to and how much\n2. **Get Approval Advice** - I'll help you decide whether to approve or decline received escrows\n\nJust chat naturally - I'll understand what you need!",
+          content: "Hello! I'm your SplitSafe Assistant. I can help you with four things:\n\n1. Create Escrows\n   Just tell me who you want to send money to and how much\n\n2. Set Bitcoin Address\n   Tell me your Bitcoin address and I'll set it for you\n\n3. Account Queries\n   Ask me about your principal, balances, or Bitcoin address\n\n4. Get Approval Advice\n   I'll help you decide whether to approve or decline received escrows\n\nJust chat naturally - I'll understand what you need!",
           role: 'assistant',
           timestamp: new Date(),
         };
@@ -81,16 +85,31 @@ export function MessagingSystem() {
       // Get API key from environment variable
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
       
-      if (!apiKey) {
-        throw new Error('OpenAI API key not configured');
+      let parsedAction: ParsedAction = null;
+      
+      if (apiKey) {
+        try {
+          // Use AI to understand the message and determine action
+          parsedAction = await parseUserMessageWithAI(content, apiKey);
+        } catch (aiError) {
+          console.warn('AI parser failed, falling back to local parser:', aiError);
+        }
       }
       
-      // Use AI to understand the message and determine action
-      const parsedAction = await parseUserMessageWithAI(content, apiKey);
+      // If AI parser failed or no API key, try local parser
+      if (!parsedAction) {
+        const { parseUserMessage } = await import('@/lib/messaging/actionParser');
+        parsedAction = parseUserMessage(content);
+      }
       
       if (parsedAction) {
         // Handle specific actions
-        const response = generateActionResponse(parsedAction);
+        const response = generateActionResponse(parsedAction, {
+          principal,
+          icpBalance,
+          btcBalance,
+          btcAddress,
+        });
         
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -124,16 +143,21 @@ export function MessagingSystem() {
             
             // Keep chat open during navigation
             setIsOpen(true);
+          } else if (parsedAction.type === 'set_bitcoin_address') {
+            const navigation = handleBitcoinAddressSet(parsedAction);
+            executeNavigation(navigation);
+            // Keep chat open during navigation
+            setIsOpen(true);
           }
         }, 1000); // 1 second delay to show the response
         
         return;
       }
 
-      // If AI didn't detect a specific action, provide helpful guidance
+      // If no action was detected, provide helpful guidance
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "You're welcome! 😊\n\nIf you need help with anything else, just let me know. I can help you create escrows or get advice on approvals.",
+        content: "I can help you with four things:\n\n1. Create Escrows\n   Try: 'send 2 btc to [recipient-id]'\n\n2. Set Bitcoin Address\n   Try: 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n\n3. Account Queries\n   Try: 'what is my principal?' or 'show my ICP balance'\n\n4. Approval Advice\n   Try: 'should I approve or decline?'\n\nJust tell me what you need!",
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -155,7 +179,7 @@ export function MessagingSystem() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [principal, icpBalance, btcBalance, btcAddress]);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -170,7 +194,7 @@ export function MessagingSystem() {
     clearGlobalChatMessages();
     const welcomeMessage: Message = {
       id: 'welcome',
-      content: "Hello! I'm your SplitSafe Assistant. I can help you with two things:\n\n1. **Create Escrows** - Just tell me who you want to send money to and how much\n2. **Get Approval Advice** - I'll help you decide whether to approve or decline received escrows\n\nJust chat naturally - I'll understand what you need!",
+      content: "Hello! I'm your SplitSafe Assistant. I can help you with four things:\n\n1. Create Escrows\n   Just tell me who you want to send money to and how much\n\n2. Set Bitcoin Address\n   Tell me your Bitcoin address and I'll set it for you\n\n3. Account Queries\n   Ask me about your principal, balances, or Bitcoin address\n\n4. Get Approval Advice\n   I'll help you decide whether to approve or decline received escrows\n\nJust chat naturally - I'll understand what you need!",
       role: 'assistant',
       timestamp: new Date(),
     };

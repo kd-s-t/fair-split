@@ -1,13 +1,13 @@
 services:
-  splitsafe-staging:
-    container_name: splitsafe-staging
+  safesplit-staging:
+    container_name: safesplit-staging
     build:
       context: ../..
       dockerfile: docker/stage/Dockerfile
     ports:
       - "3001:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=staging
       - PORT=3000
     env_file:
       - ../../.env

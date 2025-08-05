@@ -51,7 +51,6 @@ import { Typography } from "@/components/ui/typography";
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Bitcoin,
   RotateCw,
   Eye,
   Bot,
@@ -172,12 +171,7 @@ export default function TransactionsPage() {
       markUnreadTransactionsAsRead();
     }
   }, [localTransactions, principal, markUnreadTransactionsAsRead]);
-
-  function truncateHash(hash: string): string {
-    if (hash.length <= 16) return hash;
-    return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
-  }
-
+  
   function getTxId(tx: NormalizedTransaction) {
     return `${tx.from}_${tx.to
       .map((toEntry) => toEntry.principal)
@@ -341,7 +335,6 @@ export default function TransactionsPage() {
       const actor = await createSplitDappActor();
       const result = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
       dispatch(setTransactions(convertToNormalizedTransactions(result.transactions)));
-      toast.success('Transactions refreshed!');
     } catch (error) {
       console.error('Failed to refresh transactions:', error);
       toast.error('Failed to refresh transactions');
@@ -582,27 +575,24 @@ export default function TransactionsPage() {
                           <Typography variant="small" className="text-[#9F9F9F]">
                             Amount
                           </Typography>
-                          <div className="flex items-center gap-1">
-                            <Bitcoin size={16} color="#F97415" />
-                            <Typography variant="base" className="font-semibold">
-                              {(() => {
-                                if (isSentByUser(tx)) {
-                                  // If sender, show total amount
-                                  return tx.to && Array.isArray(tx.to)
-                                    ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
-                                    : '0.00000000';
-                                } else {
-                                  // If receiver, show their specific amount
-                                  const recipientEntry = tx.to.find((entry) =>
-                                    String(entry.principal) === String(principal)
-                                  );
-                                  return recipientEntry
-                                    ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
-                                    : '0.00000000';
-                                }
-                              })()} BTC
-                            </Typography>
-                          </div>
+                          <Typography variant="base" className="font-semibold">
+                            {(() => {
+                              if (isSentByUser(tx)) {
+                                // If sender, show total amount
+                                return tx.to && Array.isArray(tx.to)
+                                  ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                                  : '0.00000000';
+                              } else {
+                                // If receiver, show their specific amount
+                                const recipientEntry = tx.to.find((entry) =>
+                                  String(entry.principal) === String(principal)
+                                );
+                                return recipientEntry
+                                  ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
+                                  : '0.00000000';
+                              }
+                            })()} ICP
+                          </Typography>
                         </div>
 
                         <div className="flex flex-col gap-1">
@@ -627,14 +617,17 @@ export default function TransactionsPage() {
 
                         <div className="flex flex-col gap-1">
                           <Typography variant="small" className="text-[#9F9F9F]">
-                            Bitcoin Address
+                            Status
                           </Typography>
                           <Typography
                             variant="base"
-                            className="font-semibold text-[#FEB64D] truncate"
-                            title={Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? tx.bitcoinAddress[0] : 'No address available'}
+                            className="font-semibold text-[#FEB64D]"
                           >
-                            {Array.isArray(tx.bitcoinAddress) && tx.bitcoinAddress.length > 0 ? truncateHash(tx.bitcoinAddress[0] || '') : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
+                            {tx.status === 'cancelled' ? 'Cancelled' :
+                             tx.status === 'released' ? 'Released' :
+                             tx.status === 'confirmed' ? 'Active' :
+                             tx.status === 'pending' ? 'Pending' :
+                             tx.status}
                           </Typography>
                         </div>
                       </div>

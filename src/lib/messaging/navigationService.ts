@@ -1,4 +1,4 @@
-import { EscrowCreateAction, ApprovalSuggestionAction } from './actionParser';
+import { EscrowCreateAction, ApprovalSuggestionAction, BitcoinAddressSetAction } from './actionParser';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export interface NavigationAction {
@@ -21,6 +21,17 @@ export function handleEscrowCreation(action: EscrowCreateAction): NavigationActi
     data: {
       amount: action.amount,
       recipients: action.recipients
+    }
+  };
+}
+
+export function handleBitcoinAddressSet(action: BitcoinAddressSetAction): NavigationAction {
+  return {
+    type: 'redirect',
+    path: '/integrations',
+    data: {
+      bitcoinAddress: action.address,
+      autoSet: true
     }
   };
 }

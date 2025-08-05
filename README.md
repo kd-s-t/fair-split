@@ -13,7 +13,7 @@
 </div>
 
 # SplitSafe
-A decentralized, trustless Bitcoin escrow and payout system using Internet Computer (ICP) and modern web technologies. It enables secure cross-chain transactions with native Bitcoin integration, no bridges or wrapped tokens required.
+A decentralized, trustless Bitcoin escrow and payout system using Internet Computer (ICP) and modern web technologies. It enables secure cross-chain transactions with native Bitcoin integration using cKBTC (Chain-Key Bitcoin), no bridges or wrapped tokens required.
 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 
@@ -24,10 +24,12 @@ A decentralized, trustless Bitcoin escrow and payout system using Internet Compu
 	<img src="https://img.shields.io/badge/Framer Motion-EF008F?style=for-the-badge&logo=framer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" /> 
 </div>
 
 <div align="center"> 
   <img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" />
+  <img src="https://img.shields.io/badge/bitcoin-2F3134?style=for-the-badge&logo=bitcoin&logoColor=white" />
 	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 	<img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" /> 
 </div>
@@ -76,57 +78,20 @@ The application will be available at http://localhost:3000
 ### Local Development with Docker
 ```bash
 # Start local development environment
-docker-compose -f docker/local/docker-compose.yml up --build
+docker compose -f docker/local/docker-compose.yml up --build
 
 # Stop the containers
-docker-compose -f docker/local/docker-compose.yml down
+docker compose -f docker/local/docker-compose.yml down
 ```
 
 ### Staging Deployment with Docker
 ```bash
 # Start staging environment
-docker-compose -f docker/stage/docker-compose.yml up --build
+docker compose -f docker/stage/docker-compose.yml up --build
 
 # Stop the containers
-docker-compose -f docker/stage/docker-compose.yml down
+docker compose -f docker/stage/docker-compose.yml down
 ```
-
-### Manual Docker Builds
-```bash
-# Build local development image
-docker build -f docker/local/Dockerfile -t splitsafe:local .
-
-# Build staging image
-docker build -f docker/stage/Dockerfile -t splitsafe:staging .
-
-# Run local development container
-docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules splitsafe:local
-
-# Run staging container
-docker run -p 3001:3000 splitsafe:staging
-```
-
-## Development
-
-### Available Scripts
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript type checking
-```
-
-### Git Hooks (Husky)
-The project uses Husky for Git hooks:
-- **Pre-commit**: Runs linting before each commit
-- **Pre-push**: Runs tests before pushing code
-
-### Code Quality
-- ESLint for code linting
-- TypeScript for type checking
-- Husky for Git hooks
-- Prettier for code formatting (if configured)
 
 ## AWS Infrastructure with Terraform
 
@@ -148,23 +113,6 @@ terraform destroy
 - `public_ip` - EC2 instance public IP
 - `instance_id` - EC2 instance ID
 
-## Project Structure
-
-```
-splitsafe/
-├── src/                    # Source code
-│   ├── app/               # Next.js app directory
-│   ├── components/        # React components
-│   ├── lib/              # Utilities and services
-│   └── modules/          # Feature modules
-├── public/               # Static assets
-├── docker/              # Docker configurations
-│   ├── local/           # Local development
-│   └── stage/           # Staging deployment
-├── icp/                 # ICP canister code
-├── terraform/           # Infrastructure as code
-└── scripts/             # Utility scripts
-```
 
 ## Configuration
 

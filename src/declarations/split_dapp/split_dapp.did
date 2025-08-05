@@ -19,6 +19,7 @@ type ToEntry =
  record {
    amount: nat;
    approvedAt: opt nat;
+   bitcoinAddress: opt text;
    declinedAt: opt nat;
    name: text;
    percentage: nat;
@@ -33,16 +34,19 @@ type ToEntry =
  };
 type SplitDApp = 
  service {
+   addBitcoinBalance: (caller: principal, user: principal, amount: nat) ->
+    (bool);
    canUserCreateEscrow: (user: principal) -> (bool) query;
    cancelSplit: (caller: principal) -> ();
+   convertIcpToBitcoin: (caller: principal, user: principal, icpAmount:
+    nat) -> (bool);
    getAdmin: () -> (principal) query;
    getAllNicknames: () -> (vec record {
                                  principal;
                                  text;
                                }) query;
    getBalance: (p: principal) -> (nat) query;
-   getBitcoinTransactionHash: (_escrowId: text, _caller: principal) ->
-    (opt text);
+   getBitcoinAddress: (user: principal) -> (opt text) query;
    getCustomNickname: ("principal": principal) -> (opt text) query;
    getFraudHistory: (user: principal) -> (vec FraudActivity) query;
    getNickname: (p: principal) -> (opt text) query;
@@ -60,6 +64,7 @@ type SplitDApp =
        totalPages: nat;
        transactions: vec Transaction;
      });
+   getUserBitcoinBalance: (user: principal) -> (nat) query;
    getUserReputationScore: (user: principal) -> (nat) query;
    initiateEscrow: (caller: principal, participants: vec ParticipantShare,
     title: text) -> (text);
@@ -73,19 +78,22 @@ type SplitDApp =
     principal) -> ();
    refundSplit: (caller: principal) -> ();
    releaseSplit: (caller: principal, txId: text) -> ();
+   removeBitcoinAddress: (caller: principal) -> (bool);
    removeNickname: ("principal": principal) -> ();
    resetUserReputation: (user: principal, caller: principal) -> ();
+   setBitcoinAddress: (caller: principal, address: text) -> (bool);
+   setBitcoinBalance: (caller: principal, user: principal, amount: nat) ->
+    (bool);
    setCustomNickname: ("principal": principal, nickname: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setNickname: (p: principal, name: text) -> ();
-   updateBitcoinTransactionHash: (_escrowId: text, _txHash: text, _caller:
-    principal) -> (bool);
    updateEscrow: (caller: principal, txId: text, updatedParticipants:
     vec ParticipantShare) -> ();
  };
 type ParticipantShare = 
  record {
    amount: nat;
+   bitcoinAddress: opt text;
    nickname: text;
    percentage: nat;
    "principal": principal;
@@ -96,4 +104,4 @@ type FraudActivity =
    timestamp: int;
    transactionId: text;
  };
-service : (admin: principal) -> SplitDApp
+service : (admin: principal, _ckbtcCanisterId: text) -> SplitDApp

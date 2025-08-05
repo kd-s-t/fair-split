@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { House, Wallet } from "lucide-react";
+import { House, Wallet, Zap } from "lucide-react";
 
 
 export default function Sidebar() {
@@ -13,6 +13,7 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/dashboard", icon: <House size={16} /> },
     { name: "Escrow", href: "/escrow", icon: <Wallet size={16} /> },
     { name: "Transactions", href: "/transactions", icon: <Wallet size={16} /> },
+    { name: "Integrations", href: "/integrations", icon: <Zap size={16} /> },
   ];
 
   return (

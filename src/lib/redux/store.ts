@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import transactionsReducer from './transactionsSlice';
 import userReducer from './userSlice';
+import escrowReducer from './escrowSlice';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -33,6 +34,7 @@ export const store = configureStore({
   reducer: {
     transactions: transactionsReducer,
     user: userReducer,
+    escrow: escrowReducer,
     layout: layoutReducer,
   },
 });

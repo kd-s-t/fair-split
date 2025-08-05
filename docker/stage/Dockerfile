@@ -1,6 +1,5 @@
-# Multi-stage Dockerfile for SplitSafe
-# Stage 1: Base image with Node.js
-FROM node:20.13.1-alpine AS base
+# Production/Staging Dockerfile for SplitSafe
+FROM node:20.13.1-alpine
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -16,62 +15,33 @@ RUN apk add --no-cache \
     make \
     g++
 
-# Stage 2: Frontend build
-FROM base AS frontend-builder
-
 WORKDIR /app
 
-# Set environment variables for lightningcss (arm64 for local Mac builds)
+# Set environment variables for lightningcss
 ENV LIGHTNING_CSS_BINARY_TARGET=linux-arm64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
 COPY package*.json ./
-COPY next.config.ts ./
-COPY tailwind.config.js ./
-COPY postcss.config.mjs ./
-COPY tsconfig.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
-# Force rebuild of native modules for the correct architecture
-RUN npm install --include=dev --no-optional --force
-
-# Ensure TypeScript is available for next.config.ts
-RUN npm install typescript --save-dev
+RUN npm ci
 
 # Copy source files
 COPY . .
 
-# Force reinstall lightningcss with correct binary
-RUN npm uninstall lightningcss && npm install lightningcss --force
-
-# Rebuild native modules for the current platform
-RUN npm rebuild
-
-# Build the frontend with memory optimization for EC2
+# Build the application
 RUN npm run build
 
-# Stage 3: Production runtime
-FROM base AS production
-
-WORKDIR /app
-
-# Copy built frontend
-COPY --from=frontend-builder /app/.next ./.next
-COPY --from=frontend-builder /app/public ./public
-COPY --from=frontend-builder /app/package*.json ./
-COPY --from=frontend-builder /app/next.config.ts ./
-COPY --from=frontend-builder /app/tailwind.config.js ./
-COPY --from=frontend-builder /app/postcss.config.mjs ./
-COPY --from=frontend-builder /app/tsconfig.json ./
-
-# Install production dependencies only
-RUN npm install --only=production && npm cache clean --force
+# Remove dev dependencies and clean cache
+RUN npm prune --production && npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
+# Change ownership of the app directory
+RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 # Expose port

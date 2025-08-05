@@ -386,7 +386,7 @@ export default function TransactionsPage() {
           >
             <option value="all">All status</option>
             {availableStatuses.includes('pending') && <option value="pending">Pending</option>}
-            {availableStatuses.includes('confirmed') && <option value="confirmed">Confirmed</option>}
+            {availableStatuses.includes('confirmed') && <option value="confirmed">Active</option>}
             {availableStatuses.includes('released') && <option value="released">Released</option>}
             {availableStatuses.includes('cancelled') && <option value="cancelled">Cancelled</option>}
             {availableStatuses.includes('declined') && <option value="declined">Declined</option>}

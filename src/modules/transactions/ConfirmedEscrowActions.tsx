@@ -43,8 +43,8 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
             </Typography>
           </div>
           <div className="text-center">
-            <Typography variant="large" className="text-green-400 font-bold">
-              Confirmed
+            <Typography variant="large" className="text-blue-400 font-bold">
+              Active
             </Typography>
             <Typography variant="small" className="text-[#9F9F9F]">
               Status

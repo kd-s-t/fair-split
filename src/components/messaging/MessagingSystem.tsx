@@ -9,9 +9,12 @@ import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { handleEscrowCreation, handleApprovalSuggestion, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState, updateGlobalChatOpen, clearGlobalChatMessages } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/lib/redux/store';
+import { RootState } from '@/lib/redux/store';
 
 export function MessagingSystem() {
   const router = useRouter();
+  const principal = useAppSelector((state: RootState) => state.user.principal);
   
   // Set router for navigation service
   useEffect(() => {
@@ -173,6 +176,11 @@ export function MessagingSystem() {
     };
     setMessages([welcomeMessage]);
   };
+
+  // Don't render if user is not authenticated
+  if (!principal) {
+    return null;
+  }
 
   return (
     <>

@@ -114,15 +114,18 @@ jobs:
           echo "Host: ${{ secrets.EC2_HOST }}"
           echo "Port: ${{ secrets.EC2_PORT }}"
           
-          # Test basic connectivity first
+          # Test SSH port connectivity (skip ping as many EC2 instances block ICMP)
           if ! nc -z -w5 ${{ secrets.EC2_HOST }} ${{ secrets.EC2_PORT }}; then
             echo "❌ Cannot connect to ${{ secrets.EC2_HOST }}:${{ secrets.EC2_PORT }}"
-            echo "🔍 Checking if host is reachable..."
-            ping -c 3 ${{ secrets.EC2_HOST }} || echo "⚠️ Host is not responding to ping"
+            echo "🔍 This could be due to:"
+            echo "   - Incorrect EC2_HOST secret"
+            echo "   - Incorrect EC2_PORT secret"
+            echo "   - EC2 instance is down"
+            echo "   - Security group blocking SSH"
             exit 1
           fi
           
-          echo "✅ Host is reachable, attempting SSH key scan..."
+          echo "✅ SSH port is accessible, attempting SSH key scan..."
           
           # Try ssh-keyscan with different options
           if ! ssh-keyscan -H -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null; then

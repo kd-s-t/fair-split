@@ -1,16 +1,14 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronRight } from "lucide-react";
+import ActivityContent from "./ActivityContent";
+import { useTransactions } from "@/hooks/useTransactions";
 import { Typography } from "@/components/ui/typography";
-import {
-  ChevronRight
-} from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
-import { useTransactions } from "@/hooks/transactions";
 import type { ActivityItem } from "@/modules/transactions/types";
-import ActivityContent from "./ActivityContent";
 
 export default function RecentActivities() {
   const principal = useSelector((state: RootState) => state.user?.principal);
@@ -26,7 +24,7 @@ export default function RecentActivities() {
 
   const receivedCount = activities.filter(
     (activity: ActivityItem) => principal && activity.to && activity.to.some(
-              (recipient: { principal: unknown }) => String(recipient.principal) === String(principal)
+      (recipient: { principal: unknown }) => String(recipient.principal) === String(principal)
     )
   ).length;
 

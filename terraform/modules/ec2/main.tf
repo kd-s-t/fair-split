@@ -123,6 +123,7 @@ resource "aws_instance" "splitsafe_server" {
       "DFXVM_INIT_YES=true sh -ci \"$(curl -fsSL https://internetcomputer.org/install.sh)\"",
       "echo 'source ~/.bashrc' >> ~/.profile",
       "source ~/.bashrc",
+      "export PATH=$PATH:~/.local/share/dfx/bin",
       "dfx --version",
       "echo '✅ dfx installed'",
       "echo '======================================================================================'",

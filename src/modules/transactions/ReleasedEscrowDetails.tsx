@@ -5,15 +5,15 @@ import { ExternalLink, CalendarCheck2, Hash, CircleCheckBig } from "lucide-react
 import { Typography } from "@/components/ui/typography";
 import { ReleasedEscrowDetailsProps, ToEntry } from "./types";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
-import TransactionStats from "@/components/TransactionStats";
+// import TransactionStats from "@/components/TransactionStats";
 
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
   // Calculate total released BTC
-  const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: ToEntry) => sum + Number(toEntry.amount), 0) / 1e8
-    : 0;
+  // const totalBTC = Array.isArray(transaction.to)
+  //   ? transaction.to.reduce((sum: number, toEntry: ToEntry) => sum + Number(toEntry.amount), 0) / 1e8
+  //   : 0;
 
-  const recipientCount = transaction.to?.length || 0;
+  // const recipientCount = transaction.to?.length || 0;
 
   // Use releasedAt if present, otherwise fallback to timestamp
   const releasedAt = transaction.releasedAt;
@@ -24,13 +24,13 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
   return (
     <div className="container !rounded-2xl !p-6">
 
-      <TransactionStats
+      {/* <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}
-      />
+      /> */}
 
-      <hr className="my-6 text-[#424444] h-[1px]" />
+      {/* <hr className="my-6 text-[#424444] h-[1px]" /> */}
 
       {/* Escrow overview */}
       <Typography variant="large" className="mb-4">Escrow overview</Typography>

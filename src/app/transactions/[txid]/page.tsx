@@ -12,7 +12,7 @@ import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
-import type { NormalizedTransaction, ToEntry, EscrowTransaction } from "@/modules/transactions/types";
+import type { NormalizedTransaction } from "@/modules/transactions/types";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import { Principal } from "@dfinity/principal";
 import { AnimatePresence, motion } from "framer-motion";
@@ -20,28 +20,6 @@ import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-// Helper function to convert NormalizedTransaction to EscrowTransaction
-const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransaction => ({
-  id: tx.id,
-  from: tx.from,
-  to: tx.to.map(entry => ({
-    principal: entry.principal,
-    amount: BigInt(entry.amount),
-    percentage: Number(entry.percentage),
-    status: entry.status as { [key: string]: null },
-    name: entry.name,
-    approvedAt: entry.approvedAt,
-    declinedAt: entry.declinedAt,
-    readAt: entry.readAt,
-  })),
-  status: tx.status as "pending" | "confirmed" | "released" | "cancelled" | "refund" | "declined",
-  createdAt: tx.createdAt,
-  title: tx.title,
-  releasedAt: tx.releasedAt,
-  bitcoinAddress: tx.bitcoinAddress,
-  bitcoinTransactionHash: tx.bitcoinTransactionHash,
-});
 
 
 
@@ -87,7 +65,7 @@ export default function TransactionDetailsPage() {
           refundedAt: result[0].refundedAt ? result[0].refundedAt.toString() : undefined,
           releasedAt: result[0].releasedAt ? result[0].releasedAt.toString() : undefined,
           readAt: result[0].readAt ? result[0].readAt.toString() : undefined,
-          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: ToEntry) => ({
+          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: any) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -280,8 +258,8 @@ export default function TransactionDetailsPage() {
               <div className="text-sm text-black/80">All payments have been successfully distributed to recipients</div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-black">{totalBTC.toFixed(8)} ICP</div>
-              <div className="text-xs text-black/80">ICP Released</div>
+              <div className="text-2xl font-bold text-black">{totalBTC.toFixed(8)} BTC</div>
+              <div className="text-xs text-black/80">BTC Released</div>
             </div>
           </motion.div>
         )}
@@ -290,13 +268,32 @@ export default function TransactionDetailsPage() {
         <div className="flex-1">
 
           {statusKey === TRANSACTION_STATUS.RELEASED && (
-            <ReleasedEscrowDetails transaction={convertToEscrowTransaction(transaction)} />
+            <ReleasedEscrowDetails transaction={transaction} />
           )}
 
           {statusKey === TRANSACTION_STATUS.PENDING && (
             (() => {
               const isSender = principal && String(transaction.from) === String(principal);
-              const transactionData = convertToEscrowTransaction(transaction);
+              const transactionData = {
+                ...transaction,
+                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: any) => ({
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
+                  : [],
+                status: "pending" as const,
+                releasedAt: Array.isArray(transaction.releasedAt)
+                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                  : transaction.releasedAt,
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
+                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
+                  : transaction.bitcoinAddress,
+                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
+                  : transaction.bitcoinTransactionHash
+              };
 
               return isSender ? (
                 <EditEscrowDetails
@@ -316,8 +313,24 @@ export default function TransactionDetailsPage() {
           {(statusKey === TRANSACTION_STATUS.CANCELLED || statusKey === TRANSACTION_STATUS.DECLINED) && (
             <CancelledEscrowDetails
               transaction={{
-                ...convertToEscrowTransaction(transaction),
+                ...transaction,
+                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: any) => ({
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
+                  : [],
                 status: statusKey,
+                releasedAt: Array.isArray(transaction.releasedAt)
+                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                  : transaction.releasedAt,
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
+                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
+                  : transaction.bitcoinAddress,
+                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
+                  : transaction.bitcoinTransactionHash
               }}
             />
           )}
@@ -325,15 +338,31 @@ export default function TransactionDetailsPage() {
           {statusKey === TRANSACTION_STATUS.REFUND && (
             <RefundedEscrowDetails
               transaction={{
-                ...convertToEscrowTransaction(transaction),
+                ...transaction,
+                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: any) => ({
+                    ...toEntry,
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                  }))
+                  : [],
                 status: "refund",
+                releasedAt: Array.isArray(transaction.releasedAt)
+                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
+                  : transaction.releasedAt,
+                bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
+                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
+                  : transaction.bitcoinAddress,
+                bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
+                  : transaction.bitcoinTransactionHash
               }}
             />
           )}
 
           {statusKey === TRANSACTION_STATUS.CONFIRMED && (
             <ConfirmedEscrowActions
-              transaction={convertToEscrowTransaction(transaction)}
+              transaction={transaction}
               isLoading={isLoading}
               onRelease={handleRelease}
               onRefund={handleRefund}
@@ -352,50 +381,7 @@ export default function TransactionDetailsPage() {
           </div>
         </Card>
 
-        {/* Escrow Information Card */}
-        <Card className="w-full md:w-90 bg-[#222222] border-[#303434] text-white flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <div className="text-blue-500">🔒</div>
-            <Typography variant="large">Escrow Details</Typography>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Status:</span>
-              <span className={`text-sm font-medium ${
-                transaction.status === 'released' ? 'text-green-400' :
-                transaction.status === 'confirmed' ? 'text-blue-400' :
-                transaction.status === 'pending' ? 'text-yellow-400' :
-                'text-gray-400'
-              }`}>
-                {transaction.status === 'released' ? 'Released' :
-                 transaction.status === 'confirmed' ? 'Active' :
-                 transaction.status === 'pending' ? 'Pending' :
-                 transaction.status}
-              </span>
-            </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Total Amount:</span>
-              <span className="text-sm font-medium text-blue-400">
-                {totalBTC.toFixed(8)} ICP
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Recipients:</span>
-              <span className="text-sm font-medium text-gray-200">
-                {transaction.to.length}
-              </span>
-            </div>
-
-            {transaction.status === 'released' && (
-              <div className="p-2 bg-green-900/20 border border-green-500/30 rounded text-xs text-green-300">
-                ✓ Escrow successfully released to all recipients
-              </div>
-            )}
-          </div>
-        </Card>
       </div>
     </div>
   );

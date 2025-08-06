@@ -24,13 +24,13 @@ persistent actor {
     
     let escrowId = await SplitDApp.initiateEscrow(
       alice,
-      [{ principal = bob; amount = 100; nickname = "Bob"; percentage = 100 }],
+      [{ principal = bob; amount = 100; nickname = "Bob"; percentage = 100; bitcoinAddress = null }],
       "Test Escrow"
     );
     Debug.print("Created escrow with ID: " # escrowId);
 
     // Bob approves
-    await SplitDApp.recipientApproveEscrow(alice, 0, bob);
+    await SplitDApp.recipientApproveEscrow(alice, escrowId, bob);
     
     // Release the escrow
     await SplitDApp.releaseSplit(alice, escrowId);

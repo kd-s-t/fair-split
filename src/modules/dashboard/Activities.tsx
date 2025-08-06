@@ -1,54 +1,40 @@
 "use client"
 
-import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronRight } from "lucide-react";
-import ActivityContent from "./ActivityContent";
-import { useAuth } from "@/contexts/auth-context";
+import { Typography } from "@/components/ui/typography";
+import {
+  ChevronRight
+} from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/lib/redux/store";
 import { useTransactions } from "@/hooks/transactions";
-import type { NormalizedTransaction } from "@/modules/transactions/types";
+import ActivityContent from "./ActivityContent";
 
 export default function RecentActivities() {
-  const { principal } = useAuth();
+  const principal = useSelector((state: RootState) => state.user?.principal);
   const { transactions } = useTransactions();
 
-  // Convert transactions to activities format
-  const activities: NormalizedTransaction[] = transactions || [];
+  const activities = transactions && transactions.length > 0
+    ? [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
+    : [];
 
-  // Calculate counts
   const sentCount = activities.filter(
-    (activity) => principal && String(activity.from) === String(principal)
+    (activity: any) => principal && String(activity.from) === String(principal)
   ).length;
 
   const receivedCount = activities.filter(
-    (activity) =>
-      principal &&
-      activity.to &&
-      activity.to.some(
-        (recipient) => String(recipient.principal) === String(principal)
-      )
+    (activity: any) => principal && activity.to && activity.to.some(
+      (recipient: any) => String(recipient.principal) === String(principal)
+    )
   ).length;
 
-  if (activities.length === 0) {
-    return (
-      <div className="container !rounded-2xl !p-6">
-        <Typography variant="large" className="mb-2">
-          Recent activities
-        </Typography>
-        <Typography variant="small" className="text-[#9F9F9F]">
-          No transactions yet. Create your first escrow to get started.
-        </Typography>
-      </div>
-    );
-  }
-
   return (
-    <div className="container !rounded-2xl !p-6">
-      <Typography variant="large" className="mb-2">
-        Recent activities
+    <div className="mt-10">
+      <Typography variant="h3">
+        Recent activity
       </Typography>
-      <Typography variant="small" className="text-[#9F9F9F]">
+      <Typography variant="muted" className="text-gray-400">
         Track your latest escrow transactions
       </Typography>
 
@@ -83,7 +69,7 @@ export default function RecentActivities() {
         </div>
 
         <TabsContent value="all" className="flex flex-col gap-6 mt-6">
-          {activities.map((activity: NormalizedTransaction, idx: number) => {
+          {activities.map((activity: any, idx: number) => {
             const isSender =
               principal &&
               activity.from &&
@@ -97,30 +83,31 @@ export default function RecentActivities() {
 
             return (
               <ActivityContent
-                key={activity.id || idx}
+                key={idx}
                 idx={idx}
                 activity={activity}
                 category={category}
                 txUrl={txUrl}
               />
             );
-          })
-          }
-        </TabsContent >
+          })}
+        </TabsContent>
 
         <TabsContent value="active" className="flex flex-col gap-6 mt-6">
           {activities
-            .filter((activity: NormalizedTransaction) =>
+            .filter((activity: any) =>
               principal && String(activity.from) === String(principal)
             )
-            .map((activity, idx: number) => {
+            .map((activity: any, idx: number) => {
+              const isSender = true; // We know it's sent since we filtered
+              const category = "sent";
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
                 <ActivityContent
-                  key={activity.id || idx}
+                  key={idx}
                   idx={idx}
                   activity={activity}
-                  category="sent"
+                  category={category}
                   txUrl={txUrl}
                 />
               );
@@ -129,25 +116,27 @@ export default function RecentActivities() {
 
         <TabsContent value="completed" className="flex flex-col gap-6 mt-6">
           {activities
-            .filter((activity: NormalizedTransaction) =>
+            .filter((activity: any) =>
               principal && activity.to && activity.to.some(
-                (recipient) => String(recipient.principal) === String(principal)
+                (recipient: any) => String(recipient.principal) === String(principal)
               )
             )
-            .map((activity, idx: number) => {
+            .map((activity: any, idx: number) => {
+              const isSender = false; // We know it's received since we filtered
+              const category = "received";
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
                 <ActivityContent
-                  key={activity.id || idx}
+                  key={idx}
                   idx={idx}
                   activity={activity}
-                  category="received"
+                  category={category}
                   txUrl={txUrl}
                 />
               );
             })}
         </TabsContent>
-      </Tabs >
-    </div >
+      </Tabs>
+    </div>
   );
 }

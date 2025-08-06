@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from 'framer-motion';
 import { UseFormReturn } from "react-hook-form";
 import { escrowFormSchema } from "@/validation/escrow";
+import { z } from "zod";
 
 type FormData = z.infer<typeof escrowFormSchema>;
 

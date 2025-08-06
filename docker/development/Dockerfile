@@ -1,5 +1,5 @@
 # Development Dockerfile for SplitSafe
-FROM node:20.13.1-alpine
+FROM node:20.17.0-alpine
 
 # Set environment variables
 ENV NODE_ENV=development

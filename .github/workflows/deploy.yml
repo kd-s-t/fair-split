@@ -73,10 +73,10 @@ jobs:
         run: |
           echo "🐳 Building Docker image..."
           docker buildx create --use
-          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/stage/Dockerfile .
-          
-          echo "📤 Pushing to ECR..."
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker buildx build --platform linux/amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -f docker/stage/Dockerfile \
+            --push .
           
           # Verify the image was pushed successfully
           echo "🔍 Verifying image was pushed successfully..."

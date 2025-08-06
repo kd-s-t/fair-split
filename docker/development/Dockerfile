@@ -24,9 +24,8 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install all dependencies (including dev dependencies needed for build)
-# Skip husky prepare script in Docker build
-RUN npm ci --ignore-scripts
+# Update npm to specific version and install all dependencies
+RUN npm install -g npm@11.5.2 && npm ci --ignore-scripts
 
 # Copy source files
 COPY . .

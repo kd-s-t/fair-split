@@ -74,9 +74,20 @@ jobs:
           echo "🐳 Building Docker image..."
           docker buildx create --use
           docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/stage/Dockerfile .
+          
           echo "📤 Pushing to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          
+          # Verify the image was pushed successfully
+          echo "🔍 Verifying image was pushed successfully..."
+          if aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --region us-east-1 2>/dev/null; then
+            echo "✅ Image pushed and verified: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          else
+            echo "❌ Failed to verify image in ECR: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+            echo "🔍 Available images in repository:"
+            aws ecr describe-images --repository-name $ECR_REPOSITORY --region us-east-1 --query 'imageDetails[*].imageTags' --output table || echo "No images found"
+            exit 1
+          fi
 
   deploy:
     needs: [build, build-and-push-ecr]
@@ -131,9 +142,20 @@ jobs:
             echo "🔐 Logging into ECR..."
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             
+            # Check if image exists in ECR before pulling
+            echo "🔍 Checking if image exists in ECR..."
+            IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}"
+            
+            if ! aws ecr describe-images --repository-name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} --image-ids imageTag=${{ github.sha }} --region us-east-1 2>/dev/null; then
+              echo "❌ Image $IMAGE_URI does not exist in ECR!"
+              echo "🔍 Available images in repository:"
+              aws ecr describe-images --repository-name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} --region us-east-1 --query 'imageDetails[*].imageTags' --output table || echo "No images found"
+              exit 1
+            fi
+            
             # Pull latest image from ECR
             echo "📥 Pulling latest image from ECR..."
-            docker pull ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}
+            docker pull $IMAGE_URI
             
             # Stop existing container
             echo "🛑 Stopping existing container..."
@@ -146,7 +168,7 @@ jobs:
               --name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
               -p 3000:3000 \
               -e CANISTER_ID=${{ secrets.CANISTER_ID }} \
-              ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}
+              $IMAGE_URI
             
             echo "✅ Deployment completed successfully!"
             echo "🌐 Application should be accessible at http://${{ secrets.EC2_HOST }}:3000"

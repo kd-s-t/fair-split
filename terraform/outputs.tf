@@ -10,7 +10,24 @@ output "instance_id" {
 
 output "ssh_command" {
   description = "SSH command to connect to the instance"
-  value       = "ssh -i ${var.private_key_path} ubuntu@${module.ec2.public_ip}"
+  value       = "ssh -i ${module.ec2.ssh_key_file} ubuntu@${module.ec2.public_ip}"
+}
+
+output "ssh_private_key" {
+  description = "Private key content for SSH access (for GitHub Actions)"
+  value       = module.ec2.ssh_private_key
+  sensitive   = true
+}
+
+output "ssh_key_file" {
+  description = "Path to the generated private key file"
+  value       = module.ec2.ssh_key_file
+}
+
+output "house_key" {
+  description = "House key for GitHub Actions secret"
+  value       = random_password.house_key.result
+  sensitive   = true
 }
 
 output "ecr_repository_url" {

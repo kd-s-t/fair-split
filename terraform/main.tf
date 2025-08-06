@@ -1,6 +1,5 @@
 terraform {
-  required_version = ">= 1.4.0"
-  
+  required_version = ">= 1.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,23 +12,29 @@ provider "aws" {
   region = var.aws_region
 }
 
-# EC2 Module
+# Generate house key
+resource "random_password" "house_key" {
+  length  = 32
+  special = true
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
 module "ec2" {
   source = "./modules/ec2"
   
-  ami_id            = var.ami_id
-  instance_type     = var.instance_type
-  public_key_path   = var.public_key_path
-  private_key_path  = var.private_key_path
-  repo_url          = var.repo_url
-  aws_region        = var.aws_region
-  environment       = var.environment
+  aws_region      = var.aws_region
+  ami_id          = var.ami_id
+  instance_type   = var.instance_type
+  public_key_path = var.public_key_path
+  private_key_path = var.private_key_path
+  repo_url        = var.repo_url
+  environment     = var.environment
 }
 
-# ECR Module
 module "ecr" {
   source = "./modules/ecr"
   
-  environment   = var.environment
-  ec2_role_arn = module.ec2.ec2_role_arn
+  environment = var.environment
 } 

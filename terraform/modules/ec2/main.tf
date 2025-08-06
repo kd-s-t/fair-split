@@ -112,15 +112,27 @@ resource "aws_security_group" "splitsafe_sg" {
 }
 
 # Create a key pair
+resource "tls_private_key" "splitsafe_key" {
+  algorithm = "ED25519"
+  rsa_bits  = 4096
+}
+
 resource "aws_key_pair" "splitsafe_key" {
   key_name   = "splitsafe-key-${var.environment}"
-  public_key = file(var.public_key_path)
+  public_key = tls_private_key.splitsafe_key.public_key_openssh
 
   tags = {
     Name = "splitsafe-key-${var.environment}"
     Project = "SplitSafe"
     Environment = var.environment
   }
+}
+
+# Save the private key to a local file
+resource "local_file" "private_key" {
+  content  = tls_private_key.splitsafe_key.private_key_openssh
+  filename = "${path.module}/splitsafe-key-${var.environment}.pem"
+  file_permission = "0600"
 }
 
 resource "aws_instance" "splitsafe_server" {
@@ -148,7 +160,7 @@ resource "aws_instance" "splitsafe_server" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file(var.private_key_path)
+      private_key = tls_private_key.splitsafe_key.private_key_openssh
       host        = self.public_ip
       timeout     = "30m"
     }

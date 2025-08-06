@@ -2,9 +2,9 @@ name: CI/CD Build and Deploy to EC2
 
 on:
   push:
-    branches: [main, staging]
+    branches: [development]
   pull_request:
-    branches: [main, staging]
+    branches: [development]
     types: [closed]
   workflow_dispatch: # Manual trigger
 
@@ -31,7 +31,7 @@ jobs:
   build-and-push-ecr:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    if: github.ref == 'refs/heads/development' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     
     steps:
       - name: Checkout code
@@ -50,7 +50,7 @@ jobs:
 
       - name: Create ECR repository if it doesn't exist
         run: |
-          REPO_NAME="splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+          REPO_NAME="splitsafe-development"
           echo "🔍 Checking if ECR repository $REPO_NAME exists..."
           
           if ! aws ecr describe-repositories --repository-names $REPO_NAME --region us-east-1 2>/dev/null; then
@@ -68,14 +68,14 @@ jobs:
       - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          ECR_REPOSITORY: splitsafe-development
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "🐳 Building Docker image..."
           docker buildx create --use
           docker buildx build --platform linux/amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -f docker/stage/Dockerfile \
+            -f docker/development/Dockerfile \
             --push .
           
           # Verify the image was pushed successfully
@@ -92,7 +92,7 @@ jobs:
   deploy:
     needs: [build, build-and-push-ecr]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    if: github.ref == 'refs/heads/development' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     
     steps:
       - name: Checkout code
@@ -156,7 +156,7 @@ jobs:
       - name: Deploy to EC2
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          ECR_REPOSITORY: splitsafe-development
           IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
@@ -179,12 +179,12 @@ jobs:
             
             # Check if image exists in ECR before pulling
             echo "🔍 Checking if image exists in ECR..."
-            IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}"
+            IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/splitsafe-development:${{ github.sha }}"
             
-            if ! aws ecr describe-images --repository-name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} --image-ids imageTag=${{ github.sha }} --region us-east-1 2>/dev/null; then
+            if ! aws ecr describe-images --repository-name splitsafe-development --image-ids imageTag=${{ github.sha }} --region us-east-1 2>/dev/null; then
               echo "❌ Image $IMAGE_URI does not exist in ECR!"
               echo "🔍 Available images in repository:"
-              aws ecr describe-images --repository-name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} --region us-east-1 --query 'imageDetails[*].imageTags' --output table || echo "No images found"
+              aws ecr describe-images --repository-name splitsafe-development --region us-east-1 --query 'imageDetails[*].imageTags' --output table || echo "No images found"
               exit 1
             fi
             
@@ -194,13 +194,13 @@ jobs:
             
             # Stop existing container
             echo "🛑 Stopping existing container..."
-            docker stop splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} || true
-            docker rm splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} || true
+            docker stop splitsafe-development || true
+            docker rm splitsafe-development || true
             
             # Run new container
             echo "🚀 Starting new container..."
             docker run -d \
-              --name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
+              --name splitsafe-development \
               -p 3000:3000 \
               -e CANISTER_ID=${{ secrets.CANISTER_ID }} \
               $IMAGE_URI
@@ -239,7 +239,7 @@ jobs:
         run: |
           echo "✅ Deployment to EC2 completed successfully!"
           echo "🌐 Application URL: http://${{ secrets.EC2_HOST }}:3000"
-          echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}"
+          echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-development:${{ github.sha }}"
 
       - name: Notify deployment failure
         if: failure()

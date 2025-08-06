@@ -76,10 +76,10 @@ resource "aws_ssm_parameter" "next_public_domain" {
   }
 }
 
-resource "aws_ssm_parameter" "next_public_staging_domain" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_STAGING_DOMAIN"
+resource "aws_ssm_parameter" "next_public_development_domain" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_DEVELOPMENT_DOMAIN"
   type  = "String"
-  value = "staging.thesplitsafe.com"
+  value = "dev.thesplitsafe.com"
   tags = {
     Environment = var.environment
     Project     = "SplitSafe"
@@ -149,7 +149,7 @@ resource "aws_ssm_parameter" "next_public_icscan_url" {
 resource "aws_ssm_parameter" "node_env" {
   name  = "/splitsafe/${var.environment}/NODE_ENV"
   type  = "String"
-  value = "production"
+  value = "development"
   tags = {
     Environment = var.environment
     Project     = "SplitSafe"

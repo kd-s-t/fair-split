@@ -84,13 +84,13 @@ docker compose -f docker/local/docker-compose.yml up --build
 docker compose -f docker/local/docker-compose.yml down
 ```
 
-### Staging Deployment with Docker
+### Development Deployment with Docker
 ```bash
-# Start staging environment
-docker compose -f docker/stage/docker-compose.yml up --build
+# Start development environment
+docker compose -f docker/development/docker-compose.yml up --build
 
 # Stop the containers
-docker compose -f docker/stage/docker-compose.yml down
+docker compose -f docker/development/docker-compose.yml down
 ```
 
 ## AWS Infrastructure with Terraform

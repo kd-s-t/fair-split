@@ -1,18 +1,18 @@
-# Staging Environment
+# Development Environment
 
-This directory contains Docker configuration for staging deployment.
+This directory contains Docker configuration for development deployment.
 
 ## Usage
 
 ```bash
 # From project root
-cd frontend/docker/stage
+cd docker/development
 
-# Start staging environment
-docker compose up -d splitsafe-staging
+# Start development environment
+docker compose up -d safesplit-development
 
 # View logs
-docker compose logs -f splitsafe-staging
+docker compose logs -f safesplit-development
 
 # Stop
 docker compose down
@@ -24,7 +24,7 @@ docker compose down
 - **Read-only** source mounting
 - **Uses `start.sh`** for proper startup
 - **Port**: 3001:3000
-- **Environment**: Staging
+- **Environment**: Development
 
 ## Access
 

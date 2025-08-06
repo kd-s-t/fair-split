@@ -1,8 +1,8 @@
-# Staging Dockerfile for SplitSafe
+# Development Dockerfile for SplitSafe
 FROM node:20.13.1-alpine
 
 # Set environment variables
-ENV NODE_ENV=staging
+ENV NODE_ENV=development
 ENV PORT=3000
 
 # Install system dependencies

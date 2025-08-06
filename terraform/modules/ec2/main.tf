@@ -51,9 +51,109 @@ resource "aws_iam_role_policy" "ecr_policy" {
           "ecr:DescribeRepositories"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:us-east-1:456783087661:parameter/splitsafe/*"
       }
     ]
   })
+}
+
+# Parameter Store parameters for environment variables
+resource "aws_ssm_parameter" "next_public_domain" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_DOMAIN"
+  type  = "String"
+  value = "thesplitsafe.com"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_staging_domain" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_STAGING_DOMAIN"
+  type  = "String"
+  value = "staging.thesplitsafe.com"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_canister_id" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP"
+  type  = "String"
+  value = "uxrrr-q7777-77774-qaaaq-cai"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_dfx_host" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_DFX_HOST"
+  type  = "String"
+  value = "http://thesplitsafe.com:4943"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_blockstream_url" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_BLOCKSTREAM_URL"
+  type  = "String"
+  value = "https://blockstream.info"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_mempool_url" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_MEMPOOL_URL"
+  type  = "String"
+  value = "https://mempool.space"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_icp_dashboard_url" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_ICP_DASHBOARD_URL"
+  type  = "String"
+  value = "https://dashboard.internetcomputer.org"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "next_public_icscan_url" {
+  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_ICSCAN_URL"
+  type  = "String"
+  value = "https://icscan.io"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
+}
+
+resource "aws_ssm_parameter" "node_env" {
+  name  = "/splitsafe/${var.environment}/NODE_ENV"
+  type  = "String"
+  value = "production"
+  tags = {
+    Environment = var.environment
+    Project     = "SplitSafe"
+  }
 }
 
 # Instance Profile

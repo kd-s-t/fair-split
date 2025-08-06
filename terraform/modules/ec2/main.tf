@@ -183,6 +183,14 @@ resource "aws_instance" "splitsafe_server" {
       "docker compose version",
       "echo '✅ Docker Compose installed'",
       "echo '======================================================================================'",
+      "echo 'Installing AWS CLI...'",
+      "curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'",
+      "unzip awscliv2.zip",
+      "sudo ./aws/install",
+      "rm -rf aws awscliv2.zip",
+      "aws --version",
+      "echo '✅ AWS CLI installed'",
+      "echo '======================================================================================'",
       "echo '📦 Cloning SplitSafe repository...'",
       "cd ~",
       "if [ -d splitsafe ]; then",
@@ -197,6 +205,7 @@ resource "aws_instance" "splitsafe_server" {
       "echo '✅ Setup complete!'",
       "echo \"📱 Repository cloned to: ~/splitsafe\"",
       "echo \"🐳 Docker and Docker Compose installed\"",
+      "echo \"🔧 AWS CLI installed\"",
       "echo '======================================================================================'"
     ]
   }

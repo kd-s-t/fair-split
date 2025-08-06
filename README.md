@@ -61,6 +61,7 @@ chmod +x scripts/nuke.sh
 
 ### Run Frontend Development Server
 ```bash
+npm install -g npm@11.5.2
 # Switch to correct Node version
 nvm use
 

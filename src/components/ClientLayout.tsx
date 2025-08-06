@@ -2,7 +2,8 @@
 
 import { ReactNode, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { RootState, useAppSelector } from '../lib/redux/store'
+import { RootState, useAppSelector, store } from '../lib/redux/store'
+import { Provider } from 'react-redux'
 import { useAuth } from '@/contexts/auth-context'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
@@ -179,7 +180,7 @@ function BalanceAndNameSyncer() {
   return null
 }
 
-export default function ClientLayout({ children }: { children: ReactNode }) {
+function ClientLayoutContent({ children }: { children: ReactNode }) {
   const principal = useAppSelector((state: RootState) => state.user.principal)
   const name = useAppSelector((state: RootState) => state.user.name)
   const title = useSelector((state: RootState) => state.layout.title)
@@ -208,5 +209,13 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       <BalanceAndNameSyncer />
       <MessagingSystem />
     </div>
+  )
+}
+
+export default function ClientLayout({ children }: { children: ReactNode }) {
+  return (
+    <Provider store={store}>
+      <ClientLayoutContent>{children}</ClientLayoutContent>
+    </Provider>
   )
 } 

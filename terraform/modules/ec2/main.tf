@@ -1,5 +1,18 @@
 # EC2 Module
-# Handles EC2 instance and basic setup
+# Handles EC2 instance and basic setup for SplitSafe application
+# 
+# This module creates:
+# - EC2 instance with Ubuntu 22.04 LTS
+# - IAM roles and policies for ECR access
+# - Security groups for network access
+# - SSH key pair for secure access
+# - Elastic IP for consistent addressing
+# - Parameter Store parameters for environment variables
+# - User data script for instance initialization
+
+# =============================================================================
+# LOCALS & DATA SOURCES
+# =============================================================================
 
 # Ubuntu 22.04 LTS AMI - using a reliable AMI ID
 # ami-0c7217cdde317cfec (Ubuntu 22.04 LTS in us-east-1)
@@ -8,250 +21,35 @@ locals {
   ubuntu_ami_id = "ami-0c7217cdde317cfec" # Ubuntu 22.04 LTS us-east-1
 }
 
-# IAM Role for EC2 to access ECR
-resource "aws_iam_role" "ec2_role" {
-  name = "splitsafe-ec2-role-${var.environment}"
+# =============================================================================
+# ELASTIC IP
+# =============================================================================
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
+# Create Elastic IP for consistent IP address
+resource "aws_eip" "splitsafe_eip" {
+  instance = aws_instance.splitsafe_server.id
+  domain   = "vpc"
+  
   tags = {
-    Name        = "splitsafe-ec2-role-${var.environment}"
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-# IAM Policy for ECR access
-resource "aws_iam_role_policy" "ecr_policy" {
-  name = "splitsafe-ecr-policy-${var.environment}"
-  role = aws_iam_role.ec2_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:DescribeImages",
-          "ecr:DescribeRepositories"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameter",
-          "ssm:GetParameters",
-          "ssm:GetParametersByPath"
-        ]
-        Resource = "arn:aws:ssm:us-east-1:456783087661:parameter/splitsafe/*"
-      }
-    ]
-  })
-}
-
-# Parameter Store parameters for environment variables
-resource "aws_ssm_parameter" "next_public_domain" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_DOMAIN"
-  type  = "String"
-  value = "thesplitsafe.com"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_development_domain" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_DEVELOPMENT_DOMAIN"
-  type  = "String"
-  value = "dev.thesplitsafe.com"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_canister_id" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP"
-  type  = "String"
-  value = "uxrrr-q7777-77774-qaaaq-cai"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_dfx_host" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_DFX_HOST"
-  type  = "String"
-  value = "http://thesplitsafe.com:4943"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_blockstream_url" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_BLOCKSTREAM_URL"
-  type  = "String"
-  value = "https://blockstream.info"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_mempool_url" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_MEMPOOL_URL"
-  type  = "String"
-  value = "https://mempool.space"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_icp_dashboard_url" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_ICP_DASHBOARD_URL"
-  type  = "String"
-  value = "https://dashboard.internetcomputer.org"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "next_public_icscan_url" {
-  name  = "/splitsafe/${var.environment}/NEXT_PUBLIC_ICSCAN_URL"
-  type  = "String"
-  value = "https://icscan.io"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-resource "aws_ssm_parameter" "node_env" {
-  name  = "/splitsafe/${var.environment}/NODE_ENV"
-  type  = "String"
-  value = "development"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
-
-# Instance Profile
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "splitsafe-ec2-profile-${var.environment}"
-  role = aws_iam_role.ec2_role.name
-}
-
-# Create a default security group
-resource "aws_security_group" "splitsafe_sg" {
-  name        = "splitsafe-sg-${var.environment}"
-  description = "Security group for SplitSafe EC2 instance"
-
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Custom port 3000"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "DFX port 4943"
-    from_port   = 4943
-    to_port     = 4943
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "splitsafe-sg-${var.environment}"
+    Name = "splitsafe-eip-${var.environment}"
     Project = "SplitSafe"
     Environment = var.environment
   }
 }
 
-# Create a key pair
-resource "tls_private_key" "splitsafe_key" {
-  algorithm = "ED25519"
-  rsa_bits  = 4096
-}
+# =============================================================================
+# EC2 INSTANCE
+# =============================================================================
 
-resource "aws_key_pair" "splitsafe_key" {
-  key_name   = "splitsafe-key-${var.environment}"
-  public_key = tls_private_key.splitsafe_key.public_key_openssh
-
-  tags = {
-    Name = "splitsafe-key-${var.environment}"
-    Project = "SplitSafe"
-    Environment = var.environment
-  }
-}
-
-# Save the private key to a local file
-resource "local_file" "private_key" {
-  content  = tls_private_key.splitsafe_key.private_key_openssh
-  filename = "${path.module}/splitsafe-key-${var.environment}.pem"
-  file_permission = "0600"
-}
-
+# Main EC2 instance
 resource "aws_instance" "splitsafe_server" {
   ami                    = local.ubuntu_ami_id
   instance_type          = var.instance_type
-  key_name              = aws_key_pair.splitsafe_key.key_name
-  vpc_security_group_ids = [aws_security_group.splitsafe_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
+  key_name              = var.key_pair_name
+  vpc_security_group_ids = [var.security_group_id]
+  iam_instance_profile   = var.instance_profile_name
 
+  # Root volume configuration
   root_block_device {
     volume_size = 30
     volume_type = "gp3"
@@ -264,13 +62,14 @@ resource "aws_instance" "splitsafe_server" {
     Environment = var.environment
   }
 
+  # User data script for instance initialization
   provisioner "remote-exec" {
     on_failure = continue
 
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = tls_private_key.splitsafe_key.private_key_openssh
+      private_key = var.private_key_content
       host        = self.public_ip
       timeout     = "30m"
     }

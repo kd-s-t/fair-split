@@ -1,17 +1,15 @@
 # DFX/ICP
 .dfx/
-backend/.dfx/
-backend/.cache/
-backend/wasm/
-backend/.moj/
-backend/.vessel/
-backend/.vessel-lock
-backend/.vessel-bin
+icp/.dfx/
+icp/.cache/
+icp/wasm/
+icp/.moj/
+icp/.vessel/
+icp/.vessel-lock
+icp/.vessel-bin
 
 # Node.js
 node_modules/
-frontend/node_modules/
-backend/node_modules/
 
 # Next.js
 .next/
@@ -67,7 +65,10 @@ terraform.rc
 # SSH Keys (never commit private keys)
 *.pem
 *.key
+# Terraform generated SSH keys
 terraform/modules/*/splitsafe-key-*.pem
+terraform/modules/security/splitsafe-key-*.pem
+terraform/modules/ec2/splitsafe-key-*.pem
 
 # Build artifacts
 *.tar

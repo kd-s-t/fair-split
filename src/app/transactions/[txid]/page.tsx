@@ -26,8 +26,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-
-
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
   const [transaction, setTransaction] = useState<NormalizedTransaction | null>(null);

@@ -13,6 +13,11 @@ import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
 import type { NormalizedTransaction, ApiToEntry } from "@/modules/transactions/types";
+
+// Type for Principal objects that might have toText method
+interface PrincipalLike {
+  toText?: () => string;
+}
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import { Principal } from "@dfinity/principal";
 import { AnimatePresence, motion } from "framer-motion";
@@ -275,24 +280,32 @@ export default function TransactionDetailsPage() {
             (() => {
               const isSender = principal && String(transaction.from) === String(principal);
               const transactionData = {
-                ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
-                                  to: Array.isArray(transaction.to)
-                    ? transaction.to.map((toEntry: ApiToEntry) => ({
-                      ...toEntry,
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as any)?.toText?.() || String(toEntry.principal),
-                    }))
-                    : [],
+                id: transaction.id,
                 status: "pending" as const,
+                title: transaction.title,
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as PrincipalLike)?.toText?.() || String(transaction.from),
+                createdAt: typeof transaction.createdAt === "string" ? transaction.createdAt : String(transaction.createdAt),
+                to: Array.isArray(transaction.to)
+                  ? transaction.to.map((toEntry: ApiToEntry) => ({
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as PrincipalLike)?.toText?.() || String(toEntry.principal),
+                      amount: BigInt(String(toEntry.amount)),
+                      percentage: Number(String(toEntry.percentage)),
+                      status: toEntry.status as { [key: string]: null },
+                      name: toEntry.name,
+                      approvedAt: toEntry.approvedAt ? String(toEntry.approvedAt) : undefined,
+                      declinedAt: toEntry.declinedAt ? String(toEntry.declinedAt) : undefined,
+                      readAt: toEntry.readAt ? String(toEntry.readAt) : undefined,
+                    }))
+                  : [],
                 releasedAt: Array.isArray(transaction.releasedAt)
-                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                  : transaction.releasedAt,
+                  ? (transaction.releasedAt.length > 0 ? String(transaction.releasedAt[0]) : undefined)
+                  : transaction.releasedAt ? String(transaction.releasedAt) : undefined,
                 bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
-                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
-                  : transaction.bitcoinAddress,
+                  ? (transaction.bitcoinAddress.length > 0 ? String(transaction.bitcoinAddress[0]) : undefined)
+                  : transaction.bitcoinAddress ? String(transaction.bitcoinAddress) : undefined,
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
-                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
-                  : transaction.bitcoinTransactionHash
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? String(transaction.bitcoinTransactionHash[0]) : undefined)
+                  : transaction.bitcoinTransactionHash ? String(transaction.bitcoinTransactionHash) : undefined
               };
 
               return isSender ? (
@@ -314,23 +327,30 @@ export default function TransactionDetailsPage() {
             <CancelledEscrowDetails
               transaction={{
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as PrincipalLike)?.toText?.() || String(transaction.from),
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: ApiToEntry) => ({
                     ...toEntry,
-                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as PrincipalLike)?.toText?.() || String(toEntry.principal),
+                    amount: String(toEntry.amount),
+                    percentage: String(toEntry.percentage),
+                    status: toEntry.status,
+                    name: toEntry.name,
+                    approvedAt: toEntry.approvedAt ? String(toEntry.approvedAt) : undefined,
+                    declinedAt: toEntry.declinedAt ? String(toEntry.declinedAt) : undefined,
+                    readAt: toEntry.readAt ? String(toEntry.readAt) : undefined,
                   }))
                   : [],
                 status: statusKey,
                 releasedAt: Array.isArray(transaction.releasedAt)
-                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                  : transaction.releasedAt,
+                  ? (transaction.releasedAt.length > 0 ? String(transaction.releasedAt[0]) : undefined)
+                  : transaction.releasedAt ? String(transaction.releasedAt) : undefined,
                 bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
-                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
-                  : transaction.bitcoinAddress,
+                  ? (transaction.bitcoinAddress.length > 0 ? String(transaction.bitcoinAddress[0]) : undefined)
+                  : transaction.bitcoinAddress ? String(transaction.bitcoinAddress) : undefined,
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
-                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
-                  : transaction.bitcoinTransactionHash
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? String(transaction.bitcoinTransactionHash[0]) : undefined)
+                  : transaction.bitcoinTransactionHash ? String(transaction.bitcoinTransactionHash) : undefined
               }}
             />
           )}
@@ -339,23 +359,30 @@ export default function TransactionDetailsPage() {
             <RefundedEscrowDetails
               transaction={{
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as PrincipalLike)?.toText?.() || String(transaction.from),
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: ApiToEntry) => ({
                     ...toEntry,
-                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as PrincipalLike)?.toText?.() || String(toEntry.principal),
+                    amount: String(toEntry.amount),
+                    percentage: String(toEntry.percentage),
+                    status: toEntry.status,
+                    name: toEntry.name,
+                    approvedAt: toEntry.approvedAt ? String(toEntry.approvedAt) : undefined,
+                    declinedAt: toEntry.declinedAt ? String(toEntry.declinedAt) : undefined,
+                    readAt: toEntry.readAt ? String(toEntry.readAt) : undefined,
                   }))
                   : [],
                 status: "refund",
                 releasedAt: Array.isArray(transaction.releasedAt)
-                  ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
-                  : transaction.releasedAt,
+                  ? (transaction.releasedAt.length > 0 ? String(transaction.releasedAt[0]) : undefined)
+                  : transaction.releasedAt ? String(transaction.releasedAt) : undefined,
                 bitcoinAddress: Array.isArray(transaction.bitcoinAddress)
-                  ? (transaction.bitcoinAddress.length > 0 ? transaction.bitcoinAddress[0] : undefined)
-                  : transaction.bitcoinAddress,
+                  ? (transaction.bitcoinAddress.length > 0 ? String(transaction.bitcoinAddress[0]) : undefined)
+                  : transaction.bitcoinAddress ? String(transaction.bitcoinAddress) : undefined,
                 bitcoinTransactionHash: Array.isArray(transaction.bitcoinTransactionHash)
-                  ? (transaction.bitcoinTransactionHash.length > 0 ? transaction.bitcoinTransactionHash[0] : undefined)
-                  : transaction.bitcoinTransactionHash
+                  ? (transaction.bitcoinTransactionHash.length > 0 ? String(transaction.bitcoinTransactionHash[0]) : undefined)
+                  : transaction.bitcoinTransactionHash ? String(transaction.bitcoinTransactionHash) : undefined
               }}
             />
           )}

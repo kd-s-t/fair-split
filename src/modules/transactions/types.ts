@@ -116,17 +116,17 @@ export interface PendingEscrowDetailsProps {
 }
 
 export interface EditEscrowDetailsProps {
-  transaction: EscrowTransaction;
+  transaction: EscrowTransaction | NormalizedTransaction;
   onCancel?: () => void;
   onEdit?: () => void;
 }
 
 export interface CancelledEscrowDetailsProps {
-  transaction: EscrowTransaction;
+  transaction: EscrowTransaction | NormalizedTransaction;
 }
 
 export interface RefundedEscrowDetailsProps {
-  transaction: EscrowTransaction;
+  transaction: EscrowTransaction | NormalizedTransaction;
 }
 
 export interface ConfirmedEscrowActionsProps {

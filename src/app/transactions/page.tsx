@@ -90,8 +90,8 @@ export default function TransactionsPage() {
     dispatch(setSubtitle('View all your escrow transactions'));
   }, [dispatch]);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading] = useState(false);
+  const [error] = useState<string | null>(null);
   const [localTransactions, setLocalTransactions] = useState<NormalizedTransaction[]>([]);
   const router = useRouter();
 

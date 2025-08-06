@@ -16,7 +16,7 @@ export default function EditEscrowDetails({
   onCancel,
   onEdit
 }: EditEscrowDetailsProps) {
-  const depositAddress = transaction?.depositAddress ||
+  const depositAddress = ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
     Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
   const totalBTC =
@@ -41,7 +41,18 @@ export default function EditEscrowDetails({
 
       <hr className="my-10 text-[#424444] h-[1px]" />
 
-      <RecipientsList recipients={transaction.to || []} />
+      <RecipientsList 
+        recipients={
+          'to' in transaction && Array.isArray(transaction.to) 
+            ? transaction.to.map(recipient => ({
+                ...recipient,
+                amount: typeof recipient.amount === 'string' ? BigInt(recipient.amount) : recipient.amount,
+                percentage: typeof recipient.percentage === 'string' ? Number(recipient.percentage) : recipient.percentage,
+                status: recipient.status as { [key: string]: null }
+              }))
+            : []
+        } 
+      />
 
       <hr className="my-6 text-[#424444] h-[1px]" />
 
@@ -98,7 +109,7 @@ export default function EditEscrowDetails({
         >
           {(() => {
             // Check if any recipients have taken action
-            const hasRecipientAction = transaction.to?.some((recipient: any) =>
+            const hasRecipientAction = transaction.to?.some((recipient) =>
               recipient.status && Object.keys(recipient.status)[0] !== "pending"
             ) || false;
 

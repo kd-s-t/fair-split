@@ -24,13 +24,13 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
   return (
     <div className="container !rounded-2xl !p-6">
 
-      <TransactionStats
+      {/* <TransactionStats
         totalBTC={totalBTC}
         recipientCount={recipientCount}
         status={transaction.status}
-      />
+      /> */}
 
-      <hr className="my-6 text-[#424444] h-[1px]" />
+      {/* <hr className="my-6 text-[#424444] h-[1px]" /> */}
 
       {/* Escrow overview */}
       <Typography variant="large" className="mb-4">Escrow overview</Typography>

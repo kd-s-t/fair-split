@@ -11,6 +11,27 @@ import type { NormalizedTransaction } from '@/modules/transactions/types'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
 
+import { StatCardProps } from './types';
+
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
+  <Card className="bg-[#222222] border-[#303434] text-white p-4">
+    <div className="flex items-center justify-between mb-2">
+      <Typography variant="muted" className="text-sm">
+        {label}
+      </Typography>
+      {icon}
+    </div>
+    <Typography variant="h3" className="font-semibold text-2xl">
+      {value}
+    </Typography>
+  </Card>
+);
+
+function btcToUsd(btc: number) {
+  const rate = 60000; // 1 BTC = $60,000 (example rate)
+  return btc * rate;
+}
+
 export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
   const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
   // const _icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
@@ -203,24 +224,3 @@ export default function DashboardStats({ transactions }: { transactions: Normali
     </React.Fragment>
   );
 };
-
-import { StatCardProps } from './types';
-
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
-  <Card className="flex flex-col gap-6">
-    <div className="flex items-center gap-2 mb-2 justify-between">
-      <Typography variant="muted" className="text-sm">
-        {label}
-      </Typography>
-      <span>{icon}</span>
-    </div>
-    <Typography variant="h3" className="font-semibold text-2xl">
-      {value}
-    </Typography>
-  </Card>
-);
-
-function btcToUsd(btc: number) {
-  const rate = 60000; // 1 BTC = $60,000 (example rate)
-  return btc * rate;
-}

@@ -2,55 +2,47 @@
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import { ConfirmedEscrowActionsProps, ToEntry } from "./types";
+import { CheckCircle, RotateCcw, CircleAlert, Shield } from "lucide-react";
+import TransactionStats from "@/components/TransactionStats";
+import { ConfirmedEscrowActionsProps } from "./types";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
+import { Fragment } from "react";
+import { generateRandomHash } from "@/lib/utils";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
+
+  const txHash = generateRandomHash();
+
+  const handleCancelSplit = async () => {
+    console.log("handleCancelSplit called");
+    // Just call the parent's onRefund function which handles everything
+    if (onRefund) {
+      console.log("Calling onRefund");
+      onRefund();
+    } else {
+      console.log("onRefund is not defined");
+    }
+  };
+
+  // Calculate total BTC and recipient count for TransactionStats
   const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: ToEntry) => sum + Number(toEntry.amount), 0) / 1e8
+    ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
 
   const recipientCount = transaction.to?.length || 0;
 
   return (
-    <>
+    <Fragment>
       <div className="container !rounded-2xl !p-6">
-        <div className="mb-4">
-          <Typography variant="large" className="text-[#FEB64D] mb-2">
-            Escrow Confirmed
-          </Typography>
-          <Typography variant="small" className="text-[#9F9F9F]">
-            All recipients have approved. The escrow is now active and ready for release.
-          </Typography>
-        </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center">
-            <Typography variant="large" className="text-white font-bold">
-              {totalBTC.toFixed(8)}
-            </Typography>
-            <Typography variant="small" className="text-[#9F9F9F]">
-              Total BTC
-            </Typography>
-          </div>
-          <div className="text-center">
-            <Typography variant="large" className="text-white font-bold">
-              {recipientCount}
-            </Typography>
-            <Typography variant="small" className="text-[#9F9F9F]">
-              Recipients
-            </Typography>
-          </div>
-          <div className="text-center">
-            <Typography variant="large" className="text-blue-400 font-bold">
-              Active
-            </Typography>
-            <Typography variant="small" className="text-[#9F9F9F]">
-              Status
-            </Typography>
-          </div>
-        </div>
+        <Typography variant="large" className="mb-4">Escrow overview</Typography>
+
+        <TransactionStats
+          totalBTC={totalBTC}
+          recipientCount={recipientCount}
+          status={transaction.status}
+        />
 
         <TimeRemaining createdAt={transaction.createdAt} />
 
@@ -60,7 +52,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         <div className="mb-6">
           <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
           <div className="space-y-3">
-            {Array.isArray(transaction.to) && transaction.to.map((recipient: ToEntry, index: number) => {
+            {Array.isArray(transaction.to) && transaction.to.map((recipient: any, index: number) => {
               const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
               const statusColor = statusKey === 'approved' ? 'text-green-400' :
                 statusKey === 'pending' ? 'text-yellow-400' :
@@ -68,7 +60,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
 
               const amount = Number(recipient.amount) / 1e8;
               const totalAmount = Array.isArray(transaction.to)
-                ? transaction.to.reduce((sum: number, entry: ToEntry) => sum + Number(entry.amount), 0) / 1e8
+                ? transaction.to.reduce((sum: number, entry: any) => sum + Number(entry.amount), 0) / 1e8
                 : 0;
               const percentage = totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(0) : 0;
 
@@ -153,19 +145,21 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
                   Releasing...
                 </span>
               ) : (
-                "Release Escrow"
+                <>
+                  <CheckCircle className="w-5 h-5" /> Release payment
+                </>
               )}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               className="w-1/2 text-base font-semibold"
-              onClick={onRefund}
+              onClick={handleCancelSplit}
               disabled={isLoading === "release" || isLoading === "refund"}
             >
               {isLoading === "refund" ? (
                 <span className="flex items-center gap-2">
                   <svg
-                    className="animate-spin h-4 w-4 text-black"
+                    className="animate-spin h-4 w-4 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -187,7 +181,9 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
                   Refunding...
                 </span>
               ) : (
-                "Refund Escrow"
+                <>
+                  <RotateCcw className="w-5 h-5" /> Request refund
+                </>
               )}
             </Button>
           </div>
@@ -195,7 +191,32 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
             Release distributes funds to all recipients. Refund returns funds to the sender.
           </Typography>
         </div>
+
+        {/* Warning Note */}
+        <div className="w-full mb-4 flex items-center gap-2 rounded-xl bg-[#6B4A1B] border border-[#B8862A] px-4 py-2">
+          <CircleAlert size={18} color="#B8862A" />
+          <Typography variant="small" className="font-normal">Note: Release payment only when you're satisfied with the delivered work or received goods.</Typography>
+        </div>
+
+        {/* Smart Contract Execution Info */}
+        <div className="container-gray">
+          <div className="flex items-center gap-3">
+
+            <div className="bg-[#FEB64D]/20 rounded-full p-2">
+              <Shield color="#FEB64D" size={20} />
+            </div>
+
+            <div>
+              <Typography variant="base" className="font-semibold">
+                Smart contract execution
+              </Typography>
+              <Typography className="text-[#9F9F9F] mt-1">
+                Funds are locked and will be released by smart contract logic. No human mediation.
+              </Typography>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </Fragment>
   );
 }

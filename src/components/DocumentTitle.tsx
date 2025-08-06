@@ -5,10 +5,12 @@ import { useEffect } from 'react'
 export default function DocumentTitle() {
   useEffect(() => {
     // Set the document title based on environment
-    if (process.env.NODE_ENV === 'staging') {
-      document.title = 'Safe Split Local'
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    
+    if (isDevelopment) {
+      document.title = 'SafeSplit - Local'
     } else {
-      document.title = 'SafeSplit'
+      document.title = 'SafeSplit - Staging'
     }
   }, [])
 

@@ -13,8 +13,10 @@ export default function RecentActivities() {
   const { principal } = useAuth();
   const { transactions } = useTransactions();
 
-  // Convert transactions to activities format
-  const activities: NormalizedTransaction[] = transactions || [];
+  // Convert transactions to activities format and sort by creation date
+  const activities: NormalizedTransaction[] = transactions && transactions.length > 0
+    ? [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt))
+    : [];
 
   // Calculate counts
   const sentCount = activities.filter(
@@ -32,11 +34,11 @@ export default function RecentActivities() {
 
   if (activities.length === 0) {
     return (
-      <div className="container !rounded-2xl !p-6">
-        <Typography variant="large" className="mb-2">
-          Recent activities
+      <div className="mt-10">
+        <Typography variant="h3">
+          Recent activity
         </Typography>
-        <Typography variant="small" className="text-[#9F9F9F]">
+        <Typography variant="muted" className="text-gray-400">
           No transactions yet. Create your first escrow to get started.
         </Typography>
       </div>
@@ -44,11 +46,11 @@ export default function RecentActivities() {
   }
 
   return (
-    <div className="container !rounded-2xl !p-6">
-      <Typography variant="large" className="mb-2">
-        Recent activities
+    <div className="mt-10">
+      <Typography variant="h3">
+        Recent activity
       </Typography>
-      <Typography variant="small" className="text-[#9F9F9F]">
+      <Typography variant="muted" className="text-gray-400">
         Track your latest escrow transactions
       </Typography>
 
@@ -104,9 +106,8 @@ export default function RecentActivities() {
                 txUrl={txUrl}
               />
             );
-          })
-          }
-        </TabsContent >
+          })}
+        </TabsContent>
 
         <TabsContent value="active" className="flex flex-col gap-6 mt-6">
           {activities
@@ -147,7 +148,7 @@ export default function RecentActivities() {
               );
             })}
         </TabsContent>
-      </Tabs >
-    </div >
+      </Tabs>
+    </div>
   );
 }

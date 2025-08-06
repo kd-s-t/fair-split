@@ -13,11 +13,26 @@ export default function RecipientsList({ recipients, showTimestamps = true }: Re
     return null;
   }
 
+  // Filter out recipients in pending state
+  const activeRecipients = recipients.filter(recipient => {
+    const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
+    return statusKey !== 'pending';
+  });
+
+  if (activeRecipients.length === 0) {
+    return (
+      <>
+        <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
+        <div className="text-gray-500 text-sm">No active recipients to display</div>
+      </>
+    );
+  }
+
   return (
     <>
       <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
       <div className="space-y-3 mb-6">
-        {recipients.map((recipient, index) => {
+        {activeRecipients.map((recipient, index) => {
           const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
           const statusColor = statusKey === 'approved' ? 'text-green-400' : 
                              statusKey === 'pending' ? 'text-yellow-400' : 

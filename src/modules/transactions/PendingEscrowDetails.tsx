@@ -38,10 +38,6 @@ export default function PendingEscrowDetails({
 
       <hr className="my-10 text-[#424444] h-[1px]" />
 
-      <RecipientsList recipients={transaction.to || []} />
-
-      <hr className="my-6 text-[#424444] h-[1px]" />
-
       <Typography variant="large" className="text-[#FEB64D]">Funding required</Typography>
 
       <Typography variant="small" className="text-[#fff] font-semibold">

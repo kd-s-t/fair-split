@@ -352,50 +352,7 @@ export default function TransactionDetailsPage() {
           </div>
         </Card>
 
-        {/* Escrow Information Card */}
-        <Card className="w-full md:w-90 bg-[#222222] border-[#303434] text-white flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <div className="text-blue-500">🔒</div>
-            <Typography variant="large">Escrow Details</Typography>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Status:</span>
-              <span className={`text-sm font-medium ${
-                transaction.status === 'released' ? 'text-green-400' :
-                transaction.status === 'confirmed' ? 'text-blue-400' :
-                transaction.status === 'pending' ? 'text-yellow-400' :
-                'text-gray-400'
-              }`}>
-                {transaction.status === 'released' ? 'Released' :
-                 transaction.status === 'confirmed' ? 'Active' :
-                 transaction.status === 'pending' ? 'Pending' :
-                 transaction.status}
-              </span>
-            </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Total Amount:</span>
-              <span className="text-sm font-medium text-blue-400">
-                {totalBTC.toFixed(8)} ICP
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-400">Recipients:</span>
-              <span className="text-sm font-medium text-gray-200">
-                {transaction.to.length}
-              </span>
-            </div>
-
-            {transaction.status === 'released' && (
-              <div className="p-2 bg-green-900/20 border border-green-500/30 rounded text-xs text-green-300">
-                ✓ Escrow successfully released to all recipients
-              </div>
-            )}
-          </div>
-        </Card>
       </div>
     </div>
   );

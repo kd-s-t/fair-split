@@ -210,7 +210,20 @@ function EscrowPageContent() {
       const principalObj = Principal.fromText(principalText);
       const address = await actor.getBitcoinAddress(principalObj);
       console.log(`Raw address from canister for ${principalText}:`, address);
-      const result = address ? String(address) : null;
+      
+      // Handle the response properly - it could be an array or a single value
+      let result: string | null = null;
+      if (Array.isArray(address) && address.length > 0) {
+        result = String(address[0]);
+      } else if (address && typeof address === 'string') {
+        result = address;
+      }
+      
+      // Ensure we don't return empty strings
+      if (result && result.trim() === "") {
+        result = null;
+      }
+      
       console.log(`Processed address for ${principalText}:`, result);
       return result;
     } catch (error) {
@@ -241,8 +254,8 @@ function EscrowPageContent() {
       // Use sender's Bitcoin address from Redux (stored for potential future use)
       // const _senderAddress = senderBitcoinAddress || null;
 
-      // Get Bitcoin addresses for all recipients
-      const participantsWithBitcoinAddresses = await Promise.all(
+            // Get Bitcoin addresses for all recipients
+      let participantsWithBitcoinAddresses = await Promise.all(
         recipients.map(async (r) => {
           const bitcoinAddress = await getBitcoinAddressForPrincipal(r.principal);
           console.log(`Bitcoin address for ${r.principal}:`, bitcoinAddress);
@@ -251,12 +264,22 @@ function EscrowPageContent() {
             amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
             nickname: r.principal || "Recipient", // Ensure nickname is never empty
             percentage: BigInt(r.percentage),
-            bitcoinAddress: bitcoinAddress,
+            bitcoinAddress: bitcoinAddress && bitcoinAddress.trim() !== "" ? [bitcoinAddress] : [],
           };
         })
       );
       
       console.log('Participants with Bitcoin addresses:', participantsWithBitcoinAddresses);
+
+      // Check if any participants don't have Bitcoin addresses set
+      const participantsWithoutBitcoinAddress = participantsWithBitcoinAddresses.filter(
+        p => !p.bitcoinAddress || p.bitcoinAddress.length === 0
+      );
+
+      if (participantsWithoutBitcoinAddress.length > 0) {
+        const missingAddresses = participantsWithoutBitcoinAddress.map(p => p.nickname).join(", ");
+        toast.info(`The following recipients don't have Bitcoin addresses set: ${missingAddresses}. They will receive ICP instead.`);
+      }
 
       const txId = await actor.initiateEscrow(
         callerPrincipal,
@@ -321,15 +344,28 @@ function EscrowPageContent() {
       }
 
       // Update existing escrow
-      const updatedParticipants = await Promise.all(
-        recipients.map(async (r) => ({
-          principal: Principal.fromText(r.principal),
-          amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
-          nickname: r.principal, // Use principal as default nickname
-          percentage: BigInt(r.percentage),
-          bitcoinAddress: await getBitcoinAddressForPrincipal(r.principal),
-        }))
+      let updatedParticipants = await Promise.all(
+        recipients.map(async (r) => {
+          const bitcoinAddress = await getBitcoinAddressForPrincipal(r.principal);
+          return {
+            principal: Principal.fromText(r.principal),
+            amount: BigInt(Math.round(((Number(btcAmount) * r.percentage) / 100) * 1e8)),
+            nickname: r.principal, // Use principal as default nickname
+            percentage: BigInt(r.percentage),
+            bitcoinAddress: bitcoinAddress && bitcoinAddress.trim() !== "" ? [bitcoinAddress] : [],
+          };
+        })
       );
+
+      // Check if any participants don't have Bitcoin addresses set
+      const participantsWithoutBitcoinAddress = updatedParticipants.filter(
+        p => !p.bitcoinAddress || p.bitcoinAddress.length === 0
+      );
+
+      if (participantsWithoutBitcoinAddress.length > 0) {
+        const missingAddresses = participantsWithoutBitcoinAddress.map(p => p.nickname).join(", ");
+        toast.info(`The following recipients don't have Bitcoin addresses set: ${missingAddresses}. They will receive ICP instead.`);
+      }
 
       await actor.updateEscrow(callerPrincipal, editTxId!, updatedParticipants);
       toast.success("Escrow updated successfully!");

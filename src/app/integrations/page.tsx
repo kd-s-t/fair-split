@@ -124,7 +124,7 @@ export default function IntegrationsPage() {
       setIsCopied(true);
       toast.success('Address copied to clipboard!');
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy address');
     }
   };

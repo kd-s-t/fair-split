@@ -33,8 +33,8 @@ export default function SettingsPage() {
         const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
         const actor = await createSplitDappActorWithDfxKey();
         const address = await actor.getBitcoinAddress(principal);
-        if (address) {
-          setBitcoinAddress(address);
+        if (address && Array.isArray(address) && address.length > 0) {
+          setBitcoinAddress(address[0]);
         }
       } catch (error) {
         console.error('Failed to load Bitcoin address:', error);
@@ -67,7 +67,7 @@ export default function SettingsPage() {
       } else {
         toast.error('Invalid Bitcoin address format');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to save Bitcoin address');
     } finally {
       setIsLoading(false);
@@ -80,7 +80,7 @@ export default function SettingsPage() {
       setIsCopied(true);
       toast.success('Address copied to clipboard!');
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy address');
     }
   };
@@ -97,7 +97,7 @@ export default function SettingsPage() {
       } else {
         toast.error('No Bitcoin address found to remove');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to remove Bitcoin address');
     }
   };
@@ -209,7 +209,7 @@ export default function SettingsPage() {
               </label>
               <div className="flex items-center gap-2">
                 <Input
-                  value={principal || ''}
+                  value={principal ? principal.toText() : ''}
                   readOnly
                   className="bg-gray-800 border-gray-700 text-gray-300"
                 />
@@ -241,7 +241,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <Typography variant="small" className="text-gray-300">
-                  Escrow funds are secured by Internet Computer's threshold ECDSA
+                  Escrow funds are secured by Internet Computer&apos;s threshold ECDSA
                 </Typography>
               </div>
               <div className="flex items-center gap-2">

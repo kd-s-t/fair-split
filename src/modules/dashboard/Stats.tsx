@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
   const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
-  const icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
+  // const _icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
   const isLoading =
     btcBalance === null || btcBalance === undefined || btcBalance === "";
   const router = useRouter();
@@ -27,13 +27,13 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   const completedEscrows = transactions ? transactions.filter(tx => tx.status === 'released').length : 0;
   const pendingEscrows = transactions ? transactions.filter(tx => tx.status === 'pending').length : 0;
 
-  // Calculate ICP metrics
-  const totalIcpAmount = transactions ? transactions.reduce((sum, tx) => {
-    if (tx.status === 'released') {
-      return sum + tx.to.reduce((txSum, toEntry) => txSum + Number(toEntry.amount), 0) / 1e8;
-    }
-    return sum;
-  }, 0) : 0;
+  // Calculate ICP metrics (stored for potential future use)
+  // const _totalIcpAmount = transactions ? transactions.reduce((sum, tx) => {
+  //   if (tx.status === 'released') {
+  //     return sum + tx.to.reduce((txSum, toEntry) => txSum + Number(toEntry.amount), 0) / 1e8;
+  //   }
+  //   return sum;
+  // }, 0) : 0;
 
   const handleNewEscrow = () => {
     router.push('/escrow');

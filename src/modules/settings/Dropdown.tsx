@@ -9,7 +9,7 @@ import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
 import { useAuth } from '@/contexts/auth-context';
-import { Bitcoin, Settings, User, Wallet, ExternalLink } from 'lucide-react';
+import { Bitcoin, Settings, User, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {

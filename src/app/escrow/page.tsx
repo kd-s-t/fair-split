@@ -20,13 +20,10 @@ import {
   setTitle,
   setBtcAmount,
   setRecipients,
-  addRecipient,
-  removeRecipient,
   updateRecipient,
   setIsLoading,
   setShowDialog,
   setNewTxId,
-  setEditTxId,
   resetEscrowForm,
 } from "@/lib/redux/escrowSlice";
 
@@ -53,8 +50,8 @@ function EscrowPageContent() {
     newTxId,
   } = useAppSelector((state) => state.escrow);
   
-  // Get Bitcoin address from Redux
-  const senderBitcoinAddress = useAppSelector((state) => state.user.btcAddress);
+  // Get Bitcoin address from Redux (stored for potential future use)
+  // const senderBitcoinAddress = useAppSelector((state) => state.user.btcAddress);
 
   useEffect(() => {
     if (editTxId) {
@@ -100,7 +97,7 @@ function EscrowPageContent() {
     };
 
     loadTransactionForEdit();
-  }, [editTxId, principal]);
+  }, [editTxId, principal, dispatch]);
 
   // Populate form with data from chat system
   useEffect(() => {
@@ -119,7 +116,7 @@ function EscrowPageContent() {
       dispatch(setRecipients(newRecipients));
       dispatch(setTitle("Escrow created via chat"));
     }
-  }, [editTxId]);
+  }, [editTxId, dispatch]);
 
   // Reset form when component unmounts
   useEffect(() => {
@@ -241,8 +238,8 @@ function EscrowPageContent() {
           return;
         }
 
-      // Use sender's Bitcoin address from Redux
-      const senderAddress = senderBitcoinAddress || null;
+      // Use sender's Bitcoin address from Redux (stored for potential future use)
+      // const _senderAddress = senderBitcoinAddress || null;
 
       // Get Bitcoin addresses for all recipients
       const participantsWithBitcoinAddresses = await Promise.all(
@@ -446,6 +443,7 @@ function EscrowPageContent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
+      {/* Hot reload test comment */}
         <TransactionForm
           title={title}
           setTitle={(value: string) => dispatch(setTitle(value))}

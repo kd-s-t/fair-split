@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
 import { Principal } from '@dfinity/principal'
 import { useDispatch } from 'react-redux'
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [principal, setPrincipal] = useState<Principal | null>(null)
   const dispatch = useDispatch()
 
-  const updatePrincipal = async (client: AuthClient) => {
+  const updatePrincipal = useCallback(async (client: AuthClient) => {
     const isAuthenticated = await client.isAuthenticated()
     
     if (!isAuthenticated) {
@@ -44,14 +44,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setPrincipal(principalObj)
       dispatch(setUser({ principal: principalObj.toText(), name: null }))
     }
-  }
+  }, [principal, dispatch])
 
   useEffect(() => {
     AuthClient.create().then(async (client) => {
       setAuthClient(client)
       await updatePrincipal(client)
     })
-  }, [dispatch])
+  }, [dispatch, updatePrincipal])
 
   // Listen for authentication changes
   useEffect(() => {
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const interval = setInterval(checkAuth, 5000)
     
     return () => clearInterval(interval)
-  }, [authClient, dispatch, principal])
+  }, [authClient, updatePrincipal])
 
   const handleUpdatePrincipal = async () => {
     if (authClient) {

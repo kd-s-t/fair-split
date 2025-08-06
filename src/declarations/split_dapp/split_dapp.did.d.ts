@@ -109,6 +109,6 @@ export interface Transaction {
   'readAt' : [] | [bigint],
 }
 export type TransactionStatus = string;
-export interface _SERVICE extends SplitDApp {}
+export type _SERVICE = SplitDApp;
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

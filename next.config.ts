@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
   images: {
-    domains: ['github.com', 'api.dicebear.com'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+      },
       {
         protocol: 'https',
         hostname: 'api.dicebear.com',

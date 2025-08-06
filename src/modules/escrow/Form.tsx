@@ -6,21 +6,26 @@ import { Bitcoin, Trash2, Sparkles, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { TransactionFormProps } from './types';
 import { toast } from "sonner";
+import { useFieldArray, UseFormReturn } from "react-hook-form";
+import z from "zod";
+import { escrowFormSchema } from "@/validation/escrow";
 
-const TransactionForm = ({
-  title,
-  setTitle,
-  btcAmount,
-  setBtcAmount,
-  recipients,
-  setRecipients,
-  handleAddRecipient,
-  handleRemoveRecipient,
-  handleRecipientChange,
-}: TransactionFormProps) => {
-  
+type FormData = z.infer<typeof escrowFormSchema>;
+
+interface FormProps {
+  form: UseFormReturn<FormData>;
+}
+
+const Form = ({ form }: FormProps) => {
+
+  const { getValues, setValue, control, watch, register, formState: { errors } } = form
+
+  const { fields, append, remove } = useFieldArray({
+    control: control,
+    name: "recipients"
+  });
+
   const generateTitle = () => {
     const titles = [
       "Freelance Web Development Payment",
@@ -44,9 +49,9 @@ const TransactionForm = ({
       "Work Milestone Escrow",
       "Professional Fee Payment"
     ];
-    
+
     const randomTitle = titles[Math.floor(Math.random() * titles.length)];
-    setTitle(randomTitle);
+    setValue("title", randomTitle);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +62,7 @@ const TransactionForm = ({
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
-        
+
         // Validate the JSON structure
         if (!jsonData.recipients || !Array.isArray(jsonData.recipients)) {
           toast.error("Invalid JSON format. Expected: { recipients: string[] }");
@@ -68,12 +73,12 @@ const TransactionForm = ({
 
         // Set the title if provided
         if (jsonData.title) {
-          setTitle(jsonData.title);
+          setValue("title", jsonData.title);
         }
 
         // Set the amount if provided
         if (jsonData.amount !== undefined) {
-          setBtcAmount(jsonData.amount.toString());
+          setValue("btcAmount", jsonData.amount.toString());
         }
 
         // Create new recipients array from JSON data
@@ -83,8 +88,15 @@ const TransactionForm = ({
           percentage: Math.floor(100 / jsonData.recipients.length)
         }));
 
+        // Handle remainder for equal distribution
+        const totalAssigned = newRecipients.reduce((sum: number, recipient: { percentage: number }) => sum + recipient.percentage, 0);
+        const remainder = 100 - totalAssigned;
+        if (remainder > 0 && newRecipients.length > 0) {
+          newRecipients[0].percentage += remainder;
+        }
+
         // Replace all recipients at once
-        setRecipients(newRecipients);
+        setValue("recipients", newRecipients);
 
         toast.success(`Loaded ${jsonData.recipients.length} recipients and amount from JSON file`);
       } catch (error) {
@@ -95,66 +107,97 @@ const TransactionForm = ({
     reader.readAsText(file);
   };
 
+  const handleAddRecipient = () => {
+    const currentRecipients = getValues("recipients");
+    const newRecipient = {
+      id: `recipient-${currentRecipients.length + 1}`,
+      principal: "",
+      percentage: 0
+    };
+    append(newRecipient);
+  };
+
+  const handleRemoveRecipient = (idx: number) => {
+    if (fields.length > 1) {
+      remove(idx);
+      // Redistribute percentages after removal
+      const remainingRecipients = getValues("recipients").filter((_, index) => index !== idx);
+      if (remainingRecipients.length > 0) {
+        const equalPercentage = Math.floor(100 / remainingRecipients.length);
+        const remainder = 100 % remainingRecipients.length;
+
+        remainingRecipients.forEach((recipient, index) => {
+          const newPercentage = equalPercentage + (index < remainder ? 1 : 0);
+          setValue(`recipients.${index}.percentage`, newPercentage);
+        });
+      }
+    }
+  };
+
   const handlePercentageChange = (idx: number, value: string) => {
     const numValue = Number(value);
-    
+
     // Prevent negative values
     if (numValue < 0) {
-      handleRecipientChange(idx, "percentage", 0);
+      setValue(`recipients.${idx}.percentage`, 0);
       toast.warning("Percentage cannot be negative");
       return;
     }
-    
+
     // Handle empty or invalid input
     if (isNaN(numValue) || value === '') {
-      handleRecipientChange(idx, "percentage", 0);
+      setValue(`recipients.${idx}.percentage`, 0);
       return;
     }
-    
+
     // Cap at 100%
     if (numValue > 100) {
-      handleRecipientChange(idx, "percentage", 100);
+      setValue(`recipients.${idx}.percentage`, 100);
       toast.warning("Percentage cannot exceed 100%");
       return;
     }
-    
+
     // Calculate total percentage excluding current field
+    const recipients = getValues("recipients");
     const totalOtherPercentage = recipients.reduce((sum, recipient, index) => {
       if (index !== idx) {
         return sum + (recipient.percentage || 0);
       }
       return sum;
     }, 0);
-    
+
     // Check if new total would exceed 100%
     if (totalOtherPercentage + numValue > 100) {
       const maxAllowed = 100 - totalOtherPercentage;
-      handleRecipientChange(idx, "percentage", maxAllowed);
+      setValue(`recipients.${idx}.percentage`, maxAllowed);
       toast.warning(`Maximum allowed: ${maxAllowed}% (total cannot exceed 100%)`);
       return;
     }
-    
-    handleRecipientChange(idx, "percentage", numValue);
+
+    setValue(`recipients.${idx}.percentage`, numValue);
   };
 
   const calculateTotalAllocation = () => {
+    const recipients = watch("recipients");
     return recipients.reduce((sum, recipient) => sum + (recipient.percentage || 0), 0);
   };
+
+  const isTotalValid = calculateTotalAllocation() === 100;
 
   return (
     <div className="w-[70%] min-w-[340px]">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <Typography variant="large">Escrow setup</Typography>
+          <CardTitle className="flex items-center gap-2">
             <Bitcoin color="#F97415" />
+            <Typography variant="large">Escrow setup</Typography>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 mt-4">
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-medium text-[#A1A1AA]">
-                Title 
+                Title
               </label>
               <div className="flex gap-2">
                 <Button
@@ -185,30 +228,32 @@ const TransactionForm = ({
               </div>
             </div>
             <Input
-              className="mt-1 "
+              className="mt-1"
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              {...register("title")}
               placeholder="e.g., Freelance project payment"
             />
+            {errors.title && (
+              <div className="text-red-400 text-sm mt-1">{errors.title.message}</div>
+            )}
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-medium text-[#A1A1AA]">
                 BTC amount
               </label>
-              <span className="font-normal">
-              </span>
             </div>
             <Input
               className="mt-1"
               type="number"
               min="0"
               step="0.00000001"
-              value={btcAmount}
-              onChange={(e) => setBtcAmount(e.target.value)}
+              {...register("btcAmount")}
               placeholder="0.00000000"
             />
+            {errors.btcAmount && (
+              <div className="text-red-400 text-sm mt-1">{errors.btcAmount.message}</div>
+            )}
           </div>
           <hr className="mt-6 mb-6 text-[#424444]" />
           <div className="flex items-center justify-between">
@@ -224,9 +269,9 @@ const TransactionForm = ({
           </div>
           <div className="space-y-4">
             <AnimatePresence>
-              {recipients.map((r, idx) => (
+              {fields.map((field, idx) => (
                 <motion.div
-                  key={r.id}
+                  key={field.id}
                   layout
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -236,7 +281,7 @@ const TransactionForm = ({
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">Recipient {idx + 1}</span>
-                    {recipients.length > 1 && (
+                    {fields.length > 1 && (
                       <Button
                         variant="secondary"
                         onClick={() => handleRemoveRecipient(idx)}
@@ -256,19 +301,17 @@ const TransactionForm = ({
                       </label>
                       <Input
                         type="text"
-                        value={r.principal}
-                        onChange={(e) =>
-                          handleRecipientChange(
-                            idx,
-                            "principal",
-                            e.target.value
-                          )
-                        }
+                        {...register(`recipients.${idx}.principal`)}
                         placeholder="BTC address"
                         className="mt-1"
                         autoComplete="off"
                         name={`btc-address-${idx}`}
                       />
+                      {errors.recipients?.[idx]?.principal && (
+                        <div className="text-red-400 text-sm mt-1">
+                          {errors.recipients[idx]?.principal?.message}
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2 items-center col-span-2">
                       <div className="flex-1">
@@ -280,7 +323,7 @@ const TransactionForm = ({
                           min="0"
                           max="100"
                           step="1"
-                          value={r.percentage}
+                          value={watch(`recipients.${idx}.percentage`)}
                           onChange={(e) => handlePercentageChange(idx, e.target.value)}
                           onKeyDown={(e) => {
                             // Prevent negative sign, e, and other non-numeric characters
@@ -290,20 +333,12 @@ const TransactionForm = ({
                           }}
                           className="mt-1"
                         />
+                        {errors.recipients?.[idx]?.percentage && (
+                          <div className="text-red-400 text-sm mt-1">
+                            {errors.recipients[idx]?.percentage?.message}
+                          </div>
+                        )}
                       </div>
-                      {/* <div className="flex-1">
-                          <label className="text-xs font-medium">Amount</label>
-                          <Input
-                            type="text"
-                            value={
-                              btcAmount && r.percentage
-                                ? (Number(btcAmount) * r.percentage / 100).toFixed(8)
-                                : '0.00000000'
-                            }
-                            readOnly
-                            className="mt-1 bg-gray-900/30"
-                          />
-                        </div> */}
                     </div>
                   </div>
                 </motion.div>
@@ -312,17 +347,27 @@ const TransactionForm = ({
           </div>
           <div className="flex items-center justify-between">
             <Typography variant="muted">Total allocation:</Typography>
-            <Typography 
-              variant="small" 
-              className={`${calculateTotalAllocation() === 100 ? 'text-[#FEB64D]' : 'text-red-400'}`}
+            <Typography
+              variant="small"
+              className={`${isTotalValid ? 'text-[#FEB64D]' : 'text-red-400'}`}
             >
               {calculateTotalAllocation()}%
             </Typography>
           </div>
+          {!isTotalValid && calculateTotalAllocation() > 0 && (
+            <div className="text-red-400 text-sm">
+              Total allocation must equal 100%
+            </div>
+          )}
+          {errors.recipients && (
+            <div className="text-red-400 text-sm">
+              {errors.recipients.message}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 };
 
-export default TransactionForm;
+export default Form;

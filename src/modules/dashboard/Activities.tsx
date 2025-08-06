@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronRight } from "lucide-react";
 import ActivityContent from "./ActivityContent";
 import { useAuth } from "@/contexts/auth-context";
-import { useTransactions } from "@/hooks/transactions";
+import { useTransactions } from "@/hooks/useTransactions";
 import type { NormalizedTransaction } from "@/modules/transactions/types";
 
 export default function RecentActivities() {

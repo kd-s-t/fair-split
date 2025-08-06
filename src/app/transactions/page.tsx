@@ -76,7 +76,7 @@ function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
   }
 }
 import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
-import { useTransactions } from "@/hooks/transactions";
+import { useTransactions } from "@/hooks/useTransactions";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -171,7 +171,7 @@ export default function TransactionsPage() {
       markUnreadTransactionsAsRead();
     }
   }, [localTransactions, principal, markUnreadTransactionsAsRead]);
-  
+
   function getTxId(tx: NormalizedTransaction) {
     return `${tx.from}_${tx.to
       .map((toEntry) => toEntry.principal)
@@ -343,10 +343,10 @@ export default function TransactionsPage() {
     }
   };
 
-      if (process.env.NODE_ENV === 'development') {
-      console.log('Rendering ApprovalSuggestions with localTransactions:', localTransactions);
-      console.log('localTransactions length:', localTransactions.length);
-    }
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Rendering ApprovalSuggestions with localTransactions:', localTransactions);
+    console.log('localTransactions length:', localTransactions.length);
+  }
 
   return (
     <>
@@ -624,10 +624,10 @@ export default function TransactionsPage() {
                             className="font-semibold text-[#FEB64D]"
                           >
                             {tx.status === 'cancelled' ? 'Cancelled' :
-                             tx.status === 'released' ? 'Released' :
-                             tx.status === 'confirmed' ? 'Active' :
-                             tx.status === 'pending' ? 'Pending' :
-                             tx.status}
+                              tx.status === 'released' ? 'Released' :
+                                tx.status === 'confirmed' ? 'Active' :
+                                  tx.status === 'pending' ? 'Pending' :
+                                    tx.status}
                           </Typography>
                         </div>
                       </div>

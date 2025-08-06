@@ -5,37 +5,28 @@ import { Typography } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 import { Send, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TransactionDialog from '@/modules/escrow/Dialog';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { TransactionSummaryProps } from './types';
+import { UseFormReturn } from "react-hook-form";
 
-const TransactionSummary = ({
-  btcAmount,
-  recipients,
-  isLoading,
+interface SummaryProps {
+  form: UseFormReturn<any>;
+  handleInitiateEscrow: () => void;
+  isEditMode?: boolean;
+}
+
+const Summary = ({
+  form,
   handleInitiateEscrow,
-  showDialog,
-  setShowDialog,
-  newTxId,
   isEditMode = false,
-}: TransactionSummaryProps) => {
-  const router = useRouter();
+}: SummaryProps) => {
+
+  const { watch, handleSubmit, formState: { isSubmitting } } = form
+
+  const btcAmount = watch("btcAmount");
+  const recipients = watch("recipients");
+
   return (
     <div className="w-[35%] min-w-[220px]">
-      <TransactionDialog
-        open={showDialog}
-        onOpenChange={setShowDialog}
-        amount={btcAmount}
-        onDone={() => {
-          setShowDialog(false);
-          if (newTxId) {
-            router.push(`/transactions/${newTxId}`);
-          } else {
-            router.push('/transactions');
-          }
-        }}
-      />
       <Card className="h-fit">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -68,7 +59,7 @@ const TransactionSummary = ({
             <Typography variant="small" className="text-[#9F9F9F]">
               Recipients
             </Typography>
-            <Typography variant="base">{recipients.length}</Typography>
+            <Typography variant="base">{recipients?.length || 0}</Typography>
           </div>
           <hr className="mt-5 mb-7 text-[#424444]" />
           <div className="flex items-center gap-2">
@@ -89,11 +80,11 @@ const TransactionSummary = ({
             <Button
               variant="default"
               className="w-full text-sm"
-              disabled={isLoading}
-              onClick={handleInitiateEscrow}
+              disabled={isSubmitting}
+              onClick={handleSubmit(handleInitiateEscrow)}
             >
               <Send size={16} />
-              {isLoading ? "Processing..." : isEditMode ? "Update escrow" : "Initiate escrow"}
+              {isSubmitting ? "Processing..." : isEditMode ? "Update escrow" : "Initiate escrow"}
             </Button>
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
@@ -118,4 +109,4 @@ const TransactionSummary = ({
   );
 };
 
-export default TransactionSummary;
+export default Summary;

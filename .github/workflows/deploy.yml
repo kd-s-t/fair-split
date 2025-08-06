@@ -163,12 +163,19 @@ jobs:
             set -e
             echo "🚀 Starting deployment..."
             
-            # Navigate to project directory
+            # Create project directory if it doesn't exist
+            echo "📁 Setting up project directory..."
+            mkdir -p ${{ secrets.EC2_PROJECT_DIR }}
             cd ${{ secrets.EC2_PROJECT_DIR }}
             
-            # Pull latest changes
-            echo "📥 Pulling latest changes..."
-            git pull origin ${{ github.ref_name }}
+            # Clone repository if it doesn't exist, otherwise pull latest changes
+            if [ ! -d ".git" ]; then
+              echo "📥 Cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git .
+            else
+              echo "📥 Pulling latest changes..."
+              git pull origin ${{ github.ref_name }}
+            fi
             
             # Set environment variable for canister ID
             export CANISTER_ID=${{ secrets.CANISTER_ID }}

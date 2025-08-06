@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { Provider } from 'react-redux'
 import { store } from '../lib/redux/store'
 import ClientLayout from '@/components/ClientLayout'
+import DocumentTitle from '@/components/DocumentTitle'
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <Provider store={store}>
           <AuthProvider>
+            <DocumentTitle />
             <ClientLayout>{children}</ClientLayout>
           </AuthProvider>
         </Provider>

@@ -24,8 +24,8 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies (ignore scripts to avoid husky issues)
-RUN npm ci --ignore-scripts && npm install typescript --no-save
+# Install all dependencies including dev dependencies needed for build
+RUN npm ci --ignore-scripts
 
 # Copy source files
 COPY . .

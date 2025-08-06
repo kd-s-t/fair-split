@@ -99,6 +99,14 @@ resource "aws_security_group" "splitsafe_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "DFX port 4943"
+    from_port   = 4943
+    to_port     = 4943
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -229,6 +237,35 @@ resource "aws_instance" "splitsafe_server" {
       "sudo systemctl start nginx",
       "sudo systemctl enable nginx",
       "echo '✅ Nginx installed and configured'",
+      "echo '======================================================================================'",
+      "echo 'Configuring Nginx reverse proxy...'",
+      "sudo tee /etc/nginx/sites-available/splitsafe << 'EOF'",
+      "server {",
+      "    listen 80;",
+      "    server_name thesplitsafe.com www.thesplitsafe.com;",
+      "",
+      "    location / {",
+      "        proxy_pass http://localhost:3000;",
+      "        proxy_http_version 1.1;",
+      "        proxy_set_header Upgrade $http_upgrade;",
+      "        proxy_set_header Connection 'upgrade';",
+      "        proxy_set_header Host $host;",
+      "        proxy_set_header X-Real-IP $remote_addr;",
+      "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+      "        proxy_set_header X-Forwarded-Proto $scheme;",
+      "        proxy_cache_bypass $http_upgrade;",
+      "    }",
+      "}",
+      "EOF",
+      "sudo ln -sf /etc/nginx/sites-available/splitsafe /etc/nginx/sites-enabled/",
+      "sudo rm -f /etc/nginx/sites-enabled/default",
+      "sudo nginx -t",
+      "sudo systemctl reload nginx",
+      "echo '✅ Nginx reverse proxy configured'",
+      "echo '======================================================================================'",
+      "echo 'Installing SSL certificate with Let''s Encrypt...'",
+      "sudo apt install -y certbot python3-certbot-nginx",
+      "echo '✅ SSL tools installed (certbot ready for domain setup)'",
       "echo '======================================================================================'",
       "echo 'Installing additional tools...'",
       "sudo apt install -y htop fail2ban",

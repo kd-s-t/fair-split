@@ -48,6 +48,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Create ECR repository if it doesn't exist
+        run: |
+          REPO_NAME="splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+          echo "🔍 Checking if ECR repository $REPO_NAME exists..."
+          
+          if ! aws ecr describe-repositories --repository-names $REPO_NAME --region us-east-1 2>/dev/null; then
+            echo "📦 Creating ECR repository $REPO_NAME..."
+            aws ecr create-repository \
+              --repository-name $REPO_NAME \
+              --region us-east-1 \
+              --image-scanning-configuration scanOnPush=true \
+              --image-tag-mutability MUTABLE
+            echo "✅ ECR repository $REPO_NAME created successfully"
+          else
+            echo "✅ ECR repository $REPO_NAME already exists"
+          fi
+
       - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}

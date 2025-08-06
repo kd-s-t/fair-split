@@ -104,7 +104,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ToEntry) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -146,7 +146,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ToEntry) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -192,7 +192,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ToEntry) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -276,7 +276,7 @@ export default function TransactionDetailsPage() {
               const isSender = principal && String(transaction.from) === String(principal);
               const transactionData = {
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: any) => ({
                     ...toEntry,
@@ -314,7 +314,7 @@ export default function TransactionDetailsPage() {
             <CancelledEscrowDetails
               transaction={{
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: any) => ({
                     ...toEntry,
@@ -339,7 +339,7 @@ export default function TransactionDetailsPage() {
             <RefundedEscrowDetails
               transaction={{
                 ...transaction,
-                from: typeof transaction.from === "string" ? transaction.from : transaction.from.toText(),
+                from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: any) => ({
                     ...toEntry,

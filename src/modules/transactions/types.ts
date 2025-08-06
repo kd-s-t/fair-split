@@ -86,12 +86,12 @@ export interface RefundedEscrowDetailsProps {
 }
 
 export interface ConfirmedEscrowActionsProps {
-  transaction: EscrowTransaction;
+  transaction: EscrowTransaction | NormalizedTransaction;
   isLoading: "release" | "refund" | null;
   onRelease: (id: unknown) => void;
   onRefund: () => void;
 }
 
 export interface ReleasedEscrowDetailsProps {
-  transaction: EscrowTransaction;
+  transaction: EscrowTransaction | NormalizedTransaction;
 } 

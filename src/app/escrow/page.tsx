@@ -255,7 +255,7 @@ function EscrowPageContent() {
       // const _senderAddress = senderBitcoinAddress || null;
 
             // Get Bitcoin addresses for all recipients
-      let participantsWithBitcoinAddresses = await Promise.all(
+      const participantsWithBitcoinAddresses = await Promise.all(
         recipients.map(async (r) => {
           const bitcoinAddress = await getBitcoinAddressForPrincipal(r.principal);
           console.log(`Bitcoin address for ${r.principal}:`, bitcoinAddress);
@@ -344,7 +344,7 @@ function EscrowPageContent() {
       }
 
       // Update existing escrow
-      let updatedParticipants = await Promise.all(
+      const updatedParticipants = await Promise.all(
         recipients.map(async (r) => {
           const bitcoinAddress = await getBitcoinAddressForPrincipal(r.principal);
           return {

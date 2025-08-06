@@ -5,7 +5,6 @@ import { Typography } from "@/components/ui/typography";
 import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";
 import { PendingEscrowDetailsProps } from "./types";
-import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";

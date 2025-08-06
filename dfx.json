@@ -3,6 +3,7 @@
     "split_dapp": {
       "type": "motoko",
       "main": "icp/src/main.mo",
+      "arg": ["2vxsx-fae", "2vxsx-fae"],
       "metadata": [
         {
           "name": "candid:service"

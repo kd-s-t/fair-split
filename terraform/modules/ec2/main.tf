@@ -64,7 +64,7 @@ resource "aws_instance" "splitsafe_server" {
 
   # User data script for instance initialization
   provisioner "remote-exec" {
-    on_failure = continue
+    on_failure = fail
 
     connection {
       type        = "ssh"
@@ -91,9 +91,10 @@ resource "aws_instance" "splitsafe_server" {
       "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg",
       "echo \"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
       "sudo apt update -qq",
-      "sudo apt install -y docker-ce docker-ce-cli containerd.io",
+      "sudo apt install -y docker-ce docker-ce-cli containerd.io || exit 1",
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
+      "sudo systemctl status docker --no-pager || exit 1",
       "sudo usermod -aG docker ubuntu",
       "echo '✅ Docker installed and configured'",
       "echo '======================================================================================'",
@@ -101,7 +102,7 @@ resource "aws_instance" "splitsafe_server" {
       "mkdir -p ~/.docker/cli-plugins/",
       "curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose",
       "chmod +x ~/.docker/cli-plugins/docker-compose",
-      "docker compose version",
+      "docker compose version || exit 1",
       "echo '✅ Docker Compose installed'",
       "echo '======================================================================================'",
       "echo 'Installing AWS CLI...'",
@@ -109,14 +110,14 @@ resource "aws_instance" "splitsafe_server" {
       "unzip awscliv2.zip",
       "sudo ./aws/install",
       "rm -rf aws awscliv2.zip",
-      "aws --version",
+      "aws --version || exit 1",
       "echo '✅ AWS CLI installed'",
       "echo '======================================================================================'",
       "echo 'Installing Node.js and npm...'",
       "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -",
       "sudo apt install -y nodejs",
-      "node --version",
-      "npm --version",
+      "node --version || exit 1",
+      "npm --version || exit 1",
       "echo '✅ Node.js and npm installed'",
       "echo '======================================================================================'",
       "echo 'Installing dfx (Internet Computer SDK)...'",
@@ -124,7 +125,7 @@ resource "aws_instance" "splitsafe_server" {
       "echo 'source ~/.bashrc' >> ~/.profile",
       "source ~/.bashrc",
       "export PATH=$PATH:~/.local/share/dfx/bin",
-      "dfx --version",
+      "dfx --version || exit 1",
       "echo '✅ dfx installed'",
       "echo '======================================================================================'",
       "echo 'Installing PM2...'",
@@ -136,6 +137,7 @@ resource "aws_instance" "splitsafe_server" {
       "sudo apt install -y nginx",
       "sudo systemctl start nginx",
       "sudo systemctl enable nginx",
+      "sudo systemctl status nginx --no-pager || exit 1",
       "echo '✅ Nginx installed and configured'",
       "echo '======================================================================================'",
       "echo 'Configuring Nginx reverse proxy...'",
@@ -159,8 +161,9 @@ resource "aws_instance" "splitsafe_server" {
       "EOF",
       "sudo ln -sf /etc/nginx/sites-available/splitsafe /etc/nginx/sites-enabled/",
       "sudo rm -f /etc/nginx/sites-enabled/default",
-      "sudo nginx -t",
+      "sudo nginx -t || exit 1",
       "sudo systemctl reload nginx",
+      "sudo systemctl status nginx --no-pager || exit 1",
       "echo '✅ Nginx reverse proxy configured'",
       "echo '======================================================================================'",
       "echo 'Installing SSL certificate with Let''s Encrypt...'",

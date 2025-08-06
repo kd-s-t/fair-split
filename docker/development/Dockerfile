@@ -25,7 +25,7 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 COPY package.json package-lock.json ./
 
 # Update npm to specific version and install all dependencies
-RUN npm install -g npm@11.5.2 && npm ci --ignore-scripts
+RUN npm install -g npm@11.5.2 && npm ci
 
 # Copy source files
 COPY . .

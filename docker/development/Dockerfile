@@ -2,7 +2,7 @@
 FROM node:20.17.0-alpine
 
 # Set environment variables
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 ENV PORT=3000
 
 # Install system dependencies

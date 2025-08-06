@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Disable static optimization for dynamic content
+  staticPageGenerationTimeout: 0,
 };
 
 export default nextConfig;

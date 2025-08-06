@@ -25,8 +25,9 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 COPY package.json package-lock.json ./
 
 # Install all dependencies including dev dependencies needed for build
+ENV NODE_ENV=development
 RUN npm ci --ignore-scripts
-
+ENV NODE_ENV=production
 # Copy source files
 COPY . .
 

@@ -12,7 +12,7 @@ import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
-import type { NormalizedTransaction } from "@/modules/transactions/types";
+import type { NormalizedTransaction, ApiToEntry } from "@/modules/transactions/types";
 import ReleasedEscrowDetails from "@/modules/transactions/ReleasedEscrowDetails";
 import { Principal } from "@dfinity/principal";
 import { AnimatePresence, motion } from "framer-motion";
@@ -65,7 +65,7 @@ export default function TransactionDetailsPage() {
           refundedAt: result[0].refundedAt ? result[0].refundedAt.toString() : undefined,
           releasedAt: result[0].releasedAt ? result[0].releasedAt.toString() : undefined,
           readAt: result[0].readAt ? result[0].readAt.toString() : undefined,
-          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: any) => ({
+          to: Array.isArray(result[0].to) ? result[0].to.map((toEntry: ApiToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -104,7 +104,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ApiToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -146,7 +146,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ApiToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -192,7 +192,7 @@ export default function TransactionDetailsPage() {
           refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
           releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
           readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
-          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: any) => ({
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ApiToEntry) => ({
             ...toEntry,
             approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
             declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
@@ -277,12 +277,12 @@ export default function TransactionDetailsPage() {
               const transactionData = {
                 ...transaction,
                 from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
-                to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry: any) => ({
-                    ...toEntry,
-                    principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
-                  }))
-                  : [],
+                                  to: Array.isArray(transaction.to)
+                    ? transaction.to.map((toEntry: ApiToEntry) => ({
+                      ...toEntry,
+                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as any)?.toText?.() || String(toEntry.principal),
+                    }))
+                    : [],
                 status: "pending" as const,
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? transaction.releasedAt[0] : undefined)
@@ -316,7 +316,7 @@ export default function TransactionDetailsPage() {
                 ...transaction,
                 from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
                 to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry: any) => ({
+                  ? transaction.to.map((toEntry: ApiToEntry) => ({
                     ...toEntry,
                     principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
                   }))
@@ -341,7 +341,7 @@ export default function TransactionDetailsPage() {
                 ...transaction,
                 from: typeof transaction.from === "string" ? transaction.from : (transaction.from as any)?.toText?.() || transaction.from,
                 to: Array.isArray(transaction.to)
-                  ? transaction.to.map((toEntry: any) => ({
+                  ? transaction.to.map((toEntry: ApiToEntry) => ({
                     ...toEntry,
                     principal: typeof toEntry.principal === "string" ? toEntry.principal : toEntry.principal.toText(),
                   }))

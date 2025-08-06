@@ -65,6 +65,50 @@ export interface NormalizedTransaction {
   }>;
 }
 
+// API response types for better type safety
+export interface ApiToEntry {
+  principal: unknown;
+  amount: unknown;
+  percentage: unknown;
+  status: unknown;
+  name: string;
+  approvedAt?: unknown;
+  declinedAt?: unknown;
+  readAt?: unknown;
+}
+
+export interface ApiTransaction {
+  id: string;
+  from: unknown;
+  to: ApiToEntry[];
+  status: string;
+  title: string;
+  createdAt: unknown;
+  confirmedAt?: unknown;
+  cancelledAt?: unknown;
+  refundedAt?: unknown;
+  releasedAt?: unknown;
+  readAt?: unknown;
+  bitcoinTransactionHash?: unknown;
+  bitcoinAddress?: unknown;
+}
+
+// Activity types for dashboard
+export interface ActivityItem {
+  id?: string;
+  from: unknown;
+  to?: Array<{
+    principal: unknown;
+    amount?: unknown;
+    percentage?: unknown;
+    status?: unknown;
+    name?: string;
+  }>;
+  status?: string;
+  title?: string;
+  createdAt?: unknown;
+}
+
 // Component prop types
 export interface PendingEscrowDetailsProps {
   transaction: EscrowTransaction;

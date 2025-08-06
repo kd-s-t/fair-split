@@ -8,7 +8,7 @@ import { ConfirmedEscrowActionsProps } from "./types";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { Fragment } from "react";
-import { generateRandomHash } from "@/lib/utils";
+// import { generateRandomHash } from "@/lib/utils";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
 

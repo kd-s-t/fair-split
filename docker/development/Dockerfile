@@ -24,8 +24,8 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (ignore scripts to avoid husky issues)
+RUN npm ci --ignore-scripts
 
 # Copy source files
 COPY . .

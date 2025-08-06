@@ -9,11 +9,11 @@ import { formatBTC } from "@/lib/utils";
 import { ArrowDownLeft, ArrowUpRight, Bitcoin, Eye, UserRound, UsersRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment } from "react";
-import type { NormalizedTransaction } from "@/modules/transactions/types";
+import type { ActivityItem } from "@/modules/transactions/types";
 
 interface ActivityContentProps {
   idx: number;
-  activity: NormalizedTransaction;
+  activity: ActivityItem;
   category: string;
   txUrl?: string;
 }
@@ -55,9 +55,9 @@ const ActivityContent = ({
                   variant="large"
                   className="font-semibold leading-none"
                 >
-                  {activity.title}
+                  {activity.title || 'Untitled Transaction'}
                 </Typography>
-                {getTransactionStatusBadge(activity.status)}
+                {activity.status && getTransactionStatusBadge(activity.status)}
               </div>
 
               <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ const ActivityContent = ({
                   variant="muted"
                   className="text-xs text[rgba(159, 159, 159, 1)]"
                 >
-                  {new Date(Number(activity.createdAt) / 1_000_000).toLocaleString()}
+                  {activity.createdAt ? new Date(Number(activity.createdAt) / 1_000_000).toLocaleString() : 'Unknown date'}
                 </Typography>
 
                 <span className="text-white">•</span>
@@ -129,11 +129,11 @@ const ActivityContent = ({
                       className="flex justify-between items-center border-b border-[#333] p-3 last:border-b-0 text-white"
                     >
                       <span className="font-mono text-sm">
-                        {recipient.principal}
+                        {String(recipient.principal)}
                       </span>
                       <span className="text-xs text-[#bdbdbd]">
-                        {recipient.percentage ? recipient.percentage + "%" : ""} • {" "}
-                        {formatBTC(recipient.amount)} BTC
+                        {recipient.percentage ? String(recipient.percentage) + "%" : ""} • {" "}
+                        {recipient.amount ? formatBTC(Number(recipient.amount)) : "0"} BTC
                       </span>
                     </div>
                   ))}
@@ -144,13 +144,13 @@ const ActivityContent = ({
                   </Typography>
                   <Typography variant="small" className="text-[#FEB64D] gap-1 flex items-center">
                     <Bitcoin size={16} />
-                    {formatBTC(
-                      activity.to.reduce(
-                        (sum: number, recipient) =>
-                          sum + Number(recipient.amount),
-                        0
-                      )
-                    )}
+                                            {formatBTC(
+                          activity.to.reduce(
+                            (sum: number, recipient) =>
+                              sum + (recipient.amount ? Number(recipient.amount) : 0),
+                            0
+                          ) || 0
+                        )}
                     BTC
                   </Typography>
                 </div>
@@ -161,7 +161,7 @@ const ActivityContent = ({
               <Fragment>
                 <div className="flex items-center gap-2 py-2 font-semibold text-white">
                   <UserRound size={18} /> Sender:
-                  <Typography variant="muted">{activity.from}</Typography>
+                  <Typography variant="muted">{String(activity.from)}</Typography>
                 </div>
                 <div className="container-success mt-2">
                   <Typography variant="small">

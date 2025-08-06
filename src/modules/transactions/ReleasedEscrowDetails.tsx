@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ExternalLink, CalendarCheck2, Hash, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import { ReleasedEscrowDetailsProps, ToEntry } from "./types";
+import { ReleasedEscrowDetailsProps } from "./types";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 // import TransactionStats from "@/components/TransactionStats";
 
@@ -65,7 +65,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
       {/* Payment distribution */}
       <Typography variant="large" className="mb-4">Payment distribution</Typography>
       <div className="flex flex-col gap-4">
-        {Array.isArray(transaction.to) && transaction.to.map((toEntry: ToEntry, idx: number) => (
+        {Array.isArray(transaction.to) && transaction.to.map((toEntry, idx: number) => (
           <div key={idx} className="bg-[#232323] border border-[#393939] rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="bg-[#4F3F27] p-2 rounded-full">

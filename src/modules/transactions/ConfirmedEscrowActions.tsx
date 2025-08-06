@@ -8,7 +8,7 @@ import { ConfirmedEscrowActionsProps } from "./types";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { Fragment } from "react";
-import { generateRandomHash } from "@/lib/utils";
+// import { generateRandomHash } from "@/lib/utils";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
 
@@ -27,7 +27,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
 
   // Calculate total BTC and recipient count for TransactionStats
   const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
+    ? transaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
 
   const recipientCount = transaction.to?.length || 0;
@@ -52,7 +52,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         <div className="mb-6">
           <Typography variant="large" className="text-[#FEB64D] mb-4">Recipients</Typography>
           <div className="space-y-3">
-            {Array.isArray(transaction.to) && transaction.to.map((recipient: any, index: number) => {
+            {Array.isArray(transaction.to) && transaction.to.map((recipient, index: number) => {
               const statusKey = recipient.status ? Object.keys(recipient.status)[0] : 'unknown';
               const statusColor = statusKey === 'approved' ? 'text-green-400' :
                 statusKey === 'pending' ? 'text-yellow-400' :
@@ -60,7 +60,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
 
               const amount = Number(recipient.amount) / 1e8;
               const totalAmount = Array.isArray(transaction.to)
-                ? transaction.to.reduce((sum: number, entry: any) => sum + Number(entry.amount), 0) / 1e8
+                ? transaction.to.reduce((sum: number, entry) => sum + Number(entry.amount), 0) / 1e8
                 : 0;
               const percentage = totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(0) : 0;
 

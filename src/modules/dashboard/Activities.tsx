@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/lib/redux/store";
 import { useTransactions } from "@/hooks/transactions";
+import type { ActivityItem } from "@/modules/transactions/types";
 import ActivityContent from "./ActivityContent";
 
 export default function RecentActivities() {
@@ -20,12 +21,12 @@ export default function RecentActivities() {
     : [];
 
   const sentCount = activities.filter(
-    (activity: any) => principal && String(activity.from) === String(principal)
+    (activity: ActivityItem) => principal && String(activity.from) === String(principal)
   ).length;
 
   const receivedCount = activities.filter(
-    (activity: any) => principal && activity.to && activity.to.some(
-      (recipient: any) => String(recipient.principal) === String(principal)
+    (activity: ActivityItem) => principal && activity.to && activity.to.some(
+              (recipient: { principal: unknown }) => String(recipient.principal) === String(principal)
     )
   ).length;
 
@@ -69,7 +70,7 @@ export default function RecentActivities() {
         </div>
 
         <TabsContent value="all" className="flex flex-col gap-6 mt-6">
-          {activities.map((activity: any, idx: number) => {
+          {activities.map((activity: ActivityItem, idx: number) => {
             const isSender =
               principal &&
               activity.from &&
@@ -95,11 +96,11 @@ export default function RecentActivities() {
 
         <TabsContent value="active" className="flex flex-col gap-6 mt-6">
           {activities
-            .filter((activity: any) =>
+            .filter((activity: ActivityItem) =>
               principal && String(activity.from) === String(principal)
             )
-            .map((activity: any, idx: number) => {
-              const isSender = true; // We know it's sent since we filtered
+            .map((activity: ActivityItem, idx: number) => {
+              // const isSender = true; // We know it's sent since we filtered
               const category = "sent";
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
@@ -116,13 +117,13 @@ export default function RecentActivities() {
 
         <TabsContent value="completed" className="flex flex-col gap-6 mt-6">
           {activities
-            .filter((activity: any) =>
+            .filter((activity: ActivityItem) =>
               principal && activity.to && activity.to.some(
-                (recipient: any) => String(recipient.principal) === String(principal)
+                (recipient: { principal: unknown }) => String(recipient.principal) === String(principal)
               )
             )
-            .map((activity: any, idx: number) => {
-              const isSender = false; // We know it's received since we filtered
+            .map((activity: ActivityItem, idx: number) => {
+              // const isSender = false; // We know it's received since we filtered
               const category = "received";
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (

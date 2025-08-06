@@ -213,7 +213,7 @@ resource "aws_instance" "splitsafe_server" {
       "echo '✅ Node.js and npm installed'",
       "echo '======================================================================================'",
       "echo 'Installing dfx (Internet Computer SDK)...'",
-      "sh -ci \"$(curl -fsSL https://internetcomputer.org/install.sh)\"",
+      "DFXVM_INIT_YES=true sh -ci \"$(curl -fsSL https://internetcomputer.org/install.sh)\"",
       "echo 'source ~/.bashrc' >> ~/.profile",
       "source ~/.bashrc",
       "dfx --version",

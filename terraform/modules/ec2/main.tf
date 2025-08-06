@@ -46,7 +46,9 @@ resource "aws_iam_role_policy" "ecr_policy" {
           "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage"
+          "ecr:BatchGetImage",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories"
         ]
         Resource = "*"
       }
@@ -210,6 +212,13 @@ resource "aws_instance" "splitsafe_server" {
       "npm --version",
       "echo '✅ Node.js and npm installed'",
       "echo '======================================================================================'",
+      "echo 'Installing dfx (Internet Computer SDK)...'",
+      "sh -ci \"$(curl -fsSL https://internetcomputer.org/install.sh)\"",
+      "echo 'source ~/.bashrc' >> ~/.profile",
+      "source ~/.bashrc",
+      "dfx --version",
+      "echo '✅ dfx installed'",
+      "echo '======================================================================================'",
       "echo 'Installing PM2...'",
       "sudo npm install -g pm2",
       "pm2 --version",
@@ -243,6 +252,7 @@ resource "aws_instance" "splitsafe_server" {
       "echo \"🐳 Docker and Docker Compose installed\"",
       "echo \"🔧 AWS CLI installed\"",
       "echo \"📦 Node.js and npm installed\"",
+      "echo \"🔗 dfx (Internet Computer SDK) installed\"",
       "echo \"⚡ PM2 process manager installed\"",
       "echo \"🌐 Nginx web server installed\"",
       "echo \"🔒 Fail2ban security installed\"",

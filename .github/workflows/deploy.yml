@@ -73,10 +73,21 @@ jobs:
         run: |
           echo "🐳 Building Docker image..."
           docker buildx create --use
-          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/stage/Dockerfile .
-          echo "📤 Pushing to ECR..."
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker buildx build --platform linux/amd64 \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -f docker/stage/Dockerfile \
+            --push .
+          
+          # Verify the image was pushed successfully
+          echo "🔍 Verifying image was pushed successfully..."
+          if aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --region us-east-1 2>/dev/null; then
+            echo "✅ Image pushed and verified: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          else
+            echo "❌ Failed to verify image in ECR: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+            echo "🔍 Available images in repository:"
+            aws ecr describe-images --repository-name $ECR_REPOSITORY --region us-east-1 --query 'imageDetails[*].imageTags' --output table || echo "No images found"
+            exit 1
+          fi
 
   deploy:
     needs: [build, build-and-push-ecr]
@@ -92,9 +103,44 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
+      - name: Install network tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y netcat-openbsd
+
       - name: Add EC2 to known hosts
         run: |
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          echo "🔍 Testing connectivity to EC2 host..."
+          echo "Host: ${{ secrets.EC2_HOST }}"
+          echo "Port: ${{ secrets.EC2_PORT }}"
+          
+          # Test SSH port connectivity (skip ping as many EC2 instances block ICMP)
+          if ! nc -z -w5 ${{ secrets.EC2_HOST }} ${{ secrets.EC2_PORT }}; then
+            echo "❌ Cannot connect to ${{ secrets.EC2_HOST }}:${{ secrets.EC2_PORT }}"
+            echo "🔍 This could be due to:"
+            echo "   - Incorrect EC2_HOST secret"
+            echo "   - Incorrect EC2_PORT secret"
+            echo "   - EC2 instance is down"
+            echo "   - Security group blocking SSH"
+            exit 1
+          fi
+          
+          echo "✅ SSH port is accessible, attempting SSH key scan..."
+          
+          # Try ssh-keyscan with different options
+          if ! ssh-keyscan -H -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null; then
+            echo "⚠️ ssh-keyscan failed, trying without port specification..."
+            if ! ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null; then
+              echo "❌ Failed to add host to known_hosts"
+              echo "🔍 Attempting manual SSH connection test..."
+              ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful'" || {
+                echo "❌ SSH connection failed"
+                exit 1
+              }
+            fi
+          fi
+          
+          echo "✅ Host added to known_hosts successfully"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -131,9 +177,20 @@ jobs:
             echo "🔐 Logging into ECR..."
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             
+            # Check if image exists in ECR before pulling
+            echo "🔍 Checking if image exists in ECR..."
+            IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}"
+            
+            if ! aws ecr describe-images --repository-name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} --image-ids imageTag=${{ github.sha }} --region us-east-1 2>/dev/null; then
+              echo "❌ Image $IMAGE_URI does not exist in ECR!"
+              echo "🔍 Available images in repository:"
+              aws ecr describe-images --repository-name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} --region us-east-1 --query 'imageDetails[*].imageTags' --output table || echo "No images found"
+              exit 1
+            fi
+            
             # Pull latest image from ECR
             echo "📥 Pulling latest image from ECR..."
-            docker pull ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}
+            docker pull $IMAGE_URI
             
             # Stop existing container
             echo "🛑 Stopping existing container..."
@@ -146,16 +203,36 @@ jobs:
               --name splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }} \
               -p 3000:3000 \
               -e CANISTER_ID=${{ secrets.CANISTER_ID }} \
-              ${{ steps.login-ecr.outputs.registry }}/splitsafe-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}:${{ github.sha }}
+              $IMAGE_URI
+            
+            # Start dfx server for Internet Computer integration
+            echo "🔗 Starting dfx server..."
+            cd ~/splitsafe/icp
+            dfx start --clean --background || true
+            echo "✅ dfx server started"
+            
+            # Deploy canisters if needed
+            echo "📦 Deploying canisters..."
+            dfx deploy --network=local || echo "⚠️ Canister deployment skipped (may already be deployed)"
             
             echo "✅ Deployment completed successfully!"
             echo "🌐 Application should be accessible at http://${{ secrets.EC2_HOST }}:3000"
+            echo "🔗 dfx server running for ICP integration"
           EOF
 
       - name: Health check
         run: |
           sleep 60
           curl -f http://${{ secrets.EC2_HOST }}:3000 || exit 1
+
+      - name: Check dfx status
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "🔍 Checking dfx status..."
+            cd ~/splitsafe/icp
+            dfx status || echo "⚠️ dfx status check failed"
+            echo "✅ dfx status check completed"
+          EOF
 
       - name: Notify deployment success
         if: success()

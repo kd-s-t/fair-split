@@ -80,6 +80,8 @@ const TransactionForm = () => {
     };
 
     loadTransactionForEdit();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editTxId, principal, form]);
 
   const onSubmit = async (data: FormData) => {

@@ -36,5 +36,6 @@ module "ec2" {
 module "ecr" {
   source = "./modules/ecr"
   
-  environment = var.environment
+  environment   = var.environment
+  ec2_role_arn = module.ec2.ec2_role_arn
 } 

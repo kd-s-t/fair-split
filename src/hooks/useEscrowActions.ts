@@ -182,6 +182,8 @@ export function useEscrowActions(editTxId?: string) {
         console.error("Create escrow failed:", err);
       }
     },
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [principal, dispatch]
   );
 
@@ -208,6 +210,7 @@ export function useEscrowActions(editTxId?: string) {
             }
 
             const hasAction = tx.to.some(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (recipient: any) => recipient.status && Object.keys(recipient.status)[0] !== "pending"
             );
 

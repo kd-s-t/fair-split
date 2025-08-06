@@ -22,7 +22,7 @@ ENV LIGHTNING_CSS_BINARY_TARGET=linux-arm64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
 # Skip husky prepare script in Docker build

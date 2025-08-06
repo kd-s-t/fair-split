@@ -54,8 +54,6 @@ import {
   Bitcoin,
   Wallet,
   RotateCw,
-  Eye,
-  Bot,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -656,7 +654,7 @@ export default function TransactionsPage() {
                         showSuggestions && getTransactionSuggestion(tx) && (
                           <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300 w-full">
                             <div className="flex items-center gap-2">
-                              <Bot className="w-3 h-3 text-blue-400" />
+                              <div className="w-3 h-3 text-blue-400" />
                               {getTransactionSuggestion(tx)}
                             </div>
                           </div>

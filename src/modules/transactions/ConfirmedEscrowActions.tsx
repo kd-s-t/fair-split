@@ -12,7 +12,7 @@ import { generateRandomHash } from "@/lib/utils";
 
 export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading, transaction }: ConfirmedEscrowActionsProps) {
 
-  const txHash = generateRandomHash();
+  // const txHash = generateRandomHash();
 
   const handleCancelSplit = async () => {
     console.log("handleCancelSplit called");
@@ -195,7 +195,7 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
         {/* Warning Note */}
         <div className="w-full mb-4 flex items-center gap-2 rounded-xl bg-[#6B4A1B] border border-[#B8862A] px-4 py-2">
           <CircleAlert size={18} color="#B8862A" />
-          <Typography variant="small" className="font-normal">Note: Release payment only when you're satisfied with the delivered work or received goods.</Typography>
+                           <Typography variant="small" className="font-normal">Note: Release payment only when you&apos;re satisfied with the delivered work or received goods.</Typography>
         </div>
 
         {/* Smart Contract Execution Info */}

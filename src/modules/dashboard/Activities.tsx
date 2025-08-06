@@ -83,6 +83,7 @@ export default function RecentActivities() {
 
             return (
               <ActivityContent
+                key={idx}
                 idx={idx}
                 activity={activity}
                 category={category}
@@ -103,6 +104,7 @@ export default function RecentActivities() {
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
                 <ActivityContent
+                  key={idx}
                   idx={idx}
                   activity={activity}
                   category={category}
@@ -125,6 +127,7 @@ export default function RecentActivities() {
               const txUrl = activity.id ? `/transactions/${activity.id}` : undefined;
               return (
                 <ActivityContent
+                  key={idx}
                   idx={idx}
                   activity={activity}
                   category={category}

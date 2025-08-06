@@ -18,7 +18,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Set environment variables for lightningcss
-ENV LIGHTNING_CSS_BINARY_TARGET=linux-arm64-musl
+ENV LIGHTNING_CSS_BINARY_TARGET=linux-x64-musl
 ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files

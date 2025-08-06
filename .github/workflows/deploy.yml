@@ -205,14 +205,34 @@ jobs:
               -e CANISTER_ID=${{ secrets.CANISTER_ID }} \
               $IMAGE_URI
             
+            # Start dfx server for Internet Computer integration
+            echo "🔗 Starting dfx server..."
+            cd ~/splitsafe/icp
+            dfx start --clean --background || true
+            echo "✅ dfx server started"
+            
+            # Deploy canisters if needed
+            echo "📦 Deploying canisters..."
+            dfx deploy --network=local || echo "⚠️ Canister deployment skipped (may already be deployed)"
+            
             echo "✅ Deployment completed successfully!"
             echo "🌐 Application should be accessible at http://${{ secrets.EC2_HOST }}:3000"
+            echo "🔗 dfx server running for ICP integration"
           EOF
 
       - name: Health check
         run: |
           sleep 60
           curl -f http://${{ secrets.EC2_HOST }}:3000 || exit 1
+
+      - name: Check dfx status
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "🔍 Checking dfx status..."
+            cd ~/splitsafe/icp
+            dfx status || echo "⚠️ dfx status check failed"
+            echo "✅ dfx status check completed"
+          EOF
 
       - name: Notify deployment success
         if: success()

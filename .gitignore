@@ -64,6 +64,11 @@ crash.*.log
 .terraformrc
 terraform.rc
 
+# SSH Keys (never commit private keys)
+*.pem
+*.key
+terraform/modules/*/splitsafe-key-*.pem
+
 # Build artifacts
 *.tar
 *.tar.gz

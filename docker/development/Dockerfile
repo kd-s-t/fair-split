@@ -25,7 +25,7 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 COPY package.json package-lock.json ./
 
 # Install dependencies (ignore scripts to avoid husky issues)
-RUN npm ci --ignore-scripts && npm install -g typescript
+RUN npm ci --ignore-scripts
 
 # Copy source files
 COPY . .
@@ -33,8 +33,8 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies and clean cache
-RUN npm prune --staging && npm cache clean --force
+# Clean cache
+RUN npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

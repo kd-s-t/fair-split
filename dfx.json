@@ -14,6 +14,10 @@
       "main": "icp/test/main_test.mo",
       "type": "motoko",
       "dependencies": ["split_dapp"]
+    },
+    "frontend": {
+      "type": "assets",
+      "source": ["frontend/dist"]
     }
   },
   "defaults": {

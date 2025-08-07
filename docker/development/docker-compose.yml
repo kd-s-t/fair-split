@@ -19,7 +19,11 @@ services:
       - ../../.env
     environment:
       - NODE_ENV=development
-    command: npm run dev
+    command: >
+      sh -c "
+        chown -R nextjs:nodejs /app &&
+        npm run dev
+      "
     depends_on:
       - dfx
     networks:
@@ -39,6 +43,7 @@ services:
     working_dir: /app/icp
     command: >
       sh -c "
+        chown -R dfx:dfx /app &&
         dfx start --clean --host 0.0.0.0:4943 --background &&
         sleep 10 &&
         dfx deploy --network=local &&
@@ -51,4 +56,4 @@ services:
 
 volumes:
   dfx_cache:
-  dfx_config: 
+  dfx_config:

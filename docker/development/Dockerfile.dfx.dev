@@ -1,23 +1,44 @@
-FROM ubuntu:22.04
+# Full DFX Dockerfile for Internet Computer development on EC2
+FROM node:20.17.0
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DFX_NETWORK=local
+ENV DFXVM_INIT_YES=true
+ENV PATH="/home/dfx/.local/share/dfx/bin:$PATH"
 
 # Install system dependencies
-RUN apt update && \
-    apt install -y curl unzip libssl-dev pkg-config build-essential nodejs npm
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    python3 \
+    python3-pip \
+    unzip \
+    libssl-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-# Optional: install Node.js LTS manually if needed
-# RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-#     apt-get install -y nodejs
+# Create a non-root user named dfx
+RUN useradd -m -s /bin/bash dfx
 
-# Install DFX (Internet Computer SDK)
-RUN curl -sSL https://internetcomputer.org/install.sh | bash
+# Switch to the dfx user and install DFX
+USER dfx
+WORKDIR /home/dfx
 
-# Add DFX to PATH
-ENV PATH="/root/bin:$PATH"
+RUN curl -fsSL https://internetcomputer.org/install.sh -o install.sh && \
+    chmod +x install.sh && \
+    ./install.sh && \
+    rm install.sh
 
-# Create working directory
-WORKDIR /project
+# Confirm dfx is installed
+RUN dfx --version
 
-# Install global Node.js dev tools with --unsafe-perm to avoid permission errors
+# Set app working directory
+WORKDIR /app
+
+# Install global Node.js dev tools with unsafe perms (safe in Docker)
 RUN npm install -g --unsafe-perm \
     nodemon \
     ts-node \
@@ -26,8 +47,8 @@ RUN npm install -g --unsafe-perm \
     eslint \
     prettier
 
-# (Optional) Expose DFX default port if running it inside the container
+# Expose DFX replica port
 EXPOSE 4943
 
-# Default command (you can override in docker-compose.yml)
-CMD ["bash"]
+# Default command to start replica
+CMD ["dfx", "start", "--clean", "--host", "0.0.0.0:4943"]

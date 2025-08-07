@@ -24,6 +24,7 @@ services:
         chown -R nextjs:nodejs /app &&
         npm run dev
       "
+    user: root
     depends_on:
       - dfx
     networks:
@@ -36,6 +37,7 @@ services:
       dockerfile: docker/development/Dockerfile.dfx.dev
     ports:
       - "4943:4943"
+    user: root
     volumes:
       - ../..:/app
       - dfx_cache:/home/dfx/.cache

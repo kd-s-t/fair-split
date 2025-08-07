@@ -1,4 +1,4 @@
-# Full DFX Dockerfile for Internet Computer development on EC2
+# DFX Dockerfile for Internet Computer development on EC2
 FROM node:20.17.0
 
 # Set environment variables
@@ -12,34 +12,30 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     git \
-    build-essential \
-    python3 \
-    python3-pip \
     unzip \
     libssl-dev \
     pkg-config \
+    build-essential \
+    python3 \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user named dfx
+# Create non-root user
 RUN useradd -m -s /bin/bash dfx
 
-# Switch to the dfx user and install DFX
+# Switch to dfx user for installing dfx
 USER dfx
 WORKDIR /home/dfx
 
+# Install DFX non-interactively
 RUN curl -fsSL https://internetcomputer.org/install.sh -o install.sh && \
     chmod +x install.sh && \
     ./install.sh && \
     rm install.sh
 
-# Confirm dfx is installed
-RUN dfx --version
-
-# Set app working directory
-WORKDIR /app
-
-# Install global Node.js dev tools with unsafe perms (safe in Docker)
-RUN npm install -g --unsafe-perm \
+# Switch back to root to install global npm tools
+USER root
+RUN npm install -g \
     nodemon \
     ts-node \
     typescript \
@@ -47,8 +43,12 @@ RUN npm install -g --unsafe-perm \
     eslint \
     prettier
 
-# Expose DFX replica port
+# Switch back to dfx user for container runtime
+USER dfx
+WORKDIR /app
+
+# Expose replica port
 EXPOSE 4943
 
-# Default command to start replica
+# Start the local Internet Computer replica
 CMD ["dfx", "start", "--clean", "--host", "0.0.0.0:4943"]

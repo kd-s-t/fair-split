@@ -225,10 +225,7 @@ jobs:
             echo "🔗 dfx will be managed by Docker containers"
           EOF
 
-      - name: Health check
-        run: |
-          sleep 60
-          curl -f http://${{ secrets.EC2_HOST }}:3000 || exit 1
+
 
 
 

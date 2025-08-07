@@ -1,58 +1,24 @@
-# DFX Dockerfile for Internet Computer development (Development Version)
-# Ubuntu-based for EC2 compatibility
 FROM ubuntu:22.04
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV DFX_NETWORK=local
-ENV NODE_ENV=development
+# Install system dependencies
+RUN apt update && \
+    apt install -y curl unzip libssl-dev pkg-config build-essential nodejs npm
 
-# Install system dependencies including development tools
-RUN apt-get update && apt-get install -y \
-    curl \
-    wget \
-    git \
-    build-essential \
-    python3 \
-    python3-pip \
-    vim \
-    nano \
-    htop \
-    tree \
-    unzip \
-    zip \
-    jq \
-    ca-certificates \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*
+# Optional: install Node.js LTS manually if needed
+# RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+#     apt-get install -y nodejs
 
-# Install Node.js 20.x
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+# Install DFX (Internet Computer SDK)
+RUN curl -sSL https://internetcomputer.org/install.sh | bash
 
-# Install additional development tools
-RUN pip3 install --no-cache-dir \
-    ipython \
-    pytest \
-    black \
-    flake8
+# Add DFX to PATH
+ENV PATH="/root/bin:$PATH"
 
-# Create dfx user first
-RUN useradd -m -s /bin/bash dfx
+# Create working directory
+WORKDIR /project
 
-# Install dfx for the dfx user
-USER dfx
-WORKDIR /home/dfx
-RUN curl -fsSL https://internetcomputer.org/install.sh -o install.sh && \
-    chmod +x install.sh && \
-    DFXVM_INIT_YES=true ./install.sh && \
-    rm install.sh
-
-# Add dfx to PATH
-ENV PATH="/home/dfx/.local/share/dfx/bin:$PATH"
-
-# Install additional Node.js development tools
-RUN npm install -g \
+# Install global Node.js dev tools with --unsafe-perm to avoid permission errors
+RUN npm install -g --unsafe-perm \
     nodemon \
     ts-node \
     typescript \
@@ -60,30 +26,8 @@ RUN npm install -g \
     eslint \
     prettier
 
-# Create development workspace
-WORKDIR /app
+# (Optional) Expose DFX default port if running it inside the container
+EXPOSE 4943
 
-# Copy package files for faster builds (if they exist)
-COPY --chown=dfx:dfx package*.json ./
-
-# Install dependencies if package.json exists
-RUN if [ -f package.json ]; then npm install; fi
-
-# Expose dfx port and additional development ports
-EXPOSE 4943 3000 8080
-
-# Create a development startup script
-RUN echo '#!/bin/bash\n\
-echo "Starting DFX development environment..."\n\
-echo "Available commands:"\n\
-echo "  dfx start --clean --host 0.0.0.0:4943"\n\
-echo "  dfx deploy"\n\
-echo "  dfx canister call"\n\
-echo "  npm run dev"\n\
-echo ""\n\
-echo "Starting dfx..."\n\
-dfx start --clean --host 0.0.0.0:4943\n\
-' > /home/dfx/start-dev.sh && chmod +x /home/dfx/start-dev.sh
-
-# Default command for development
-CMD ["/home/dfx/start-dev.sh"] 
+# Default command (you can override in docker-compose.yml)
+CMD ["bash"]

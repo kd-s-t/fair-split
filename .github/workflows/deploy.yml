@@ -203,26 +203,33 @@ jobs:
               exit 1
             fi
             
-            # Pull latest image from ECR
-            echo "📥 Pulling latest image from ECR..."
-            docker pull $IMAGE_URI
-            
-            # Stop existing container
-            echo "🛑 Stopping existing container..."
+            # Stop existing containers
+            echo "🛑 Stopping existing containers..."
+            docker-compose -f docker/development/docker-compose.yml down || true
             docker stop splitsafe-development || true
             docker rm splitsafe-development || true
             
-            # Run new container
-            echo "🚀 Starting new container..."
-            docker run -d \
-              --name splitsafe-development \
-              -p 3000:3000 \
-              -e CANISTER_ID=${{ secrets.CANISTER_ID }} \
-              $IMAGE_URI
+            # Update docker-compose.yml to use ECR image for frontend
+            echo "🔧 Updating docker-compose configuration..."
+            sed -i "s|build:|image: $IMAGE_URI|g" docker/development/docker-compose.yml
+            sed -i "/context:/d" docker/development/docker-compose.yml
+            sed -i "/dockerfile:/d" docker/development/docker-compose.yml
+            
+            # Start all services with docker-compose
+            echo "🚀 Starting all services with docker-compose..."
+            docker-compose -f docker/development/docker-compose.yml up -d
+            
+            # Wait for services to be healthy
+            echo "⏳ Waiting for services to be healthy..."
+            sleep 30
+            
+            # Check service status
+            echo "🔍 Checking service status..."
+            docker-compose -f docker/development/docker-compose.yml ps
             
             echo "✅ Deployment completed successfully!"
-            echo "🌐 Application should be accessible at http://${{ secrets.EC2_HOST }}:3000"
-            echo "🔗 dfx will be managed by Docker containers"
+            echo "🌐 Frontend should be accessible at http://${{ secrets.EC2_HOST }}:3000"
+            echo "🔗 DFX should be accessible at http://${{ secrets.EC2_HOST }}:4943"
           EOF
 
 
@@ -233,7 +240,8 @@ jobs:
         if: success()
         run: |
           echo "✅ Deployment to EC2 completed successfully!"
-          echo "🌐 Application URL: http://${{ secrets.EC2_HOST }}:3000"
+          echo "🌐 Frontend URL: http://${{ secrets.EC2_HOST }}:3000"
+          echo "🔗 DFX URL: http://${{ secrets.EC2_HOST }}:4943"
           echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-development:${{ github.sha }}"
 
       - name: Notify deployment failure

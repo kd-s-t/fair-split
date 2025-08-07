@@ -27,9 +27,7 @@ services:
 
   dfx:
     container_name: dfx
-    build:
-      context: ../..
-      dockerfile: docker/local/Dockerfile.dfx
+    image: fleek/dfx:latest
     platform: linux/amd64
     ports:
       - "4943:4943"
@@ -38,13 +36,7 @@ services:
       - dfx_cache:/home/dfx/.cache
       - dfx_config:/home/dfx/.config
     working_dir: /app/icp
-    command: >
-      sh -c "
-        dfx start --clean --host 0.0.0.0:4943 --background &&
-        sleep 10 &&
-        dfx deploy --network=local &&
-        tail -f /dev/null
-      "
+    command: dfx start --clean --host 0.0.0.0:4943
     environment:
       - DFX_NETWORK=local
     networks:

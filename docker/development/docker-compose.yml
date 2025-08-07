@@ -34,25 +34,15 @@ services:
 
   dfx:
     container_name: dfx-development
-    build:
-      context: ../..
-      dockerfile: docker/development/Dockerfile.dfx.dev
+    image: fleek/dfx:latest
     ports:
       - "4943:4943"
-    user: root
     volumes:
       - ../..:/app
       - dfx_cache:/home/dfx/.cache
       - dfx_config:/home/dfx/.config
     working_dir: /app/icp
-    command: >
-      sh -c "
-        chown -R dfx:dfx /app &&
-        dfx start --clean --host 0.0.0.0:4943 --background &&
-        sleep 10 &&
-        dfx deploy --network=local &&
-        tail -f /dev/null
-      "
+    command: dfx start --clean --host 0.0.0.0:4943
     environment:
       - DFX_NETWORK=local
     networks:

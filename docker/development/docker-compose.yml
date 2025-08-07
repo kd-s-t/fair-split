@@ -1,14 +1,54 @@
+name: safesplit-development
+
+networks:
+  safesplit-network:
+    driver: bridge
+
 services:
-  safesplit-development:
-    container_name: safesplit-development
+  frontend:
+    container_name: frontend-development
     build:
       context: ../..
       dockerfile: docker/development/Dockerfile
     ports:
-      - "3001:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
+      - "3000:3000"
+    volumes:
+      - ../..:/app
+      - /app/node_modules
     env_file:
       - ../../.env
-    restart: unless-stopped 
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    depends_on:
+      - dfx
+    networks:
+      - safesplit-network
+
+  dfx:
+    container_name: dfx-development
+    build:
+      context: ../..
+      dockerfile: docker/local/Dockerfile.dfx
+    ports:
+      - "4943:4943"
+    volumes:
+      - ../..:/app
+      - dfx_cache:/home/dfx/.cache
+      - dfx_config:/home/dfx/.config
+    working_dir: /app/icp
+    command: >
+      sh -c "
+        dfx start --clean --host 0.0.0.0:4943 --background &&
+        sleep 10 &&
+        dfx deploy --network=local &&
+        tail -f /dev/null
+      "
+    environment:
+      - DFX_NETWORK=local
+    networks:
+      - safesplit-network
+
+volumes:
+  dfx_cache:
+  dfx_config: 

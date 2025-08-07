@@ -2,7 +2,7 @@
 FROM node:20.17.0-alpine
 
 # Set environment variables
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 ENV PORT=3000
 
 # Install system dependencies
@@ -24,18 +24,11 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install all dependencies including dev dependencies needed for build
-ENV NODE_ENV=development
+# Install all dependencies including dev dependencies
 RUN npm ci --ignore-scripts
-ENV NODE_ENV=production
+
 # Copy source files
 COPY . .
-
-# Build the application
-RUN npm run build
-
-# Clean cache
-RUN npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -52,5 +45,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["npm", "start"] 
+# Start the development server
+CMD ["npm", "run", "dev"] 

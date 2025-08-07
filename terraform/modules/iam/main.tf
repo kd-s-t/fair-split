@@ -68,6 +68,12 @@ resource "aws_iam_role_policy" "ecr_policy" {
   })
 }
 
+# Attach SSM managed policy for EC2 to connect to Systems Manager
+resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # Instance Profile for EC2
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "splitsafe-ec2-profile-${var.environment}"

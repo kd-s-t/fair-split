@@ -29,7 +29,7 @@ services:
     container_name: dfx-development
     build:
       context: ../..
-      dockerfile: docker/local/Dockerfile.dfx
+      dockerfile: docker/development/Dockerfile.dfx.dev
     ports:
       - "4943:4943"
     volumes:

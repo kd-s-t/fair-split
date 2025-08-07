@@ -27,12 +27,12 @@ RUN useradd -m -s /bin/bash dfx
 USER dfx
 WORKDIR /home/dfx
 
-# Install DFX non-interactively and set default version via sourced env
+# Install DFX non-interactively and set a specific version
 RUN curl -fsSL https://internetcomputer.org/install.sh -o install.sh && \
     chmod +x install.sh && \
     ./install.sh && \
     rm install.sh && \
-    /bin/bash -c "source /home/dfx/.local/share/dfx/env && dfxvm install latest && dfxvm default latest"
+    /bin/bash -c "source /home/dfx/.local/share/dfx/env && dfxvm install 0.28.0 && dfxvm default 0.28.0"
 
 # Switch back to root to install global dev tools
 USER root

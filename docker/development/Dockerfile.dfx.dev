@@ -23,19 +23,18 @@ RUN apt-get update && apt-get install -y \
 # Create non-root user
 RUN useradd -m -s /bin/bash dfx
 
-# Switch to dfx user for installing dfx
+# Switch to dfx user to install DFX
 USER dfx
 WORKDIR /home/dfx
 
-# Install DFX non-interactively
+# Install DFX non-interactively and set default version via sourced env
 RUN curl -fsSL https://internetcomputer.org/install.sh -o install.sh && \
     chmod +x install.sh && \
     ./install.sh && \
     rm install.sh && \
-    /home/dfx/.local/share/dfxvm/bin/dfxvm install latest && \
-    /home/dfx/.local/share/dfxvm/bin/dfxvm default latest
+    /bin/bash -c "source /home/dfx/.local/share/dfx/env && dfxvm install latest && dfxvm default latest"
 
-# Switch back to root to install global npm tools
+# Switch back to root to install global dev tools
 USER root
 RUN npm install -g \
     nodemon \
@@ -45,12 +44,12 @@ RUN npm install -g \
     eslint \
     prettier
 
-# Switch back to dfx user for container runtime
+# Switch back to dfx user for runtime
 USER dfx
 WORKDIR /app
 
 # Expose replica port
 EXPOSE 4943
 
-# Start the local Internet Computer replica
-CMD ["dfx", "start", "--clean", "--host", "0.0.0.0:4943"]
+# Default command (overridden in docker-compose.yml)
+CMD ["bash"]

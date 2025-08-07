@@ -31,7 +31,9 @@ WORKDIR /home/dfx
 RUN curl -fsSL https://internetcomputer.org/install.sh -o install.sh && \
     chmod +x install.sh && \
     ./install.sh && \
-    rm install.sh
+    rm install.sh && \
+    /home/dfx/.local/share/dfxvm/bin/dfxvm install latest && \
+    /home/dfx/.local/share/dfxvm/bin/dfxvm default latest
 
 # Switch back to root to install global npm tools
 USER root

@@ -13,7 +13,12 @@ RUN apk add --no-cache \
     build-base \
     python3 \
     make \
-    g++
+    g++ \
+    bash
+
+# Install dfx
+RUN sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+ENV PATH="/root/.local/share/dfx/bin:$PATH"
 
 WORKDIR /app
 

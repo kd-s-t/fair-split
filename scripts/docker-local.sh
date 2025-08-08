@@ -40,27 +40,32 @@ case "${1:-up}" in
     echo "⏳ Waiting for dfx to be ready..."
     sleep 5
     
-    # Deploy canisters
+    # Deploy canisters via dfx container
     echo "🔧 Deploying canisters..."
-    dfx deploy split_dapp --mode=reinstall --argument "(principal \"$(dfx identity get-principal)\", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y
+    ADMIN_PRINCIPAL=$(docker exec dfx dfx identity get-principal || docker exec dfx-development dfx identity get-principal)
+    docker exec dfx sh -lc 'cd /app/icp && dfx deploy split_dapp --mode=reinstall --argument "(principal '"'"$ADMIN_PRINCIPAL'"'", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y' 2>/dev/null || \
+    docker exec dfx-development sh -lc 'cd /app/icp && dfx deploy split_dapp --mode=reinstall --argument "(principal '"'"$ADMIN_PRINCIPAL'"'", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y'
     
     # Generate frontend bindings
     echo "🛠 Generating frontend bindings..."
-    dfx generate split_dapp
+    docker exec dfx sh -lc 'cd /app/icp && dfx generate split_dapp' 2>/dev/null || \
+    docker exec dfx-development sh -lc 'cd /app/icp && dfx generate split_dapp'
     
     # Set initial balances
     echo "💰 Setting initial balances..."
     FRONTEND_PRINCIPAL="uu3ee-ff3xm-vhws5-zxy6q-vtsvx-q2uhy-4ligb-wcltn-dd6xn-bckkv-mqe"
-    ADMIN_PRINCIPAL=$(dfx identity get-principal)
     
     # Set initial ICP balance (0 ICP)
-    dfx canister call split_dapp setInitialBalance "(principal \"$FRONTEND_PRINCIPAL\", 0, principal \"$ADMIN_PRINCIPAL\")"
+    docker exec dfx sh -lc 'cd /app/icp && dfx canister call split_dapp setInitialBalance "(principal \"'$FRONTEND_PRINCIPAL'\", 0, principal \"'$ADMIN_PRINCIPAL'\")"' 2>/dev/null || \
+    docker exec dfx-development sh -lc 'cd /app/icp && dfx canister call split_dapp setInitialBalance "(principal \"'$FRONTEND_PRINCIPAL'\", 0, principal \"'$ADMIN_PRINCIPAL'\")"'
     
     # Set initial Bitcoin balance (10 BTC)
-    dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$FRONTEND_PRINCIPAL\", 1000000000)"
+    docker exec dfx sh -lc 'cd /app/icp && dfx canister call split_dapp setBitcoinBalance "(principal \"'$ADMIN_PRINCIPAL'\", principal \"'$FRONTEND_PRINCIPAL'\", 1000000000)"' 2>/dev/null || \
+    docker exec dfx-development sh -lc 'cd /app/icp && dfx canister call split_dapp setBitcoinBalance "(principal \"'$ADMIN_PRINCIPAL'\", principal \"'$FRONTEND_PRINCIPAL'\", 1000000000)"'
     
     # Bind Bitcoin address
-    dfx canister call split_dapp setBitcoinAddress "(principal \"$FRONTEND_PRINCIPAL\", \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\")"
+    docker exec dfx sh -lc 'cd /app/icp && dfx canister call split_dapp setBitcoinAddress "(principal \"'$FRONTEND_PRINCIPAL'\", \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\")"' 2>/dev/null || \
+    docker exec dfx-development sh -lc 'cd /app/icp && dfx canister call split_dapp setBitcoinAddress "(principal \"'$FRONTEND_PRINCIPAL'\", \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\")"'
     
     echo "✅ Canisters deployed and configured!"
     ;;

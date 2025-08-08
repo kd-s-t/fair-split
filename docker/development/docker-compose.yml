@@ -19,14 +19,6 @@ services:
       - ../../.env
     environment:
       - NODE_ENV=development
-    command: >
-      sh -c "
-        chown -R dfx:dfx /app &&
-        . /home/dfx/.local/share/dfx/env &&
-        dfx start --clean --host 0.0.0.0:4943 &&
-        tail -f /dev/null
-      "
-    user: root
     depends_on:
       - dfx
     networks:

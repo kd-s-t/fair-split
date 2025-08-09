@@ -39,12 +39,9 @@ jobs:
           DFX_USER=${{ secrets.EC2_USER }}
           PROJECT_DIR=${{ secrets.EC2_PROJECT_DIR }}
 
-          # Ensure repo present and up to date on DFX host
-          (
-          ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "PROJECT_DIR='$PROJECT_DIR' ADMIN_PRINCIPAL='${{ secrets.ADMIN_PRINCIPAL }}' bash -s" <<'REMOTE'
+          REMOTE_CMD='
             set -e
-            mkdir -p "$PROJECT_DIR"
-            cd "$PROJECT_DIR"
+            mkdir -p "$PROJECT_DIR" && cd "$PROJECT_DIR"
             if [ ! -d .git ]; then
               git clone https://github.com/${{ github.repository }}.git .
             else
@@ -52,51 +49,24 @@ jobs:
               git checkout ${{ github.ref_name }} || git checkout -B ${{ github.ref_name }}
               git pull origin ${{ github.ref_name }}
             fi
-
-            # Ensure dfx is installed and on PATH
-            if ! command -v dfx >/dev/null 2>&1; then
-              echo "📦 Installing dfx..."
-              export DFXVM_INIT_YES=1
-              curl -fsSL https://internetcomputer.org/install.sh | bash
-            fi
-            # Load dfx env and PATH
-            if [ -f "$HOME/.local/share/dfx/env" ]; then
-              . "$HOME/.local/share/dfx/env"
-            fi
+            [ -f "$HOME/.local/share/dfx/env" ] && . "$HOME/.local/share/dfx/env" || true
             export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"
-
-            # Ensure replica is running (use existing dockerized replica if present)
-            if curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
-              echo "✅ Found running dfx replica on 127.0.0.1:4943; will use it"
-            else
-              echo "🚀 Starting local dfx replica..."
-              pkill -f 'dfx.*replica' >/dev/null 2>&1 || true
+            if ! curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
+              pkill -f "dfx.*replica" >/dev/null 2>&1 || true
               dfx start --clean --host 127.0.0.1:4943 --background
-              echo "⏳ Waiting for dfx replica to be ready..."
-              for i in {1..30}; do
-                if curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
-                  echo "✅ dfx replica is up"
-                  break
-                fi
-                sleep 2
-              done
+              sleep 5
             fi
-
-            # Deploy the canister (use repo root that contains dfx.json)
-            cd "$PROJECT_DIR"
-            export DFX_NETWORK=local
-            export DFX_HOST=http://127.0.0.1:4943
-            # Determine admin principal: prefer provided secret, else current identity
-            if [ -z "$ADMIN_PRINCIPAL" ]; then
-              ADMIN_PRINCIPAL=$(dfx identity get-principal)
-            fi
+            export DFX_NETWORK=local DFX_HOST=http://127.0.0.1:4943
+            ADMIN_PRINCIPAL="${{ secrets.ADMIN_PRINCIPAL }}"
+            if [ -z "$ADMIN_PRINCIPAL" ]; then ADMIN_PRINCIPAL=$(dfx identity get-principal); fi
             echo "Admin principal: $ADMIN_PRINCIPAL"
             dfx deploy split_dapp --argument "(principal \"$ADMIN_PRINCIPAL\", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y
-REMOTE
-          ) || true
+          '
+
+          ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" bash -lc "$REMOTE_CMD"
 
           # Read canister id from remote and expose as output
-          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"\$HOME/.local/share/dfx/bin:\$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR' && dfx canister id split_dapp" | tr -d '\r')
+          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "bash -lc 'export PATH=\"\$HOME/.local/share/dfx/bin:\$HOME/.local/bin:\$PATH\"; cd \"$PROJECT_DIR\" && dfx canister id split_dapp'" | tr -d '\r')
           echo "Canister ID: $CANISTER_ID"
           echo "canister_id=$CANISTER_ID" >> "$GITHUB_OUTPUT"
 

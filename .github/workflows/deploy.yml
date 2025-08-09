@@ -29,19 +29,19 @@ jobs:
           ssh -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
             echo "📦 Preparing dfx workspace..."
-            mkdir -p ~/apps/safesplit || true
-            if [ ! -d "~/apps/safesplit/.git" ]; then
+            mkdir -p "$HOME/apps/safesplit" || true
+            if [ ! -d "$HOME/apps/safesplit/.git" ]; then
               echo "Cloning repo..."
-              git clone https://github.com/${{ github.repository }}.git ~/apps/safesplit || true
+              git clone https://github.com/${{ github.repository }}.git "$HOME/apps/safesplit" || true
             fi
-            cd ~/apps/safesplit && git fetch --all && git checkout ${{ github.ref_name }} && git pull || true
+            cd "$HOME/apps/safesplit" && git fetch --all && git checkout ${{ github.ref_name }} && git pull || true
 
-            mkdir -p ~/dfxproj
-            cp -f ~/apps/safesplit/dfx.json ~/dfxproj/
-            rsync -av --delete ~/apps/safesplit/icp/src/ ~/dfxproj/src/
+            mkdir -p "$HOME/dfxproj"
+            cp -f "$HOME/apps/safesplit/dfx.json" "$HOME/dfxproj/"
+            rsync -av --delete "$HOME/apps/safesplit/icp/src/" "$HOME/dfxproj/src/"
 
             echo "🚀 Deploying canisters to local replica..."
-            docker exec -i dfx bash -lc 'cd /app && dfx identity new --storage-mode plaintext deployer || true && dfx identity use deployer && dfx deploy --network local'
+            docker exec -i dfx bash -lc 'cd /app && (dfx identity list | grep -q "^deployer$" || dfx identity new deployer) && dfx identity use deployer && dfx deploy --network local'
 
             LOCAL_ID=$(docker exec -i dfx bash -lc 'cd /app && dfx canister id split_dapp' | tr -d '\r')
             echo "Canister ID: $LOCAL_ID"

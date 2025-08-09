@@ -15,6 +15,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Read SSM public envs for build
+        id: read-ssm
+        run: |
+          AWS_REGION=us-east-1
+          SSM_PATH="/splitsafe/development"
+          mapfile -t lines < <(aws ssm get-parameters-by-path --path "$SSM_PATH" --with-decryption --recursive --region "$AWS_REGION" --query 'Parameters[*].[Name,Value]' --output text)
+          for l in "${lines[@]}"; do
+            k=$(echo "$l" | awk '{print $1}')
+            v=$(echo "$l" | awk '{print $2}')
+            key=${k##*/}
+            echo "$key=$v" >> $GITHUB_OUTPUT
+          done
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -70,12 +83,29 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: splitsafe-development
           IMAGE_TAG: ${{ github.sha }}
+          # Pull public envs from SSM so Next.js client bundle gets them at build time
+          NEXT_PUBLIC_DFX_HOST: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_DFX_HOST }}
+          NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP }}
+          NEXT_PUBLIC_DOMAIN: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_DOMAIN }}
+          NEXT_PUBLIC_DEVELOPMENT_DOMAIN: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_DEVELOPMENT_DOMAIN }}
+          NEXT_PUBLIC_BLOCKSTREAM_URL: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_BLOCKSTREAM_URL }}
+          NEXT_PUBLIC_MEMPOOL_URL: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_MEMPOOL_URL }}
+          NEXT_PUBLIC_ICP_DASHBOARD_URL: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_ICP_DASHBOARD_URL }}
+          NEXT_PUBLIC_ICSCAN_URL: ${{ steps.read-ssm.outputs.NEXT_PUBLIC_ICSCAN_URL }}
         run: |
           echo "🐳 Building Production Docker image..."
           docker buildx create --use || true
           docker buildx build --platform linux/amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             -f docker/production/Dockerfile \
+            --build-arg NEXT_PUBLIC_DFX_HOST="$NEXT_PUBLIC_DFX_HOST" \
+            --build-arg NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP="$NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP" \
+            --build-arg NEXT_PUBLIC_DOMAIN="$NEXT_PUBLIC_DOMAIN" \
+            --build-arg NEXT_PUBLIC_DEVELOPMENT_DOMAIN="$NEXT_PUBLIC_DEVELOPMENT_DOMAIN" \
+            --build-arg NEXT_PUBLIC_BLOCKSTREAM_URL="$NEXT_PUBLIC_BLOCKSTREAM_URL" \
+            --build-arg NEXT_PUBLIC_MEMPOOL_URL="$NEXT_PUBLIC_MEMPOOL_URL" \
+            --build-arg NEXT_PUBLIC_ICP_DASHBOARD_URL="$NEXT_PUBLIC_ICP_DASHBOARD_URL" \
+            --build-arg NEXT_PUBLIC_ICSCAN_URL="$NEXT_PUBLIC_ICSCAN_URL" \
             --push .
           
           # Verify the image was pushed successfully

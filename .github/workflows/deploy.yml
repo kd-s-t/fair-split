@@ -81,15 +81,15 @@ jobs:
               done
             fi
 
-            # Deploy the canister
-            cd icp
+            # Deploy the canister (use repo root that contains dfx.json)
+            cd "$PROJECT_DIR"
             export DFX_NETWORK=local
             export DFX_HOST=http://127.0.0.1:4943
             dfx deploy split_dapp -y
           REMOTE
 
           # Read canister id from remote and expose as output
-          CANISTER_ID=$(ssh -tt -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"$HOME/.local/share/dfx/bin:$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR/icp' && dfx canister id split_dapp" | tr -d '\r')
+          CANISTER_ID=$(ssh -tt -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"$HOME/.local/share/dfx/bin:$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR' && dfx canister id split_dapp" | tr -d '\r')
           echo "Canister ID: $CANISTER_ID"
           echo "canister_id=$CANISTER_ID" >> "$GITHUB_OUTPUT"
 

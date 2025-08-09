@@ -15,27 +15,20 @@ import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
 import type { NormalizedTransaction } from '@/modules/transactions/types'
 
-// Environment variable logging
+// Environment variable logging (client-safe, explicit keys only)
 const logEnvironmentVariables = () => {
   console.log('🌍 Environment Variables:')
   console.log('NODE_ENV:', process.env.NODE_ENV)
-  console.log('NEXT_PUBLIC_* variables:', process.env)
-  
-  // Log all NEXT_PUBLIC_ variables
-  Object.keys(process.env).forEach(key => {
-    if (key.startsWith('NEXT_PUBLIC_')) {
-      console.log(`  ${key}:`, process.env[key])
-    }
+  console.log('NEXT_PUBLIC_* (explicit):', {
+    NEXT_PUBLIC_DFX_HOST: process.env.NEXT_PUBLIC_DFX_HOST,
+    NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP: process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP,
+    NEXT_PUBLIC_DOMAIN: process.env.NEXT_PUBLIC_DOMAIN,
+    NEXT_PUBLIC_DEVELOPMENT_DOMAIN: process.env.NEXT_PUBLIC_DEVELOPMENT_DOMAIN,
+    NEXT_PUBLIC_BLOCKSTREAM_URL: process.env.NEXT_PUBLIC_BLOCKSTREAM_URL,
+    NEXT_PUBLIC_MEMPOOL_URL: process.env.NEXT_PUBLIC_MEMPOOL_URL,
+    NEXT_PUBLIC_ICP_DASHBOARD_URL: process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL,
+    NEXT_PUBLIC_ICSCAN_URL: process.env.NEXT_PUBLIC_ICSCAN_URL,
   })
-  
-  // Log other important variables (without exposing sensitive data)
-  const safeVars = ['NODE_ENV', 'VERCEL_ENV', 'VERCEL_URL', 'NEXT_PUBLIC_VERCEL_URL']
-  safeVars.forEach(key => {
-    if (process.env[key]) {
-      console.log(`  ${key}:`, process.env[key])
-    }
-  })
-  
   console.log('🌍 End Environment Variables')
 }
 

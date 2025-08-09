@@ -9,56 +9,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
-  dfx-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Add EC2 to known hosts
-        run: |
-          ssh-keyscan -H -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-
-      - name: Deploy Motoko canisters to local dfx and update SSM
-        run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.EC2_PORT }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            echo "📦 Preparing dfx workspace..."
-            mkdir -p "$HOME/apps/safesplit" || true
-            if [ ! -d "$HOME/apps/safesplit/.git" ]; then
-              echo "Cloning repo..."
-              git clone https://github.com/${{ github.repository }}.git "$HOME/apps/safesplit" || true
-            fi
-            cd "$HOME/apps/safesplit" && git fetch --all && git checkout ${{ github.ref_name }} && git pull || true
-
-            mkdir -p "$HOME/dfxproj"
-            cp -f "$HOME/apps/safesplit/dfx.json" "$HOME/dfxproj/"
-            rsync -av --delete "$HOME/apps/safesplit/icp/src/" "$HOME/dfxproj/src/"
-
-            echo "🔎 Ensuring dfx container is running..."
-            docker restart dfx >/dev/null 2>&1 || true
-            sleep 3
-            echo "🔎 Waiting for local replica to be ready (dfx ping)..."
-            docker exec -i dfx bash -lc 'for i in $(seq 1 60); do dfx ping local >/dev/null 2>&1 && exit 0 || sleep 2; done; echo "Replica not responding" >&2; exit 1'
-
-            echo "🚀 Deploying canisters to local replica..."
-            docker exec -i dfx bash -lc 'cd /app && (dfx identity list | grep -q "^deployer$" || dfx identity new deployer) && dfx identity use deployer && dfx deploy --network local'
-
-            LOCAL_ID=$(docker exec -i dfx bash -lc 'cd /app && dfx canister id split_dapp' | tr -d '\r')
-            echo "Canister ID: $LOCAL_ID"
-
-            echo "🔑 Updating SSM parameters for frontend..."
-            aws ssm put-parameter --name "/splitsafe/development/NEXT_PUBLIC_DFX_HOST" --type String --value "https://thesplitsafe.com" --overwrite --region us-east-1
-            aws ssm put-parameter --name "/splitsafe/development/NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP" --type String --value "$LOCAL_ID" --overwrite --region us-east-1
-          EOF
-
   build:
-    needs: dfx-deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

@@ -180,7 +180,7 @@ resource "aws_instance" "splitsafe_server" {
       "  docker volume create dfx_cache >/dev/null",
       "  docker volume create dfx_config >/dev/null",
       "  docker pull fleek/dfx:latest || true",
-      "  docker run -d --name dfx --restart unless-stopped --cpus 1 --memory 1g --memory-swap 2g -p 127.0.0.1:4943:4943 -e DFX_NETWORK=local -v dfx_cache:/home/dfx/.cache -v dfx_config:/home/dfx/.config -v /home/ubuntu/dfxproj:/app -w /app fleek/dfx:latest dfx start --clean --host 0.0.0.0:4943",
+      "  docker run -d --name dfx --restart unless-stopped --cpus 1 --memory 1g --memory-swap 2g --user 0 -p 127.0.0.1:4943:4943 -e DFX_NETWORK=local -v dfx_cache:/home/dfx/.cache -v dfx_config:/home/dfx/.config -v /home/ubuntu/dfxproj:/app -w /app fleek/dfx:latest dfx start --clean --host 0.0.0.0:4943",
       "  echo '✅ dfx replica started'",
       "fi"
     ]

@@ -94,7 +94,7 @@ jobs:
           REMOTE || true
 
           # Read canister id from remote and expose as output
-          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"$HOME/.local/share/dfx/bin:$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR' && dfx canister id split_dapp" | tr -d '\r')
+          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"\$HOME/.local/share/dfx/bin:\$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR' && dfx canister id split_dapp" | tr -d '\r')
           echo "Canister ID: $CANISTER_ID"
           echo "canister_id=$CANISTER_ID" >> "$GITHUB_OUTPUT"
 

@@ -55,7 +55,7 @@ module "ec2" {
   security_group_id    = module.security.security_group_id
   private_key_content  = module.security.private_key_content
   instance_profile_name = module.iam.ec2_instance_profile_name
-  enable_dfx           = true
+  enable_dfx           = false
   dfx_domain           = var.dfx_domain
 }
 

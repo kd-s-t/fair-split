@@ -316,20 +316,7 @@ jobs:
             sudo systemctl enable --now caddy
             sudo systemctl reload caddy || true
 
-            # Ensure local dfx replica is running and bound to loopback, as root (for volume perms)
-            echo "🧪 Ensuring local dfx replica is running..."
-            if ! docker ps --format '{{.Names}}' | grep -q '^dfx$'; then
-              docker rm -f dfx 2>/dev/null || true
-              docker volume create dfx_cache >/dev/null
-              docker volume create dfx_config >/dev/null
-              docker run -d --name dfx --restart unless-stopped --cpus 1 --memory 1g --memory-swap 2g --user 0 \
-                -p 127.0.0.1:4943:4943 -e DFX_NETWORK=local \
-                -v dfx_cache:/home/dfx/.cache -v dfx_config:/home/dfx/.config \
-                fleek/dfx:latest dfx start --clean --host 0.0.0.0:4943
-              echo "✅ dfx container started"
-            else
-              echo "✅ dfx container already running"
-            fi
+            # Note: Dockerized dfx is deprecated; we run host dfx via systemd now.
 
             # Wait for services to be healthy
             echo "⏳ Waiting for services to be healthy..."

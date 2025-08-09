@@ -52,6 +52,13 @@ jobs:
               git pull origin ${{ github.ref_name }}
             fi
 
+            # Ensure dfx is installed and on PATH
+            if ! command -v dfx >/dev/null 2>&1; then
+              echo "📦 Installing dfx..."
+              curl -fsSL https://internetcomputer.org/install.sh | sh
+            fi
+            export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"
+
             # Start dfx if not running
             pgrep -f 'dfx.*replica' >/dev/null 2>&1 || dfx start --host 0.0.0.0 --background
 
@@ -62,7 +69,7 @@ jobs:
           REMOTE
 
           # Read canister id from remote and expose as output
-          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "cd '$PROJECT_DIR/icp' && dfx canister id split_dapp" | tr -d '\r')
+          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"$HOME/.local/share/dfx/bin:$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR/icp' && dfx canister id split_dapp" | tr -d '\r')
           echo "Canister ID: $CANISTER_ID"
           echo "canister_id=$CANISTER_ID" >> "$GITHUB_OUTPUT"
 

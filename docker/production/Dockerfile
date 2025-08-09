@@ -28,6 +28,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
+# Ensure runtime cache directory exists and is writable by the non-root user
+RUN mkdir -p /app/.next/cache && chown -R 1001:1001 /app/.next
+
 USER nextjs
 EXPOSE 3000
 

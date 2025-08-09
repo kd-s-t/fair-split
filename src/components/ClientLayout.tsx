@@ -19,7 +19,7 @@ import type { NormalizedTransaction } from '@/modules/transactions/types'
 const logEnvironmentVariables = () => {
   console.log('🌍 Environment Variables:')
   console.log('NODE_ENV:', process.env.NODE_ENV)
-  console.log('NEXT_PUBLIC_* variables:')
+  console.log('NEXT_PUBLIC_* variables:', process.env)
   
   // Log all NEXT_PUBLIC_ variables
   Object.keys(process.env).forEach(key => {

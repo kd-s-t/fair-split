@@ -260,15 +260,15 @@ jobs:
             echo "🌐 Writing Caddyfile for $DOMAIN and $APP_DOMAIN..."
             sudo mkdir -p /etc/caddy
             sudo tee /etc/caddy/Caddyfile >/dev/null <<CADDY
-${DOMAIN} {
-  encode zstd gzip
-  reverse_proxy 127.0.0.1:4943
-}
-${APP_DOMAIN} {
-  encode zstd gzip
-  reverse_proxy 127.0.0.1:3000
-}
-CADDY
+            ${DOMAIN} {
+              encode zstd gzip
+              reverse_proxy 127.0.0.1:4943
+            }
+            ${APP_DOMAIN} {
+              encode zstd gzip
+              reverse_proxy 127.0.0.1:3000
+            }
+            CADDY
             sudo caddy validate --config /etc/caddy/Caddyfile || { echo "❌ Invalid Caddyfile"; exit 1; }
             sudo systemctl enable --now caddy
             sudo systemctl reload caddy || true
@@ -308,11 +308,6 @@ CADDY
             echo "🌐 DFX (via HTTPS reverse proxy) should be at https://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
             
           EOF
-
-
-
-
-
       - name: Notify deployment success
         if: success()
         run: |

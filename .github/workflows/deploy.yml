@@ -64,21 +64,27 @@ jobs:
             fi
             export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"
 
-            # Start clean replica and wait until it is ready
-            pkill -f 'dfx.*replica' >/dev/null 2>&1 || true
-            dfx start --clean --host 0.0.0.0 --background
-            echo "⏳ Waiting for dfx replica to be ready..."
-            for i in {1..30}; do
-              if curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
-                echo "✅ dfx replica is up"
-                break
-              fi
-              sleep 2
-            done
+            # Ensure replica is running (use existing dockerized replica if present)
+            if curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
+              echo "✅ Found running dfx replica on 127.0.0.1:4943; will use it"
+            else
+              echo "🚀 Starting local dfx replica..."
+              pkill -f 'dfx.*replica' >/dev/null 2>&1 || true
+              dfx start --clean --host 127.0.0.1:4943 --background
+              echo "⏳ Waiting for dfx replica to be ready..."
+              for i in {1..30}; do
+                if curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
+                  echo "✅ dfx replica is up"
+                  break
+                fi
+                sleep 2
+              done
+            fi
 
             # Deploy the canister
             cd icp
             export DFX_NETWORK=local
+            export DFX_HOST=http://127.0.0.1:4943
             dfx deploy split_dapp -y
           REMOTE
 

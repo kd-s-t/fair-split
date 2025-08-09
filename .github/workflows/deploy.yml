@@ -58,10 +58,23 @@ jobs:
               export DFXVM_INIT_YES=1
               curl -fsSL https://internetcomputer.org/install.sh | bash
             fi
+            # Load dfx env and PATH
+            if [ -f "$HOME/.local/share/dfx/env" ]; then
+              . "$HOME/.local/share/dfx/env"
+            fi
             export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"
 
-            # Start dfx if not running
-            pgrep -f 'dfx.*replica' >/dev/null 2>&1 || dfx start --host 0.0.0.0 --background
+            # Start clean replica and wait until it is ready
+            pkill -f 'dfx.*replica' >/dev/null 2>&1 || true
+            dfx start --clean --host 0.0.0.0 --background
+            echo "⏳ Waiting for dfx replica to be ready..."
+            for i in {1..30}; do
+              if curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
+                echo "✅ dfx replica is up"
+                break
+              fi
+              sleep 2
+            done
 
             # Deploy the canister
             cd icp

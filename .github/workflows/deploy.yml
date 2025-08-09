@@ -39,29 +39,28 @@ jobs:
           DFX_USER=${{ secrets.EC2_USER }}
           PROJECT_DIR=${{ secrets.EC2_PROJECT_DIR }}
 
-          REMOTE_CMD='
-            set -e
-            mkdir -p "$PROJECT_DIR" && cd "$PROJECT_DIR"
-            if [ ! -d .git ]; then
-              git clone https://github.com/${{ github.repository }}.git .
-            else
-              git fetch --all --tags
-              git checkout ${{ github.ref_name }} || git checkout -B ${{ github.ref_name }}
-              git pull origin ${{ github.ref_name }}
-            fi
-            [ -f "$HOME/.local/share/dfx/env" ] && . "$HOME/.local/share/dfx/env" || true
-            export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"
-            if ! curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then
-              pkill -f "dfx.*replica" >/dev/null 2>&1 || true
-              dfx start --clean --host 127.0.0.1:4943 --background
-              sleep 5
-            fi
-            export DFX_NETWORK=local DFX_HOST=http://127.0.0.1:4943
-            ADMIN_PRINCIPAL="${{ secrets.ADMIN_PRINCIPAL }}"
-            if [ -z "$ADMIN_PRINCIPAL" ]; then ADMIN_PRINCIPAL=$(dfx identity get-principal); fi
-            echo "Admin principal: $ADMIN_PRINCIPAL"
-            dfx deploy split_dapp --argument "(principal \"$ADMIN_PRINCIPAL\", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y
-          '
+          REMOTE_CMD='set -e; \
+            PROJECT_DIR="'$PROJECT_DIR'"; \
+            mkdir -p "$PROJECT_DIR"; cd "$PROJECT_DIR"; \
+            if [ ! -d .git ]; then \
+              git clone https://github.com/${{ github.repository }}.git .; \
+            else \
+              git fetch --all --tags; \
+              git checkout ${{ github.ref_name }} || git checkout -B ${{ github.ref_name }}; \
+              git pull origin ${{ github.ref_name }}; \
+            fi; \
+            [ -f "$HOME/.local/share/dfx/env" ] && . "$HOME/.local/share/dfx/env" || true; \
+            export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"; \
+            if ! curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then \
+              pkill -f "dfx.*replica" >/dev/null 2>&1 || true; \
+              dfx start --clean --host 127.0.0.1:4943 --background; \
+              sleep 5; \
+            fi; \
+            export DFX_NETWORK=local DFX_HOST=http://127.0.0.1:4943; \
+            ADMIN_PRINCIPAL="${{ secrets.ADMIN_PRINCIPAL }}"; \
+            if [ -z "$ADMIN_PRINCIPAL" ]; then ADMIN_PRINCIPAL=$(dfx identity get-principal); fi; \
+            echo "Admin principal: $ADMIN_PRINCIPAL"; \
+            dfx deploy split_dapp --argument "(principal \"$ADMIN_PRINCIPAL\", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y'
 
           ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" bash -lc "$REMOTE_CMD"
 

@@ -38,6 +38,8 @@ jobs:
           DFX_PORT=${{ secrets.EC2_PORT }}
           DFX_USER=${{ secrets.EC2_USER }}
           PROJECT_DIR=${{ secrets.EC2_PROJECT_DIR }}
+          # Fallback if secret is missing
+          : "${PROJECT_DIR:=/home/ubuntu/splitsafe}"
 
           REMOTE_CMD='set -e; \
             PROJECT_DIR="'$PROJECT_DIR'"; \

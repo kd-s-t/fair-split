@@ -9,88 +9,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
-  deploy-canister:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/development' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
-    outputs:
-      canister_id: ${{ steps.deploy_dfx.outputs.canister_id }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup SSH agent (DFX EC2)
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Add DFX host to known hosts (fallback to main EC2)
-        run: |
-          echo "🔍 Adding DFX host to known_hosts..."
-          DFX_HOST="${{ secrets.DFX_EC2_HOST }}"
-          if [ -z "$DFX_HOST" ]; then DFX_HOST="${{ secrets.EC2_HOST }}"; fi
-          if ! ssh-keyscan -H -p ${{ secrets.EC2_PORT }} "$DFX_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-            ssh-keyscan -H "$DFX_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          fi
-
-      - name: Deploy canister on DFX host
-        id: deploy_dfx
-        run: |
-          set -e
-          DFX_HOST=${{ secrets.DFX_EC2_HOST }}
-          if [ -z "$DFX_HOST" ]; then DFX_HOST=${{ secrets.EC2_HOST }}; fi
-          DFX_PORT=${{ secrets.EC2_PORT }}
-          DFX_USER=${{ secrets.EC2_USER }}
-          PROJECT_DIR=${{ secrets.EC2_PROJECT_DIR }}
-          # Fallback if secret is missing
-          : "${PROJECT_DIR:=/home/ubuntu/splitsafe}"
-
-          REMOTE_CMD='set -e; \
-            PROJECT_DIR="'$PROJECT_DIR'"; \
-            mkdir -p "$PROJECT_DIR"; cd "$PROJECT_DIR"; \
-            if [ ! -d .git ]; then \
-              git clone https://github.com/${{ github.repository }}.git .; \
-            else \
-              git fetch --all --tags; \
-              git checkout ${{ github.ref_name }} || git checkout -B ${{ github.ref_name }}; \
-              git pull origin ${{ github.ref_name }}; \
-            fi; \
-            [ -f "$HOME/.local/share/dfx/env" ] && . "$HOME/.local/share/dfx/env" || true; \
-            export PATH="$HOME/.local/share/dfx/bin:$HOME/.local/bin:$PATH"; \
-            if ! curl -sSf http://127.0.0.1:4943/api/v2/status >/dev/null; then \
-              pkill -f "dfx.*replica" >/dev/null 2>&1 || true; \
-              dfx start --clean --host 127.0.0.1:4943 --background; \
-              sleep 5; \
-            fi; \
-            export DFX_NETWORK=local DFX_HOST=http://127.0.0.1:4943; \
-            ADMIN_PRINCIPAL="${{ secrets.ADMIN_PRINCIPAL }}"; \
-            if [ -z "$ADMIN_PRINCIPAL" ]; then ADMIN_PRINCIPAL=$(dfx identity get-principal); fi; \
-            echo "Admin principal: $ADMIN_PRINCIPAL"; \
-            dfx deploy split_dapp --argument "(principal \"$ADMIN_PRINCIPAL\", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y'
-
-          ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" bash -lc "$REMOTE_CMD"
-
-          # Read canister id from remote and expose as output
-          CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "bash -lc 'export PATH=\"\$HOME/.local/share/dfx/bin:\$HOME/.local/bin:\$PATH\"; cd \"$PROJECT_DIR\" && dfx canister id split_dapp'" | tr -d '\r')
-          echo "Canister ID: $CANISTER_ID"
-          echo "canister_id=$CANISTER_ID" >> "$GITHUB_OUTPUT"
-
-      - name: Configure AWS credentials (for SSM write)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Write canister ID to SSM
-        run: |
-          aws ssm put-parameter \
-            --name "/splitsafe/development/NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP" \
-            --type String \
-            --value "${{ steps.deploy_dfx.outputs.canister_id }}" \
-            --overwrite \
-            --region us-east-1
   build:
-    needs: deploy-canister
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -321,12 +240,9 @@ jobs:
             echo "🔍 Recent logs:"
             docker logs --tail 200 frontend-development || true
             
-            # DFX canisters are deployed in the separate 'deploy-canister' job on the DFX EC2
-            
             echo "✅ Deployment completed successfully!"
             echo "🌐 Frontend should be accessible at http://${{ secrets.EC2_HOST }}:3000"
-            echo "🔗 DFX should be accessible at http://${{ secrets.EC2_HOST }}:4943"
-            echo "🔗 ICP canisters deployed and configured!"
+            
           EOF
 
 
@@ -338,7 +254,6 @@ jobs:
         run: |
           echo "✅ Deployment to EC2 completed successfully!"
           echo "🌐 Frontend URL: http://${{ secrets.EC2_HOST }}:3000"
-          echo "🔗 DFX URL: http://${{ secrets.EC2_HOST }}:4943"
           echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-development:${{ github.sha }}"
 
       - name: Notify deployment failure

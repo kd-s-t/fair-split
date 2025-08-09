@@ -55,6 +55,23 @@ module "ec2" {
   instance_profile_name = module.iam.ec2_instance_profile_name
 }
 
+# Additional EC2 instance dedicated to DFX (local IC network)
+module "ec2_dfx" {
+  source = "./modules/ec2"
+
+  aws_region            = var.aws_region
+  ami_id                = var.ami_id
+  instance_type         = var.instance_type
+  public_key_path       = var.public_key_path
+  private_key_path      = var.private_key_path
+  repo_url              = var.repo_url
+  environment           = "${var.environment}-dfx"
+  key_pair_name         = module.security.key_pair_name
+  security_group_id     = module.security.security_group_id
+  private_key_content   = module.security.private_key_content
+  instance_profile_name = module.iam.ec2_instance_profile_name
+}
+
 module "ecr" {
   source = "./modules/ecr"
   

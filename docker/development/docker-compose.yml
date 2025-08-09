@@ -19,24 +19,6 @@ services:
       - ../../.env
     environment:
       - NODE_ENV=development
-    depends_on:
-      - dfx
-    networks:
-      - safesplit-network
-
-  dfx:
-    container_name: dfx-development
-    image: fleek/dfx:latest
-    ports:
-      - "4943:4943"
-    volumes:
-      - ../..:/app
-      - dfx_cache:/home/dfx/.cache
-      - dfx_config:/home/dfx/.config
-    working_dir: /app/icp
-    command: dfx start --clean --host 0.0.0.0:4943
-    environment:
-      - DFX_NETWORK=local
     networks:
       - safesplit-network
 

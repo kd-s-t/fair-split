@@ -23,18 +23,21 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Add DFX EC2 to known hosts
+      - name: Add DFX host to known hosts (fallback to main EC2)
         run: |
           echo "🔍 Adding DFX host to known_hosts..."
-          if ! ssh-keyscan -H -p ${{ secrets.EC2_PORT }} ${{ secrets.DFX_EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null; then
-            ssh-keyscan -H ${{ secrets.DFX_EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          DFX_HOST="${{ secrets.DFX_EC2_HOST }}"
+          if [ -z "$DFX_HOST" ]; then DFX_HOST="${{ secrets.EC2_HOST }}"; fi
+          if ! ssh-keyscan -H -p ${{ secrets.EC2_PORT }} "$DFX_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+            ssh-keyscan -H "$DFX_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           fi
 
-      - name: Deploy canister on DFX EC2
+      - name: Deploy canister on DFX host
         id: deploy_dfx
         run: |
           set -e
           DFX_HOST=${{ secrets.DFX_EC2_HOST }}
+          if [ -z "$DFX_HOST" ]; then DFX_HOST=${{ secrets.EC2_HOST }}; fi
           DFX_PORT=${{ secrets.EC2_PORT }}
           DFX_USER=${{ secrets.EC2_USER }}
           PROJECT_DIR=${{ secrets.EC2_PROJECT_DIR }}

@@ -33,3 +33,9 @@ variable "icscan_url" {
   type        = string
   default     = "https://icscan.io"
 } 
+
+variable "dfx_host" {
+  description = "DFX replica host URL (e.g., http://<public_ip>:4943)"
+  type        = string
+  default     = ""
+}

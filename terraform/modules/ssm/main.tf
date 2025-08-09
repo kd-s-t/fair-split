@@ -52,7 +52,7 @@ resource "aws_ssm_parameter" "next_public_canister_id" {
 resource "aws_ssm_parameter" "next_public_dfx_host" {
   name  = "${local.parameter_prefix}/NEXT_PUBLIC_DFX_HOST"
   type  = "String"
-  value = "http://54.164.242.192:4943"
+  value = coalesce(var.dfx_host, "")
   tags = {
     Environment = var.environment
     Project     = "SplitSafe"

@@ -59,7 +59,7 @@ systemctl reload caddy || systemctl restart caddy
 echo "⏳ Waiting for HTTPS to come up (max ~90s for cert issuance)..."
 for host in "$ROOT_DOMAIN" "$APP_DOMAIN"; do
   for i in {1..18}; do
-    if curl -sI "https://${host}" | head -n 1 | grep -q " 200\| 301\| 302"; then
+    if curl -sI "https://${host}" | head -n 1 | grep -Eq " 200| 301| 302"; then
       echo "✅ ${host} is responding over HTTPS"
       break
     fi

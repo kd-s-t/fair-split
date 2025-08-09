@@ -61,6 +61,19 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Read SSM public envs for build
+        id: read-ssm
+        run: |
+          AWS_REGION=us-east-1
+          SSM_PATH="/splitsafe/development"
+          mapfile -t lines < <(aws ssm get-parameters-by-path --path "$SSM_PATH" --with-decryption --recursive --region "$AWS_REGION" --query 'Parameters[*].[Name,Value]' --output text)
+          for l in "${lines[@]}"; do
+            k=$(echo "$l" | awk '{print $1}')
+            v=$(echo "$l" | awk '{print $2}')
+            key=${k##*/}
+            echo "$key=$v" >> $GITHUB_OUTPUT
+          done
+
       - name: Create ECR repository if it doesn't exist
         run: |
           REPO_NAME="splitsafe-development"

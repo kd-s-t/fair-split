@@ -54,3 +54,12 @@ variable "instance_profile_name" {
   description = "Name of the IAM instance profile from IAM module"
   type        = string
 } 
+
+# Enables provisioning of a local Internet Computer (dfx) replica
+# on the EC2 instance using a Docker container. Intended to be set
+# to true only for the dedicated DFX instance (e.g., environment "*-dfx").
+variable "enable_dfx" {
+  description = "Whether to start a Dockerized dfx replica on this instance"
+  type        = bool
+  default     = false
+}

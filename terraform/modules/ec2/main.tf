@@ -146,4 +146,34 @@ resource "aws_instance" "splitsafe_server" {
       "echo '======================================================================================'"
     ]
   }
+
+  # Optionally start a Dockerized dfx replica and seed minimal project files
+  # This runs only when var.enable_dfx is true
+  provisioner "remote-exec" {
+    when       = create
+    on_failure = continue
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = var.private_key_content
+      host        = self.public_ip
+      timeout     = "30m"
+    }
+
+    inline = [
+      "if [ \"${var.enable_dfx}\" = \"true\" ]; then",
+      "  echo '📦 Preparing minimal dfx workspace...'",
+      "  mkdir -p /home/ubuntu/dfxproj",
+      "  cat >/home/ubuntu/dfxproj/dfx.json <<EOF\n{\n  \"canisters\": {},\n  \"version\": 1\n}\nEOF",
+      "  echo '🐳 Starting Dockerized dfx replica on 0.0.0.0:4943...'",
+      "  docker rm -f dfx 2>/dev/null || true",
+      "  docker volume create dfx_cache >/dev/null",
+      "  docker volume create dfx_config >/dev/null",
+      "  docker pull fleek/dfx:latest || true",
+      "  docker run -d --name dfx --restart unless-stopped -p 4943:4943 -e DFX_NETWORK=local -v dfx_cache:/home/dfx/.cache -v dfx_config:/home/dfx/.config -v /home/ubuntu/dfxproj:/app -w /app fleek/dfx:latest dfx start --clean --host 0.0.0.0:4943",
+      "  echo '✅ dfx replica started'",
+      "fi"
+    ]
+  }
 } 

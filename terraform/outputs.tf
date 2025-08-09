@@ -55,3 +55,9 @@ output "dfx_ssh_command" {
   description = "SSH command to connect to the DFX instance"
   value       = "ssh -i ${module.security.private_key_file} ubuntu@${module.ec2_dfx.public_ip}"
 }
+
+# Convenience output to show whether dfx replica bootstrap is enabled
+output "dfx_enabled" {
+  description = "Whether DFX bootstrap is enabled for the DFX instance"
+  value       = true
+}

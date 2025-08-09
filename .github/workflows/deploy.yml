@@ -71,11 +71,11 @@ jobs:
           ECR_REPOSITORY: splitsafe-development
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "🐳 Building Docker image..."
-          docker buildx create --use
+          echo "🐳 Building Production Docker image..."
+          docker buildx create --use || true
           docker buildx build --platform linux/amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -f docker/development/Dockerfile \
+            -f docker/production/Dockerfile \
             --push .
           
           # Verify the image was pushed successfully
@@ -214,21 +214,35 @@ jobs:
             
             # Stop existing containers
             echo "🛑 Stopping existing containers..."
-            docker compose -f docker/development/docker-compose.yml down || true
-            docker stop splitsafe-development || true
-            docker rm splitsafe-development || true
-            
-            # Update docker-compose.yml to use ECR image for frontend
-            echo "🔧 Updating docker-compose configuration..."
-            sed -i "s|build:|image: $IMAGE_URI|g" docker/development/docker-compose.yml
-            sed -i "/context:/d" docker/development/docker-compose.yml
-            sed -i "/dockerfile:/d" docker/development/docker-compose.yml
-            # Remove dev-only volume mounts to avoid masking node_modules inside the image
-            sed -i "/^\s*volumes:\s*$/,/^\s*env_file:/{/^- \..*\/app/d;/^- \/app\/node_modules/d;/^\s*volumes:\s*$/d}" docker/development/docker-compose.yml || true
+            docker compose -f docker/development/docker-compose.deploy.yml down || true
+            docker rm -f frontend-development || true
+
+            # Create a deploy-only compose file that uses the ECR image
+            echo "🔧 Creating deploy-only docker-compose file..."
+            mkdir -p docker/development
+            printf '%s\n' \
+              "services:" \
+              "  frontend:" \
+              "    image: $IMAGE_URI" \
+              "    container_name: frontend-development" \
+              "    ports:" \
+              "      - \"3000:3000\"" \
+              "    env_file:" \
+              "      - ../../.env" \
+              "    restart: unless-stopped" \
+              "    deploy:" \
+              "      resources:" \
+              "        limits:" \
+              "          cpus: '1.0'" \
+              "          memory: 1g" \
+              "        reservations:" \
+              "          cpus: '0.25'" \
+              "          memory: 256m" \
+              > docker/development/docker-compose.deploy.yml
             
             # Start all services with docker-compose
             echo "🚀 Starting all services with docker-compose..."
-            docker compose -f docker/development/docker-compose.yml up -d
+            COMPOSE_COMPATIBILITY=1 docker compose -f docker/development/docker-compose.deploy.yml up -d
             
             # Wait for services to be healthy
             echo "⏳ Waiting for services to be healthy..."
@@ -236,7 +250,7 @@ jobs:
             
             # Check service status
             echo "🔍 Checking service status..."
-            docker compose -f docker/development/docker-compose.yml ps
+            docker compose -f docker/development/docker-compose.deploy.yml ps
             echo "🔍 Recent logs:"
             docker logs --tail 200 frontend-development || true
             

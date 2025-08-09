@@ -40,6 +40,7 @@ jobs:
           PROJECT_DIR=${{ secrets.EC2_PROJECT_DIR }}
 
           # Ensure repo present and up to date on DFX host
+          (
           ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "PROJECT_DIR='$PROJECT_DIR' ADMIN_PRINCIPAL='${{ secrets.ADMIN_PRINCIPAL }}' bash -s" <<'REMOTE'
             set -e
             mkdir -p "$PROJECT_DIR"
@@ -91,7 +92,8 @@ jobs:
             fi
             echo "Admin principal: $ADMIN_PRINCIPAL"
             dfx deploy split_dapp --argument "(principal \"$ADMIN_PRINCIPAL\", \"ml52i-qqaaa-aaaar-qaabq-cai\")" -y
-          REMOTE || true
+REMOTE
+          ) || true
 
           # Read canister id from remote and expose as output
           CANISTER_ID=$(ssh -o StrictHostKeyChecking=no -p "$DFX_PORT" "$DFX_USER@$DFX_HOST" "export PATH=\"\$HOME/.local/share/dfx/bin:\$HOME/.local/bin:\$PATH\"; cd '$PROJECT_DIR' && dfx canister id split_dapp" | tr -d '\r')

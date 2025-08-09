@@ -40,6 +40,9 @@ jobs:
             cp -f "$HOME/apps/safesplit/dfx.json" "$HOME/dfxproj/"
             rsync -av --delete "$HOME/apps/safesplit/icp/src/" "$HOME/dfxproj/src/"
 
+            echo "🔎 Waiting for local replica to be ready..."
+            docker exec -i dfx bash -lc 'for i in $(seq 1 30); do dfx ping local -q && exit 0 || sleep 2; done; echo "Replica not responding" >&2; exit 1'
+
             echo "🚀 Deploying canisters to local replica..."
             docker exec -i dfx bash -lc 'cd /app && (dfx identity list | grep -q "^deployer$" || dfx identity new deployer) && dfx identity use deployer && dfx deploy --network local'
 

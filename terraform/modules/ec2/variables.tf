@@ -63,3 +63,9 @@ variable "enable_dfx" {
   type        = bool
   default     = false
 }
+
+# Domain that Caddy should obtain a certificate for and serve
+variable "dfx_domain" {
+  description = "Public domain that will serve HTTPS and reverse-proxy to dfx (e.g., thesplitsafe.com)"
+  type        = string
+}

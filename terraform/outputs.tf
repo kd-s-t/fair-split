@@ -41,6 +41,6 @@ output "ecr_repository_name" {
 } 
 
 output "dfx_url" {
-  description = "URL for the DFX replica running on the single EC2"
-  value       = "http://${module.ec2.public_ip}:4943"
+  description = "Public HTTPS URL for the DFX replica served via Caddy"
+  value       = "https://${var.dfx_domain}"
 }

@@ -20,6 +20,9 @@ ENV PORT=3000
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 
+# Install minimal runtime tools used by healthcheck
+RUN apk add --no-cache curl
+
 # Copy standalone build output
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
@@ -28,9 +31,9 @@ COPY --from=builder /app/public ./public
 USER nextjs
 EXPOSE 3000
 
-# Healthcheck assumes an API route exists; adjust if needed
+# Healthcheck against Next.js API route
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:3000/api/health || exit 1
+  CMD curl -fsS http://127.0.0.1:3000/api/health >/dev/null || exit 1
 
 CMD ["node", "server.js"]
 

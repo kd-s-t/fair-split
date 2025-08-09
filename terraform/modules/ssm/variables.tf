@@ -35,7 +35,7 @@ variable "icscan_url" {
 } 
 
 variable "dfx_host" {
-  description = "DFX replica host URL (e.g., http://<public_ip>:4943)"
+  description = "DFX replica host URL (e.g., https://thesplitsafe.com)"
   type        = string
   default     = ""
 }

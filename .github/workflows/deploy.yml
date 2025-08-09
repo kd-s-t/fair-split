@@ -256,6 +256,7 @@ jobs:
             
             echo "✅ Deployment completed successfully!"
             echo "🌐 Frontend should be accessible at http://${{ secrets.EC2_HOST }}:3000"
+            echo "🌐 DFX (via HTTPS reverse proxy) should be at https://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
             
           EOF
 
@@ -268,6 +269,7 @@ jobs:
         run: |
           echo "✅ Deployment to EC2 completed successfully!"
           echo "🌐 Frontend URL: http://${{ secrets.EC2_HOST }}:3000"
+          echo "🌐 DFX URL: https://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
           echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-development:${{ github.sha }}"
 
       - name: Notify deployment failure

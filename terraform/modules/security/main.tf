@@ -86,6 +86,8 @@ resource "aws_security_group" "splitsafe_sg" {
     from_port   = 4943
     to_port     = 4943
     protocol    = "tcp"
+    # Keep open temporarily for direct access if needed. Ideally, bind dfx to loopback
+    # and expose only via HTTPS through Caddy on 443.
     cidr_blocks = ["0.0.0.0/0"]
   }
 

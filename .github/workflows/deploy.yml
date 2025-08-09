@@ -244,6 +244,50 @@ jobs:
             echo "🚀 Starting all services with docker-compose..."
             COMPOSE_COMPATIBILITY=1 docker compose -f docker/development/docker-compose.deploy.yml up -d
             
+            # Ensure Caddy is installed and configured to proxy HTTPS
+            echo "🔐 Ensuring Caddy (TLS reverse proxy) is installed and configured..."
+            DOMAIN="${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
+            APP_DOMAIN="app.$DOMAIN"
+            if ! command -v caddy >/dev/null 2>&1; then
+              echo "📦 Installing Caddy..."
+              sudo apt-get update -qq
+              sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg lsb-release
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+              echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+              sudo apt-get update -qq
+              sudo apt-get install -y caddy
+            fi
+            echo "🌐 Writing Caddyfile for $DOMAIN and $APP_DOMAIN..."
+            sudo mkdir -p /etc/caddy
+            sudo tee /etc/caddy/Caddyfile >/dev/null <<CADDY
+${DOMAIN} {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:4943
+}
+${APP_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:3000
+}
+CADDY
+            sudo caddy validate --config /etc/caddy/Caddyfile || { echo "❌ Invalid Caddyfile"; exit 1; }
+            sudo systemctl enable --now caddy
+            sudo systemctl reload caddy || true
+
+            # Ensure local dfx replica is running and bound to loopback, as root (for volume perms)
+            echo "🧪 Ensuring local dfx replica is running..."
+            if ! docker ps --format '{{.Names}}' | grep -q '^dfx$'; then
+              docker rm -f dfx 2>/dev/null || true
+              docker volume create dfx_cache >/dev/null
+              docker volume create dfx_config >/dev/null
+              docker run -d --name dfx --restart unless-stopped --cpus 1 --memory 1g --memory-swap 2g --user 0 \
+                -p 127.0.0.1:4943:4943 -e DFX_NETWORK=local \
+                -v dfx_cache:/home/dfx/.cache -v dfx_config:/home/dfx/.config \
+                fleek/dfx:latest dfx start --clean --host 0.0.0.0:4943
+              echo "✅ dfx container started"
+            else
+              echo "✅ dfx container already running"
+            fi
+
             # Wait for services to be healthy
             echo "⏳ Waiting for services to be healthy..."
             sleep 30
@@ -253,6 +297,11 @@ jobs:
             docker compose -f docker/development/docker-compose.deploy.yml ps
             echo "🔍 Recent logs:"
             docker logs --tail 200 frontend-development || true
+
+            # Quick external checks
+            echo "🔎 Probing HTTPS endpoints via Caddy..."
+            curl -I https://$DOMAIN | sed -n '1,6p' || true
+            curl -I https://$APP_DOMAIN | sed -n '1,6p' || true
             
             echo "✅ Deployment completed successfully!"
             echo "🌐 Frontend should be accessible at http://${{ secrets.EC2_HOST }}:3000"

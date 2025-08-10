@@ -4,16 +4,16 @@ interface UserState {
   principal: string | null;
   name: string | null;
   icpBalance?: string | null;
-  btcBalance?: string | null;
-  btcAddress?: string | null;
+  ckbtcAddress?: string | null;
+  ckbtcBalance?: string | null;
 }
 
 const initialState: UserState = {
   principal: null,
   name: null,
   icpBalance: null,
-  btcBalance: null,
-  btcAddress: null,
+  ckbtcAddress: null,
+  ckbtcBalance: null,
 };
 
 const userSlice = createSlice({
@@ -28,8 +28,8 @@ const userSlice = createSlice({
       state.principal = null;
       state.name = null;
       state.icpBalance = null;
-      state.btcBalance = null;
-      state.btcAddress = null;
+      state.ckbtcAddress = null;
+      state.ckbtcBalance = null;
     },
     setUserName(state, action: PayloadAction<string | null>) {
       state.name = action.payload;
@@ -37,14 +37,21 @@ const userSlice = createSlice({
     setIcpBalance(state, action: PayloadAction<string | null>) {
       state.icpBalance = action.payload;
     },
-    setBtcBalance(state, action: PayloadAction<string | null>) {
-      state.btcBalance = action.payload;
+    setCkbtcAddress(state, action: PayloadAction<string | null>) {
+      state.ckbtcAddress = action.payload;
     },
-    setBtcAddress(state, action: PayloadAction<string | null>) {
-      state.btcAddress = action.payload;
+    setCkbtcBalance(state, action: PayloadAction<string | null>) {
+      state.ckbtcBalance = action.payload;
     },
   },
 });
 
-export const { setUser, clearUser, setUserName, setIcpBalance, setBtcBalance, setBtcAddress } = userSlice.actions;
+export const { 
+  setUser, 
+  clearUser, 
+  setUserName, 
+  setIcpBalance,
+  setCkbtcAddress,
+  setCkbtcBalance
+} = userSlice.actions;
 export default userSlice.reducer; 

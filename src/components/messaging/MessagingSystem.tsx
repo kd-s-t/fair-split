@@ -17,8 +17,8 @@ export function MessagingSystem() {
   const router = useRouter();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
-  const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
-  const btcAddress = useAppSelector((state: RootState) => state.user.btcAddress);
+  const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
+  const ckbtcAddress = useAppSelector((state: RootState) => state.user.ckbtcAddress);
   
   // Set router for navigation service
   useEffect(() => {
@@ -107,8 +107,8 @@ export function MessagingSystem() {
         const response = generateActionResponse(parsedAction, {
           principal,
           icpBalance,
-          btcBalance,
-          btcAddress,
+          ckbtcBalance,
+          ckbtcAddress,
         });
         
         const assistantMessage: Message = {
@@ -179,7 +179,7 @@ export function MessagingSystem() {
     } finally {
       setIsLoading(false);
     }
-  }, [principal, icpBalance, btcBalance, btcAddress]);
+  }, [principal, icpBalance, ckbtcBalance, ckbtcAddress]);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);

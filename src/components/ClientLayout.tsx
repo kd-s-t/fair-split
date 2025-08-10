@@ -9,7 +9,7 @@ import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
 import { MessagingSystem } from '@/components/messaging/MessagingSystem'
 import AuthOverlay from '@/components/AuthOverlay'
-import { setIcpBalance, setBtcBalance, setUserName, setBtcAddress } from '../lib/redux/userSlice'
+import { setIcpBalance, setUserName, setCkbtcAddress, setCkbtcBalance } from '../lib/redux/userSlice'
 import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
@@ -45,7 +45,7 @@ function BalanceAndNameSyncer() {
         const isAuthenticated = await authClient.isAuthenticated()
         if (!isAuthenticated) {
           console.warn('User not authenticated, skipping backend calls')
-          dispatch(setBtcBalance(null))
+          dispatch(setCkbtcBalance(null))
           dispatch(setUserName(null))
           dispatch(setTransactions([]))
           return
@@ -66,14 +66,14 @@ function BalanceAndNameSyncer() {
           dispatch(setIcpBalance(null))
         }
 
-        // Fetch Bitcoin Balance
+        // Fetch CKBT Balance
         try {
-          const btcBalance = await actor.getUserBitcoinBalance(principalObj)
-          const formattedBtc = (Number(btcBalance) / 1e8).toFixed(8)
-          dispatch(setBtcBalance(formattedBtc))
+          const ckbtcBalance = await actor.getUserCkbtcBalance(principalObj)
+          const formattedCkbtc = (Number(ckbtcBalance) / 1e8).toFixed(8)
+          dispatch(setCkbtcBalance(formattedCkbtc))
         } catch {
-          console.error('❌ Could not fetch Bitcoin balance')
-          dispatch(setBtcBalance(null))
+          console.error('❌ Could not fetch CKBT balance')
+          dispatch(setCkbtcBalance(null))
         }
 
         // Fetch Nickname
@@ -89,15 +89,15 @@ function BalanceAndNameSyncer() {
           dispatch(setUserName(null))
         }
 
-        // Fetch Bitcoin Address
+        // Fetch CKBT Address
         try {
-          const btcAddress = await actor.getBitcoinAddress(principalObj)
-          // btcAddress is an array or opt type, so handle accordingly
-          const address = Array.isArray(btcAddress) ? btcAddress[0] : btcAddress;
-          dispatch(setBtcAddress(address ? String(address) : null))
+          const ckbtcAddress = await actor.getCkbtcAddress(principalObj)
+          // ckbtcAddress is an array or opt type, so handle accordingly
+          const address = Array.isArray(ckbtcAddress) ? ckbtcAddress[0] : ckbtcAddress;
+          dispatch(setCkbtcAddress(address ? String(address) : null))
         } catch {
-          console.error('❌ Could not fetch Bitcoin address')
-          dispatch(setBtcAddress(null))
+          console.error('❌ Could not fetch CKBT address')
+          dispatch(setCkbtcAddress(null))
         }
 
         // Fetch Transactions
@@ -163,7 +163,7 @@ function BalanceAndNameSyncer() {
         }
       } catch (error) {
         console.error('🔥 Unexpected error in BalanceAndNameSyncer:', error)
-        dispatch(setBtcBalance(null))
+        dispatch(setCkbtcBalance(null))
         dispatch(setUserName(null))
         dispatch(setTransactions([]))
       }

@@ -33,10 +33,10 @@ function btcToUsd(btc: number) {
 }
 
 export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
-  const btcBalance = useAppSelector((state: RootState) => state.user.btcBalance);
+  const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
   // const _icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
   const isLoading =
-    btcBalance === null || btcBalance === undefined || btcBalance === "";
+    ckbtcBalance === null || ckbtcBalance === undefined || ckbtcBalance === "";
   const router = useRouter();
   const [showBalance, setShowBalance] = useState(true);
   const [displayBalance, setDisplayBalance] = useState("0.00000000");
@@ -66,8 +66,8 @@ export default function DashboardStats({ transactions }: { transactions: Normali
 
   // Animate balance when it becomes visible
   useEffect(() => {
-    if (showBalance && btcBalance && !isLoading) {
-      const targetBalance = Number(btcBalance);
+    if (showBalance && ckbtcBalance && !isLoading) {
+      const targetBalance = Number(ckbtcBalance);
       const targetUsd = btcToUsd(targetBalance);
       
       // Animate from 0 to target
@@ -97,7 +97,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
       setDisplayBalance("0.00000000");
       setDisplayUsd("$0.00");
     }
-  }, [showBalance, btcBalance, isLoading]);
+  }, [showBalance, ckbtcBalance, isLoading]);
 
   return (
     <React.Fragment>

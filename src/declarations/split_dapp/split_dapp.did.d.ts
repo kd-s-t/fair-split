@@ -23,6 +23,11 @@ export interface SplitDApp {
   'getAllNicknames' : ActorMethod<[], Array<[Principal, string]>>,
   'getBalance' : ActorMethod<[Principal], bigint>,
   'getBitcoinAddress' : ActorMethod<[Principal], [] | [string]>,
+  'getCkbtcBalance' : ActorMethod<
+    [Principal],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'getCustomNickname' : ActorMethod<[Principal], [] | [string]>,
   'getFraudHistory' : ActorMethod<[Principal], Array<FraudActivity>>,
   'getNickname' : ActorMethod<[Principal], [] | [string]>,
@@ -68,6 +73,17 @@ export interface SplitDApp {
   'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'removeBitcoinAddress' : ActorMethod<[Principal], boolean>,
   'removeNickname' : ActorMethod<[Principal], undefined>,
+  'requestCkbtcWallet' : ActorMethod<
+    [],
+    {
+        'ok' : {
+          'owner' : Principal,
+          'subaccount' : Subaccount,
+          'btcAddress' : string,
+        }
+      } |
+      { 'err' : string }
+  >,
   'resetUserReputation' : ActorMethod<[Principal, Principal], undefined>,
   'setBitcoinAddress' : ActorMethod<[Principal, string], boolean>,
   'setBitcoinBalance' : ActorMethod<[Principal, Principal, bigint], boolean>,
@@ -79,6 +95,7 @@ export interface SplitDApp {
     undefined
   >,
 }
+export type Subaccount = Uint8Array | number[];
 export interface ToEntry {
   'status' : { 'pending' : null } |
     { 'approved' : null } |
@@ -109,6 +126,6 @@ export interface Transaction {
   'readAt' : [] | [bigint],
 }
 export type TransactionStatus = string;
-export type _SERVICE = SplitDApp;
+export interface _SERVICE extends SplitDApp {}
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

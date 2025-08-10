@@ -43,6 +43,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : IDL.Nat,
     'percentage' : IDL.Nat,
   });
+  const Subaccount = IDL.Vec(IDL.Nat8);
   const SplitDApp = IDL.Service({
     'addBitcoinBalance' : IDL.Func(
         [IDL.Principal, IDL.Principal, IDL.Nat],
@@ -67,6 +68,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Principal],
         [IDL.Opt(IDL.Text)],
         ['query'],
+      ),
+    'getCkbtcBalance' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
       ),
     'getCustomNickname' : IDL.Func(
         [IDL.Principal],
@@ -135,6 +141,20 @@ export const idlFactory = ({ IDL }) => {
     'releaseSplit' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'removeBitcoinAddress' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'removeNickname' : IDL.Func([IDL.Principal], [], []),
+    'requestCkbtcWallet' : IDL.Func(
+        [],
+        [
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'owner' : IDL.Principal,
+              'subaccount' : Subaccount,
+              'btcAddress' : IDL.Text,
+            }),
+            'err' : IDL.Text,
+          }),
+        ],
+        [],
+      ),
     'resetUserReputation' : IDL.Func([IDL.Principal, IDL.Principal], [], []),
     'setBitcoinAddress' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
     'setBitcoinBalance' : IDL.Func(

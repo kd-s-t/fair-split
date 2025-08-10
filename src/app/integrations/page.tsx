@@ -7,150 +7,128 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Typography } from '@/components/ui/typography';
-import { Bitcoin, Save, Copy, Check, Edit, Trash2 } from 'lucide-react';
+import { Bitcoin, Copy, Check, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setTitle, setSubtitle, useAppSelector } from '@/lib/redux/store';
+import { setCkbtcAddress, setCkbtcBalance } from '@/lib/redux/userSlice';
 
 export default function IntegrationsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
-  const btcAddress = useAppSelector((state) => state.user.btcAddress);
-  const btcBalance = useAppSelector((state) => state.user.btcBalance);
   const icpBalance = useAppSelector((state) => state.user.icpBalance);
+  const ckbtcAddress = useAppSelector((state) => state.user.ckbtcAddress);
+  const ckbtcBalance = useAppSelector((state) => state.user.ckbtcBalance);
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempAddress, setTempAddress] = useState('');
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     dispatch(setTitle('Integrations'));
-    dispatch(setSubtitle('Manage your Bitcoin address'));
+    dispatch(setSubtitle('Manage your cKBTC wallet'));
   }, [dispatch]);
 
-  // Handle auto-setting Bitcoin address from AI
+  // Initialize cKBTC wallet and balance on load
   useEffect(() => {
-    const handleAutoSetBitcoinAddress = async () => {
+    const initializeCkbtc = async () => {
+      if (!principal) return;
+      
+      setIsInitializing(true);
       try {
-        const chatData = sessionStorage.getItem('splitsafe_chat_data');
-        if (chatData) {
-          const data = JSON.parse(chatData);
-          if (data.autoSet && data.bitcoinAddress) {
-            // Clear the session storage
-            sessionStorage.removeItem('splitsafe_chat_data');
-            
-            // Check if user already has a Bitcoin address
-            if (btcAddress) {
-              toast.error('You already have a Bitcoin address set. Please remove the existing address first if you want to change it.');
-              return;
-            }
-            
-            // Validate the Bitcoin address
-            const address = data.bitcoinAddress;
-            if (!address.startsWith('bc1') && !address.startsWith('1') && !address.startsWith('3')) {
-              toast.error('Invalid Bitcoin address format. Please provide a valid Bitcoin address.');
-              return;
-            }
-            
-            // Set the Bitcoin address automatically
-            setIsLoading(true);
-            const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-            const actor = await createSplitDappActorWithDfxKey();
-            const success = await actor.setBitcoinAddress(principal, address);
-            
-            if (success) {
-              toast.success(`Bitcoin address ${address} set successfully!`);
-            } else {
-              toast.error('Failed to set Bitcoin address. Please try again.');
-            }
+        const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
+        const actor = await createSplitDappActorWithDfxKey();
+        
+        // Get cKBTC balance
+        const balanceResult = await actor.getCkbtcBalance(principal);
+        if ('ok' in balanceResult) {
+          dispatch(setCkbtcBalance(balanceResult.ok.toString()));
+        } else {
+          console.error('Failed to get cKBTC balance:', balanceResult.err);
+          dispatch(setCkbtcBalance('0'));
+        }
+        
+        // If no cKBTC address exists, generate one
+        if (!ckbtcAddress) {
+          const walletResult = await actor.requestCkbtcWallet();
+          if ('ok' in walletResult) {
+            dispatch(setCkbtcAddress(walletResult.ok.btcAddress));
+            toast.success('cKBTC wallet generated successfully!');
+          } else {
+            console.error('Failed to generate cKBTC wallet:', walletResult.err);
+            toast.error('Failed to generate cKBTC wallet: ' + walletResult.err);
           }
         }
       } catch (error) {
-        console.error('Error auto-setting Bitcoin address:', error);
-        toast.error('Failed to auto-set Bitcoin address. Please set it manually.');
+        console.error('Error initializing cKBTC:', error);
+        toast.error('Failed to initialize cKBTC wallet. Please try again.');
       } finally {
-        setIsLoading(false);
+        setIsInitializing(false);
       }
     };
 
     if (principal) {
-      handleAutoSetBitcoinAddress();
+      initializeCkbtc();
     }
-  }, [principal, btcAddress]);
+  }, [principal, dispatch, ckbtcAddress]);
 
-  // When editing, initialize tempAddress with the current btcAddress
-  const startEditing = () => {
-    setTempAddress(btcAddress || '');
-    setIsEditing(true);
-  };
-
-  const handleSaveBitcoinAddress = async () => {
-    const safeAddress = tempAddress || '';
-    if (!safeAddress.trim()) {
-      toast.error('Please enter a valid Bitcoin address');
-      return;
-    }
-
-    // Basic Bitcoin address validation
-    if (!safeAddress.startsWith('bc1') && !safeAddress.startsWith('1') && !safeAddress.startsWith('3')) {
-      toast.error('Please enter a valid Bitcoin address');
-      return;
-    }
-
+  // Generate new cKBTC wallet address
+  const generateCkbtcWallet = async () => {
+    if (!principal) return;
+    
     setIsLoading(true);
     try {
       const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
       const actor = await createSplitDappActorWithDfxKey();
-      const success = await actor.setBitcoinAddress(principal, safeAddress);
+      const result = await actor.requestCkbtcWallet();
       
-      if (success) {
-        // No need to update local state here, Redux will handle it
-        setIsEditing(false);
-        toast.success('Bitcoin address updated successfully!');
+      if ('ok' in result) {
+        dispatch(setCkbtcAddress(result.ok.btcAddress));
+        toast.success('New cKBTC wallet generated successfully!');
       } else {
-        toast.error('Failed to update Bitcoin address');
+        toast.error('Failed to generate cKBTC wallet: ' + result.err);
       }
     } catch (error) {
-      console.error('❌ Error updating Bitcoin address:', error);
-      toast.error('Failed to update Bitcoin address');
+      console.error('Error generating cKBTC wallet:', error);
+      toast.error('Failed to generate cKBTC wallet. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCopyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(btcAddress || '');
-      setIsCopied(true);
-      toast.success('Address copied to clipboard!');
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy address');
-    }
-  };
-
-  const handleRemoveAddress = async () => {
+  // Refresh cKBTC balance
+  const refreshCkbtcBalance = async () => {
+    if (!principal) return;
+    
     try {
       const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
       const actor = await createSplitDappActorWithDfxKey();
-      const success = await actor.removeBitcoinAddress(principal);
+      const result = await actor.getCkbtcBalance(principal);
       
-      if (success) {
-        // No need to update local state here, Redux will handle it
-        setIsEditing(false);
-        toast.success('Bitcoin address removed');
+      if ('ok' in result) {
+        dispatch(setCkbtcBalance(result.ok.toString()));
+        toast.success('cKBTC balance updated!');
       } else {
-        toast.error('Failed to remove Bitcoin address');
+        console.error('Failed to get cKBTC balance:', result.err);
+        toast.error('Failed to refresh cKBTC balance');
       }
     } catch (error) {
-      console.error('❌ Error removing Bitcoin address:', error);
-      toast.error('Failed to remove Bitcoin address');
+      console.error('Error refreshing cKBTC balance:', error);
+      toast.error('Failed to refresh cKBTC balance');
     }
   };
 
-  const cancelEditing = () => {
-    setTempAddress('');
-    setIsEditing(false);
+  // Copy address to clipboard
+  const handleCopyAddress = async () => {
+    if (!ckbtcAddress) return;
+    
+    try {
+      await navigator.clipboard.writeText(ckbtcAddress);
+      setIsCopied(true);
+      toast.success('Address copied to clipboard!');
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      toast.error('Failed to copy address');
+    }
   };
 
   if (!principal) {
@@ -160,7 +138,22 @@ export default function IntegrationsPage() {
           <Card className="bg-[#222222] border-[#303434] text-white">
             <CardContent className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3 text-gray-300">Loading your Bitcoin address...</span>
+              <span className="ml-3 text-gray-300">Loading your cKBTC wallet...</span>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card className="bg-[#222222] border-[#303434] text-white">
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+              <span className="ml-3 text-gray-300">Initializing cKBTC wallet...</span>
             </CardContent>
           </Card>
         </div>
@@ -210,15 +203,15 @@ export default function IntegrationsPage() {
             </CardContent>
           </Card>
           
-          {/* Bitcoin Balance Display */}
+          {/* cKBTC Balance Display */}
           <Card className="bg-[#222222] border-[#303434] text-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bitcoin className="text-yellow-500" size={24} />
-                Bitcoin Balance
+                cKBTC Balance
               </CardTitle>
               <CardDescription className="text-gray-400">
-                Your current Bitcoin balance
+                Your current cKBTC balance
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -230,44 +223,51 @@ export default function IntegrationsPage() {
                       Available Balance
                     </Typography>
                     <Typography variant="h3" className="text-yellow-500 font-bold">
-                      {btcBalance ? `${btcBalance} BTC` : 'Loading...'}
+                      {ckbtcBalance ? `${ckbtcBalance} cKBTC` : 'Loading...'}
                     </Typography>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-yellow-500 border-yellow-500">
-                  Bitcoin
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refreshCkbtcBalance}
+                    className="text-yellow-500 border-yellow-500 hover:bg-yellow-900/20"
+                  >
+                    <RefreshCw size={14} />
+                  </Button>
+                  <Badge variant="outline" className="text-yellow-500 border-yellow-500">
+                    cKBTC
+                  </Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Bitcoin Address Management */}
+        {/* cKBTC Address Management */}
         <Card className="bg-[#222222] border-[#303434] text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bitcoin className="text-yellow-500" size={24} />
-              Bitcoin Address
+              cKBTC Wallet
             </CardTitle>
             <CardDescription className="text-gray-400">
-              {btcAddress 
-                ? 'Your Bitcoin address for receiving payments'
-                : 'Enter your Bitcoin address to receive payments when escrow is released'
-              }
+              Your cKBTC wallet address for receiving Bitcoin payments
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             
-            {btcAddress && !isEditing ? (
-              // Display existing address
+            {ckbtcAddress ? (
+              // Display generated address
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
                   <div className="flex-1">
                     <Typography variant="small" className="text-gray-400 mb-2">
-                      Your Bitcoin Address
+                      Your cKBTC Address
                     </Typography>
                     <div className="font-mono text-sm text-gray-200 break-all">
-                      {btcAddress}
+                      {ckbtcAddress}
                     </div>
                   </div>
                   <div className="flex gap-2 ml-4">
@@ -282,72 +282,53 @@ export default function IntegrationsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={startEditing}
+                      onClick={generateCkbtcWallet}
+                      disabled={isLoading}
                       className="text-blue-400 border-blue-600 hover:bg-blue-900/20"
                     >
-                      <Edit size={14} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRemoveAddress}
-                      className="text-red-400 border-red-600 hover:bg-red-900/20"
-                    >
-                      <Trash2 size={14} />
+                      {isLoading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                      ) : (
+                        <RefreshCw size={14} />
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
                   <Typography variant="small" className="text-green-300">
-                    <strong>✅ Address configured:</strong> Bitcoin will be automatically sent to this address when escrow is released.
+                    <strong>✅ Wallet ready:</strong> Bitcoin will be automatically sent to this cKBTC address when escrow is released.
                   </Typography>
                 </div>
               </div>
             ) : (
-              // Add/Edit address form
+              // Generate wallet button
               <div className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-200">
-                    {isEditing ? 'Update Bitcoin Address' : 'Bitcoin Address'}
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter your Bitcoin address (e.g., bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh)"
-                      value={tempAddress}
-                      onChange={(e) => setTempAddress(e.target.value)}
-                      className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-                    />
-                    <Button
-                      onClick={handleSaveBitcoinAddress}
-                      disabled={isLoading || !tempAddress.trim()}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {isLoading ? (
+                <div className="text-center">
+                  <Button
+                    onClick={generateCkbtcWallet}
+                    disabled={isLoading}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <Save size={16} />
-                      )}
-                    </Button>
-                    {isEditing && (
-                      <Button
-                        variant="outline"
-                        onClick={cancelEditing}
-                        className="text-gray-300 border-gray-600 hover:bg-gray-700"
-                      >
-                        Cancel
-                      </Button>
+                        Generating Wallet...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Bitcoin size={16} />
+                        Generate cKBTC Wallet
+                      </div>
                     )}
-                  </div>
+                  </Button>
                 </div>
 
-                {!btcAddress && !isEditing && (
-                  <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-                    <Typography variant="small" className="text-yellow-300">
-                      <strong>No Bitcoin address set:</strong> Add your Bitcoin address to receive payments when escrow is released.
-                    </Typography>
-                  </div>
-                )}
+                <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                  <Typography variant="small" className="text-yellow-300">
+                    <strong>No cKBTC wallet:</strong> Generate your cKBTC wallet address to receive Bitcoin payments when escrow is released.
+                  </Typography>
+                </div>
               </div>
             )}
           </CardContent>

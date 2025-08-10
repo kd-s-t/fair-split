@@ -32,6 +32,7 @@ type ToEntry =
              pending;
            };
  };
+type Subaccount = blob;
 type SplitDApp = 
  service {
    addBitcoinBalance: (caller: principal, user: principal, amount: nat) ->
@@ -47,6 +48,10 @@ type SplitDApp =
                                }) query;
    getBalance: (p: principal) -> (nat) query;
    getBitcoinAddress: (user: principal) -> (opt text) query;
+   getCkbtcBalance: (user: principal) -> (variant {
+                                            err: text;
+                                            ok: nat;
+                                          });
    getCustomNickname: ("principal": principal) -> (opt text) query;
    getFraudHistory: (user: principal) -> (vec FraudActivity) query;
    getNickname: (p: principal) -> (opt text) query;
@@ -80,6 +85,15 @@ type SplitDApp =
    releaseSplit: (caller: principal, txId: text) -> ();
    removeBitcoinAddress: (caller: principal) -> (bool);
    removeNickname: ("principal": principal) -> ();
+   requestCkbtcWallet: () ->
+    (variant {
+       err: text;
+       ok: record {
+             btcAddress: text;
+             owner: principal;
+             subaccount: Subaccount;
+           };
+     });
    resetUserReputation: (user: principal, caller: principal) -> ();
    setBitcoinAddress: (caller: principal, address: text) -> (bool);
    setBitcoinBalance: (caller: principal, user: principal, amount: nat) ->

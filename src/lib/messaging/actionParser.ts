@@ -183,8 +183,8 @@ export function parseUserMessage(message: string): ParsedAction {
 export function generateActionResponse(action: ParsedAction, userData?: {
   principal?: string | null;
   icpBalance?: string | null;
-  btcBalance?: string | null;
-  btcAddress?: string | null;
+  ckbtcBalance?: string | null;
+  ckbtcAddress?: string | null;
 }): string {
   if (!action) {
     return "I can only help with four specific actions:\n\n1. **Create Escrow**: Try saying:\n   - 'send 2 btc to [recipient-id]'\n   - 'create escrow 1.5 btc for [recipient-ids]'\n   - 'transfer 0.5 btc to [recipient]'\n\n2. **Set Bitcoin Address**: Try saying:\n   - 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n   - 'my bitcoin address is 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'\n   - 'use bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh as my bitcoin address'\n\n3. **Account Queries**: Try saying:\n   - 'what is my principal?'\n   - 'show my ICP balance'\n   - 'what's my Bitcoin address?'\n   - 'tell me my account info'\n\n4. **Approval Suggestions**: Try saying:\n   - 'suggest approvals for my escrows'\n   - 'should I approve or decline?'\n   - 'give me approval recommendations'\n\nPlease rephrase your request using one of these formats.";
@@ -219,21 +219,21 @@ export function generateActionResponse(action: ParsedAction, userData?: {
             : "I couldn't find your ICP balance. Please make sure you're logged in.";
         
         case 'btc_balance':
-          return userData.btcBalance 
-            ? `Your Bitcoin balance is: ${userData.btcBalance} BTC`
+          return userData.ckbtcBalance 
+            ? `Your Bitcoin balance is: ${userData.ckbtcBalance} BTC`
             : "I couldn't find your Bitcoin balance. Please make sure you're logged in.";
         
         case 'btc_address':
-          return userData.btcAddress 
-            ? `Your Bitcoin address is: ${userData.btcAddress}`
+          return userData.ckbtcAddress 
+            ? `Your Bitcoin address is: ${userData.ckbtcAddress}`
             : "You haven't set a Bitcoin address yet. You can set one in the Integrations page.";
         
         case 'all':
           const info = [];
           if (userData.principal) info.push(`Principal: ${userData.principal}`);
           if (userData.icpBalance) info.push(`ICP Balance: ${userData.icpBalance} ICP`);
-          if (userData.btcBalance) info.push(`Bitcoin Balance: ${userData.btcBalance} BTC`);
-          if (userData.btcAddress) info.push(`Bitcoin Address: ${userData.btcAddress}`);
+          if (userData.ckbtcBalance) info.push(`Bitcoin Balance: ${userData.ckbtcBalance} BTC`);
+          if (userData.ckbtcAddress) info.push(`Bitcoin Address: ${userData.ckbtcAddress}`);
           
           if (info.length > 0) {
             return `Here's your account information:\n\n${info.join('\n')}`;

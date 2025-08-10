@@ -2,8 +2,10 @@ import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
+import Blob "mo:base/Blob";
+import Array "mo:base/Array";
+
 import Debug "mo:base/Debug";
-import Iter "mo:base/Iter";
 
 import TransactionTypes "schema";
 import Balance "modules/balance";
@@ -14,6 +16,9 @@ import Escrow "modules/escrow";
 import Users "modules/users";
 import Admin "modules/admin";
 import Bitcoin "modules/bitcoin";
+import CKBTC "modules/ckbtc";
+
+
 
 persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
 
@@ -36,6 +41,12 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   // Bitcoin integration - Dynamic cKBTC canister ID
   // For now, use a placeholder that won't cause initialization errors
   transient let bitcoinIntegration = Bitcoin.BitcoinIntegration("2vxsx-fae"); // Placeholder
+  // Temporarily disable cKBTC integration for local deployment
+  // transient let ckbtcIntegration = CKBTC.CKBTCIntegration(_ckbtcCanisterId, "ckbtc-minter-canister-id", Principal.fromText("aaaaa-aa"));
+  
+
+  
+
 
   public shared func initiateEscrow(
     caller : Principal,
@@ -104,12 +115,12 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   };
 
   // Bitcoin integration functions (internal use only)
-  private func getBitcoinBalance(account : Bitcoin.Account) : async { #ok : Nat; #err : Text } {
+  private func _getBitcoinBalance(account : Bitcoin.Account) : async { #ok : Nat; #err : Text } {
     let result = await bitcoinIntegration.getBitcoinBalance(account);
     return result;
   };
 
-  private func transferBitcoin(
+  private func _transferBitcoin(
     fromAccount : Bitcoin.Account,
     toAccount : Bitcoin.Account,
     amount : Nat,
@@ -119,7 +130,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     return result;
   };
 
-  private func createBitcoinEscrow(escrowId : Text) : async Bitcoin.Account {
+  private func _createBitcoinEscrow(escrowId : Text) : async Bitcoin.Account {
     return bitcoinIntegration.createBitcoinEscrowAccount(escrowId);
   };
 
@@ -205,6 +216,36 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     };
   };
 
+  // cKBTC wallet generation (placeholder for local deployment)
+  public shared (msg) func requestCkbtcWallet() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
+    // Return placeholder data for local testing
+    #ok({
+      btcAddress = "bc1qplaceholderaddressforlocaltesting";
+      owner = msg.caller;
+      subaccount = subaccountFromPrincipal(msg.caller);
+    })
+  };
+
+  // Get cKBTC balance for user (placeholder for local deployment)
+  public shared func getCkbtcBalance(user : Principal) : async { #ok : Nat; #err : Text } {
+    // Return placeholder balance for local testing
+    #ok(0)
+  };
+
+  // Helper function for cKBTC subaccount generation
+  private func subaccountFromPrincipal(p : Principal) : CKBTC.Subaccount {
+    let src = Blob.toArray(Principal.toBlob(p));
+    let out = Array.tabulate<Nat8>(32, func(i : Nat) : Nat8 {
+      if (i == 0) 0x53
+      else if (i == 1) 0x41
+      else if (i == 2) 0x46
+      else if (i == 3) 0x45
+      else if (i < 4 + src.size() and i >= 4) src[i - 4]
+      else 0
+    });
+    Blob.fromArray(out)
+  };
+
   // Bitcoin address management functions
   public shared func setBitcoinAddress(caller : Principal, address : Text) : async Bool {
     // Basic Bitcoin address validation
@@ -227,7 +268,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
 
   public shared func removeBitcoinAddress(caller : Principal) : async Bool {
     switch (userBitcoinAddresses.get(caller)) {
-      case (?address) {
+      case (?_address) {
         userBitcoinAddresses.delete(caller);
         true
       };
@@ -279,10 +320,10 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
       // Convert ICP e8s to Bitcoin satoshis
       // Using a simplified conversion rate: 1 ICP ≈ 0.000001 BTC
       // In production, you'd use real-time exchange rates
-      let bitcoinSatoshis = icpAmount / 100_000_000; // Simplified conversion
+      let bitcoinSatoshis = if (icpAmount >= 100_000_000) { icpAmount / 100_000_000 } else { 0 }; // Safe division
       
       // Deduct ICP from user's balance
-      let newIcpBalance = currentIcpBalance - icpAmount;
+      let newIcpBalance : Nat = currentIcpBalance - icpAmount;
       balances.put(user, newIcpBalance);
       
       // Add Bitcoin to user's balance

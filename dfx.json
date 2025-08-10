@@ -3,7 +3,10 @@
     "split_dapp": {
       "type": "motoko",
       "main": "icp/src/main.mo",
-      "arg": ["2vxsx-fae", "2vxsx-fae"],
+      "arg": [
+        "principal \"2vxsx-fae\"",
+        "text \"ckbtc-minter-canister-id\""
+      ],
       "metadata": [
         {
           "name": "candid:service"
@@ -13,16 +16,38 @@
     "split_dapp_test": {
       "main": "icp/test/main_test.mo",
       "type": "motoko",
-      "dependencies": ["split_dapp"]
+      "dependencies": [
+        "split_dapp"
+      ]
     },
     "frontend": {
       "type": "assets",
-      "source": ["frontend/dist"]
+      "source": [
+        "frontend/dist"
+      ]
     }
   },
   "defaults": {
     "build": {
       "packtool": ""
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    },
+    "ic": {
+      "type": "persistent",
+      "providers": [
+        "https://icp0.io"
+      ]
+    },
+    "staging": {
+      "type": "persistent",
+      "providers": [
+        "https://thesplitsafe.com/"
+      ]
     }
   },
   "version": 1

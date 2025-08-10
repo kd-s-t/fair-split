@@ -24,7 +24,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
   useEffect(() => {
     const loadBitcoinAddress = async () => {
       if (!principal) {
-        console.log('No principal available, skipping Bitcoin address load');
         setIsLoadingBitcoin(false);
         return;
       }

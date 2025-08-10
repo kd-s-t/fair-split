@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
-import { clearUser, setBtcBalance } from "@/lib/redux/userSlice";
+import { clearUser } from "@/lib/redux/userSlice";
 import { Typography } from "./ui/typography";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -34,7 +34,6 @@ export default function Home() {
     await authClient.logout();
     indexedDB.deleteDatabase('auth-client-storage');
     dispatch(clearUser());
-    dispatch(setBtcBalance(null));
   };
 
 

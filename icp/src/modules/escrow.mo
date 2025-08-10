@@ -88,7 +88,7 @@ module {
         let escrowId = Nat.toText(timestamp) # "-" # principalText # "-" # randomSuffix;
 
         // Calculate total amount to escrow
-        let totalAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
+        let _totalAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
             participants,
             0,
             func(acc, p) { acc + p.amount }

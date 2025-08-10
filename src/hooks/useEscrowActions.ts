@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { setNewTxId } from "@/lib/redux/escrowSlice";
 import { setTransactions } from "@/lib/redux/transactionsSlice";
-import { setBtcBalance } from "@/lib/redux/userSlice";
+import { setCkbtcBalance } from "@/lib/redux/userSlice";
 import { Principal } from "@dfinity/principal";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
@@ -30,9 +30,9 @@ export function useEscrowActions(editTxId?: string) {
         const actor = await createSplitDappActor();
         const balance = await actor.getUserBitcoinBalance(Principal.fromText(principal.toText())) as bigint;
         const formatted = (Number(balance) / 1e8).toFixed(8);
-        dispatch(setBtcBalance(formatted));
+        dispatch(setCkbtcBalance(formatted));
       } catch {
-        dispatch(setBtcBalance(null));
+        dispatch(setCkbtcBalance(null));
       }
     }
   };
@@ -142,12 +142,12 @@ export function useEscrowActions(editTxId?: string) {
         const actor = await createSplitDappActor();
         const callerPrincipal = Principal.fromText(principal.toText());
 
-        const btcBalance = await actor.getUserBitcoinBalance(callerPrincipal) as bigint;
+        const ckbtcBalance = await actor.getUserBitcoinBalance(callerPrincipal) as bigint;
         const requiredAmount = BigInt(Math.round(Number(data.btcAmount) * 1e8));
 
-        if (btcBalance < requiredAmount) {
+        if (ckbtcBalance < requiredAmount) {
           toast.error(
-            `Insufficient Bitcoin balance. You have ${(Number(btcBalance) / 1e8).toFixed(8)} BTC, but need ${data.btcAmount} BTC`
+            `Insufficient Bitcoin balance. You have ${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC, but need ${data.btcAmount} BTC`
           );
           return;
         }

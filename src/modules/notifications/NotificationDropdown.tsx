@@ -12,7 +12,6 @@ import TransactionDetailsModal from '@/modules/transactions/DetailsModal';
 import type { NormalizedTransaction, EscrowTransaction } from '@/modules/transactions/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Helper function to convert NormalizedTransaction to EscrowTransaction
 const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransaction => ({
   id: tx.id,
   from: tx.from,
@@ -35,7 +34,6 @@ const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransactio
 });
 
 function getTxId(tx: NormalizedTransaction) {
-  // If tx.to is an array of Principal, join their text representations
   return `${tx.from}_${tx.to.map((toEntry) => toEntry.principal).join('-')}_${tx.createdAt}`;
 }
 
@@ -44,16 +42,6 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
   const dispatch = useDispatch();
   const [selectedTx, setSelectedTx] = useState<NormalizedTransaction | null>(null);
 
-
-
-  // Fetch transactions and update Redux
-  // Transactions are now fetched centrally in layout.tsx
-  // No need to fetch them here anymore
-
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log("transactions bell", transactions);
-  }
   const unreadCount = transactions.filter(tx => {
     // Check if current user is a recipient in this transaction
     const recipientEntry = tx.to.find((entry) =>
@@ -78,8 +66,6 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
   }, [unreadCount]);
 
   const handleRowClick = async (tx: NormalizedTransaction) => {
-
-    // Check if current user is a recipient and hasn't read this transaction
     const recipientEntry = tx.to.find((entry) =>
       String(entry.principal) === String(principalId)
     );

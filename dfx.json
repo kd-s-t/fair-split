@@ -34,7 +34,7 @@
   },
   "networks": {
     "local": {
-      "bind": "0.0.0.0:4943",
+      "bind": "localhost:4943",
       "type": "ephemeral"
     },
     "ic": {

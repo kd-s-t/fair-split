@@ -114,7 +114,6 @@ terraform destroy
 - `public_ip` - EC2 instance public IP
 - `instance_id` - EC2 instance ID
 
-
 ## Configuration
 
 ### Environment Variables

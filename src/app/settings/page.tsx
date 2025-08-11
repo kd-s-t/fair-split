@@ -30,8 +30,8 @@ export default function SettingsPage() {
       if (!principal) return;
       
       try {
-        const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-        const actor = await createSplitDappActorWithDfxKey();
+        const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
+        const actor = await createSplitDappActor();
         const address = await actor.getBitcoinAddress(principal);
         if (address && Array.isArray(address) && address.length > 0) {
           setBitcoinAddress(address[0]);
@@ -58,8 +58,8 @@ export default function SettingsPage() {
 
     setIsLoading(true);
     try {
-      const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-      const actor = await createSplitDappActorWithDfxKey();
+      const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
+      const actor = await createSplitDappActor();
       const success = await actor.setBitcoinAddress(principal, bitcoinAddress);
       
       if (success) {
@@ -87,8 +87,8 @@ export default function SettingsPage() {
 
   const handleRemoveAddress = async () => {
     try {
-      const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-      const actor = await createSplitDappActorWithDfxKey();
+      const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
+      const actor = await createSplitDappActor();
       const success = await actor.removeBitcoinAddress(principal);
       
       if (success) {

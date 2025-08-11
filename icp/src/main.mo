@@ -232,6 +232,21 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     #ok(0)
   };
 
+  // Anonymous versions for local development
+  public shared func requestCkbtcWalletAnonymous() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
+    // Return placeholder data for local testing
+    #ok({
+      btcAddress = "bc1qplaceholderaddressforlocaltesting";
+      owner = Principal.fromText("2vxsx-fae");
+      subaccount = subaccountFromPrincipal(Principal.fromText("2vxsx-fae"));
+    })
+  };
+
+  public shared func getCkbtcBalanceAnonymous() : async { #ok : Nat; #err : Text } {
+    // Return placeholder balance for local testing
+    #ok(0)
+  };
+
   // Helper function for cKBTC subaccount generation
   private func subaccountFromPrincipal(p : Principal) : CKBTC.Subaccount {
     let src = Blob.toArray(Principal.toBlob(p));

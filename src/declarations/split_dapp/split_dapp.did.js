@@ -74,6 +74,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
+    'getCkbtcBalanceAnonymous' : IDL.Func(
+        [],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'getCustomNickname' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(IDL.Text)],
@@ -142,6 +147,20 @@ export const idlFactory = ({ IDL }) => {
     'removeBitcoinAddress' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'removeNickname' : IDL.Func([IDL.Principal], [], []),
     'requestCkbtcWallet' : IDL.Func(
+        [],
+        [
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'owner' : IDL.Principal,
+              'subaccount' : Subaccount,
+              'btcAddress' : IDL.Text,
+            }),
+            'err' : IDL.Text,
+          }),
+        ],
+        [],
+      ),
+    'requestCkbtcWalletAnonymous' : IDL.Func(
         [],
         [
           IDL.Variant({

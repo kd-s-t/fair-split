@@ -28,6 +28,11 @@ export interface SplitDApp {
     { 'ok' : bigint } |
       { 'err' : string }
   >,
+  'getCkbtcBalanceAnonymous' : ActorMethod<
+    [],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'getCustomNickname' : ActorMethod<[Principal], [] | [string]>,
   'getFraudHistory' : ActorMethod<[Principal], Array<FraudActivity>>,
   'getNickname' : ActorMethod<[Principal], [] | [string]>,
@@ -74,6 +79,17 @@ export interface SplitDApp {
   'removeBitcoinAddress' : ActorMethod<[Principal], boolean>,
   'removeNickname' : ActorMethod<[Principal], undefined>,
   'requestCkbtcWallet' : ActorMethod<
+    [],
+    {
+        'ok' : {
+          'owner' : Principal,
+          'subaccount' : Subaccount,
+          'btcAddress' : string,
+        }
+      } |
+      { 'err' : string }
+  >,
+  'requestCkbtcWalletAnonymous' : ActorMethod<
     [],
     {
         'ok' : {

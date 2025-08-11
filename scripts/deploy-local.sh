@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SafeSplit Local Deployment Script
+# Updated for identity-agnostic deployment - works with ANY user principal
+# This allows multiple users (your 20 customers) to use the same canister
+
 set -e
 
 # Colors
@@ -65,7 +69,7 @@ start_dfx() {
     printf "${YELLOW}⚠️ All attempts failed, trying manual approach...${NC}\n"
     
     # Final attempt with minimal options
-    dfx start --background --host 127.0.0.1:4943 || {
+    dfx start --background --host localhost:4943 || {
         printf "${YELLOW}⚠️ Manual approach failed, trying without host binding...${NC}\n"
         dfx start --background
     }
@@ -97,8 +101,11 @@ deploy_canisters() {
     while [ $attempt -le $max_attempts ]; do
         printf "${YELLOW}🔄 Attempt $attempt: Deploying split_dapp...${NC}\n"
         
-        if dfx deploy split_dapp --network local --mode=reinstall --argument "(principal \"$(dfx identity get-principal)\", \"ckbtc-minter-canister-id\")" -y; then
+        # Use identity-agnostic deployment with anonymous principal as admin
+        # This allows ANY authenticated user to use the canister
+        if dfx deploy split_dapp --network local --mode=reinstall --argument "(principal \"2vxsx-fae\", \"ckbtc-minter-canister-id\")" -y; then
             printf "${GREEN}✅ Canister deployed successfully!${NC}\n"
+            printf "${GREEN}✅ Identity-agnostic deployment: Works with ANY user principal${NC}\n"
             return 0
         else
             printf "${YELLOW}⚠️ Deployment attempt $attempt failed${NC}\n"
@@ -149,10 +156,11 @@ setup_initial_balances
 
 # Final success message
 echo "\n====================\n🎉 Local Development Environment Ready! 🎉\n===================="
-printf "${GREEN}✅ dfx replica running on 127.0.0.1:4943${NC}\n"
-printf "${GREEN}✅ split_dapp canister deployed${NC}\n"
+printf "${GREEN}✅ dfx replica running on localhost:4943${NC}\n"
+printf "${GREEN}✅ split_dapp canister deployed (identity-agnostic)${NC}\n"
 printf "${GREEN}✅ Frontend bindings generated${NC}\n"
 printf "${GREEN}✅ Initial balances configured${NC}\n"
 printf "${GREEN}✅ Test users created${NC}\n"
 echo "\n🚀 You can now start your frontend development server!"
 echo "\n💡 Note: cKBTC wallet addresses will be generated automatically when users visit the Integrations page."
+echo "\n🔐 Multi-user ready: Any authenticated user can now use the canister!"

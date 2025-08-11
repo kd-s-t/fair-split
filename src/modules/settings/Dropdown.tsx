@@ -38,7 +38,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
           const { createSplitDappActorAnonymous } = await import('@/lib/icp/splitDapp');
           const actor = await createSplitDappActorAnonymous();
           const address = await actor.getBitcoinAddress(principal);
-          console.log('Bitcoin address loaded:', address);
           setBitcoinAddress(address ? String(address) : null);
         } catch (error) {
           console.error(`Failed to load Bitcoin address (attempt ${retryCount + 1}):`, error);

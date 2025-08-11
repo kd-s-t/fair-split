@@ -52,6 +52,10 @@ type SplitDApp =
                                             err: text;
                                             ok: nat;
                                           });
+   getCkbtcBalanceAnonymous: () -> (variant {
+                                      err: text;
+                                      ok: nat;
+                                    });
    getCustomNickname: ("principal": principal) -> (opt text) query;
    getFraudHistory: (user: principal) -> (vec FraudActivity) query;
    getNickname: (p: principal) -> (opt text) query;
@@ -86,6 +90,15 @@ type SplitDApp =
    removeBitcoinAddress: (caller: principal) -> (bool);
    removeNickname: ("principal": principal) -> ();
    requestCkbtcWallet: () ->
+    (variant {
+       err: text;
+       ok: record {
+             btcAddress: text;
+             owner: principal;
+             subaccount: Subaccount;
+           };
+     });
+   requestCkbtcWalletAnonymous: () ->
     (variant {
        err: text;
        ok: record {

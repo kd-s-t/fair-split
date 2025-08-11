@@ -47,7 +47,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [principal, dispatch])
 
   useEffect(() => {
-    AuthClient.create().then(async (client) => {
+    // For local development, use anonymous identity
+    // For production, use default identity provider
+    const config = process.env.NODE_ENV === 'development' 
+      ? { 
+          idleOptions: { disableIdle: true },
+          identityProvider: undefined  // Explicitly disable identity provider for local development
+        }
+      : {};
+    
+    AuthClient.create(config).then(async (client) => {
       setAuthClient(client)
       await updatePrincipal(client)
     })

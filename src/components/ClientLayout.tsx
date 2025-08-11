@@ -9,7 +9,7 @@ import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
 import { MessagingSystem } from '@/components/messaging/MessagingSystem'
 import AuthOverlay from '@/components/AuthOverlay'
-import { setIcpBalance, setUserName, setCkbtcAddress, setCkbtcBalance } from '../lib/redux/userSlice'
+import { setIcpBalance, setUserName, setCkbtcBalance } from '../lib/redux/userSlice'
 import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
@@ -57,12 +57,9 @@ function BalanceAndNameSyncer() {
         // Fetch ICP Balance
         try {
           const icpBalance = await actor.getBalance(principalObj)
-          console.log('Raw ICP balance from canister:', icpBalance)
           const formattedIcp = (Number(icpBalance) / 1e8).toFixed(8)
-          console.log('Formatted ICP balance:', formattedIcp)
           dispatch(setIcpBalance(formattedIcp))
         } catch {
-          console.error('❌ Could not fetch ICP balance')
           dispatch(setIcpBalance(null))
         }
 
@@ -72,7 +69,6 @@ function BalanceAndNameSyncer() {
           const formattedCkbtc = (Number(ckbtcBalance) / 1e8).toFixed(8)
           dispatch(setCkbtcBalance(formattedCkbtc))
         } catch {
-          console.error('❌ Could not fetch CKBT balance')
           dispatch(setCkbtcBalance(null))
         }
 
@@ -89,16 +85,8 @@ function BalanceAndNameSyncer() {
           dispatch(setUserName(null))
         }
 
-        // Fetch CKBT Address
-        try {
-          const ckbtcAddress = await actor.getCkbtcAddress(principalObj)
-          // ckbtcAddress is an array or opt type, so handle accordingly
-          const address = Array.isArray(ckbtcAddress) ? ckbtcAddress[0] : ckbtcAddress;
-          dispatch(setCkbtcAddress(address ? String(address) : null))
-        } catch {
-          console.error('❌ Could not fetch CKBT address')
-          dispatch(setCkbtcAddress(null))
-        }
+        // Note: cKBTC address is generated via requestCkbtcWallet() in the integrations page
+        // We don't need to fetch it here since it's handled in the integrations flow
 
         // Fetch Transactions
         try {

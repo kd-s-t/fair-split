@@ -4,7 +4,7 @@ import { idlFactory } from '@/declarations/split_dapp'
 import { AuthClient } from '@dfinity/auth-client'
 
 export const createSplitDappActor = async () => {
-  const host = process.env.NEXT_PUBLIC_DFX_HOST || 'https://ic0.app'
+  const host = process.env.NEXT_PUBLIC_DFX_HOST || ''
   const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
   if (!canisterId) {
@@ -13,7 +13,11 @@ export const createSplitDappActor = async () => {
     )
   }
 
-  const agent = new HttpAgent({ host })
+  // For local development, use anonymous identity (no authentication)
+  const agent = new HttpAgent({ 
+    host
+  })
+  
   // Optionally fetch root key in local
   if (host.includes('localhost')) {
     await agent.fetchRootKey()
@@ -34,7 +38,7 @@ export async function getPrincipalText() {
 
 // Function to create actor with default DFX identity for local testing
 export const createSplitDappActorWithDfxKey = async () => {
-  const host = process.env.NEXT_PUBLIC_DFX_HOST || 'https://ic0.app'
+  const host = process.env.NEXT_PUBLIC_DFX_HOST || ''
   const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
   if (!canisterId) {
@@ -63,7 +67,7 @@ export const createSplitDappActorWithDfxKey = async () => {
 
 // Deprecated fallback: create anonymous/default actor (not recommended for authed flows)
 export const createSplitDappActorAnonymous = async () => {
-  const host = process.env.NEXT_PUBLIC_DFX_HOST || 'https://ic0.app'
+  const host = process.env.NEXT_PUBLIC_DFX_HOST || ''
   const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
   if (!canisterId) {

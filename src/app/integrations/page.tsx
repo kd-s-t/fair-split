@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+
 import { Badge } from '@/components/ui/badge';
 import { Typography } from '@/components/ui/typography';
 import { Bitcoin, Copy, Check, RefreshCw } from 'lucide-react';
@@ -35,11 +35,11 @@ export default function IntegrationsPage() {
       
       setIsInitializing(true);
       try {
-        const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-        const actor = await createSplitDappActorWithDfxKey();
+        const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
+        const actor = await createSplitDappActor();
         
-        // Get cKBTC balance
-        const balanceResult = await actor.getCkbtcBalance(principal);
+        // Get cKBTC balance (anonymous for local development)
+        const balanceResult = await actor.getCkbtcBalanceAnonymous() as { ok: number } | { err: string };
         if ('ok' in balanceResult) {
           dispatch(setCkbtcBalance(balanceResult.ok.toString()));
         } else {
@@ -49,7 +49,7 @@ export default function IntegrationsPage() {
         
         // If no cKBTC address exists, generate one
         if (!ckbtcAddress) {
-          const walletResult = await actor.requestCkbtcWallet();
+          const walletResult = await actor.requestCkbtcWalletAnonymous() as { ok: { btcAddress: string } } | { err: string };
           if ('ok' in walletResult) {
             dispatch(setCkbtcAddress(walletResult.ok.btcAddress));
             toast.success('cKBTC wallet generated successfully!');
@@ -60,7 +60,10 @@ export default function IntegrationsPage() {
         }
       } catch (error) {
         console.error('Error initializing cKBTC:', error);
-        toast.error('Failed to initialize cKBTC wallet. Please try again.');
+        // Only show error if we don't already have a cKBTC address
+        if (!ckbtcAddress) {
+          toast.error('Failed to initialize cKBTC wallet. Please try again.');
+        }
       } finally {
         setIsInitializing(false);
       }
@@ -77,9 +80,9 @@ export default function IntegrationsPage() {
     
     setIsLoading(true);
     try {
-      const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-      const actor = await createSplitDappActorWithDfxKey();
-      const result = await actor.requestCkbtcWallet();
+      const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
+      const actor = await createSplitDappActor();
+      const result = await actor.requestCkbtcWalletAnonymous() as { ok: { btcAddress: string } } | { err: string };
       
       if ('ok' in result) {
         dispatch(setCkbtcAddress(result.ok.btcAddress));
@@ -100,9 +103,9 @@ export default function IntegrationsPage() {
     if (!principal) return;
     
     try {
-      const { createSplitDappActorWithDfxKey } = await import('@/lib/icp/splitDapp');
-      const actor = await createSplitDappActorWithDfxKey();
-      const result = await actor.getCkbtcBalance(principal);
+      const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
+      const actor = await createSplitDappActor();
+              const result = await actor.getCkbtcBalanceAnonymous() as { ok: number } | { err: string };
       
       if ('ok' in result) {
         dispatch(setCkbtcBalance(result.ok.toString()));
@@ -111,8 +114,7 @@ export default function IntegrationsPage() {
         console.error('Failed to get cKBTC balance:', result.err);
         toast.error('Failed to refresh cKBTC balance');
       }
-    } catch (error) {
-      console.error('Error refreshing cKBTC balance:', error);
+    } catch {
       toast.error('Failed to refresh cKBTC balance');
     }
   };

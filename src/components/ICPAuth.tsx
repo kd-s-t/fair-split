@@ -19,9 +19,19 @@ export default function Home() {
 
   const login = async () => {
     if (!authClient) return;
+    
+    // For local development, use anonymous identity
+    // For production, use Internet Identity
+    const identityProvider = process.env.NODE_ENV === 'development' 
+      ? undefined  // Use anonymous identity for local development
+      : 'https://identity.ic0.app';
+    
     await authClient.login({
-      identityProvider: 'https://identity.ic0.app',
+      identityProvider,
       maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000),
+      derivationOrigin: process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'  // Your local frontend URL
+        : undefined,
       onSuccess: async () => {
         // Update the authentication state
         await updatePrincipal();

@@ -21,17 +21,17 @@ export default function Home() {
     if (!authClient) return;
     
     // For local development, use anonymous identity
-    // For production, use Internet Identity
+    // For staging/production, use Internet Identity
     const identityProvider = process.env.NODE_ENV === 'development' 
       ? undefined  // Use anonymous identity for local development
-      : 'https://identity.ic0.app';
+      : 'https://identity.internetcomputer.org';
     
     await authClient.login({
       identityProvider,
       maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000),
       derivationOrigin: process.env.NODE_ENV === 'development' 
         ? 'http://localhost:3000'  // Your local frontend URL
-        : undefined,
+        : 'https://staging.thesplitsafe.com',  // Staging environment URL
       onSuccess: async () => {
         // Update the authentication state
         await updatePrincipal();

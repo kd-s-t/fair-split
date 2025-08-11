@@ -42,12 +42,6 @@
       "providers": [
         "https://icp0.io"
       ]
-    },
-    "staging": {
-      "type": "persistent",
-      "providers": [
-        "https://thesplitsafe.com/"
-      ]
     }
   },
   "version": 1

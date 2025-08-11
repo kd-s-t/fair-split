@@ -7,7 +7,7 @@ const ORIGIN = typeof window !== 'undefined' ? window.location.origin : 'http://
 const IS_LOCAL = ORIGIN.startsWith('http://localhost')
 
 export const createSplitDappActor = async () => {
-  const host = IS_LOCAL ? 'http://localhost:4943' : 'https://staging.thesplitsafe.com'
+  const host = IS_LOCAL ? 'http://localhost:4943' : 'https://thesplitsafe.com'
   const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
   if (!canisterId) {
@@ -21,10 +21,8 @@ export const createSplitDappActor = async () => {
     host
   })
   
-  // Fetch root key when talking to a local replica via proxy
-  if (IS_LOCAL) {
-    await agent.fetchRootKey()
-  }
+  // Always fetch root key since we're using a local replica behind the domain
+  await agent.fetchRootKey()
 
   return Actor.createActor(idlFactory, {
     agent,
@@ -41,10 +39,7 @@ export async function getPrincipalText() {
 
 // Function to create actor with default DFX identity for local testing
 export const createSplitDappActorWithDfxKey = async () => {
-  // Use staging host for non-development environments
-  const host = process.env.NODE_ENV === 'development' 
-    ? (process.env.NEXT_PUBLIC_DFX_HOST || 'http://localhost:4943')
-    : 'https://staging.thesplitsafe.com'
+  const host = IS_LOCAL ? 'http://localhost:4943' : 'https://thesplitsafe.com'
   
   const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
@@ -62,10 +57,8 @@ export const createSplitDappActorWithDfxKey = async () => {
     identity 
   })
   
-  // Fetch root key when talking to a local replica via proxy
-  if (host.includes('localhost') || host.includes('staging.thesplitsafe.com')) {
-    await agent.fetchRootKey()
-  }
+  // Always fetch root key since we're using a local replica behind the domain
+  await agent.fetchRootKey()
 
   return Actor.createActor(idlFactory, {
     agent,
@@ -75,10 +68,7 @@ export const createSplitDappActorWithDfxKey = async () => {
 
 // Deprecated fallback: create anonymous/default actor (not recommended for authed flows)
 export const createSplitDappActorAnonymous = async () => {
-  // Use staging host for non-development environments
-  const host = process.env.NODE_ENV === 'development' 
-    ? (process.env.NEXT_PUBLIC_DFX_HOST || 'http://localhost:4943')
-    : 'https://staging.thesplitsafe.com'
+  const host = IS_LOCAL ? 'http://localhost:4943' : 'https://thesplitsafe.com'
   
   const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP
 
@@ -90,10 +80,8 @@ export const createSplitDappActorAnonymous = async () => {
 
   const agent = new HttpAgent({ host })
 
-  // Fetch root key when talking to a local replica via proxy
-  if (host.includes('localhost') || host.includes('staging.thesplitsafe.com')) {
-    await agent.fetchRootKey()
-  }
+  // Always fetch root key since we're using a local replica behind the domain
+  await agent.fetchRootKey()
 
   return Actor.createActor(idlFactory, {
     agent,

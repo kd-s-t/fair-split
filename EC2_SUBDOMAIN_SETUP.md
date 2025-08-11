@@ -370,6 +370,28 @@ server {
 // In your agent code:
 const host = IS_LOCAL ? 'http://localhost:4943' : 'https://thesplitsafe.com'
 await agent.fetchRootKey() // Always call this since using local replica
+
+// Add crypto polyfill for Internet Computer
+if (typeof window !== 'undefined' && !window.crypto) {
+  const { webcrypto } = require('crypto')
+  window.crypto = webcrypto
+}
+```
+
+**4. Update Next.js config:**
+```typescript
+// next.config.ts
+webpack: (config, { isServer }) => {
+  if (!isServer) {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      crypto: false,
+      stream: false,
+      buffer: false,
+    };
+  }
+  return config;
+},
 ```
 
 **Apply the fix:**

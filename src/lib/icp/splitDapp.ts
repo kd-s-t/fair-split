@@ -3,6 +3,13 @@ import { Actor, HttpAgent } from '@dfinity/agent'
 import { idlFactory } from '@/declarations/split_dapp'
 import { AuthClient } from '@dfinity/auth-client'
 
+// Add crypto polyfill for Internet Computer
+if (typeof window !== 'undefined' && !window.crypto) {
+  import('crypto').then(({ webcrypto }) => {
+    (window as any).crypto = webcrypto
+  })
+}
+
 const ORIGIN = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
 const IS_LOCAL = ORIGIN.startsWith('http://localhost')
 

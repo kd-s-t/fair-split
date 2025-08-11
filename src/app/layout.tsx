@@ -9,6 +9,13 @@ import { store } from '../lib/redux/store'
 import ClientLayout from '@/components/ClientLayout'
 import DocumentTitle from '@/components/DocumentTitle'
 
+// Add crypto polyfill for Internet Computer
+if (typeof window !== 'undefined' && !window.crypto) {
+  import('crypto').then(({ webcrypto }) => {
+    (window as any).crypto = webcrypto
+  })
+}
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">

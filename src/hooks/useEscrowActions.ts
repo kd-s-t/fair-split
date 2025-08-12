@@ -28,10 +28,16 @@ export function useEscrowActions(editTxId?: string) {
     if (principal && authClient) {
       try {
         const actor = await createSplitDappActor();
-        const balance = await actor.getUserBitcoinBalance(Principal.fromText(principal.toText())) as bigint;
-        const formatted = (Number(balance) / 1e8).toFixed(8);
-        dispatch(setCkbtcBalance(formatted));
-      } catch {
+        const balanceResult = await actor.getCkbtcBalance(Principal.fromText(principal.toText())) as { ok: number } | { err: string };
+        if ('ok' in balanceResult) {
+          const formatted = (Number(balanceResult.ok) / 1e8).toFixed(8);
+          dispatch(setCkbtcBalance(formatted));
+        } else {
+          console.error('Failed to get cKBTC balance:', balanceResult.err);
+          dispatch(setCkbtcBalance(null));
+        }
+      } catch (error) {
+        console.error('Error updating cKBTC balance:', error);
         dispatch(setCkbtcBalance(null));
       }
     }

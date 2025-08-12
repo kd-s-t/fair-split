@@ -9,7 +9,7 @@ import { clearUser, setUser } from '../lib/redux/userSlice'
 interface AuthContextType {
   principal: Principal | null
   authClient: AuthClient | null
-  updatePrincipal: () => Promise<void>
+  updatePrincipal: (client?: AuthClient) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,26 +23,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [principal, setPrincipal] = useState<Principal | null>(null)
   const dispatch = useDispatch()
 
-  const updatePrincipal = useCallback(async (client: AuthClient) => {
-    const isAuthenticated = await client.isAuthenticated()
+  const updatePrincipal = useCallback(async (client?: AuthClient) => {
+    const authClientToUse = client || authClient
+    if (!authClientToUse) {
+      console.log('🔐 No auth client available for updatePrincipal')
+      return
+    }
+    
+    console.log('🔐 Checking authentication status...')
+    const isAuthenticated = await authClientToUse.isAuthenticated()
+    console.log('🔐 Is authenticated:', isAuthenticated)
     
     if (!isAuthenticated) {
+      console.log('🔐 Not authenticated, clearing user if needed')
       // Only logout if we actually had a principal before
       if (principal) {
-        await client.logout()
+        await authClientToUse.logout()
         setPrincipal(null)
         dispatch(clearUser())
       }
       return
     }
 
-    const identity = client.getIdentity()
+    const identity = authClientToUse.getIdentity()
     const principalObj = identity.getPrincipal()
+    const principalText = principalObj.toText()
+    console.log('🔐 Got principal:', principalText)
     
     // Only update if the principal has changed
-    if (!principal || principal.toText() !== principalObj.toText()) {
+    if (!principal || principal.toText() !== principalText) {
+      console.log('🔐 Updating principal in state and Redux')
       setPrincipal(principalObj)
-      dispatch(setUser({ principal: principalObj.toText(), name: null }))
+      dispatch(setUser({ principal: principalText, name: null }))
+    } else {
+      console.log('🔐 Principal unchanged, no update needed')
     }
   }, [principal, dispatch])
 
@@ -77,9 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [authClient, updatePrincipal])
 
   const handleUpdatePrincipal = async () => {
-    if (authClient) {
-      await updatePrincipal(authClient)
-    }
+    await updatePrincipal()
   }
 
   return (

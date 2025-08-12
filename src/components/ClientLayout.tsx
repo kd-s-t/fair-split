@@ -1,14 +1,14 @@
 'use client'
 
-import { ReactNode, useEffect } from 'react'
+import React, { ReactNode, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState, useAppSelector, store } from '../lib/redux/store'
 import { Provider } from 'react-redux'
 import { useAuth } from '@/contexts/auth-context'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
-import { MessagingSystem } from '@/components/messaging/MessagingSystem'
 import AuthOverlay from '@/components/AuthOverlay'
+import RightSidebar from '@/modules/chat/RightSidebar'
 import { setIcpBalance, setUserName, setCkbtcBalance } from '../lib/redux/userSlice'
 import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
@@ -65,10 +65,16 @@ function BalanceAndNameSyncer() {
 
         // Fetch CKBT Balance
         try {
-          const ckbtcBalance = await actor.getUserCkbtcBalance(principalObj)
-          const formattedCkbtc = (Number(ckbtcBalance) / 1e8).toFixed(8)
-          dispatch(setCkbtcBalance(formattedCkbtc))
-        } catch {
+          const ckbtcBalanceResult = await actor.getCkbtcBalance(principalObj) as { ok: number } | { err: string }
+          if ('ok' in ckbtcBalanceResult) {
+            const formattedCkbtc = (Number(ckbtcBalanceResult.ok) / 1e8).toFixed(8)
+            dispatch(setCkbtcBalance(formattedCkbtc))
+          } else {
+            console.error('Failed to get cKBTC balance:', ckbtcBalanceResult.err)
+            dispatch(setCkbtcBalance(null))
+          }
+        } catch (error) {
+          console.error('Error fetching cKBTC balance:', error)
           dispatch(setCkbtcBalance(null))
         }
 
@@ -166,16 +172,21 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   const name = useAppSelector((state: RootState) => state.user.name)
   const title = useSelector((state: RootState) => state.layout.title)
   const subtitle = useSelector((state: RootState) => state.layout.subtitle)
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(false)
 
   // Log environment variables on app startup
   useEffect(() => {
     logEnvironmentVariables()
   }, [])
 
+  const toggleRightSidebar = () => {
+    setIsRightSidebarOpen(!isRightSidebarOpen)
+  }
+
   return (
     <div className="relative w-screen h-screen overflow-hidden flex">
       <Sidebar />
-      <main className="flex-1 flex flex-col">
+      <main className={`flex flex-col transition-all duration-300 ${isRightSidebarOpen ? 'mr-80' : 'mr-0'}`}>
         <Header
           title={title}
           subtitle={subtitle}
@@ -186,9 +197,9 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
         />
         <div className="flex-1 p-6 overflow-auto">{children}</div>
       </main>
+      <RightSidebar isOpen={isRightSidebarOpen} onToggle={toggleRightSidebar} />
       <AuthOverlay />
       <BalanceAndNameSyncer />
-      <MessagingSystem />
     </div>
   )
 }

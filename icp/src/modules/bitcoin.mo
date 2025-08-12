@@ -3,6 +3,8 @@ import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
 import Text "mo:base/Text";
 import Result "mo:base/Result";
+import HashMap "mo:base/HashMap";
+import Debug "mo:base/Debug";
 
 // cKBTC Ledger Interface
 module {
@@ -43,6 +45,9 @@ module {
 
     // Bitcoin integration for SafeSplit
     public class BitcoinIntegration(ledgerCanisterId : Text) {
+        // Mock Bitcoin balances for local development
+        private var mockBitcoinBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+        private var mockTransactionId : Nat = 0;
         private let ledger : Ledger = actor(ledgerCanisterId);
 
         // Convert ICP e8s to Bitcoin satoshis (approximate conversion)
@@ -57,55 +62,53 @@ module {
             return satoshis * 100_000_000; // Simplified conversion
         };
 
-        // Transfer Bitcoin from escrow to recipient
+        // Transfer Bitcoin from escrow to recipient (MOCK VERSION for local development)
         public func transferBitcoin(
             fromAccount : Account,
             toAccount : Account,
             amount : Nat,
             memo : Nat64
         ) : async Result.Result<Nat, Text> {
-            let transferArgs : TransferArgs = {
-                memo = memo;
-                amount = amount;
-                fee = 0; // cKBTC typically has very low fees
-                from_subaccount = fromAccount.subaccount;
-                to = toAccount;
-                created_at_time = null;
+            // For local development, use mock balances instead of real cKBTC
+            let fromBalance = switch (mockBitcoinBalances.get(fromAccount.owner)) {
+                case (?balance) balance;
+                case null 0;
             };
 
-            try {
-                let result = await ledger.transfer(transferArgs);
-                switch (result) {
-                    case (#Ok(blockIndex)) {
-                        return #ok(blockIndex);
-                    };
-                    case (#Err(error)) {
-                        let errorMessage = switch (error) {
-                            case (#BadFee(e)) { "Bad fee: expected " # Nat.toText(e.expected_fee) };
-                            case (#BadBurn(e)) { "Bad burn: minimum " # Nat.toText(e.min_burn_amount) };
-                            case (#InsufficientFunds(e)) { "Insufficient funds: balance " # Nat.toText(e.balance) };
-                            case (#TooOld) { "Transaction too old" };
-                            case (#CreatedInFuture(e)) { "Created in future: " # Nat64.toText(e.ledger_time) };
-                            case (#Duplicate(e)) { "Duplicate: " # Nat.toText(e.duplicate_of) };
-                            case (#TemporarilyUnavailable) { "Temporarily unavailable" };
-                            case (#GenericError(e)) { "Generic error: " # e.error_message };
-                        };
-                        return #err(errorMessage);
-                    };
-                };
-            } catch (_error) {
-                return #err("Transfer failed");
+            if (fromBalance < amount) {
+                return #err("Insufficient funds: balance " # Nat.toText(fromBalance) # ", required " # Nat.toText(amount));
             };
+
+            // Update mock balances
+            mockBitcoinBalances.put(fromAccount.owner, fromBalance - amount);
+            
+            let toBalance = switch (mockBitcoinBalances.get(toAccount.owner)) {
+                case (?balance) balance;
+                case null 0;
+            };
+            mockBitcoinBalances.put(toAccount.owner, toBalance + amount);
+
+            // Generate mock transaction ID
+            mockTransactionId += 1;
+            
+            Debug.print("🔗 MOCK BITCOIN TRANSFER: " # Nat.toText(amount) # " satoshis from " # Principal.toText(fromAccount.owner) # " to " # Principal.toText(toAccount.owner) # " (txid: " # Nat.toText(mockTransactionId) # ")");
+            
+            return #ok(mockTransactionId);
         };
 
-        // Get Bitcoin balance for an account
+        // Get Bitcoin balance for an account (MOCK VERSION)
         public func getBitcoinBalance(account : Account) : async Result.Result<Nat, Text> {
-            try {
-                let balance = await ledger.account_balance(account);
-                return #ok(Nat64.toNat(balance.e8s));
-            } catch (_error) {
-                return #err("Failed to get balance");
+            let balance = switch (mockBitcoinBalances.get(account.owner)) {
+                case (?b) b;
+                case null 0;
             };
+            return #ok(balance);
+        };
+
+        // Set mock Bitcoin balance for testing
+        public func setMockBitcoinBalance(principal : Principal, amount : Nat) {
+            mockBitcoinBalances.put(principal, amount);
+            Debug.print("💰 Set mock Bitcoin balance for " # Principal.toText(principal) # ": " # Nat.toText(amount) # " satoshis");
         };
 
         // Create a Bitcoin escrow account

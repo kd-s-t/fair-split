@@ -9,61 +9,15 @@ import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
 import { useAuth } from '@/contexts/auth-context';
-import { Bitcoin, Settings, User, Wallet } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);
-  const [bitcoinAddress, setBitcoinAddress] = useState<string | null>(null);
-  const [isLoadingBitcoin, setIsLoadingBitcoin] = useState(true);
   const displayName = useAppSelector((state: RootState) => state.user.name);
-  const icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
-  const { principal } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    const loadBitcoinAddress = async () => {
-      if (!principal) {
-        setIsLoadingBitcoin(false);
-        return;
-      }
-      
-      const maxRetries = 3;
-      let retryCount = 0;
-      
-      const attemptLoad = async (): Promise<void> => {
-        try {
-          console.log('Loading Bitcoin address for principal:', principal.toText());
-          // Use anonymous actor for query operations (getBitcoinAddress is a query method)
-          const { createSplitDappActorAnonymous } = await import('@/lib/icp/splitDapp');
-          const actor = await createSplitDappActorAnonymous();
-          const address = await actor.getBitcoinAddress(principal);
-          setBitcoinAddress(address ? String(address) : null);
-        } catch (error) {
-          console.error(`Failed to load Bitcoin address (attempt ${retryCount + 1}):`, error);
-          
-          // Retry for network or temporary errors
-          if (retryCount < maxRetries - 1) {
-            retryCount++;
-            console.log(`Retrying Bitcoin address load (${retryCount}/${maxRetries})...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
-            return attemptLoad();
-          }
-          
-          // Set to null on final error to show "Not Set" status
-          setBitcoinAddress(null);
-        } finally {
-          if (retryCount >= maxRetries - 1) {
-            setIsLoadingBitcoin(false);
-          }
-        }
-      };
 
-      attemptLoad();
-    };
-
-    loadBitcoinAddress();
-  }, [principal]);
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -117,58 +71,7 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
 
           <DropdownMenuSeparator className="bg-gray-700" />
 
-          {/* Balance Section */}
-          <DropdownMenuItem className="px-3 py-2 cursor-default">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <Wallet size={16} className="text-blue-400" />
-                <span className="text-sm">ICP Balance</span>
-              </div>
-              <span className="text-sm font-medium text-blue-400">
-                {icpBalance ? `${icpBalance} ICP` : 'Loading...'}
-              </span>
-            </div>
-          </DropdownMenuItem>
 
-          {/* Bitcoin Address Status */}
-          <DropdownMenuItem className="px-3 py-2 cursor-default">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <Bitcoin size={16} className="text-yellow-400" />
-                <span className="text-sm">Bitcoin Address</span>
-              </div>
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                bitcoinAddress 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-yellow-600 text-white'
-              }`}>
-                {isLoadingBitcoin ? 'Loading...' : bitcoinAddress ? 'Set' : 'Not Set'}
-              </span>
-            </div>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator className="bg-gray-700" />
-
-          {/* Navigation Items */}
-          <DropdownMenuItem 
-            onClick={() => handleNavigate('/dashboard')}
-            className="px-3 py-2 cursor-pointer hover:bg-gray-700"
-          >
-            <div className="flex items-center gap-2">
-              <User size={16} />
-              <span>Dashboard</span>
-            </div>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem 
-            onClick={() => handleNavigate('/integrations')}
-            className="px-3 py-2 cursor-pointer hover:bg-gray-700"
-          >
-            <div className="flex items-center gap-2">
-              <Bitcoin size={16} />
-              <span>Bitcoin Setup</span>
-            </div>
-          </DropdownMenuItem>
 
           <DropdownMenuItem 
             onClick={() => setShowSettings(true)}

@@ -120,6 +120,11 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     return result;
   };
 
+  // Public function to set mock Bitcoin balance for testing
+  public shared func setMockBitcoinBalance(principal : Principal, amount : Nat) : async () {
+    bitcoinIntegration.setMockBitcoinBalance(principal, amount);
+  };
+
   private func _transferBitcoin(
     fromAccount : Bitcoin.Account,
     toAccount : Bitcoin.Account,
@@ -226,10 +231,14 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     })
   };
 
-  // Get cKBTC balance for user (placeholder for local deployment)
+  // Get cKBTC balance for user (uses mock balance for local deployment)
   public shared func getCkbtcBalance(user : Principal) : async { #ok : Nat; #err : Text } {
-    // Return placeholder balance for local testing
-    #ok(0)
+    // Use mock Bitcoin balance from the Bitcoin integration module
+    let result = await bitcoinIntegration.getBitcoinBalance({ owner = user; subaccount = null });
+    switch (result) {
+      case (#ok(balance)) { #ok(balance) };
+      case (#err(error)) { #err(error) };
+    };
   };
 
   // Anonymous versions for local development

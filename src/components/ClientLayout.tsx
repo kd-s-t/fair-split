@@ -179,14 +179,26 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
     logEnvironmentVariables()
   }, [])
 
+  // Prevent body scroll when sidebar is open
+  React.useEffect(() => {
+    if (isRightSidebarOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isRightSidebarOpen]);
+
   const toggleRightSidebar = () => {
     setIsRightSidebarOpen(!isRightSidebarOpen)
   }
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex">
-      <Sidebar />
-      <main className={`flex flex-col transition-all duration-300 ${isRightSidebarOpen ? 'mr-80' : 'mr-0'}`}>
+    <div className="flex h-screen w-screen overflow-hidden">
+      <Sidebar className="flex flex-col h-screen w-48" />
+      <main className="flex flex-col h-screen flex-1 transition-all duration-300">
         <Header
           title={title}
           subtitle={subtitle}
@@ -197,7 +209,17 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
         />
         <div className="flex-1 p-6 overflow-auto">{children}</div>
       </main>
-      <RightSidebar isOpen={isRightSidebarOpen} onToggle={toggleRightSidebar} />
+      {isRightSidebarOpen && (
+        <RightSidebar isOpen={isRightSidebarOpen} onToggle={toggleRightSidebar} className="flex flex-col h-screen w-80" />
+      )}
+      {!isRightSidebarOpen && (
+        <button
+          onClick={toggleRightSidebar}
+          className="fixed right-4 top-20 z-50 bg-[#222222] border border-[#303434] text-white hover:bg-[#303434] rounded p-2"
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-chevron-left"><polyline points="11 17 6 12 11 7"></polyline></svg>
+        </button>
+      )}
       <AuthOverlay />
       <BalanceAndNameSyncer />
     </div>

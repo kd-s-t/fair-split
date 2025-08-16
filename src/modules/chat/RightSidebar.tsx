@@ -208,25 +208,12 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-80 bg-[#222222] border-l border-[#303434] z-40 shadow-2xl"
+            className="h-screen w-80 bg-[#222222] border-l border-[#303434] z-40 shadow-2xl"
           >
             <div className="flex flex-col h-full p-4 space-y-4">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
-                <Button
-                  onClick={onToggle}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                >
-                  <ChevronRight size={16} />
-                </Button>
-              </div>
-
               {/* AI Chat Interface - Full Space */}
-              <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg">
-                <div className="flex items-center justify-between p-3 border-b border-[#303434]">
+              <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg min-h-0">
+                <div className="flex items-center justify-between p-3 border-b border-[#303434] flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                       <span className="text-xs text-white font-bold">AI</span>
@@ -243,17 +230,15 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
                     </Button>
                   </div>
                 </div>
-                                  <div className="flex-1 overflow-hidden">
-                    <ChatInterface
-                      messages={messages}
-                      onSendMessage={handleSendMessage}
-                      onClearChat={handleClearChat}
-                      isLoading={isLoading}
-                    />
-                  </div>
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  <ChatInterface
+                    messages={messages}
+                    onSendMessage={handleSendMessage}
+                    onClearChat={handleClearChat}
+                    isLoading={isLoading}
+                  />
+                </div>
               </div>
-
-
             </div>
           </motion.div>
         )}

@@ -21,6 +21,10 @@ const Form = ({ form }: FormProps) => {
 
   const { getValues, setValue, control, watch, register, formState: { errors } } = form
 
+  // Debug: Log current form values
+  const currentValues = watch();
+  console.log('Current form values:', currentValues);
+
   const { fields, append, remove } = useFieldArray({
     control: control,
     name: "recipients"
@@ -297,21 +301,28 @@ const Form = ({ form }: FormProps) => {
                   <div className="grid grid-cols-8 gap-4 mt-2">
                     <div className="col-span-6">
                       <label className="text-sm font-medium text-[#A1A1AA]">
-                        BTC address
+                        ICP Principal ID
                       </label>
                       <Input
                         type="text"
-                        {...register(`recipients.${idx}.principal`)}
-                        placeholder="BTC address"
+                        value={watch(`recipients.${idx}.principal`) || ''}
+                        placeholder="ICP Principal ID"
                         className="mt-1"
                         autoComplete="off"
-                        name={`btc-address-${idx}`}
+                        onChange={(e) => {
+                          console.log('Field value changed:', e.target.value);
+                          console.log('Field name:', `recipients.${idx}.principal`);
+                          setValue(`recipients.${idx}.principal`, e.target.value);
+                        }}
                       />
                       {errors.recipients?.[idx]?.principal && (
                         <div className="text-red-400 text-sm mt-1">
                           {errors.recipients[idx]?.principal?.message}
                         </div>
                       )}
+                      <div className="text-gray-400 text-xs mt-1">
+                        Enter the recipient&apos;s ICP Principal ID. The system will automatically convert to BTC addresses.
+                      </div>
                     </div>
                     <div className="flex gap-2 items-center col-span-2">
                       <div className="flex-1">

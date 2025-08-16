@@ -91,11 +91,7 @@ print_status "Deploying canisters..."
 
 # Deploy split_dapp first with arguments
 print_status "Deploying split_dapp..."
-# Create a temporary file with arguments
-echo "$CURRENT_PRINCIPAL" > /tmp/arg1.txt
-echo "ckbtc-minter-canister-id" > /tmp/arg2.txt
-cat /tmp/arg1.txt /tmp/arg2.txt | dfx deploy --network local split_dapp
-rm /tmp/arg1.txt /tmp/arg2.txt
+echo "yes" | dfx deploy split_dapp --network local --mode=reinstall --argument "(principal \"$CURRENT_PRINCIPAL\", \"ckbtc-minter-canister-id\")"
 
 # Deploy split_dapp_test
 print_status "Deploying split_dapp_test..."
@@ -108,6 +104,25 @@ print_warning "Skipping frontend deployment (running in Docker)"
 print_status "Getting canister IDs..."
 SPLIT_DAPP_ID=$(dfx canister id --network local split_dapp)
 SPLIT_DAPP_TEST_ID=$(dfx canister id --network local split_dapp_test)
+
+# Step 7: Set initial balances for testing
+print_status "Setting initial balances for testing..."
+print_status "Setting 1 BTC balance for current user..."
+
+# Set 1 BTC (100,000,000 satoshis) for the current user
+dfx canister call split_dapp setBitcoinBalance "(principal \"$CURRENT_PRINCIPAL\", principal \"$CURRENT_PRINCIPAL\", 100_000_000)" --network local
+
+# Also set 1 BTC for the specific user principal that's commonly used
+print_status "Setting 1 BTC balance for ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe..."
+dfx canister call split_dapp setMockBitcoinBalance "(principal \"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe\", 100_000_000)" --network local
+
+# Also set some ICP balance for testing
+print_status "Setting 10 ICP balance for current user..."
+dfx canister call split_dapp setInitialBalance "(principal \"$CURRENT_PRINCIPAL\", 1_000_000_000, principal \"$CURRENT_PRINCIPAL\")" --network local
+
+print_success "Initial balances set!"
+print_success "   - 1 BTC (100,000,000 satoshis)"
+print_success "   - 10 ICP (1,000,000,000 e8s)"
 
 print_success "Deployment completed!"
 echo

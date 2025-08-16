@@ -6,7 +6,7 @@ import { AuthClient } from '@dfinity/auth-client'
 // Add crypto polyfill for Internet Computer
 if (typeof window !== 'undefined' && !window.crypto) {
   import('crypto').then(({ webcrypto }) => {
-    (window as any).crypto = webcrypto
+    (window as unknown as { crypto: typeof webcrypto }).crypto = webcrypto
   })
 }
 

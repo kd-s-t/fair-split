@@ -18,7 +18,7 @@ interface ChatInterfaceProps {
   isLoading: boolean;
 }
 
-export function ChatInterface({ messages, onSendMessage, onClearChat, isLoading }: ChatInterfaceProps) {
+export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

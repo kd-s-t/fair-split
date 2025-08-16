@@ -1,9 +1,26 @@
 
 import { z } from "zod";
 
+// ICP Principal validation function
+const isValidICPPrincipal = (principal: string): boolean => {
+  // Temporarily simplify validation to debug the issue
+  const isValid = principal.trim().length > 0;
+  
+  // Debug logging
+  console.log('ICP Principal validation:', {
+    principal,
+    trimmedLength: principal.trim().length,
+    isValid
+  });
+  
+  return isValid;
+};
+
 const recipientSchema = z.object({
     id: z.string(),
-    principal: z.string().min(1, "BTC address is required"),
+    principal: z.string()
+      .min(1, "ICP Principal ID is required")
+      .refine(isValidICPPrincipal, "Please enter a valid ICP Principal ID"),
     percentage: z.number().min(0, "Percentage must be at least 0").max(100, "Percentage cannot exceed 100")
   });
 

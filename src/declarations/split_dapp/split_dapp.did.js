@@ -187,6 +187,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'setMockBitcoinBalance' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'setNickname' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'updateEscrow' : IDL.Func(
         [IDL.Principal, IDL.Text, IDL.Vec(ParticipantShare)],

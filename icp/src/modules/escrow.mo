@@ -245,7 +245,7 @@ module {
         // Get sender's Bitcoin address
         let senderBitcoinAddress = switch (userBitcoinAddresses.get(caller)) {
             case (?address) address;
-            case null "bc1qplaceholderaddressfornow"; // Fallback if no address set
+            case null "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"; // Fallback if no address set
         };
         
         let tx : TransactionTypes.Transaction = {

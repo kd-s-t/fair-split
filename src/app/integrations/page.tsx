@@ -52,7 +52,6 @@ export default function IntegrationsPage() {
           const walletResult = await actor.requestCkbtcWalletAnonymous() as { ok: { btcAddress: string } } | { err: string };
           if ('ok' in walletResult) {
             dispatch(setCkbtcAddress(walletResult.ok.btcAddress));
-            toast.success('cKBTC wallet generated successfully!');
           } else {
             console.error('Failed to generate cKBTC wallet:', walletResult.err);
             toast.error('Failed to generate cKBTC wallet: ' + walletResult.err);
@@ -86,7 +85,6 @@ export default function IntegrationsPage() {
       
       if ('ok' in result) {
         dispatch(setCkbtcAddress(result.ok.btcAddress));
-        toast.success('New cKBTC wallet generated successfully!');
       } else {
         toast.error('Failed to generate cKBTC wallet: ' + result.err);
       }
@@ -128,7 +126,7 @@ export default function IntegrationsPage() {
       setIsCopied(true);
       toast.success('Address copied to clipboard!');
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy address');
     }
   };

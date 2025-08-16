@@ -18,6 +18,9 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "warn",
     },
   },
+  {
+    ignores: ["src/declarations/**/*.d.ts"],
+  },
 ];
 
 export default eslintConfig;

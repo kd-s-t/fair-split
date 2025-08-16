@@ -53,25 +53,25 @@ export default function EditNameModal({
   if (!open) return null;
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="dark:bg-slate-900 p-6 rounded-xl shadow-xl w-full max-w-xs"
+        className="bg-[#222222] border border-[#303434] p-6 rounded-xl shadow-xl w-full max-w-xs"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ duration: 0.2 }}
       >
-        <h2 className="text-lg font-semibold mb-2">Edit Display Name</h2>
+        <h2 className="text-lg font-semibold mb-2 text-white">Edit Display Name</h2>
         <div className="mb-4 flex flex-col items-start">
-          <span className="text-xs text-muted-foreground mb-1">
+          <span className="text-xs text-gray-400 mb-1">
             Principal ID
           </span>
           <div className="relative flex items-center gap-2 w-full">
-            <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded break-all select-all border border-slate-200 dark:border-slate-700 w-full">
+            <span className="font-mono text-xs bg-[#2C2C2C] text-white px-2 py-1 rounded break-all select-all border border-[#303434] w-full">
               {principalId}
             </span>
             <button
@@ -98,7 +98,7 @@ export default function EditNameModal({
           </div>
         </div>
         <input
-          className="w-full border rounded px-3 py-2 mb-4"
+          className="w-full border border-[#303434] bg-[#2C2C2C] text-white rounded px-3 py-2 mb-4 placeholder-gray-400"
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
           placeholder="Enter your nickname"

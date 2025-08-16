@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       console.log('🔐 Principal unchanged, no update needed')
     }
-  }, [principal, dispatch])
+  }, [principal, dispatch, authClient])
 
   useEffect(() => {
     // For local development, use anonymous identity

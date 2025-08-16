@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { getAvatarUrl, truncatePrincipal } from '@/lib/utils';
@@ -8,20 +8,16 @@ import EditNameModal from './Modal';
 import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
-import { useAuth } from '@/contexts/auth-context';
 import { Settings } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);
   const displayName = useAppSelector((state: RootState) => state.user.name);
-  const router = useRouter();
 
 
 
-  const handleNavigate = (path: string) => {
-    router.push(path);
-  };
+
 
   return (
     <>

@@ -2,8 +2,10 @@ import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import Nat "mo:base/Nat";
+import Nat8 "mo:base/Nat8";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
+import Iter "mo:base/Iter";
 
 import Debug "mo:base/Debug";
 
@@ -221,11 +223,13 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     };
   };
 
-  // cKBTC wallet generation (placeholder for local deployment)
+  // cKBTC wallet generation (realistic fake addresses for presentation)
   public shared (msg) func requestCkbtcWallet() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
-    // Return placeholder data for local testing
+    // Generate realistic-looking fake Bitcoin address for presentation
+    let fakeAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+    
     #ok({
-      btcAddress = "bc1qplaceholderaddressforlocaltesting";
+      btcAddress = fakeAddress;
       owner = msg.caller;
       subaccount = subaccountFromPrincipal(msg.caller);
     })
@@ -243,9 +247,11 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
 
   // Anonymous versions for local development
   public shared func requestCkbtcWalletAnonymous() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
-    // Return placeholder data for local testing
+    // Generate realistic-looking fake Bitcoin address for presentation
+    let fakeAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+    
     #ok({
-      btcAddress = "bc1qplaceholderaddressforlocaltesting";
+      btcAddress = fakeAddress;
       owner = Principal.fromText("2vxsx-fae");
       subaccount = subaccountFromPrincipal(Principal.fromText("2vxsx-fae"));
     })

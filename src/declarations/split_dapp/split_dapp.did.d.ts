@@ -105,6 +105,7 @@ export interface SplitDApp {
   'setBitcoinBalance' : ActorMethod<[Principal, Principal, bigint], boolean>,
   'setCustomNickname' : ActorMethod<[Principal, string], undefined>,
   'setInitialBalance' : ActorMethod<[Principal, bigint, Principal], undefined>,
+  'setMockBitcoinBalance' : ActorMethod<[Principal, bigint], undefined>,
   'setNickname' : ActorMethod<[Principal, string], undefined>,
   'updateEscrow' : ActorMethod<
     [Principal, string, Array<ParticipantShare>],

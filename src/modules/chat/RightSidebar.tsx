@@ -3,15 +3,14 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { ChatInterface, Message } from './ChatInterface';
 import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
-import { getGlobalChatState, updateGlobalChatOpen, clearGlobalChatMessages } from '@/lib/messaging/chatState';
+import { getGlobalChatState, clearGlobalChatMessages } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/lib/redux/store';
 import { RootState } from '@/lib/redux/store';

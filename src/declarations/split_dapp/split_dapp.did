@@ -113,6 +113,7 @@ type SplitDApp =
     (bool);
    setCustomNickname: ("principal": principal, nickname: text) -> ();
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
+   setMockBitcoinBalance: ("principal": principal, amount: nat) -> ();
    setNickname: (p: principal, name: text) -> ();
    updateEscrow: (caller: principal, txId: text, updatedParticipants:
     vec ParticipantShare) -> ();

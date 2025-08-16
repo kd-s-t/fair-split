@@ -189,195 +189,193 @@ const Form = ({ form }: FormProps) => {
   const isTotalValid = calculateTotalAllocation() === 100;
 
   return (
-    <div className="w-[70%] min-w-[340px]">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bitcoin color="#F97415" />
-            <Typography variant="large">Escrow setup</Typography>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 mt-4">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-medium text-[#A1A1AA]">
-                Title
-              </label>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={generateTitle}
-                  className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
-                >
-                  <Sparkles size={14} className="mr-1" />
-                  Generate
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => document.getElementById('json-upload')?.click()}
-                  className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
-                >
-                  <Upload size={14} className="mr-1" />
-                  Upload JSON
-                </Button>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="json-upload"
-                />
-              </div>
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bitcoin color="#F97415" />
+          <Typography variant="large">Escrow setup</Typography>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 mt-4">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-[#A1A1AA]">
+              Title
+            </label>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={generateTitle}
+                className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
+              >
+                <Sparkles size={14} className="mr-1" />
+                Generate
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => document.getElementById('json-upload')?.click()}
+                className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
+              >
+                <Upload size={14} className="mr-1" />
+                Upload JSON
+              </Button>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="json-upload"
+              />
             </div>
-            <Input
-              className="mt-1"
-              type="text"
-              {...register("title")}
-              placeholder="e.g., Freelance project payment"
-            />
-            {errors.title && (
-              <div className="text-red-400 text-sm mt-1">{errors.title.message}</div>
-            )}
           </div>
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-medium text-[#A1A1AA]">
-                BTC amount
-              </label>
-            </div>
-            <Input
-              className="mt-1"
-              type="number"
-              min="0"
-              step="0.00000001"
-              {...register("btcAmount")}
-              placeholder="0.00000000"
-            />
-            {errors.btcAmount && (
-              <div className="text-red-400 text-sm mt-1">{errors.btcAmount.message}</div>
-            )}
+          <Input
+            className="mt-1"
+            type="text"
+            {...register("title")}
+            placeholder="e.g., Freelance project payment"
+          />
+          {errors.title && (
+            <div className="text-red-400 text-sm mt-1">{errors.title.message}</div>
+          )}
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-[#A1A1AA]">
+              BTC amount
+            </label>
           </div>
-          <hr className="mt-6 mb-6 text-[#424444]" />
-          <div className="flex items-center justify-between">
-            <Typography variant="large">Recipients & split allocation</Typography>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleAddRecipient}
-              type="button"
-            >
-              + Add recipient
-            </Button>
-          </div>
-          <div className="space-y-4">
-            <AnimatePresence>
-              {fields.map((field, idx) => (
-                <motion.div
-                  key={field.id}
-                  layout
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.25 }}
-                  className="container bg-[#2C2C2C] rounded-lg relative"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Recipient {idx + 1}</span>
-                    {fields.length > 1 && (
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleRemoveRecipient(idx)}
-                        type="button"
-                        size="icon"
-                        aria-label="Remove recipient"
-                      >
-                        <Trash2 size={16} color="#F64C4C" />
-                      </Button>
-                    )}
-                  </div>
+          <Input
+            className="mt-1"
+            type="number"
+            min="0"
+            step="0.00000001"
+            {...register("btcAmount")}
+            placeholder="0.00000000"
+          />
+          {errors.btcAmount && (
+            <div className="text-red-400 text-sm mt-1">{errors.btcAmount.message}</div>
+          )}
+        </div>
+        <hr className="mt-6 mb-6 text-[#424444]" />
+        <div className="flex items-center justify-between">
+          <Typography variant="large">Recipients & split allocation</Typography>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleAddRecipient}
+            type="button"
+          >
+            + Add recipient
+          </Button>
+        </div>
+        <div className="space-y-4">
+          <AnimatePresence>
+            {fields.map((field, idx) => (
+              <motion.div
+                key={field.id}
+                layout
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.25 }}
+                className="container bg-[#2C2C2C] rounded-lg relative"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Recipient {idx + 1}</span>
+                  {fields.length > 1 && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleRemoveRecipient(idx)}
+                      type="button"
+                      size="icon"
+                      aria-label="Remove recipient"
+                    >
+                      <Trash2 size={16} color="#F64C4C" />
+                    </Button>
+                  )}
+                </div>
 
-                  <div className="grid grid-cols-8 gap-4 mt-2">
-                    <div className="col-span-6">
+                <div className="grid grid-cols-8 gap-4 mt-2">
+                  <div className="col-span-6">
+                    <label className="text-sm font-medium text-[#A1A1AA]">
+                      ICP Principal ID
+                    </label>
+                    <Input
+                      type="text"
+                      value={watch(`recipients.${idx}.principal`) || ''}
+                      placeholder="ICP Principal ID"
+                      className="mt-1"
+                      autoComplete="off"
+                      onChange={(e) => {
+                        console.log('Field value changed:', e.target.value);
+                        console.log('Field name:', `recipients.${idx}.principal`);
+                        setValue(`recipients.${idx}.principal`, e.target.value);
+                      }}
+                    />
+                    {errors.recipients?.[idx]?.principal && (
+                      <div className="text-red-400 text-sm mt-1">
+                        {errors.recipients[idx]?.principal?.message}
+                      </div>
+                    )}
+                    <div className="text-gray-400 text-xs mt-1">
+                      Enter the recipient&apos;s ICP Principal ID. The system will automatically convert to BTC addresses.
+                    </div>
+                  </div>
+                  <div className="flex gap-2 items-center col-span-2">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-[#A1A1AA]">
-                        ICP Principal ID
+                        Percentage (%)
                       </label>
                       <Input
-                        type="text"
-                        value={watch(`recipients.${idx}.principal`) || ''}
-                        placeholder="ICP Principal ID"
-                        className="mt-1"
-                        autoComplete="off"
-                        onChange={(e) => {
-                          console.log('Field value changed:', e.target.value);
-                          console.log('Field name:', `recipients.${idx}.principal`);
-                          setValue(`recipients.${idx}.principal`, e.target.value);
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={watch(`recipients.${idx}.percentage`)}
+                        onChange={(e) => handlePercentageChange(idx, e.target.value)}
+                        onKeyDown={(e) => {
+                          // Prevent negative sign, e, and other non-numeric characters
+                          if (['-', 'e', 'E'].includes(e.key)) {
+                            e.preventDefault();
+                          }
                         }}
+                        className="mt-1"
                       />
-                      {errors.recipients?.[idx]?.principal && (
+                      {errors.recipients?.[idx]?.percentage && (
                         <div className="text-red-400 text-sm mt-1">
-                          {errors.recipients[idx]?.principal?.message}
+                          {errors.recipients[idx]?.percentage?.message}
                         </div>
                       )}
-                      <div className="text-gray-400 text-xs mt-1">
-                        Enter the recipient&apos;s ICP Principal ID. The system will automatically convert to BTC addresses.
-                      </div>
-                    </div>
-                    <div className="flex gap-2 items-center col-span-2">
-                      <div className="flex-1">
-                        <label className="text-sm font-medium text-[#A1A1AA]">
-                          Percentage (%)
-                        </label>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="1"
-                          value={watch(`recipients.${idx}.percentage`)}
-                          onChange={(e) => handlePercentageChange(idx, e.target.value)}
-                          onKeyDown={(e) => {
-                            // Prevent negative sign, e, and other non-numeric characters
-                            if (['-', 'e', 'E'].includes(e.key)) {
-                              e.preventDefault();
-                            }
-                          }}
-                          className="mt-1"
-                        />
-                        {errors.recipients?.[idx]?.percentage && (
-                          <div className="text-red-400 text-sm mt-1">
-                            {errors.recipients[idx]?.percentage?.message}
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+        <div className="flex items-center justify-between">
+          <Typography variant="muted">Total allocation:</Typography>
+          <Typography
+            variant="small"
+            className={`${isTotalValid ? 'text-[#FEB64D]' : 'text-red-400'}`}
+          >
+            {calculateTotalAllocation()}%
+          </Typography>
+        </div>
+        {!isTotalValid && calculateTotalAllocation() > 0 && (
+          <div className="text-red-400 text-sm">
+            Total allocation must equal 100%
           </div>
-          <div className="flex items-center justify-between">
-            <Typography variant="muted">Total allocation:</Typography>
-            <Typography
-              variant="small"
-              className={`${isTotalValid ? 'text-[#FEB64D]' : 'text-red-400'}`}
-            >
-              {calculateTotalAllocation()}%
-            </Typography>
+        )}
+        {errors.recipients && (
+          <div className="text-red-400 text-sm">
+            {errors.recipients.message}
           </div>
-          {!isTotalValid && calculateTotalAllocation() > 0 && (
-            <div className="text-red-400 text-sm">
-              Total allocation must equal 100%
-            </div>
-          )}
-          {errors.recipients && (
-            <div className="text-red-400 text-sm">
-              {errors.recipients.message}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -16,6 +16,7 @@ import TransactionDialog from "./Dialog";
 import { escrowFormSchema } from "@/validation/escrow";
 import { useEscrowActions } from "@/hooks/useEscrowActions";
 import Form from "./Form";
+import AIAssistant from "./AIAssistant";
 
 type FormData = z.infer<typeof escrowFormSchema>;
 
@@ -103,7 +104,10 @@ const TransactionForm = () => {
 
   return (
     <div className="flex gap-6 p-6 min-h-screen bg-[#0A0A0A]">
-      <Form form={form} />
+      <div className="w-[70%] min-w-[340px]">
+        <AIAssistant form={form} />
+        <Form form={form} />
+      </div>
       <Summary {...summaryProps} />
 
       <TransactionDialog

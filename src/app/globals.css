@@ -24,6 +24,10 @@
   @apply p-3 rounded-[10px] border bg-[#2C2C2C] border-[#424444];
 }
 
+.container-blue {
+  @apply p-3 rounded-[10px] border bg-[#007AFF]/30 border-[#007AFF];
+}
+
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 

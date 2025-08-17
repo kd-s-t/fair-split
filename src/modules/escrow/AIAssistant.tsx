@@ -25,7 +25,7 @@ interface AiGeneratedSetup {
 }
 
 interface AIAssistantProps {
-    form: UseFormReturn<any>;
+    form: UseFormReturn;
 }
 
 const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
@@ -133,7 +133,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
                                 className='h-24'
                             />
                             <Typography variant="muted" className='font-normal'>
-                                Example: "Send 0.03 BTC — 60% to Dev, 30% to Designer, 10% to QA"
+                                Example: &quot;Send 0.03 BTC — 60% to Dev, 30% to Designer, 10% to QA&quot;
                             </Typography>
                             <Button
                                 variant="outline"

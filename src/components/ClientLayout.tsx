@@ -14,6 +14,7 @@ import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActorAnonymous } from '@/lib/icp/splitDapp'
 import { Principal } from '@dfinity/principal'
 import type { NormalizedTransaction } from '@/modules/transactions/types'
+import { BotMessageSquare } from 'lucide-react'
 
 // Environment variable logging (client-safe, explicit keys only)
 const logEnvironmentVariables = () => {
@@ -215,9 +216,9 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
       {!isRightSidebarOpen && (
         <button
           onClick={toggleRightSidebar}
-          className="fixed right-4 top-20 z-50 bg-[#222222] border border-[#303434] text-white hover:bg-[#303434] rounded p-2"
+          className="fixed right-4 bottom-10 z-50 bg-[#FEB64D] rounded-full py-3 px-3"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-chevron-left"><polyline points="11 17 6 12 11 7"></polyline></svg>
+          <BotMessageSquare />
         </button>
       )}
       <AuthOverlay />

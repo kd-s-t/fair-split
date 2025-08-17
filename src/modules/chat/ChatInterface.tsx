@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { BotMessageSquare, Send } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 export interface Message {
   id: string;
@@ -52,14 +53,18 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
+            {message.role !== 'user' && (
+              <div className="rounded-full bg-[#FEB64D] self-start">
+                <BotMessageSquare />
+              </div>
+            )}
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.role === 'user'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-[#2a2a2a] text-white'
-              }`}
+              className={`rounded-lg p-3 ${message.role === 'user'
+                ? 'bg-[#FEB64D] text-black'
+                : 'bg-[#2a2a2a] text-white'
+                }`}
             >
               <div className="whitespace-pre-wrap text-sm">{message.content}</div>
             </div>
@@ -78,25 +83,25 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-[#303434]">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
+      <div className="px-4 pb-4">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 border border-[#FEB64D] rounded-xl">
+          <Input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type your message... (Press Enter to send)"
-            className="flex-1 bg-[#2a2a2a] border border-[#404040] rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-orange-500"
+            placeholder="Talk with SplitSafe AI"
+            className='bg-transparent border-0 !focus:border-0'
             disabled={isLoading}
           />
           <Button
             type="submit"
+            variant="ghost"
             size="sm"
             disabled={!inputValue.trim() || isLoading}
-            className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
+            className="disabled:opacity-50"
           >
-            <Send size={14} />
+            <Send size={14} color="#FEB64D" />
           </Button>
         </form>
       </div>

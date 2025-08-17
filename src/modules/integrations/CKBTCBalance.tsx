@@ -11,6 +11,7 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 
 const CKBTCBalance: React.FC = () => {
+
   const { principal } = useAuth();
   const dispatch = useDispatch()
   const { ckbtcBalance } = useUser()

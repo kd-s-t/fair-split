@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { Bitcoin, Trash2, Sparkles, Upload } from "lucide-react";
+import { Bitcoin, Trash2, Sparkles, Upload, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 import z from "zod";
 import { escrowFormSchema } from "@/validation/escrow";
+import { useUser } from "@/hooks/useUser";
 
 type FormData = z.infer<typeof escrowFormSchema>;
 
@@ -20,6 +21,7 @@ interface FormProps {
 const Form = ({ form }: FormProps) => {
 
   const { getValues, setValue, control, watch, register, formState: { errors } } = form
+  const { ckbtcBalance } = useUser()
 
   // Debug: Log current form values
   const currentValues = watch();
@@ -115,6 +117,7 @@ const Form = ({ form }: FormProps) => {
     const currentRecipients = getValues("recipients");
     const newRecipient = {
       id: `recipient-${currentRecipients.length + 1}`,
+      name: "",
       principal: "",
       percentage: 0
     };
@@ -245,6 +248,10 @@ const Form = ({ form }: FormProps) => {
             <label className="text-sm font-medium text-[#A1A1AA]">
               BTC amount
             </label>
+            <div className="flex items-center gap-1">
+              <Typography variant="muted">{ckbtcBalance}</Typography>
+              <Typography variant="small">BTC</Typography>
+            </div>
           </div>
           <Input
             className="mt-1"
@@ -270,6 +277,13 @@ const Form = ({ form }: FormProps) => {
             + Add recipient
           </Button>
         </div>
+        <div className="container-blue flex gap-2">
+          <Info />
+          <div>
+            <Typography variant="base" className="text-[#71B5FF]">Recipient address</Typography>
+            <Typography variant="small" className="text-white">Enter the recipient&apos;s ICP Principal ID. The system will automatically convert to BTC addresses.</Typography>
+          </div>
+        </div>
         <div className="space-y-4">
           <AnimatePresence>
             {fields.map((field, idx) => (
@@ -283,24 +297,25 @@ const Form = ({ form }: FormProps) => {
                 className="container bg-[#2C2C2C] rounded-lg relative"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">Recipient {idx + 1}</span>
+                  <Typography variant="base" className="font-semibold text-[#FEB64D]">{field.name || `Recipient ${idx + 1}`}</Typography>
                   {fields.length > 1 && (
                     <Button
                       variant="secondary"
+                      className="!rounded-full !border-none bg-[#353535]"
                       onClick={() => handleRemoveRecipient(idx)}
                       type="button"
                       size="icon"
                       aria-label="Remove recipient"
                     >
-                      <Trash2 size={16} color="#F64C4C" />
+                      <Trash2 size={16} className="text-[#F64C4C]" />
                     </Button>
                   )}
                 </div>
 
-                <div className="grid grid-cols-8 gap-4 mt-2">
+                <div className="grid grid-cols-8 gap-4">
                   <div className="col-span-6">
                     <label className="text-sm font-medium text-[#A1A1AA]">
-                      ICP Principal ID
+                      ICP address
                     </label>
                     <Input
                       type="text"
@@ -309,8 +324,6 @@ const Form = ({ form }: FormProps) => {
                       className="mt-1"
                       autoComplete="off"
                       onChange={(e) => {
-                        console.log('Field value changed:', e.target.value);
-                        console.log('Field name:', `recipients.${idx}.principal`);
                         setValue(`recipients.${idx}.principal`, e.target.value);
                       }}
                     />
@@ -319,9 +332,6 @@ const Form = ({ form }: FormProps) => {
                         {errors.recipients[idx]?.principal?.message}
                       </div>
                     )}
-                    <div className="text-gray-400 text-xs mt-1">
-                      Enter the recipient&apos;s ICP Principal ID. The system will automatically convert to BTC addresses.
-                    </div>
                   </div>
                   <div className="flex gap-2 items-center col-span-2">
                     <div className="flex-1">

@@ -10,6 +10,10 @@ import { Sparkles, Bitcoin, Bot } from "lucide-react";
 import { Typography } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
 import { UseFormReturn } from "react-hook-form";
+import z from 'zod';
+import { escrowFormSchema } from '@/validation/escrow';
+
+type FormData = z.infer<typeof escrowFormSchema>;
 
 interface Recipient {
     name: string;
@@ -25,7 +29,7 @@ interface AiGeneratedSetup {
 }
 
 interface AIAssistantProps {
-    form: UseFormReturn;
+    form: UseFormReturn<FormData>;
 }
 
 const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
@@ -86,9 +90,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
             form.setValue("title", setup.title);
             form.setValue("btcAmount", setup.totalAmount.toString());
 
+            console.log("setup", setup);
+
             // Set recipients
             const formRecipients = setup.recipients.map((recipient, index) => ({
                 id: `recipient-${index + 1}`,
+                name: recipient.name,
                 principal: "",
                 percentage: recipient.percentage
             }));
@@ -96,6 +103,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
             form.setValue("recipients", formRecipients);
 
             setSetup(null);
+            setDescription("");
         }
     };
 
@@ -141,7 +149,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
                                 disabled={isGenerating}
                                 className="w-full mt-4"
                             >
-                                <Sparkles className="h-4 w-4 mr-2" />
+                                <Sparkles size={16} />
                                 {isGenerating ? "Generating..." : "Generate split"}
                             </Button>
                         </div>
@@ -197,7 +205,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
                             onClick={handleConfirmSetup}
                             className="w-full mt-6"
                         >
-                            <Sparkles />
+                            <Sparkles size={16} />
                             Confirm setup
                         </Button>
                     </div>

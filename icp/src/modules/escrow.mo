@@ -125,122 +125,30 @@ module {
             };
         };
 
-        // Separate participants into Bitcoin and ICP recipients
-        let bitcoinParticipants = Array.filter<TransactionTypes.ParticipantShare>(
-            participants,
-            func(p) {
-                switch (p.bitcoinAddress) {
-                    case (?address) { address != "" };
-                    case null false;
-                }
-            }
-        );
-        
-        let icpParticipants = Array.filter<TransactionTypes.ParticipantShare>(
-            participants,
-            func(p) {
-                switch (p.bitcoinAddress) {
-                    case (?address) { address == "" };
-                    case null true;
-                }
-            }
-        );
+        // Get cKBTC addresses for all participants and handle everything as cKBTC transfers
+        let participantsWithAddresses = participants; // No need to modify, just use as-is
 
-        // Convert ICP participants' amounts from Bitcoin to ICP using real-time exchange rate
-        let convertedIcpParticipants = Array.map<TransactionTypes.ParticipantShare, TransactionTypes.ParticipantShare>(
-            icpParticipants,
-            func(p) {
-                let btcAmountInSatoshis = p.amount;
-                // Get real-time BTC to ICP exchange rate
-                let exchangeRate = getBtcToIcpRate();
-                // Convert satoshis to ICP using integer arithmetic
-                // 1 BTC = 100,000,000 satoshis
-                // 1 BTC = 15,000 ICP (current rate)
-                // So 1 satoshi = 0.00015 ICP
-                let icpAmount = btcAmountInSatoshis * exchangeRate / 100_000_000;
-                {
-                    principal = p.principal;
-                    amount = icpAmount;
-                    nickname = p.nickname;
-                    percentage = p.percentage;
-                    bitcoinAddress = null; // No Bitcoin address for ICP recipients
-                }
-            }
-        );
-
-        // Calculate total Bitcoin amount needed (only for Bitcoin recipients)
-        let totalBitcoinAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
-            bitcoinParticipants,
+        // Calculate total cKBTC amount needed
+        let totalCkbtcAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
+            participantsWithAddresses,
             0,
             func(acc, p) { acc + p.amount }
         );
 
-        // Calculate total ICP amount needed (for ICP recipients)
-        let totalIcpAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
-            convertedIcpParticipants,
-            0,
-            func(acc, p) { acc + p.amount }
-        );
+        // Balance check is now handled in the main canister using mock balances
+        // Skip balance check here since it's already validated
+        Debug.print("🔍 Backend: Balance check skipped - handled in main canister");
+        Debug.print("🔍 Backend: totalCkbtcAmount = " # Nat.toText(totalCkbtcAmount) # " satoshis");
+        Debug.print("🔍 Backend: caller = " # Principal.toText(caller));
 
-        // Check sender's Bitcoin balance for Bitcoin recipients
-        if (totalBitcoinAmount > 0) {
-            let senderBitcoinBalance = Balance.getBalance(bitcoinBalances, caller);
-            if (senderBitcoinBalance < totalBitcoinAmount) {
-                return {
-                    success = false;
-                    escrowId = null;
-                    error = ?("Error: Insufficient Bitcoin balance. Required: " # Nat.toText(totalBitcoinAmount) # " satoshis, Available: " # Nat.toText(senderBitcoinBalance) # " satoshis");
-                    newLogs = logs;
-                };
-            };
-        };
-
-        // Check sender's ICP balance for ICP recipients
         var updatedLogs = logs;
-        if (totalIcpAmount > 0) {
-            let senderIcpBalance = Balance.getBalance(balances, caller);
-            if (senderIcpBalance < totalIcpAmount) {
-                // Sender doesn't have enough ICP, try to convert from Bitcoin
-                let senderBitcoinBalance = Balance.getBalance(bitcoinBalances, caller);
-                let requiredBtcForIcp = totalIcpAmount * 100_000_000 / getBtcToIcpRate(); // Convert ICP needed to BTC
-                
-                if (senderBitcoinBalance < requiredBtcForIcp) {
-                    return {
-                        success = false;
-                        escrowId = null;
-                        error = ?("Error: Insufficient balance. Need " # Nat.toText(totalIcpAmount) # " ICP (or " # Nat.toText(requiredBtcForIcp) # " satoshis) for ICP recipients, but only have " # Nat.toText(senderIcpBalance) # " ICP and " # Nat.toText(senderBitcoinBalance) # " satoshis");
-                        newLogs = logs;
-                    };
-                };
-                
-                // Convert Bitcoin to ICP for the sender
-                Balance.decreaseBalance(bitcoinBalances, caller, requiredBtcForIcp);
-                Balance.increaseBalance(balances, caller, totalIcpAmount);
-                
-                updatedLogs := Array.append<Text>(
-                    logs,
-                    [
-                        "Converted " # Nat.toText(requiredBtcForIcp) # " satoshis to " # Nat.toText(totalIcpAmount) # " ICP for sender " # Principal.toText(caller)
-                    ]
-                );
-            };
-        };
 
-        // Deduct Bitcoin from sender's balance for Bitcoin recipients
-        if (totalBitcoinAmount > 0) {
-            Balance.decreaseBalance(bitcoinBalances, caller, totalBitcoinAmount);
-        };
+        // Balance deduction is now handled in the main canister using mock balances
+        // Skip balance deduction here since it's already handled
+        Debug.print("🔍 Backend: Balance deduction skipped - handled in main canister");
 
-        // Deduct ICP from sender's balance for ICP recipients
-        if (totalIcpAmount > 0) {
-            Balance.decreaseBalance(balances, caller, totalIcpAmount);
-        };
-
-        // Combine Bitcoin and ICP participants for transaction creation
-        let allParticipants = Array.append<TransactionTypes.ParticipantShare>(
-            bitcoinParticipants,
-            convertedIcpParticipants
-        );
+        // Use participants with addresses for transaction creation
+        let allParticipants = participantsWithAddresses;
         
         // Get sender's Bitcoin address
         let senderBitcoinAddress = switch (userBitcoinAddresses.get(caller)) {
@@ -263,7 +171,7 @@ module {
                         approvedAt = null;
                         declinedAt = null;
                         readAt = null;
-                        bitcoinAddress = p.bitcoinAddress; // Store recipient's Bitcoin address (null for ICP recipients)
+                        bitcoinAddress = userBitcoinAddresses.get(p.principal); // Get recipient's cKBTC address from HashMap
                     };
                 },
             );
@@ -291,13 +199,11 @@ module {
         let newLogs = Array.append<Text>(
             updatedLogs,
             [
-                "Mixed escrow created by " # Principal.toText(caller) # " at " # Nat.toText(timestamp),
+                "cKBTC escrow created by " # Principal.toText(caller) # " at " # Nat.toText(timestamp),
                 "Escrow ID: " # escrowId,
                 "Sender Bitcoin address: " # senderBitcoinAddress,
-                "Bitcoin recipients: " # Nat.toText(bitcoinParticipants.size()) # " with " # Nat.toText(totalBitcoinAmount) # " satoshis",
-                "ICP recipients: " # Nat.toText(convertedIcpParticipants.size()) # " with " # Nat.toText(totalIcpAmount) # " ICP",
-                "Total recipients: " # Nat.toText(allParticipants.size()),
-                "Awaiting recipient approvals for mixed transfer",
+                "Total recipients: " # Nat.toText(allParticipants.size()) # " with " # Nat.toText(totalCkbtcAmount) # " satoshis",
+                "Awaiting recipient approvals for cKBTC transfer",
             ],
         );
 
@@ -351,7 +257,7 @@ module {
                             // Check if this is a Bitcoin recipient (has Bitcoin address)
                             switch (toEntry.bitcoinAddress) {
                                 case (?bitcoinAddress) {
-                                    if (bitcoinAddress != "" and bitcoinAddress != "bc1qplaceholderaddressfornow") {
+                                    if (bitcoinAddress != "" and not Text.startsWith(bitcoinAddress, #text "bc1q")) {
                                         // This is a real Bitcoin transfer - call the Bitcoin transfer function
                                         // Note: In a real implementation, you'd need to pass the bitcoinIntegration instance
                                         // For now, we'll just log it and update internal balances
@@ -760,7 +666,7 @@ module {
                     approvedAt = null;
                     declinedAt = null;
                     readAt = null;
-                    bitcoinAddress = p.bitcoinAddress;
+                    bitcoinAddress = null; // Will be set when transaction is processed
                 };
             }
         );

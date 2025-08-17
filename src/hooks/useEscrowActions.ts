@@ -135,24 +135,25 @@ export function useEscrowActions(editTxId?: string) {
   };
 
   // Function to get Bitcoin address for a principal
-  const getBitcoinAddressForPrincipal = async (principalText: string): Promise<string | null> => {
+  const getBitcoinAddressForPrincipal = async (principalText: string): Promise<string> => {
     try {
       const actor = await createSplitDappActor();
       const principalObj = Principal.fromText(principalText);
       const address = await actor.getBitcoinAddress(principalObj);
       console.log(`Raw address from canister for ${principalText}:`, address);
       
-      // For testing/mock environment, if no address is set, use a realistic fake address
-      // This prevents the ICP backend from rejecting empty strings
-      const result = address && typeof address === 'string' && address.trim() !== '' 
-        ? address 
-        : generateFakeBitcoinAddress();
-      console.log(`Processed address for ${principalText}:`, result);
-      return result;
+      // Return empty string for ICP recipients (no Bitcoin address set)
+      if (!address || typeof address !== 'string' || address.trim() === '') {
+        console.log(`No address found for ${principalText}, returning empty string for ICP recipient`);
+        return "";
+      }
+      
+      console.log(`Found address for ${principalText}:`, address);
+      return address;
     } catch (error) {
       console.error('Failed to get Bitcoin address for principal:', principalText, error);
-      // Return realistic fake address for presentation instead of null
-      return generateFakeBitcoinAddress();
+      // Return empty string on error (treat as ICP recipient)
+      return "";
     }
   };
 
@@ -166,17 +167,26 @@ export function useEscrowActions(editTxId?: string) {
 
       try {
         const actor = await createSplitDappActor();
-        const callerPrincipal = Principal.fromText(principal.toText());
+        const callerPrincipal = principal; // principal is already a Principal object
 
+        console.log('🔄 Escrow creation: Checking balance for principal:', callerPrincipal.toText());
         const ckbtcBalanceResult = await actor.getCkbtcBalance(callerPrincipal) as { ok: number } | { err: string };
+        console.log('🔄 Escrow creation: Balance result:', ckbtcBalanceResult);
+        
         if ('err' in ckbtcBalanceResult) {
+          console.error('🔄 Escrow creation: Balance check failed:', ckbtcBalanceResult.err);
           toast.error(`Failed to get Bitcoin balance: ${ckbtcBalanceResult.err}`);
           return;
         }
+        
         const ckbtcBalance = BigInt(ckbtcBalanceResult.ok);
         const requiredAmount = BigInt(Math.round(Number(data.btcAmount) * 1e8));
+        
+        console.log('🔄 Escrow creation: Available balance:', ckbtcBalance.toString(), 'satoshis');
+        console.log('🔄 Escrow creation: Required amount:', requiredAmount.toString(), 'satoshis');
 
         if (ckbtcBalance < requiredAmount) {
+          console.error('🔄 Escrow creation: Insufficient balance');
           toast.error(
             `Insufficient Bitcoin balance. You have ${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC, but need ${data.btcAmount} BTC`
           );
@@ -184,20 +194,34 @@ export function useEscrowActions(editTxId?: string) {
         }
 
         const participants = await Promise.all(
-          data.recipients.map(async (r) => ({
-            principal: Principal.fromText(r.principal),
-            amount: BigInt(Math.round(((Number(data.btcAmount) * r.percentage) / 100) * 1e8)),
-            nickname: r.principal || "Recipient",
-            percentage: BigInt(r.percentage),
-            bitcoinAddress: await getBitcoinAddressForPrincipal(r.principal),
-          }))
+          data.recipients.map(async (r) => {
+            return {
+              principal: Principal.fromText(r.principal),
+              amount: BigInt(Math.round(((Number(data.btcAmount) * r.percentage) / 100) * 1e8)),
+              nickname: r.principal || "Recipient",
+              percentage: BigInt(r.percentage),
+            };
+          })
         );
 
+        console.log('🔄 Escrow creation: Calling initiateEscrow with:', {
+          callerPrincipal: callerPrincipal.toText(),
+          participants: participants.map(p => ({
+            principal: p.principal.toText(),
+            amount: p.amount.toString(),
+            nickname: p.nickname,
+            percentage: p.percentage.toString()
+          })),
+          title: data.title || ""
+        });
+        
         const txId = await actor.initiateEscrow(
           callerPrincipal,
           participants,
           data.title || ""
         );
+        
+        console.log('🔄 Escrow creation: initiateEscrow result:', txId);
 
         if (typeof txId === "string" && txId.startsWith("Error:")) {
           toast.error(txId);
@@ -207,6 +231,9 @@ export function useEscrowActions(editTxId?: string) {
         dispatch(setNewTxId(String(txId)));
         await fetchAndStoreTransactions();
         await updateBalance();
+        
+        // Redirect to transaction management page
+        window.location.href = `/transactions/${txId}`;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         toast.error(`Error creating escrow: ${errorMessage}`);
@@ -226,7 +253,7 @@ export function useEscrowActions(editTxId?: string) {
 
       try {
         const actor = await createSplitDappActor();
-        const callerPrincipal = Principal.fromText(principal.toText());
+        const callerPrincipal = principal; // principal is already a Principal object
 
         // Verify transaction is still editable
         try {

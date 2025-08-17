@@ -7,10 +7,14 @@ import TransactionStats from "@/components/TransactionStats";
 import { RefundedEscrowDetailsProps } from "./types";
 import RecipientsList from "./RecipientsList";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
+import { useMemo } from "react";
 
 export default function RefundedEscrowDetails({ transaction }: RefundedEscrowDetailsProps) {
-  const depositAddress = ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
-    Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const depositAddress = useMemo(() => {
+    return ('bitcoinAddress' in transaction ? transaction.bitcoinAddress : undefined) ||
+      ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
+      "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+  }, [transaction]);
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0

@@ -4,36 +4,27 @@ dfx identity get-principal
 
 dfx identity use default
 dfx identity get-principal
-27x7r-i75hq-n7emo-27bdr-t75ik-bghml-ayjp3-b475x-2imua-ehkeu-3qe
-
-dfx identity use user2
-dfx identity get-principal
-modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe
-
-
-dfx identity use user3
-dfx identity get-principal
-lj5ry-unyjc-jdn7p-j3qmv-ug3zb-cegzu-wnmf7-vpni3-5f3zj-hhjjf-tqe
-
-dfx identity use user4
-dfx identity get-principal
-6d7pr-gfm24-fnvuv-odsjz-6brox-4spcl-ahcyw-gzync-bx3qg-sdaqt-rqe
 
 dfx identity list
 
 dfx canister id split_dapp
 uxrrr-q7777-77774-qaaaq-cai
 
-genos - 2820835 - j7r3u-uzdl5-2ywu3-ylhp3-gpkhl-7rcxu-3xyyu-kmdp2-dsl7z-sdfe6-hae
-genos - fe4nh-lgnft-kpdcw-tufpd-jt5eo-3hai3-ev76u-y2hht-dgohe-b5tsn-fqe
-hcpw - 2833579 - hi5lo-gxyun-jvs2p-dcark-7siu4-z55fi-dteam-wwie6-lhvex-2aca2-dae
 
-dfx canister call split_dapp getTransactionBySenderAndIndex '(principal "10btc genos - uu3ee-ff3xm-vhws5-zxy6q-vtsvx-q2uhy-4ligb-wcltn-dd6xn-bckkv-mqe", 0)'
-
-Option 1: Use dfx identity in browser (Recommended)
-dfx identity export default
-
-
-
-uu3ee-ff3xm-vhws5-zxy6q-vtsvx-q2uhy-4ligb-wcltn-dd6xn-bckkv-mqe
+ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe
 ckbtc-minter-canister-id
+
+
+dfx canister call split_dapp setBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", 1000000000)' --network local
+
+dfx canister call split_dapp setMockBitcoinBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", 100000000)' --network local
+
+dfx canister call split_dapp getCkbtcBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe")' --network local
+
+dfx canister call split_dapp getCkbtcBalance '(principal "hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe")' --network local
+
+
+dfx deploy split_dapp --network local --yes
+dfx generate split_dapp --network local
+
+dfx canister call split_dapp initiateEscrow '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", vec { record { "principal" = principal "hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe"; amount = 50000; nickname = "Test Recipient"; percentage = 100 } }, "Test Escrow")' --network local

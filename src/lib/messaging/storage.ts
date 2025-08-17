@@ -1,4 +1,4 @@
-import { Message } from '@/components/messaging/ChatInterface';
+import { Message } from '@/modules/chat/ChatInterface';
 
 const STORAGE_KEY = 'splitsafe_chat_messages';
 

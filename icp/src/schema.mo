@@ -31,6 +31,5 @@ module {
         amount : Nat;
         nickname : Text;
         percentage : Nat;
-        bitcoinAddress : ?Text; // Bitcoin address for this recipient
     };
 }; 

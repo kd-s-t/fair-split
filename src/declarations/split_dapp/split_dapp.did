@@ -121,7 +121,6 @@ type SplitDApp =
 type ParticipantShare = 
  record {
    amount: nat;
-   bitcoinAddress: opt text;
    nickname: text;
    percentage: nat;
    "principal": principal;

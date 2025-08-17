@@ -4,7 +4,7 @@
       "type": "motoko",
       "main": "icp/src/main.mo",
       "arg": [
-        "principal \"2vxsx-fae\"",
+        "principal \"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe\"",
         "text \"ckbtc-minter-canister-id\""
       ],
       "metadata": [
@@ -23,7 +23,7 @@
     "frontend": {
       "type": "assets",
       "source": [
-        "frontend/dist"
+        ".next"
       ]
     }
   },

@@ -21,9 +21,7 @@ const Form = ({ form }: FormProps) => {
 
   const { getValues, setValue, control, watch, register, formState: { errors } } = form
 
-  // Debug: Log current form values
-  const currentValues = watch();
-  console.log('Current form values:', currentValues);
+
 
   const { fields, append, remove } = useFieldArray({
     control: control,
@@ -310,8 +308,6 @@ const Form = ({ form }: FormProps) => {
                         className="mt-1"
                         autoComplete="off"
                         onChange={(e) => {
-                          console.log('Field value changed:', e.target.value);
-                          console.log('Field name:', `recipients.${idx}.principal`);
                           setValue(`recipients.${idx}.principal`, e.target.value);
                         }}
                       />

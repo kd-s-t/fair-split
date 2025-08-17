@@ -10,14 +10,18 @@ import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 export default function EditEscrowDetails({
   transaction,
   onCancel,
   onEdit
 }: EditEscrowDetailsProps) {
-  const depositAddress = ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
-    Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const depositAddress = useMemo(() => {
+    return ('bitcoinAddress' in transaction ? transaction.bitcoinAddress : undefined) ||
+      ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
+      "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+  }, [transaction]);
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0

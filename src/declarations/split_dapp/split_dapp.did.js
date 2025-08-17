@@ -39,7 +39,6 @@ export const idlFactory = ({ IDL }) => {
   const ParticipantShare = IDL.Record({
     'principal' : IDL.Principal,
     'nickname' : IDL.Text,
-    'bitcoinAddress' : IDL.Opt(IDL.Text),
     'amount' : IDL.Nat,
     'percentage' : IDL.Nat,
   });

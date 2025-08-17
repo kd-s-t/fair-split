@@ -35,12 +35,21 @@ function btcToUsd(btc: number) {
 export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
   const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
   // const _icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
+  
+  // Debug logging
+  console.log('🔄 DashboardStats: ckbtcBalance from Redux:', ckbtcBalance, 'Type:', typeof ckbtcBalance);
+  
   const isLoading =
     ckbtcBalance === null || ckbtcBalance === undefined || ckbtcBalance === "";
+    
   const router = useRouter();
   const [showBalance, setShowBalance] = useState(true);
   const [displayBalance, setDisplayBalance] = useState("0.00000000");
   const [displayUsd, setDisplayUsd] = useState("$0.00");
+  
+  console.log('🔄 DashboardStats: isLoading:', isLoading);
+  console.log('🔄 DashboardStats: showBalance:', showBalance);
+  console.log('🔄 DashboardStats: displayBalance:', displayBalance);
 
   // Calculate transaction counts
   const totalEscrows = transactions ? transactions.length : 0;

@@ -10,7 +10,6 @@ export interface FraudActivity {
 export interface ParticipantShare {
   'principal' : Principal,
   'nickname' : string,
-  'bitcoinAddress' : [] | [string],
   'amount' : bigint,
   'percentage' : bigint,
 }

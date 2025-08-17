@@ -135,6 +135,7 @@ echo "💰 Setting up initial balances..."
 FRONTEND_PRINCIPAL="uu3ee-ff3xm-vhws5-zxy6q-vtsvx-q2uhy-4ligb-wcltn-dd6xn-bckkv-mqe"
 ADMIN_PRINCIPAL=$(dfx identity get-principal)
 ICP_E8S=1000000000  # 10 ICP for testing
+CKBTC_SATOSHIS=100000000  # 1 BTC in satoshis for testing
 
 # Function to setup initial balances with retry logic
 setup_initial_balances() {
@@ -145,6 +146,22 @@ setup_initial_balances() {
         printf "${YELLOW}⚠️ Failed to set ICP balance, retrying...${NC}\n"
         sleep 2
         dfx canister call split_dapp setInitialBalance "(principal \"$FRONTEND_PRINCIPAL\", $ICP_E8S, principal \"$ADMIN_PRINCIPAL\")" --network local
+    }
+    
+    # Set initial mock cKBTC balance for frontend principal (1 BTC)
+    printf "${YELLOW}🔄 Setting up mock cKBTC balance...${NC}\n"
+    dfx canister call split_dapp setMockBitcoinBalance "(principal \"$FRONTEND_PRINCIPAL\", $CKBTC_SATOSHIS : nat)" --network local || {
+        printf "${YELLOW}⚠️ Failed to set mock cKBTC balance, retrying...${NC}\n"
+        sleep 2
+        dfx canister call split_dapp setMockBitcoinBalance "(principal \"$FRONTEND_PRINCIPAL\", $CKBTC_SATOSHIS : nat)" --network local
+    }
+    
+    # Set initial Bitcoin balance for escrow functionality (1 BTC)
+    printf "${YELLOW}🔄 Setting up Bitcoin balance for escrow...${NC}\n"
+    dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$FRONTEND_PRINCIPAL\", $CKBTC_SATOSHIS : nat)" --network local || {
+        printf "${YELLOW}⚠️ Failed to set Bitcoin balance, retrying...${NC}\n"
+        sleep 2
+        dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$FRONTEND_PRINCIPAL\", $CKBTC_SATOSHIS : nat)" --network local
     }
     
     printf "${GREEN}✅ Initial balances setup complete!${NC}\n"

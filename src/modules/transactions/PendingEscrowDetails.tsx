@@ -9,13 +9,15 @@ import RecipientsList from "./RecipientsList";
 import TimeRemaining from "./TimeRemaining";
 import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 export default function PendingEscrowDetails({
   transaction,
   onCancel
 }: PendingEscrowDetailsProps) {
-  const depositAddress = transaction?.depositAddress ||
-    Array.from({ length: 42 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const depositAddress = useMemo(() => {
+    return transaction?.bitcoinAddress || transaction?.depositAddress || "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+  }, [transaction?.bitcoinAddress, transaction?.depositAddress]);
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0

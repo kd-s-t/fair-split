@@ -55,12 +55,42 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     participants : [TransactionTypes.ParticipantShare],
     title : Text,
   ) : async Text {
+    // Calculate total amount to be deducted
+    let totalAmount = Array.foldLeft<TransactionTypes.ParticipantShare, Nat>(
+      participants,
+      0,
+      func(acc, p) { acc + p.amount }
+    );
+    
+    // Get current mock balance
+    let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = caller; subaccount = null })) {
+      case (#ok(balance)) balance;
+      case (#err(_)) 0;
+    };
+    
+    // Check if user has sufficient balance
+    if (currentMockBalance < totalAmount) {
+      return "Error: Insufficient cKBTC balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(currentMockBalance) # " satoshis";
+    };
+    
+    // Deduct from mock balance first
+    bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance - totalAmount);
+    
+    // Then proceed with escrow creation
     let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);
     logs := result.newLogs;
     switch (result.success, result.escrowId, result.error) {
       case (true, ?escrowId, null) { escrowId };
-      case (false, null, ?error) { error };
-      case (_, _, _) { "Error: Unexpected result from escrow module" };
+      case (false, null, ?error) { 
+        // If escrow creation failed, restore the balance
+        bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
+        error 
+      };
+      case (_, _, _) { 
+        // If unexpected result, restore the balance
+        bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
+        "Error: Unexpected result from escrow module" 
+      };
     };
   };
 
@@ -98,6 +128,29 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   ) : async () {
     let result = Escrow.releaseSplit(caller, txId, transactions, balances, bitcoinBalances, reputation, logs);
     logs := result.newLogs;
+    
+    // If escrow was successfully released, update recipient mock balances
+    if (result.success) {
+      // Get the transaction to find recipients
+      let transaction = await getTransaction(txId, caller);
+      switch (transaction) {
+        case (?tx) {
+          // Update mock balances for all approved recipients
+          for (toEntry in tx.to.vals()) {
+            if (toEntry.status == #approved) {
+              // Get current mock balance for recipient
+              let currentBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = toEntry.principal; subaccount = null })) {
+                case (#ok(balance)) balance;
+                case (#err(_)) 0;
+              };
+              // Add the escrow amount to recipient's mock balance
+              bitcoinIntegration.setMockBitcoinBalance(toEntry.principal, currentBalance + toEntry.amount);
+            };
+          };
+        };
+        case null { /* Transaction not found */ };
+      };
+    };
   };
 
   public shared func updateEscrow(

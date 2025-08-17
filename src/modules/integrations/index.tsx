@@ -16,8 +16,6 @@ export default function Integrations() {
 	const dispatch = useDispatch();
 	const { principal } = useAuth();
 	const { ckbtcAddress } = useUser();
-	const [isLoading, setIsLoading] = useState(false);
-	const [isCopied, setIsCopied] = useState(false);
 	const [isInitializing, setIsInitializing] = useState(true);
 
 	useEffect(() => {
@@ -69,29 +67,6 @@ export default function Integrations() {
 			initializeCkbtc();
 		}
 	}, [principal, dispatch, ckbtcAddress]);
-
-	// Generate new cKBTC wallet address
-	const generateCkbtcWallet = async () => {
-		if (!principal) return;
-
-		setIsLoading(true);
-		try {
-			const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
-			const actor = await createSplitDappActor();
-			const result = await actor.requestCkbtcWalletAnonymous() as { ok: { btcAddress: string } } | { err: string };
-
-			if ('ok' in result) {
-				dispatch(setCkbtcAddress(result.ok.btcAddress));
-			} else {
-				toast.error('Failed to generate cKBTC wallet: ' + result.err);
-			}
-		} catch (error) {
-			console.error('Error generating cKBTC wallet:', error);
-			toast.error('Failed to generate cKBTC wallet. Please try again.');
-		} finally {
-			setIsLoading(false);
-		}
-	};
 
 	if (!principal) {
 		return (

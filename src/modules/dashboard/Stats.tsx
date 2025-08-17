@@ -10,9 +10,7 @@ import React, { useState, useEffect } from "react";
 import type { NormalizedTransaction } from '@/modules/transactions/types'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
-
 import { StatCardProps } from './types';
-import WithdrawModal from "./Modal";
 import Withdraw from "./Withdraw";
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (

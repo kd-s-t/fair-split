@@ -14,7 +14,7 @@ const typographyVariants = cva("", {
       large: "text-lg font-semibold",
       base: "text-base font-medium",
       small: "text-sm font-medium",
-      muted: "text-sm text-[#BCBCBC]",
+      muted: "text-sm text-[#BCBCBC] font-normal",
     },
   },
   defaultVariants: {
@@ -24,16 +24,16 @@ const typographyVariants = cva("", {
 
 export interface TypographyProps extends React.HTMLAttributes<HTMLElement> {
   variant?:
-    | "h1"
-    | "h2"
-    | "h3"
-    | "h4"
-    | "p"
-    | "list"
-    | "large"
-    | "small"
-    | "muted"
-    | "base";
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "p"
+  | "list"
+  | "large"
+  | "small"
+  | "muted"
+  | "base";
   asChild?: boolean;
 }
 
@@ -43,16 +43,16 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
       variant === "h1"
         ? "h1"
         : variant === "h2"
-        ? "h2"
-        : variant === "h3"
-        ? "h3"
-        : variant === "h4"
-        ? "h4"
-        : variant === "list"
-        ? "ul"
-        : variant === "small"
-        ? "small"
-        : "p";
+          ? "h2"
+          : variant === "h3"
+            ? "h3"
+            : variant === "h4"
+              ? "h4"
+              : variant === "list"
+                ? "ul"
+                : variant === "small"
+                  ? "small"
+                  : "p";
 
     return React.createElement(Comp, {
       className: cn(

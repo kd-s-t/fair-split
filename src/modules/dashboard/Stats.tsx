@@ -5,13 +5,15 @@ import { Card } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
-import { CircleCheck, Clock8, Eye, EyeOff, Plus, Shield, Zap } from "lucide-react";
+import { BanknoteArrowDown, CircleCheck, Clock8, Eye, EyeOff, Plus, Shield, Zap } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import type { NormalizedTransaction } from '@/modules/transactions/types'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
 
 import { StatCardProps } from './types';
+import WithdrawModal from "./Modal";
+import Withdraw from "./Withdraw";
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
   <Card className="bg-[#222222] border-[#303434] text-white p-4">
@@ -35,18 +37,19 @@ function btcToUsd(btc: number) {
 export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
   const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
   // const _icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
-  
+
   // Debug logging
   console.log('🔄 DashboardStats: ckbtcBalance from Redux:', ckbtcBalance, 'Type:', typeof ckbtcBalance);
-  
+
   const isLoading =
     ckbtcBalance === null || ckbtcBalance === undefined || ckbtcBalance === "";
-    
+
   const router = useRouter();
   const [showBalance, setShowBalance] = useState(true);
   const [displayBalance, setDisplayBalance] = useState("0.00000000");
   const [displayUsd, setDisplayUsd] = useState("$0.00");
-  
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+
   console.log('🔄 DashboardStats: isLoading:', isLoading);
   console.log('🔄 DashboardStats: showBalance:', showBalance);
   console.log('🔄 DashboardStats: displayBalance:', displayBalance);
@@ -69,6 +72,10 @@ export default function DashboardStats({ transactions }: { transactions: Normali
     router.push('/escrow');
   };
 
+  const handleWithdraw = (isOpen: boolean) => {
+    setIsWithdrawOpen(isOpen)
+  }
+
   const handleToggleBalance = () => {
     setShowBalance((prev) => !prev);
   };
@@ -78,29 +85,29 @@ export default function DashboardStats({ transactions }: { transactions: Normali
     if (showBalance && ckbtcBalance && !isLoading) {
       const targetBalance = Number(ckbtcBalance);
       const targetUsd = btcToUsd(targetBalance);
-      
+
       // Animate from 0 to target
       const duration = 1000; // 1 second
       const steps = 60;
       const increment = targetBalance / steps;
       const usdIncrement = targetUsd / steps;
-      
+
       let current = 0;
       let currentUsd = 0;
       const interval = setInterval(() => {
         current += increment;
         currentUsd += usdIncrement;
-        
+
         if (current >= targetBalance) {
           current = targetBalance;
           currentUsd = targetUsd;
           clearInterval(interval);
         }
-        
+
         setDisplayBalance(current.toFixed(8));
         setDisplayUsd(`$${currentUsd.toLocaleString()}`);
       }, duration / steps);
-      
+
       return () => clearInterval(interval);
     } else if (!showBalance) {
       setDisplayBalance("0.00000000");
@@ -175,12 +182,20 @@ export default function DashboardStats({ transactions }: { transactions: Normali
             </Typography>
           </motion.div>
         </div>
-        <Button
-          variant="default"
-          onClick={handleNewEscrow}
-        >
-          <Plus className="text-xs" /> New escrow
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleWithdraw(true)}
+          >
+            <BanknoteArrowDown size={14} /> Withdraw
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleNewEscrow}
+          >
+            <Plus className="text-xs" /> New escrow
+          </Button>
+        </div>
       </div>
 
       <div className="container w-full shadow-sm flex items-center gap-2 mt-6">
@@ -229,6 +244,11 @@ export default function DashboardStats({ transactions }: { transactions: Normali
           icon={<Clock8 className="text-gray-400 text-2xl" />}
         />
       </div>
+
+      <Withdraw
+        open={isWithdrawOpen}
+        onClose={() => handleWithdraw(false)}
+      />
 
     </React.Fragment>
   );

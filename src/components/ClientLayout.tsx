@@ -1,27 +1,26 @@
 'use client'
 
-import React, { ReactNode, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { RootState, useAppSelector, store } from '../lib/redux/store'
-import { Provider } from 'react-redux'
-import { useAuth } from '@/contexts/auth-context'
+import AuthOverlay from '@/components/AuthOverlay'
 import Header from '@/components/Header'
 import Sidebar from '@/components/SideBar'
-import AuthOverlay from '@/components/AuthOverlay'
+import { useUser } from '@/hooks/useUser'
 import RightSidebar from '@/modules/chat/RightSidebar'
 import { BotMessageSquare } from 'lucide-react'
+import { ReactNode, useEffect, useState } from 'react'
+import { Provider, useSelector } from 'react-redux'
+import { RootState, store } from '../lib/redux/store'
 
 
 function ClientLayoutContent({ children }: { children: ReactNode }) {
-  const principal = useAppSelector((state: RootState) => state.user.principal)
-  const name = useAppSelector((state: RootState) => state.user.name)
+
+  const { principal, name } = useUser()
+
   const title = useSelector((state: RootState) => state.layout.title)
   const subtitle = useSelector((state: RootState) => state.layout.subtitle)
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = React.useState(false)
-
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
 
   // Prevent body scroll when sidebar is open
-  React.useEffect(() => {
+  useEffect(() => {
     if (isRightSidebarOpen) {
       document.body.classList.add('overflow-hidden');
     } else {

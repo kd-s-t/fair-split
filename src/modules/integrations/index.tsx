@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Typography } from '@/components/ui/typography';
-import { Bitcoin, Copy, Check, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
-import { useDispatch } from 'react-redux';
-import { setTitle, setSubtitle } from '@/lib/redux/store';
-import { setCkbtcAddress, setCkbtcBalance } from '@/lib/redux/userSlice';
 import { useUser } from '@/hooks/useUser';
-import ICPBalance from './ICPBalance';
-import CKBTCBalance from './CKBTCBalance';
+import { setSubtitle, setTitle } from '@/lib/redux/store';
+import { setCkbtcAddress, setCkbtcBalance } from '@/lib/redux/userSlice';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
 import BitcoinAddress from './BitcoinAddress';
+import CKBTCBalance from './CKBTCBalance';
+import ICPBalance from './ICPBalance';
 
 export default function Integrations() {
 	const dispatch = useDispatch();
@@ -96,20 +93,6 @@ export default function Integrations() {
 		}
 	};
 
-	// Copy address to clipboard
-	const handleCopyAddress = async () => {
-		if (!ckbtcAddress) return;
-
-		try {
-			await navigator.clipboard.writeText(ckbtcAddress);
-			setIsCopied(true);
-			toast.success('Address copied to clipboard!');
-			setTimeout(() => setIsCopied(false), 2000);
-		} catch {
-			toast.error('Failed to copy address');
-		}
-	};
-
 	if (!principal) {
 		return (
 			<div className="container mx-auto px-4 py-8">
@@ -146,96 +129,6 @@ export default function Integrations() {
 				<ICPBalance />
 				<CKBTCBalance />
 			</div>
-
-			{/* cKBTC Address Management */}
-			<Card className="bg-[#222222] border-[#303434] text-white">
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<Bitcoin className="text-yellow-500" size={24} />
-						cKBTC Wallet
-					</CardTitle>
-					<CardDescription className="text-gray-400">
-						Your cKBTC wallet address for receiving Bitcoin payments
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-
-					{ckbtcAddress ? (
-						// Display generated address
-						<div className="space-y-3">
-							<div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700">
-								<div className="flex-1">
-									<Typography variant="small" className="text-gray-400 mb-2">
-										Your cKBTC Address
-									</Typography>
-									<div className="font-mono text-sm text-gray-200 break-all">
-										{ckbtcAddress}
-									</div>
-								</div>
-								<div className="flex gap-2 ml-4">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={handleCopyAddress}
-										className="text-gray-300 border-gray-600 hover:bg-gray-700"
-									>
-										{isCopied ? <Check size={14} /> : <Copy size={14} />}
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={generateCkbtcWallet}
-										disabled={isLoading}
-										className="text-blue-400 border-blue-600 hover:bg-blue-900/20"
-									>
-										{isLoading ? (
-											<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-										) : (
-											<RefreshCw size={14} />
-										)}
-									</Button>
-								</div>
-							</div>
-
-							<div className="p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-								<Typography variant="small" className="text-green-300">
-									<strong>✅ Wallet ready:</strong> Bitcoin will be automatically sent to this cKBTC address when escrow is released.
-								</Typography>
-							</div>
-						</div>
-					) : (
-						// Generate wallet button
-						<div className="space-y-3">
-							<div className="text-center">
-								<Button
-									onClick={generateCkbtcWallet}
-									disabled={isLoading}
-									className="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3"
-								>
-									{isLoading ? (
-										<div className="flex items-center gap-2">
-											<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-											Generating Wallet...
-										</div>
-									) : (
-										<div className="flex items-center gap-2">
-											<Bitcoin size={16} />
-											Generate cKBTC Wallet
-										</div>
-									)}
-								</Button>
-							</div>
-
-							<div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-								<Typography variant="small" className="text-yellow-300">
-									<strong>No cKBTC wallet:</strong> Generate your cKBTC wallet address to receive Bitcoin payments when escrow is released.
-								</Typography>
-							</div>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
 			<BitcoinAddress />
 		</div>
 	);

@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-
 import { BotMessageSquare, X } from 'lucide-react';
 import { ChatInterface, Message } from './ChatInterface';
 import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
@@ -12,23 +11,20 @@ import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState, clearGlobalChatMessages } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/lib/redux/store';
-import { RootState } from '@/lib/redux/store';
 import { ParsedAction } from '@/lib/messaging/actionParser';
 import { Typography } from '@/components/ui/typography';
+import { useUser } from '@/hooks/useUser';
 
 interface RightSidebarProps {
   isOpen: boolean;
+  onToggle: () => void
 }
 
-export default function RightSidebar({ isOpen }: RightSidebarProps) {
+export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
   const router = useRouter();
-  const principal = useAppSelector((state: RootState) => state.user.principal);
-  const icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
-  const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
-  const ckbtcAddress = useAppSelector((state: RootState) => state.user.ckbtcAddress);
+  const { principal, icpBalance, ckbtcAddress, ckbtcBalance } = useUser();
 
-  const [messages, setMessages] = React.useState<Message[]>(() => {
+  const [messages, setMessages] = useState<Message[]>(() => {
     const globalState = getGlobalChatState();
     if (globalState.messages.length > 0) {
       return globalState.messages;
@@ -36,15 +32,16 @@ export default function RightSidebar({ isOpen }: RightSidebarProps) {
     const savedMessages = loadMessages();
     return savedMessages;
   });
-  const [isLoading, setIsLoading] = React.useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   // Set router for navigation service
-  React.useEffect(() => {
+  useEffect(() => {
     setRouter(router);
   }, [router]);
 
   // Load messages from localStorage on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const globalState = getGlobalChatState();
     if (globalState.messages.length === 0) {
       const savedMessages = loadMessages();
@@ -63,13 +60,13 @@ export default function RightSidebar({ isOpen }: RightSidebarProps) {
   }, []);
 
   // Save messages to localStorage and update global state whenever messages change
-  React.useEffect(() => {
+  useEffect(() => {
     saveMessages(messages);
     const globalState = getGlobalChatState();
     globalState.messages = messages;
   }, [messages]);
 
-  const handleSendMessage = React.useCallback(async (content: string) => {
+  const handleSendMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -187,7 +184,6 @@ export default function RightSidebar({ isOpen }: RightSidebarProps) {
 
   return (
     <>
-      {/* Sidebar */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -198,21 +194,19 @@ export default function RightSidebar({ isOpen }: RightSidebarProps) {
             className="h-screen w-80 bg-[#222222] border-l border-[#303434] z-40 shadow-2xl"
           >
             <div className="flex flex-col h-full p-4 space-y-4">
-              {/* AI Chat Interface - Full Space */}
               <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg min-h-0">
                 <div className="flex items-center justify-between p-3 border-b border-[#303434] flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <BotMessageSquare color="#FEB64D" />
                     <Typography variant='h4'>SplitSafe AI</Typography>
                   </div>
-                  <div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <X size={14} />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onToggle}
+                  >
+                    <X size={14} />
+                  </Button>
                 </div>
                 <div className="flex-1 overflow-y-auto min-h-0">
                   <ChatInterface

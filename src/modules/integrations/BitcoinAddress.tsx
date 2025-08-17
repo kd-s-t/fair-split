@@ -1,12 +1,28 @@
 "use client"
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Typography } from '@/components/ui/typography';
-import { Info, Plus, Wallet } from 'lucide-react';
+import { useUser } from '@/hooks/useUser';
+import { Check, CircleCheckBig, Copy, Edit, Trash2, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const BitcoinAddress: React.FC = () => {
+  const { ckbtcAddress } = useUser()
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyAddress = async () => {
+    if (!ckbtcAddress) return;
+
+    try {
+      await navigator.clipboard.writeText(ckbtcAddress);
+      setIsCopied(true);
+      toast.success('Address copied to clipboard!');
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy address');
+    }
+  };
 
   return (
     <div className="container space-y-4 space-x-2 !p-5">
@@ -15,55 +31,47 @@ const BitcoinAddress: React.FC = () => {
           <Typography variant='h3'>Bitcoin address</Typography>
           <Typography variant='muted'>Your Bitcoin address for receiving payments</Typography>
         </div>
-        <Button>
-          <Plus />
-          Add BTC address
-        </Button>
       </div>
-      <div className="container !p-5 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Label</Label>
-            <Input
-              placeholder='Ledger wallet'
-            />
+      <div className="container flex items-center justify-between">
+        <div className='flex items-center gap-2'>
+          <div className="bg-[#4F3F27] p-2 rounded-full">
+            <Wallet color="#FEB64D" />
           </div>
-          <div>
-            <Label>Address</Label>
-            <Input
-              placeholder='Ledger wallet'
-            />
-          </div>
+          <Typography variant='muted'>{ckbtcAddress}</Typography>
         </div>
         <div className="flex items-center gap-2">
-          <Button>Save</Button>
-          <Button variant="outline">Cancel</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyAddress}
+            className="text-gray-300 border-gray-600 hover:bg-gray-700"
+          >
+            {isCopied ? <Check size={14} /> : <Copy size={14} />}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyAddress}
+            className="text-gray-300 border-gray-600 hover:bg-gray-700"
+          >
+            <Edit size={14} />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyAddress}
+            className="text-gray-300 border-gray-600 hover:bg-gray-700"
+          >
+            <Trash2 color="#EB4C5C" size={14} />
+          </Button>
         </div>
       </div>
-      <div className="container flex items-center gap-2">
-        <div className="bg-[#4F3F27] p-2 rounded-full">
-          <Wallet color="#FEB64D" />
-        </div>
-        <div>
-          <Typography variant='base'>Trezor wallet</Typography>
-          <Typography variant='muted'>bc1q9x5jk2k8v9h3m6n4l5p7r8s1t2u3v4w5x6y7z8a</Typography>
-        </div>
-      </div>
-      <div className="container flex items-center">
-        <div className="bg-[#4F3F27] p-2 rounded-full">
-          <Wallet color="#FEB64D" />
-        </div>
-        <div>
-          <Typography variant='base'>Trezor wallet</Typography>
-          <Typography variant='muted'>bc1q9x5jk2k8v9h3m6n4l5p7r8s1t2u3v4w5x6y7z8a</Typography>
-        </div>
-      </div>
-      <div className="container-blue flex items-start gap-2">
+      <div className="container-success flex items-start gap-2">
         <div className="h5">
-          <Info color="#71B5FF" />
+          <CircleCheckBig color="#00C287" />
         </div>
         <div>
-          <Typography variant='base' className='text-[#71B5FF]'>Address configured</Typography>
+          <Typography variant='base' className='text-[#00C287]'>Address configured</Typography>
           <Typography variant='muted' className='text-white'>Default address will be used when escrows are released, unless otherwise selected.</Typography>
         </div>
       </div>

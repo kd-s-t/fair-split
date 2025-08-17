@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { BotMessageSquare, X } from 'lucide-react';
 import { ChatInterface, Message } from './ChatInterface';
 import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
@@ -15,19 +15,19 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/lib/redux/store';
 import { RootState } from '@/lib/redux/store';
 import { ParsedAction } from '@/lib/messaging/actionParser';
+import { Typography } from '@/components/ui/typography';
 
 interface RightSidebarProps {
   isOpen: boolean;
-  onToggle: () => void;
 }
 
-export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
+export default function RightSidebar({ isOpen }: RightSidebarProps) {
   const router = useRouter();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
   const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
   const ckbtcAddress = useAppSelector((state: RootState) => state.user.ckbtcAddress);
-  
+
   const [messages, setMessages] = React.useState<Message[]>(() => {
     const globalState = getGlobalChatState();
     if (globalState.messages.length > 0) {
@@ -82,9 +82,9 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
 
     try {
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-      
+
       let parsedAction: ParsedAction = null;
-      
+
       if (apiKey) {
         try {
           parsedAction = await parseUserMessageWithAI(content, apiKey);
@@ -92,11 +92,11 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
           console.warn('AI parser failed, falling back to local parser:', aiError);
         }
       }
-      
+
       if (!parsedAction) {
         // Fallback to local parsing logic
         const lowerContent = content.toLowerCase();
-        
+
         if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('escrow')) {
           parsedAction = { type: 'create_escrow', recipients: [], amount: '0' };
         } else if (lowerContent.includes('bitcoin') && lowerContent.includes('address')) {
@@ -143,7 +143,7 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
             executeNavigation(navigation);
           }
         }, 1000);
-        
+
         return;
       }
 
@@ -157,10 +157,10 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: error instanceof Error && error.message.includes('API key') 
+        content: error instanceof Error && error.message.includes('API key')
           ? "I'm sorry, but the AI assistant is not configured. Please contact support to enable this feature."
           : "I'm sorry, but I encountered an error while processing your message. Please try again.",
         role: 'assistant',
@@ -187,18 +187,6 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
 
   return (
     <>
-      {/* Toggle Button */}
-      <Button
-        onClick={onToggle}
-        variant="outline"
-        size="sm"
-        className="fixed right-4 top-20 z-50 bg-[#222222] border-[#303434] text-white hover:bg-[#303434]"
-      >
-        {isOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </Button>
-
-
-
       {/* Sidebar */}
       <AnimatePresence>
         {isOpen && (
@@ -214,18 +202,15 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
               <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg min-h-0">
                 <div className="flex items-center justify-between p-3 border-b border-[#303434] flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                      <span className="text-xs text-white font-bold">AI</span>
-                    </div>
-                    <span className="text-sm font-medium text-white">SplitSafe Assistant</span>
+                    <BotMessageSquare color="#FEB64D" />
+                    <Typography variant='h4'>SplitSafe AI</Typography>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-white p-1"
                     >
-                      <Trash2 size={14} />
+                      <X size={14} />
                     </Button>
                   </div>
                 </div>

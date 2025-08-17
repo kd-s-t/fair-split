@@ -108,11 +108,71 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     idx : Nat,
     recipient : Principal,
   ) : async () {
+    // Get the transaction to find the declined amount
+    let txs = switch (transactions.get(sender)) {
+      case (?list) list;
+      case null [];
+    };
+    
+    if (idx < txs.size()) {
+      let tx = txs[idx];
+      if (tx.status == "pending" or tx.status == "confirmed") {
+        // Find the recipient's amount to refund
+        let recipientEntry = Array.find<TransactionTypes.ToEntry>(
+          tx.to,
+          func(entry) { entry.principal == recipient }
+        );
+        
+        switch (recipientEntry) {
+          case (?entry) {
+            // Refund the declined amount to sender's mock balance
+            let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = sender; subaccount = null })) {
+              case (#ok(balance)) balance;
+              case (#err(_)) 0;
+            };
+            bitcoinIntegration.setMockBitcoinBalance(sender, currentMockBalance + entry.amount);
+          };
+          case null {
+            // Recipient not found, this shouldn't happen but handle gracefully
+            Debug.print("Warning: Recipient not found in transaction for decline");
+          };
+        };
+      };
+    };
+    
     let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, bitcoinBalances, reputation, fraudHistory, logs);
     logs := result.newLogs;
   };
 
   public shared func cancelSplit(caller : Principal) : async () {
+    // Get all pending transactions for the caller
+    let txs = switch (transactions.get(caller)) {
+      case (?list) list;
+      case null [];
+    };
+    
+    // Calculate total amount to refund from pending transactions
+    var totalRefundAmount : Nat = 0;
+    for (tx in txs.vals()) {
+      if (tx.status == "pending") {
+        let txAmount = Array.foldLeft<TransactionTypes.ToEntry, Nat>(
+          tx.to,
+          0,
+          func(acc, entry) { acc + entry.amount }
+        );
+        totalRefundAmount := totalRefundAmount + txAmount;
+      };
+    };
+    
+    // Refund the total amount to the caller's mock balance
+    if (totalRefundAmount > 0) {
+      let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = caller; subaccount = null })) {
+        case (#ok(balance)) balance;
+        case (#err(_)) 0;
+      };
+      bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance + totalRefundAmount);
+    };
+    
     let result = Escrow.cancelSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
   };

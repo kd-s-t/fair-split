@@ -8,6 +8,7 @@ import { Principal } from "@dfinity/principal";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type Recipient = {
   principal: string;
@@ -23,6 +24,7 @@ type FormData = {
 export function useEscrowActions(editTxId?: string) {
   const { principal, authClient } = useAuth();
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const updateBalance = async () => {
     if (principal && authClient) {
@@ -233,7 +235,11 @@ export function useEscrowActions(editTxId?: string) {
         await updateBalance();
         
         // Redirect to transaction management page
-        window.location.href = `/transactions/${txId}`;
+        console.log('🔄 Redirecting to transaction page:', `/transactions/${txId}`);
+        // Add a small delay to ensure state updates are complete
+        setTimeout(() => {
+          router.push(`/transactions/${encodeURIComponent(String(txId))}`);
+        }, 100);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         toast.error(`Error creating escrow: ${errorMessage}`);

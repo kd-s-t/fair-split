@@ -111,7 +111,7 @@ export default function PendingEscrowDetails({
               >
                 <CircleX size={16} />
               </motion.div>
-              Cancel escrow
+              Cancel escrow 1
             </Button>
           </motion.div>
           <motion.div

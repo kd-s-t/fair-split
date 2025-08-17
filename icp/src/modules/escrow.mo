@@ -331,31 +331,15 @@ module {
         success : Bool;
         newLogs : [Text];
     } {
-        // Remove all #locked transactions (drafts)
+        // Get all transactions for the caller
         let txs = switch (transactions.get(caller)) {
             case (?list) list;
             case null [];
         };
-        let filtered = Array.filter<TransactionTypes.Transaction>(
-            txs,
-            func(tx) {
-                if (tx.status == "cancelled") {
-                    // Log cancellation of draft
-                    false // Remove draft
-                } else {
-                    true // Keep others
-                };
-            },
-        );
-        transactions.put(caller, filtered);
         
-        // For #pending, refund and update status as before
-        let txs2 = switch (transactions.get(caller)) {
-            case (?list) list;
-            case null [];
-        };
+        // Update pending transactions to cancelled status
         let updated = Array.map<TransactionTypes.Transaction, TransactionTypes.Transaction>(
-            txs2,
+            txs,
             func(tx) {
                 if (tx.status == "pending") {
                     // Calculate total amount to refund

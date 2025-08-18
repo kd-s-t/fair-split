@@ -122,19 +122,7 @@ export function useEscrowActions(editTxId?: string) {
     dispatch(setTransactions(serializableTxs));
   };
 
-  // Function to generate a realistic-looking fake Bitcoin address for presentation
-  const generateFakeBitcoinAddress = (): string => {
-    // Generate a realistic-looking bc1 address for presentation
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let address = 'bc1q';
-    
-    // Generate 38 random characters (bc1q + 38 chars = 42 total, which is realistic)
-    for (let i = 0; i < 38; i++) {
-      address += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    return address;
-  };
+
 
   // Function to get Bitcoin address for a principal
   const getBitcoinAddressForPrincipal = async (principalText: string): Promise<string> => {
@@ -247,7 +235,7 @@ export function useEscrowActions(editTxId?: string) {
       }
     },
 
-    [principal, dispatch, getBitcoinAddressForPrincipal, fetchAndStoreTransactions, updateBalance]
+    [principal, dispatch, getBitcoinAddressForPrincipal, fetchAndStoreTransactions, updateBalance, router]
   );
 
   const updateEscrow = useCallback(

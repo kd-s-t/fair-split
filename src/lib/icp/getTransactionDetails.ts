@@ -41,7 +41,7 @@ export async function approveTransactionById(
     const caller = Principal.fromText(callerPrincipal);
     
     // Find if the caller is a recipient in this transaction
-    const recipientEntry = transaction.to.find((entry: any) => {
+    const recipientEntry = transaction.to.find((entry: Record<string, unknown>) => {
       const entryPrincipal = typeof entry.principal === 'string' 
         ? entry.principal 
         : entry.principal.toText();

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { BotMessageSquare, X } from 'lucide-react';
+import { BotMessageSquare, X, Send } from 'lucide-react';
 import { ChatInterface, Message } from './ChatInterface';
 import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { ParsedAction } from '@/lib/messaging/actionParser';
 import { Typography } from '@/components/ui/typography';
 import { useUser } from '@/hooks/useUser';
+import { Input } from '@/components/ui/input';
 
 interface RightSidebarProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
   // Set router for navigation service
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
       if (savedMessages.length === 0) {
         const welcomeMessage: Message = {
           id: 'welcome',
-          content: "Hello! I'm your SplitSafe Assistant. I can help you with four things:\n\n1. Create Escrows\n   Just tell me who you want to send money to and how much\n\n2. Set Bitcoin Address\n   Tell me your Bitcoin address and I'll set it for you\n\n3. Account Queries\n   Ask me about your principal, balances, or Bitcoin address\n\n4. Get Approval Advice\n   I'll help you decide whether to approve or decline received escrows\n\nJust chat naturally - I'll understand what you need!",
+          content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
           role: 'assistant',
           timestamp: new Date(),
         };
@@ -148,7 +150,7 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I can help you with four things:\n\n1. Create Escrows\n   Try: 'send 2 btc to [recipient-id]'\n\n2. Set Bitcoin Address\n   Try: 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n\n3. Account Queries\n   Try: 'what is my principal?' or 'show my ICP balance'\n\n4. Approval Advice\n   Try: 'should I approve or decline?'\n\nJust tell me what you need!",
+        content: "I can help you with two main things:\n\n1. Create Escrows\n   Try: 'send 2 btc to [recipient-id]'\n\n2. Get Approval Advice\n   Try: 'should I approve or decline?'\n\nJust tell me what you need!",
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -177,39 +179,129 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
     clearGlobalChatMessages();
     const welcomeMessage: Message = {
       id: 'welcome',
-      content: "Hello! I'm your SplitSafe Assistant. I can help you with four things:\n\n1. Create Escrows\n   Just tell me who you want to send money to and how much\n\n2. Set Bitcoin Address\n   Tell me your Bitcoin address and I'll set it for you\n\n3. Account Queries\n   Ask me about your principal, balances, or Bitcoin address\n\n4. Get Approval Advice\n   I'll help you decide whether to approve or decline received escrows\n\nJust chat naturally - I'll understand what you need!",
+      content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
       role: 'assistant',
       timestamp: new Date(),
     };
     setMessages([welcomeMessage]);
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputValue.trim() && !isLoading) {
+      handleSendMessage(inputValue.trim());
+      setInputValue('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <div className="h-full bg-[#222222] border-l border-[#303434] shadow-2xl">
-      <div className="flex flex-col h-full p-4 space-y-4 overflow-hidden">
-        <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg min-h-0 overflow-hidden">
-          <div className="flex items-center justify-between p-3 border-b border-[#303434] flex-shrink-0 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <BotMessageSquare color="#FEB64D" />
-              <Typography variant='h4' className="truncate">SplitSafe AI</Typography>
+    <div className="w-full h-full bg-[#222222] border border-[#FEB64D] rounded-[2%] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 border-b border-[#303434]">
+        <div className="flex items-center space-x-3">
+          <BotMessageSquare className="w-5 h-5 text-[#FEB64D]" />
+          <span className="text-white font-semibold">SplitSafe AI</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggle}
+          className="text-white hover:bg-[#2a2a2a]"
+        >
+          <X size={20} />
+        </Button>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 min-h-0">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {message.role === 'assistant' && (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FEB64D] to-[#F97415] flex items-center justify-center flex-shrink-0">
+                    <BotMessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                
+                <div
+                  className={`max-w-[294px] rounded-xl p-4 ${
+                    message.role === 'user'
+                      ? 'bg-[#FEB64D] text-black ml-auto'
+                      : 'bg-[#474747] text-white border border-[#636363]'
+                  }`}
+                >
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {message.content}
+                  </div>
+                </div>
+
+                {message.role === 'user' && (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4A2BE1] to-[#7B5AFF] flex items-center justify-center flex-shrink-0">
+                    <div className="w-5 h-5 text-white font-bold">U</div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FEB64D] to-[#F97415] flex items-center justify-center flex-shrink-0">
+                  <BotMessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div className="bg-[#474747] text-white rounded-xl p-4 border border-[#636363]">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-sm">Thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Input Box */}
+        <div className="flex-shrink-0 p-4">
+          <form onSubmit={handleSubmit} className="bg-[#333333] border border-[#FEB64D] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <Input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Talk with SplitSafe AI"
+                className="bg-transparent border-0 text-white placeholder-[#FFFFFF66] focus:outline-none focus:ring-0 flex-1"
+                disabled={isLoading}
+              />
+              <div className="flex items-center space-x-2">
+                <span className="text-white">|</span>
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  disabled={!inputValue.trim() || isLoading}
+                  className="text-[#FEB64D] hover:bg-transparent p-0"
+                >
+                  <Send size={20} />
+                </Button>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggle}
-              className="flex-shrink-0"
-            >
-              <X size={14} />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto min-h-0 min-w-0">
-            <ChatInterface
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              onClearChat={handleClearChat}
-              isLoading={isLoading}
-            />
-          </div>
+          </form>
         </div>
       </div>
     </div>

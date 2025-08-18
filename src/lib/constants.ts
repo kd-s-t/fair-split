@@ -8,6 +8,8 @@ export const TRANSACTION_STATUS_MAP: Record<string, { label: string; variant: st
     refund: { label: "Refunded", variant: "error" },
     active: { label: "Active", variant: "secondary" },
     completed: { label: "Completed", variant: "success" },
+    withdraw_pending: { label: "Withdrawal Pending", variant: "primary" },
+    withdraw_complete: { label: "Withdrawal Complete", variant: "success" },
 };
 
 // Transaction Status Constants
@@ -18,4 +20,6 @@ export const TRANSACTION_STATUS = {
     CANCELLED: "cancelled",
     REFUND: "refund",
     DECLINED: "declined",
+    WITHDRAW_PENDING: "withdraw_pending",
+    WITHDRAW_COMPLETE: "withdraw_complete",
 } as const;

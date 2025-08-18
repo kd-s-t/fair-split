@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useUser } from '@/hooks/useUser';
 import { setSubtitle, setTitle } from '@/lib/redux/store';
-import { setCkbtcAddress, setCkbtcBalance } from '@/lib/redux/userSlice';
+import { setCkbtcAddress, setCkbtcBalance, setIcpBalance } from '@/lib/redux/userSlice';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
@@ -33,17 +33,17 @@ export default function Integrations() {
 				const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
 				const actor = await createSplitDappActor();
 
-				// Get ICP balance
+				// Get ICP balance and store in Redux
 				try {
 					const icpBalanceResult = await actor.getBalance(principal) as bigint;
+					console.log('ICP Balance:', icpBalanceResult.toString());
 					dispatch(setIcpBalance(icpBalanceResult.toString()));
 				} catch (error) {
 					console.error('Failed to get ICP balance:', error);
-					dispatch(setIcpBalance('0'));
 				}
 
-				// Get cKBTC balance (anonymous for local development)
-				const balanceResult = await actor.getCkbtcBalanceAnonymous() as { ok: number } | { err: string };
+				// Get cKBTC balance for the specific user
+				const balanceResult = await actor.getCkbtcBalance(principal) as { ok: number } | { err: string };
 				if ('ok' in balanceResult) {
 					dispatch(setCkbtcBalance(balanceResult.ok.toString()));
 				} else {

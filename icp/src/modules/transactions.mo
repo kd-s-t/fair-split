@@ -31,13 +31,16 @@ module {
         };
         allTxs := Array.append(allTxs, sentTxs);
 
-        // Get transactions where user is a recipient
-        for ((_, txs) in transactions.entries()) {
-            for (tx in txs.vals()) {
-                // Check if user is in the recipients list
-                for (toEntry in tx.to.vals()) {
-                    if (toEntry.principal == user) {
-                        allTxs := Array.append(allTxs, [tx]);
+        // Get transactions where user is a recipient (but not already included as sender)
+        for ((sender, txs) in transactions.entries()) {
+            // Skip if this is the user's own transactions (already included above)
+            if (sender != user) {
+                for (tx in txs.vals()) {
+                    // Check if user is in the recipients list
+                    for (toEntry in tx.to.vals()) {
+                        if (toEntry.principal == user) {
+                            allTxs := Array.append(allTxs, [tx]);
+                        };
                     };
                 };
             };

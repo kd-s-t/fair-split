@@ -62,7 +62,7 @@ const ICPBalance: React.FC = () => {
       <CardContent>
         <div className="flex items-center gap-3 mt-4">
           <Typography variant="h2">
-            {icpBalance ? `${icpBalance}` : 'Loading...'}
+            {icpBalance ? `${(Number(icpBalance) / 100_000_000).toFixed(2)}` : 'Loading...'}
           </Typography>
 
           {icpBalance && (

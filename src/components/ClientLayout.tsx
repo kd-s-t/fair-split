@@ -27,14 +27,14 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="grid grid-cols-10 grid-rows-[auto_1fr] h-screen w-screen overflow-hidden">
+    <div className="grid grid-cols-10 grid-rows-[auto_1fr] h-screen w-screen overflow-hidden p-5">
       {/* Left Sidebar - spans both rows */}
       <div className="col-span-1 row-span-2">
         <Sidebar />
       </div>
       
       {/* Header - row 1, columns 2-10 */}
-      <div className="col-span-9 row-span-1 overflow-hidden">
+      <div className="col-span-9 row-span-1 overflow-hidden  p-5">
         <Header
           title={title}
           subtitle={subtitle}
@@ -46,11 +46,11 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
       </div>
       
       {/* Main Content + AI Assistant Container - row 2, columns 2-10 */}
-      <div className="col-span-9 row-span-1 overflow-hidden">
+      <div className="col-span-9 row-span-1 overflow-hidden p-5" >
         <div className="flex h-full">
           {/* Main Content - flex-1 when AI closed, flex-[8] when AI open */}
           <div className={`transition-all duration-300 ${isRightSidebarOpen ? 'flex-[8]' : 'flex-1'}`}>
-            <div className="h-full p-6 overflow-auto min-w-0">{children}</div>
+            <div className="h-full m-5 overflow-auto min-w-0">{children}</div>
           </div>
           
           {/* AI Assistant - slides in from right */}

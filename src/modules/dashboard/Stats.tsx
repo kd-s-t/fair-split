@@ -27,9 +27,9 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
   </Card>
 );
 
-function btcToUsd(btc: number) {
-  const rate = 60000; // 1 BTC = $60,000 (example rate)
-  return btc * rate;
+function ckbtcToUsd(ckbtc: number) {
+  const rate = 60000; // 1 ckBTC = $60,000 (example rate)
+  return ckbtc * rate;
 }
 
 export default function DashboardStats({ transactions }: { transactions: NormalizedTransaction[] }) {
@@ -82,7 +82,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   useEffect(() => {
     if (showBalance && ckbtcBalance && !isLoading) {
       const targetBalance = Number(ckbtcBalance);
-      const targetUsd = btcToUsd(targetBalance);
+      const targetUsd = ckbtcToUsd(targetBalance);
 
       // Animate from 0 to target
       const duration = 1000; // 1 second
@@ -161,9 +161,9 @@ export default function DashboardStats({ transactions }: { transactions: Normali
               {isLoading ? (
                 <span className="inline-block w-32 h-7 bg-gray-200 animate-pulse rounded" />
               ) : showBalance ? (
-                `${displayBalance} BTC`
+                `${displayBalance} ckBTC`
               ) : (
-                '•••••••• BTC'
+                                  '•••••••• ckBTC'
               )}
             </Typography>
           </motion.div>
@@ -217,7 +217,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
           />
         </motion.div>
         <Typography variant="muted" className="font-medium">
-          Secured by ICP threshold ECDSA • No bridges, no wrapped BTC
+                      Secured by ICP threshold ECDSA • No bridges, no wrapped ckBTC
         </Typography>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">

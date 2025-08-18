@@ -34,15 +34,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Fetch cKBTC Balance
       try {
         console.log('🔄 Fetching cKBTC balance...')
-        const ckbtcBalanceResult = await actor.getCkbtcBalance(principalObj) as { ok: number } | { err: string }
+        const ckbtcBalanceResult = await actor.getUserBitcoinBalance(principalObj) as number
         console.log('🔄 cKBTC balance result:', ckbtcBalanceResult)
         
-        if ('ok' in ckbtcBalanceResult) {
-          const formattedCkbtc = (Number(ckbtcBalanceResult.ok) / 1e8).toFixed(8)
+        if (typeof ckbtcBalanceResult === 'bigint' || typeof ckbtcBalanceResult === 'number') {
+          const formattedCkbtc = (Number(ckbtcBalanceResult) / 1e8).toFixed(8)
           console.log('🔄 Setting cKBTC balance to:', formattedCkbtc)
           dispatch(setCkbtcBalance(formattedCkbtc))
         } else {
-          console.error('🔄 Failed to get cKBTC balance:', ckbtcBalanceResult.err)
+          console.error('🔄 Failed to get cKBTC balance:', ckbtcBalanceResult)
           dispatch(setCkbtcBalance(null))
         }
       } catch (error) {
@@ -67,6 +67,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('🔄 Error fetching user name:', error)
         dispatch(setUserName(null))
       }
+
+
 
       // Fetch Transactions
       try {

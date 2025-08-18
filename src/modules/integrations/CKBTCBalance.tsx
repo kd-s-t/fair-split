@@ -9,6 +9,7 @@ import { setCkbtcBalance } from '@/lib/redux/userSlice';
 import { Bitcoin, ExternalLink, RefreshCw } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 const CKBTCBalance: React.FC = () => {
 
@@ -16,23 +17,35 @@ const CKBTCBalance: React.FC = () => {
   const dispatch = useDispatch()
   const { ckbtcBalance } = useUser()
 
+  // Debug logging
+  console.log('🔍 CKBTCBalance component - principal:', principal?.toText());
+  console.log('🔍 CKBTCBalance component - ckbtcBalance from Redux:', ckbtcBalance);
+
+
+
   const refreshCkbtcBalance = async () => {
     if (!principal) return;
 
     try {
+      console.log('🔄 Refreshing ckBTC balance for principal:', principal.toText());
       const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
       const actor = await createSplitDappActor();
-      const result = await actor.getCkbtcBalanceAnonymous() as { ok: number } | { err: string };
+      const result = await actor.getUserBitcoinBalance(principal) as number;
 
-      if ('ok' in result) {
-        dispatch(setCkbtcBalance(result.ok.toString()));
+      console.log('🔄 ckBTC balance result:', result);
+
+      if (typeof result === 'bigint' || typeof result === 'number') {
+        const formattedCkbtc = (Number(result) / 1e8).toFixed(8);
+        console.log('🔄 Setting ckBTC balance to:', formattedCkbtc);
+        dispatch(setCkbtcBalance(formattedCkbtc));
         toast.success('cKBTC balance updated!');
       } else {
-        console.error('Failed to get cKBTC balance:', result.err);
-        toast.error('Failed to refresh cKBTC balance');
+        console.error('Failed to get ckBTC balance:', result);
+        toast.error('Failed to refresh ckBTC balance');
       }
-    } catch {
-      toast.error('Failed to refresh cKBTC balance');
+    } catch (error) {
+      console.error('🔄 Error refreshing ckBTC balance:', error);
+      toast.error('Failed to refresh ckBTC balance');
     }
   };
 

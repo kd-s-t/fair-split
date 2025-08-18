@@ -95,8 +95,8 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
         <DropdownMenuTrigger asChild>
           <motion.button
             type="button"
-            className="relative text-muted-foreground hover:text-foreground transition cursor-pointer"
-            whileHover={{ scale: 1.1 }}
+            className="relative text-white hover:text-white transition cursor-pointer w-full h-full flex items-center justify-center"
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleBellClick}
             animate={bellRing ? {
@@ -112,18 +112,16 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
               repeatDelay: 2
             }}
           >
-            <Bell className="w-5 h-5" />
+            <Bell className="w-6 h-6" />
             <AnimatePresence>
               {unreadCount > 0 && (
-                <motion.span
-                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center"
+                <motion.div
+                  className="absolute top-[21px] right-[6px] w-2 h-2 bg-[#EA2D2D] rounded-full"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ duration: 0.3, type: "spring", stiffness: 500 }}
-                >
-                  {unreadCount}
-                </motion.span>
+                />
               )}
             </AnimatePresence>
           </motion.button>

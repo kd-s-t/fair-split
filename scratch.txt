@@ -15,9 +15,11 @@ ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe
 ckbtc-minter-canister-id
 
 
-dfx canister call split_dapp setBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", 1000000000)' --network local
+# Set ICP balance (1 ICP = 100,000,000 e8s)
+dfx canister call split_dapp setInitialBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", 1000000000 : nat, principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe")' --network local
 
-dfx canister call split_dapp setMockBitcoinBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", 100000000)' --network local
+# Set ckBTC balance (1 ckBTC = 100,000,000 satoshis)
+dfx canister call split_dapp setBitcoinBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", 100000000 : nat)' --network local
 
 dfx canister call split_dapp getCkbtcBalance '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe")' --network local
 

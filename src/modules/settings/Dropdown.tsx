@@ -8,7 +8,7 @@ import EditNameModal from './Modal';
 import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
-import { Settings } from 'lucide-react';
+import { Settings, ChevronDown } from 'lucide-react';
 
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
@@ -23,20 +23,21 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 focus:outline-none cursor-pointer hover:bg-gray-800 rounded-lg px-2 py-1 transition-colors min-w-0">
-            <div className="relative w-8 h-8 overflow-hidden rounded-full flex-shrink-0">
+          <button className="flex items-center space-x-3 focus:outline-none cursor-pointer hover:opacity-80 transition-opacity min-w-0">
+            <div className="relative w-12 h-12 overflow-hidden rounded-full flex-shrink-0 bg-[#D9D9D9]">
               <Image
                 src={getAvatarUrl()}
                 alt={'User avatar'}
                 fill
-                sizes="32px"
+                sizes="48px"
                 className="object-cover"
               />
             </div>
-            <div className="flex flex-col items-start min-w-0 flex-1">
-              <span className="text-sm font-medium text-white truncate max-w-32">
-                {displayName && displayName.trim() !== '' ? displayName : truncatePrincipal(principalId)}
+            <div className="flex items-center space-x-2">
+              <span className="text-white text-[19px] leading-[19px] font-normal">
+                {displayName && displayName.trim() !== '' ? displayName : 'User'}
               </span>
+              <ChevronDown className="w-3.5 h-3.5 text-white rotate-90" />
             </div>
           </button>
         </DropdownMenuTrigger>

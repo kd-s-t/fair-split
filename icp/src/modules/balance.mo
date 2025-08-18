@@ -13,13 +13,7 @@ module {
     }
   };
 
-  public func setBalance(
-    map : HashMap.HashMap<Principal, Nat>,
-    principal : Principal,
-    amount : Nat
-  ) : () {
-    map.put(principal, amount);
-  };
+
 
   public func increaseBalance(
     map : HashMap.HashMap<Principal, Nat>,

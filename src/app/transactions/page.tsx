@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { NormalizedTransaction } from "@/modules/transactions/types";
 import { motion } from "framer-motion";
+import { Search, RotateCw, Bell, ChevronDown } from "lucide-react";
 
 // Helper function to convert API response to NormalizedTransaction[]
 const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTransaction[] => {
-  return transactions.map((tx: unknown) => {
+  const normalizedTxs = transactions.map((tx: unknown) => {
     const txObj = tx as Record<string, unknown>;
     return {
       id: txObj.id as string,
@@ -40,7 +41,19 @@ const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTra
       }),
     };
   });
+
+  // Deduplicate transactions by ID, keeping the latest one
+  const uniqueTxs = new Map<string, NormalizedTransaction>();
+  normalizedTxs.forEach(tx => {
+    const existing = uniqueTxs.get(tx.id);
+    if (!existing || Number(tx.createdAt) > Number(existing.createdAt)) {
+      uniqueTxs.set(tx.id, tx);
+    }
+  });
+
+  return Array.from(uniqueTxs.values());
 };
+
 import {
   markAllAsRead,
   setTransactions,
@@ -53,7 +66,6 @@ import {
   ArrowUpRight,
   Bitcoin,
   Wallet,
-  RotateCw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,6 +87,7 @@ function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
     return "AI suggests: Review - Uneven split detected";
   }
 }
+
 import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
 import { useTransactions } from "@/hooks/useTransactions";
 
@@ -82,9 +95,7 @@ export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
   const { transactions } = useTransactions();
-  if (process.env.NODE_ENV === 'development') {
-    console.log("transactions", transactions);
-  }
+  
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
     dispatch(setSubtitle('View all your escrow transactions'));
@@ -105,15 +116,8 @@ export default function TransactionsPage() {
   const refreshIconRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Transactions from Redux:', transactions);
-      console.log('Transactions length:', transactions?.length || 0);
-    }
     if (transactions && transactions.length > 0) {
       const sorted = [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Setting localTransactions:', sorted);
-      }
       setLocalTransactions(sorted);
     }
   }, [transactions]);
@@ -350,51 +354,38 @@ export default function TransactionsPage() {
     }
   };
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Rendering ApprovalSuggestions with localTransactions:', localTransactions);
-    console.log('localTransactions length:', localTransactions.length);
-  }
-
   return (
-    <>
-      {isLoading && (
-        <div className="text-center">
-          <div className="flex flex-col gap-2 items-center">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="w-full max-w-3xl h-10 bg-gray-200 animate-pulse rounded"
-              />
-            ))}
-          </div>
-        </div>
-      )}
+    <div className="flex flex-col space-y-6">
       {/* AI Approval Suggestions */}
       <ApprovalSuggestions transactions={localTransactions} />
 
-      {/* Search, Filter Section, and Refresh Icon in the same row */}
-      <div className="flex items-center gap-4 mb-6 w-full">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Search transactions"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#FEB64D]"
-          />
-        </div>
-        <div className="w-1/5">
-          <select className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]">
-            <option value="all">All transactions</option>
+      {/* Filter Section */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-4">
+          {/* Search Bar */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BCBCBC]" />
+            <input
+              type="text"
+              placeholder="Search transactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-[#BCBCBC] focus:outline-none focus:border-[#FEB64D]"
+            />
+          </div>
+          
+          {/* Category Filter */}
+          <select className="px-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D] min-w-[156px]">
+            <option value="all">All categories</option>
             {availableCategories.includes('sent') && <option value="sent">Sent</option>}
             {availableCategories.includes('received') && <option value="received">Received</option>}
           </select>
-        </div>
-        <div className="w-1/5">
+          
+          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-4 py-2 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D]"
+            className="px-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D] min-w-[139px]"
           >
             <option value="all">All status</option>
             {availableStatuses.includes('pending') && <option value="pending">Pending</option>}
@@ -403,289 +394,216 @@ export default function TransactionsPage() {
             {availableStatuses.includes('cancelled') && <option value="cancelled">Cancelled</option>}
             {availableStatuses.includes('declined') && <option value="declined">Declined</option>}
           </select>
-        </div>
-        {/* Refresh icon at the end */}
-        <div className="flex items-center ml-4 min-w-[40px]">
+          
+          {/* Refresh Button */}
           <button
             ref={refreshIconRef}
             onClick={fetchTransactions}
-            className="p-2 rounded-full hover:bg-[#2a2a2a] transition-colors"
-            aria-label="Refresh"
+            className="px-3 py-2.5 border border-[#7A7A7A] rounded-lg text-white hover:bg-[#2a2a2a] transition-colors flex items-center space-x-2"
             disabled={refreshing}
           >
-            <RotateCw className={`h-5 w-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
+            <RotateCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
           </button>
         </div>
+        
+        {/* Transaction Count */}
+        <p className="text-[#BCBCBC] text-sm">
+          Showing {currentTransactions.length} of {localTransactions.length} transactions
+        </p>
       </div>
+
+      {/* Transactions List */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="space-y-6"
       >
         {!isLoading && !error && (
           <>
-            {/* Show 'No transactions found.' below filters if there are no transactions */}
             {localTransactions.length === 0 && (
-              <div className="text-center text-muted-foreground mb-4">No transactions found.</div>
+              <div className="text-center text-[#BCBCBC] py-8">No transactions found.</div>
             )}
 
-            {/* Only show transaction count and list if there are transactions */}
-            {localTransactions.length > 0 && (
-              <>
-                <div className="text-sm text-gray-400 mb-4">
-                  Showing {currentTransactions.length} of {localTransactions.length} transactions
-                </div>
+            {currentTransactions.map((tx, idx: number) => {
+              const pendingApproval = isPendingApproval(tx);
+              const isRowClickable = (!pendingApproval && getTransactionCategory(tx) === "sent") && 
+                                    (tx.status !== "withdraw_complete" && tx.status !== "withdraw_pending");
 
-                <div className="space-y-4">
-                  {currentTransactions.map((tx, idx: number) => {
-                    const pendingApproval = isPendingApproval(tx);
-                    const isRowClickable = !pendingApproval && getTransactionCategory(tx) === "sent";
-
-                    return (
-                      <motion.div
-                        key={tx.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: idx * 0.05 }}
-                        className={`bg-[#222222] rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between border border-[#303434] shadow-sm ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors' : ''}`}
-                        onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
+              return (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                  className={`bg-[#222222] rounded-5xl p-5 border border-[#303434] ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors cursor-pointer' : ''}`}
+                  onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-xl font-semibold text-white">{tx.title}</h3>
+                        {getTransactionStatusBadge(tx.status)}
+                      </div>
+                      
+                      <div className="flex items-center space-x-4 text-sm text-[#BCBCBC]">
+                        <span>{new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}</span>
+                        {getTransactionCategory(tx) === "sent" ? (
+                          <div className="flex items-center space-x-1 text-[#007AFF]">
+                            <ArrowUpRight size={14} />
+                            <span>Sent</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1 text-[#00C287]">
+                            <ArrowDownLeft size={14} />
+                            <span>Receiving</span>
+                          </div>
+                        )}
+                        {((tx.status === 'pending' || tx.status === 'confirmed') &&
+                          !isSentByUser(tx) && hasUserApproved(tx)) && (
+                            <span>• You approved</span>
+                          )}
+                        {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') &&
+                          !isSentByUser(tx) && hasUserDeclined(tx)) && (
+                            <span>• You declined</span>
+                          )}
+                      </div>
+                    </div>
+                    
+                    {getTransactionCategory(tx) === "sent" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#7A7A7A] text-white"
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Typography variant="large" className="text-xl">
-                                  {tx.title}
-                                </Typography>
+                        <Wallet className="w-4 h-4 mr-2" />
+                        Manage escrow
+                      </Button>
+                    )}
+                  </div>
 
-                                {getTransactionStatusBadge(tx.status)}
-                              </div>
-                              <div className="flex items-center gap-2 text-xs mb-2">
-                                <Typography
-                                  variant="small"
-                                  className="text-[#9F9F9F]"
-                                >
-                                  {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
-                                </Typography>
-                                {getTransactionCategory(tx) === "sent" ? (
-                                  <div className="flex items-center gap-1 text-[#007AFF]">
-                                    <ArrowUpRight size={14} />
-                                    <Typography
-                                      variant="muted"
-                                      className="!text-[#007AFF]"
-                                    >
-                                      Sent
-                                    </Typography>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1 text-[#00C287]">
-                                    <ArrowDownLeft size={14} />
-                                    <Typography
-                                      variant="muted"
-                                      className="!text-[#00C287]"
-                                    >
-                                      Receiving
-                                    </Typography>
-                                  </div>
-                                )}
-                                {((tx.status === 'pending' || tx.status === 'confirmed') &&
-                                  !isSentByUser(tx) && hasUserApproved(tx)) && (
-                                    <Typography
-                                      variant="small"
-                                      className="text-[#9F9F9F] ml-2"
-                                    >
-                                      • You approved
-                                    </Typography>
-                                  )}
-                                {((tx.status === 'pending' || tx.status === 'confirmed' || tx.status === 'declined') &&
-                                  !isSentByUser(tx) && hasUserDeclined(tx)) && (
-                                    <Typography
-                                      variant="small"
-                                      className="text-[#9F9F9F] ml-2"
-                                    >
-                                      • You declined
-                                    </Typography>
-                                  )}
-                              </div>
-                            </div>
-                            {getTransactionCategory(tx) === "sent" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-[#7A7A7A]"
-                              >
-                                <Wallet /> Manage escrow
-                              </Button>
-                            )}
-                            {pendingApproval && !isSentByUser(tx) && tx.status !== 'cancelled' ? (
-                              <div className="flex justify-end w-full gap-2 mt-2">
-                                <Button
-                                  className={`bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                  onClick={() => handleApprove(tx)}
-                                  disabled={isApproving === getTxId(tx)}
-                                >
-                                  {isApproving === getTxId(tx) ? (
-                                    <span className="flex items-center gap-2">
-                                      <svg
-                                        className="animate-spin h-4 w-4 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <circle
-                                          className="opacity-25"
-                                          cx="12"
-                                          cy="12"
-                                          r="10"
-                                          stroke="currentColor"
-                                          strokeWidth="4"
-                                        />
-                                        <path
-                                          className="opacity-75"
-                                          fill="currentColor"
-                                          d="M4 12a8 8 0 018-8v8z"
-                                        />
-                                      </svg>
-                                      Approving...
-                                    </span>
-                                  ) : (
-                                    'Approve'
-                                  )}
-                                </Button>
-                                <Button
-                                  className={`bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow transition cursor-pointer ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                  onClick={() => handleDecline(tx)}
-                                  disabled={isDeclining === getTxId(tx)}
-                                >
-                                  {isDeclining === getTxId(tx) ? (
-                                    <span className="flex items-center gap-2">
-                                      <svg
-                                        className="animate-spin h-4 w-4 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <circle
-                                          className="opacity-25"
-                                          cx="12"
-                                          cy="12"
-                                          r="10"
-                                          stroke="currentColor"
-                                          strokeWidth="4"
-                                        />
-                                        <path
-                                          className="opacity-75"
-                                          fill="currentColor"
-                                          d="M4 12a8 8 0 018-8v8z"
-                                        />
-                                      </svg>
-                                      Declining...
-                                    </span>
-                                  ) : (
-                                    'Decline'
-                                  )}
-                                </Button>
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="grid grid-cols-3 mt-2">
-                            <div>
-                              <Typography variant="small" className="text-[#9F9F9F]">
-                                Amount
-                              </Typography>
-                              <div className="flex items-center gap-1">
-                                <Bitcoin size={16} color="#F97415" />
-                                <Typography variant="base" className="font-semibold">
-                                  {(() => {
-                                    if (isSentByUser(tx)) {
-                                      // If sender, show total amount
-                                      return tx.to && Array.isArray(tx.to)
-                                        ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
-                                        : '0.00000000';
-                                    } else {
-                                      // If receiver, show their specific amount
-                                      const recipientEntry = tx.to.find((entry) =>
-                                        String(entry.principal) === String(principal)
-                                      );
-                                      return recipientEntry
-                                        ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
-                                        : '0.00000000';
-                                    }
-                                  })()} BTC
-                                </Typography>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                              <Typography variant="small" className="text-[#9F9F9F]">
-                                {isSentByUser(tx) ? "To" : "Your Share"}
-                              </Typography>
-                              <Typography variant="base" className="font-semibold">
-                                {isSentByUser(tx) ? (
-                                  `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
-                                ) : (
-                                  (() => {
-                                    const recipientEntry = tx.to.find((entry) =>
-                                      String(entry.principal) === String(principal)
-                                    );
-                                    return recipientEntry && recipientEntry.percentage
-                                      ? `${recipientEntry.percentage}%`
-                                      : 'N/A';
-                                  })()
-                                )}
-                              </Typography>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                              <Typography variant="small" className="text-[#9F9F9F]">
-                                Status
-                              </Typography>
-                              <Typography
-                                variant="base"
-                                className="font-semibold text-[#FEB64D]"
-                              >
-                                {tx.status === 'cancelled' ? 'Cancelled' :
-                                  tx.status === 'released' ? 'Released' :
-                                    tx.status === 'confirmed' ? 'Active' :
-                                      tx.status === 'pending' ? 'Pending' :
-                                        tx.status}
-                              </Typography>
-                              <div className="flex flex-col gap-1">
-                                <Typography variant="small" className="text-[#9F9F9F]">
-                                  Bitcoin Address
-                                </Typography>
-                                <Typography
-                                  variant="base"
-                                  className="font-semibold text-[#FEB64D] truncate"
-                                  title={tx.bitcoinAddress || 'No address available'}
-                                >
-                                  {tx.bitcoinAddress ? truncateHash(tx.bitcoinAddress) : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
-                                </Typography>
-                              </div>
-                            </div>
-                            {/* AI Suggestion below amount */}
-                            {
-                              showSuggestions && getTransactionSuggestion(tx) && (
-                                <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300 w-full">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 text-blue-400" />
-                                    {getTransactionSuggestion(tx)}
-                                  </div>
-                                </div>
-                              )
+                  {/* Transaction Details Grid */}
+                  <div className="grid grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-[#BCBCBC] text-sm mb-1">Amount</p>
+                      <div className="flex items-center space-x-2">
+                        <Bitcoin size={16} className="text-[#F97415]" />
+                        <span className="font-semibold text-white">
+                          {(() => {
+                            if (isSentByUser(tx)) {
+                              return tx.to && Array.isArray(tx.to)
+                                ? (tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8).toFixed(8)
+                                : '0.00000000';
+                            } else {
+                              const recipientEntry = tx.to.find((entry) =>
+                                String(entry.principal) === String(principal)
+                              );
+                              return recipientEntry
+                                ? (Number(recipientEntry.amount) / 1e8).toFixed(8)
+                                : '0.00000000';
                             }
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+                          })()} BTC
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[#BCBCBC] text-sm mb-1">
+                        {isSentByUser(tx) ? "To" : "Your Share"}
+                      </p>
+                      <p className="font-semibold text-white">
+                        {isSentByUser(tx) ? (
+                          `${tx.to.length} recipient${tx.to.length !== 1 ? "s" : ""}`
+                        ) : (
+                          (() => {
+                            const recipientEntry = tx.to.find((entry) =>
+                              String(entry.principal) === String(principal)
+                            );
+                            return recipientEntry && recipientEntry.percentage
+                              ? `${recipientEntry.percentage}%`
+                              : 'N/A';
+                          })()
+                        )}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[#BCBCBC] text-sm mb-1">Status</p>
+                      <p className="font-semibold text-[#FEB64D]">
+                        {tx.status === 'cancelled' ? 'Cancelled' :
+                          tx.status === 'released' ? 'Released' :
+                            tx.status === 'confirmed' ? 'Active' :
+                              tx.status === 'pending' ? 'Pending' :
+                                tx.status}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bitcoin Address */}
+                  <div className="mt-4">
+                    <p className="text-[#BCBCBC] text-sm mb-1">Bitcoin Address</p>
+                    <p className="font-semibold text-[#FEB64D] truncate" title={tx.bitcoinAddress || 'No address available'}>
+                      {tx.bitcoinAddress ? truncateHash(tx.bitcoinAddress) : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
+                    </p>
+                  </div>
+
+                  {/* AI Suggestion */}
+                  {showSuggestions && getTransactionSuggestion(tx) && (
+                    <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg text-sm text-blue-300">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                        {getTransactionSuggestion(tx)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Approval/Decline Buttons */}
+                  {pendingApproval && !isSentByUser(tx) && tx.status !== 'cancelled' && (
+                    <div className="flex justify-end space-x-3 mt-4">
+                      <Button
+                        className={`bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        onClick={() => handleApprove(tx)}
+                        disabled={isApproving === getTxId(tx)}
+                      >
+                        {isApproving === getTxId(tx) ? (
+                          <span className="flex items-center space-x-2">
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                            </svg>
+                            Approving...
+                          </span>
+                        ) : (
+                          'Approve'
+                        )}
+                      </Button>
+                      <Button
+                        className={`bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        onClick={() => handleDecline(tx)}
+                        disabled={isDeclining === getTxId(tx)}
+                      >
+                        {isDeclining === getTxId(tx) ? (
+                          <span className="flex items-center space-x-2">
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                            </svg>
+                            Declining...
+                          </span>
+                        ) : (
+                          'Decline'
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </>
         )}
         {error && <div className="text-red-500 text-center">{error}</div>}
       </motion.div>
-    </>
+    </div>
   );
 }

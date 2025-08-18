@@ -146,6 +146,34 @@ cp env.example .env
 ### Principals
 After setting up, a `principals.json` will be generated with sample users for testing.
 
+## Testing
+
+### Withdrawal Testing
+The application includes comprehensive withdrawal functionality for both ICP and ckBTC. You can test withdrawals using the following sample addresses:
+
+#### Valid Bitcoin Addresses for Testing:
+- `bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh` ✅ (Tested and working)
+- `bc1q9d4ywgf0zq3k2nqx8f9l6u8v7m5n4p3q2r1s0t9u8v7w6x5y4z3a2b1c0d`
+- `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa` (Legacy format)
+- `3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy` (P2SH format)
+
+#### Test Withdrawal Commands:
+```bash
+# Test ckBTC withdrawal (0.1 ckBTC = 10,000,000 satoshis)
+dfx canister call split_dapp withdrawBtc "(principal \"YOUR_PRINCIPAL\", 10_000_000 : nat, \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\")"
+
+# Test ICP withdrawal (10 ICP = 1,000,000,000 e8s)
+dfx canister call split_dapp withdrawIcp "(principal \"YOUR_PRINCIPAL\", 1_000_000_000 : nat, \"test-icp-address-123456789012345678901234567890\")"
+```
+
+#### Run Complete Withdrawal Tests:
+```bash
+# Run the full withdrawal test suite
+./scripts/tests/test-withdraw.sh
+```
+
+**Note**: These addresses work because the system uses mock balances for development. When deploying to mainnet, real Bitcoin address validation and actual transfer mechanisms will be used.
+
 ## Authors
 
 - [@kenn](https://www.linkedin.com/in/kdst/)

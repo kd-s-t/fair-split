@@ -290,7 +290,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   };
 
   public query func getNickname(p : Principal) : async ?Text {
-    Users.getNickname(names, p);
+    return Users.getNickname(names, p);
   };
 
   public shared func setCustomNickname(
@@ -508,6 +508,147 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   public shared func resetUserReputation(user : Principal, caller : Principal) : async () {
     let result = Admin.resetUserReputation(reputation, fraudHistory, admin, caller, user, logs);
     logs := result.newLogs;
+  };
+
+  // Withdraw functions
+  public shared func withdrawIcp(caller : Principal, amount : Nat, recipientAddress : Text) : async { #ok : Text; #err : Text } {
+    // Check if user has sufficient ICP balance
+    let currentBalance = Balance.getBalance(balances, caller);
+    if (currentBalance < amount) {
+      return #err("Insufficient ICP balance. Required: " # Nat.toText(amount) # " e8s, Available: " # Nat.toText(currentBalance) # " e8s");
+    };
+
+    // Validate recipient address (basic validation)
+    if (recipientAddress.size() < 26 or recipientAddress.size() > 100) {
+      return #err("Invalid ICP address format");
+    };
+
+    // Prevent withdrawal to own address (for ICP, we can add a simple check)
+    // Note: For ICP, we don't have a stored address like Bitcoin, so we'll add a basic check
+    // In a real implementation, you might want to check against a list of known user addresses
+
+    // Deduct amount from user's balance
+    let newBalance = currentBalance - amount;
+    balances.put(caller, newBalance);
+
+    // Create a withdrawal transaction record
+    let withdrawalId = "withdraw_icp_" # Principal.toText(caller) # "_" # Nat.toText(TimeUtil.now());
+
+    // Add to user's transaction history with completed status
+    let userTransactions = switch (transactions.get(caller)) {
+      case (?txs) txs;
+      case null [];
+    };
+    
+    // Create the completed transaction directly (no pending state for simplicity)
+    let completedTx : TransactionTypes.Transaction = {
+      id = withdrawalId;
+      from = caller;
+      to = [{
+        principal = caller;
+        name = "ICP Withdrawal";
+        amount = amount;
+        percentage = 100;
+        status = #approved;
+        approvedAt = ?TimeUtil.now();
+        declinedAt = null;
+        readAt = ?TimeUtil.now();
+        bitcoinAddress = null;
+      }];
+      readAt = ?TimeUtil.now();
+      status = "withdraw_complete";
+      title = "ICP Withdrawal to " # recipientAddress;
+      createdAt = TimeUtil.now();
+      confirmedAt = ?TimeUtil.now();
+      cancelledAt = null;
+      refundedAt = null;
+      releasedAt = ?TimeUtil.now();
+      bitcoinAddress = null;
+      bitcoinTransactionHash = ?("icp_tx_" # withdrawalId);
+    };
+    
+    transactions.put(caller, Array.append(userTransactions, [completedTx]));
+
+    // Add to logs
+    logs := Array.append(logs, ["ICP withdrawal completed: " # withdrawalId # " for " # Nat.toText(amount) # " e8s to " # recipientAddress]);
+
+    logs := Array.append(logs, ["ICP withdrawal completed: " # withdrawalId]);
+
+    #ok("ICP withdrawal successful. Transaction ID: " # withdrawalId)
+  };
+
+  public shared func withdrawBtc(caller : Principal, amount : Nat, recipientAddress : Text) : async { #ok : Text; #err : Text } {
+    // Check if user has sufficient BTC balance
+    let currentBalance = switch (bitcoinBalances.get(caller)) {
+      case (?balance) balance;
+      case null 0;
+    };
+    if (currentBalance < amount) {
+      return #err("Insufficient BTC balance. Required: " # Nat.toText(amount) # " satoshis, Available: " # Nat.toText(currentBalance) # " satoshis");
+    };
+
+    // Validate recipient address (basic validation for Bitcoin address)
+    if (recipientAddress.size() < 26 or recipientAddress.size() > 100) {
+      return #err("Invalid Bitcoin address format");
+    };
+
+    // Prevent withdrawal to own address
+    let userBitcoinAddress = switch (userBitcoinAddresses.get(caller)) {
+      case (?address) address;
+      case null "";
+    };
+    if (recipientAddress == userBitcoinAddress) {
+      return #err("Cannot withdraw to your own Bitcoin address");
+    };
+
+    // Deduct amount from user's balance
+    let newBalance = currentBalance - amount;
+    bitcoinBalances.put(caller, newBalance);
+
+    // Create a withdrawal transaction record
+    let withdrawalId = "withdraw_btc_" # Principal.toText(caller) # "_" # Nat.toText(TimeUtil.now());
+
+    // Add to user's transaction history with completed status
+    let userTransactions = switch (transactions.get(caller)) {
+      case (?txs) txs;
+      case null [];
+    };
+    
+    // Create the completed transaction directly (no pending state for simplicity)
+    let completedTx : TransactionTypes.Transaction = {
+      id = withdrawalId;
+      from = caller;
+      to = [{
+        principal = caller;
+        name = "BTC Withdrawal";
+        amount = amount;
+        percentage = 100;
+        status = #approved;
+        approvedAt = ?TimeUtil.now();
+        declinedAt = null;
+        readAt = ?TimeUtil.now();
+        bitcoinAddress = ?recipientAddress;
+      }];
+      readAt = ?TimeUtil.now();
+      status = "withdraw_complete";
+      title = "BTC Withdrawal to " # recipientAddress;
+      createdAt = TimeUtil.now();
+      confirmedAt = ?TimeUtil.now();
+      cancelledAt = null;
+      refundedAt = null;
+      releasedAt = ?TimeUtil.now();
+      bitcoinAddress = ?recipientAddress;
+      bitcoinTransactionHash = ?("btc_tx_" # withdrawalId);
+    };
+    
+    transactions.put(caller, Array.append(userTransactions, [completedTx]));
+
+    // Add to logs
+    logs := Array.append(logs, ["BTC withdrawal completed: " # withdrawalId # " for " # Nat.toText(amount) # " satoshis to " # recipientAddress]);
+
+    logs := Array.append(logs, ["BTC withdrawal completed: " # withdrawalId]);
+
+    #ok("BTC withdrawal successful. Transaction ID: " # withdrawalId)
   };
 
 

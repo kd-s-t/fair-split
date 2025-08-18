@@ -125,7 +125,7 @@ export function useEscrowActions(editTxId?: string) {
 
 
   // Function to get Bitcoin address for a principal
-  const getBitcoinAddressForPrincipal = async (principalText: string): Promise<string> => {
+  const getBitcoinAddressForPrincipal = useCallback(async (principalText: string): Promise<string> => {
     try {
       const actor = await createSplitDappActor();
       const principalObj = Principal.fromText(principalText);
@@ -145,7 +145,7 @@ export function useEscrowActions(editTxId?: string) {
       // Return empty string on error (treat as ICP recipient)
       return "";
     }
-  };
+  }, []);
 
   const createEscrow = useCallback(
     async (data: FormData) => {

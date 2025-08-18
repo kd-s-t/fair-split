@@ -4,11 +4,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { BotMessageSquare, X, Send } from 'lucide-react';
 import { Message } from './ChatInterface';
-import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
+import { saveMessages, loadMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
-import { getGlobalChatState, clearGlobalChatMessages } from '@/lib/messaging/chatState';
+import { getGlobalChatState } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
 import { ParsedAction } from '@/lib/messaging/actionParser';
 

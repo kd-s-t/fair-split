@@ -110,6 +110,16 @@ export interface SplitDApp {
     [Principal, string, Array<ParticipantShare>],
     undefined
   >,
+  'withdrawBtc' : ActorMethod<
+    [Principal, bigint, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'withdrawIcp' : ActorMethod<
+    [Principal, bigint, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
 }
 export type Subaccount = Uint8Array | number[];
 export interface ToEntry {

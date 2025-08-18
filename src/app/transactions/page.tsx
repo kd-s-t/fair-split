@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { NormalizedTransaction } from "@/modules/transactions/types";
 import { motion } from "framer-motion";
-import { Search, RotateCw, Bell, ChevronDown } from "lucide-react";
+import { Search, RotateCw } from "lucide-react";
 
 // Helper function to convert API response to NormalizedTransaction[]
 const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTransaction[] => {
@@ -60,7 +60,7 @@ import {
 } from "../../lib/redux/transactionsSlice";
 import { useRouter } from "next/navigation";
 import { Principal } from "@dfinity/principal";
-import { Typography } from "@/components/ui/typography";
+
 import {
   ArrowDownLeft,
   ArrowUpRight,

@@ -11,7 +11,7 @@ import { withdrawFormSchema } from '@/validation/withdraw';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, Bitcoin, Coins, Info, X, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, Bitcoin, Coins, Info, X, AlertCircle, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useUser } from '@/hooks/useUser';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -122,7 +122,8 @@ export default function Withdraw({
       }
     } catch (err) {
       console.error('Withdrawal error:', err);
-      setError('Withdrawal failed. Please try again.');
+      console.error('Error details:', JSON.stringify(err, null, 2));
+      setError(`Withdrawal failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -260,7 +261,8 @@ export default function Withdraw({
                 <label className="flex items-start gap-3 cursor-pointer">
                   <Checkbox
                     id="terms"
-                    {...register("isAcceptedTerms")}
+                    checked={isAcceptedTerms}
+                    onCheckedChange={(checked) => setValue("isAcceptedTerms", checked as boolean)}
                     aria-describedby={errors.isAcceptedTerms ? "terms-error" : undefined}
                   />
                   <div className='flex flex-col text-left'>
@@ -289,14 +291,35 @@ export default function Withdraw({
 
               <hr className='bg-[#424444]' />
               
+              {/* Debug Info */}
+              <div className="text-xs text-gray-400 mb-2">
+                Debug: isDirty={isDirty.toString()}, isValid={isValid.toString()}, isLoading={isLoading.toString()}
+                <div>Amount: &quot;{amount}&quot; (length: {amount.length})</div>
+                <div>Address: &quot;{watch('address')}&quot; (length: {watch('address').length})</div>
+                <div>Terms: {isAcceptedTerms.toString()}</div>
+                <div>Form Values: {JSON.stringify({amount: watch('amount'), address: watch('address'), isAcceptedTerms: watch('isAcceptedTerms')})}</div>
+                {Object.keys(errors).length > 0 && (
+                  <div>
+                    Errors: {Object.keys(errors).map(key => `${key}: ${errors[key as keyof typeof errors]?.message || 'unknown error'}`).join(', ')}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-3">
                 <Button
                   type="submit"
                   variant="default"
-                  disabled={!isDirty || !isValid || isLoading}
+                  disabled={isLoading}
                   className="flex-1"
                 >
-                  {isLoading ? 'Processing...' : 'Withdraw'}
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </div>
+                  ) : (
+                    'Withdraw'
+                  )}
                 </Button>
                 <Button
                   type="button"

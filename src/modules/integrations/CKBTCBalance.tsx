@@ -9,7 +9,7 @@ import { setCkbtcBalance } from '@/lib/redux/userSlice';
 import { Bitcoin, ExternalLink, RefreshCw } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+
 
 const CKBTCBalance: React.FC = () => {
 

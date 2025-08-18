@@ -193,6 +193,16 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'withdrawBtc' : IDL.Func(
+        [IDL.Principal, IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'withdrawIcp' : IDL.Func(
+        [IDL.Principal, IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
   });
   return SplitDApp;
 };

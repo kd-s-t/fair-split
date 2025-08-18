@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { BotMessageSquare, X, Send } from 'lucide-react';
-import { ChatInterface, Message } from './ChatInterface';
+import { Message } from './ChatInterface';
 import { saveMessages, loadMessages, clearMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
@@ -12,16 +11,15 @@ import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet
 import { getGlobalChatState, clearGlobalChatMessages } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
 import { ParsedAction } from '@/lib/messaging/actionParser';
-import { Typography } from '@/components/ui/typography';
+
 import { useUser } from '@/hooks/useUser';
 import { Input } from '@/components/ui/input';
 
 interface RightSidebarProps {
-  isOpen: boolean;
   onToggle: () => void
 }
 
-export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
+export default function RightSidebar({ onToggle }: RightSidebarProps) {
   const router = useRouter();
   const { principal, icpBalance, ckbtcAddress, ckbtcBalance } = useUser();
 
@@ -174,17 +172,7 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
     }
   }, [principal, icpBalance, ckbtcBalance, ckbtcAddress]);
 
-  const handleClearChat = () => {
-    clearMessages();
-    clearGlobalChatMessages();
-    const welcomeMessage: Message = {
-      id: 'welcome',
-      content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
-      role: 'assistant',
-      timestamp: new Date(),
-    };
-    setMessages([welcomeMessage]);
-  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

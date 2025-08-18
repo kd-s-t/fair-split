@@ -117,6 +117,16 @@ type SplitDApp =
    setNickname: (p: principal, name: text) -> ();
    updateEscrow: (caller: principal, txId: text, updatedParticipants:
     vec ParticipantShare) -> ();
+   withdrawBtc: (caller: principal, amount: nat, recipientAddress: text) ->
+    (variant {
+       err: text;
+       ok: text;
+     });
+   withdrawIcp: (caller: principal, amount: nat, recipientAddress: text) ->
+    (variant {
+       err: text;
+       ok: text;
+     });
  };
 type ParticipantShare = 
  record {

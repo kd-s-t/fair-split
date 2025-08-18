@@ -18,6 +18,7 @@ const isValidICPPrincipal = (principal: string): boolean => {
 
 const recipientSchema = z.object({
     id: z.string(),
+    name: z.string(),
     principal: z.string()
       .min(1, "ICP Principal ID is required")
       .refine(isValidICPPrincipal, "Please enter a valid ICP Principal ID"),

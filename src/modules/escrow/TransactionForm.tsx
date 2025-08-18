@@ -39,6 +39,7 @@ const TransactionForm = () => {
       recipients: [
         {
           id: "recipient-1",
+          name: "",
           principal: "",
           percentage: 100
         }

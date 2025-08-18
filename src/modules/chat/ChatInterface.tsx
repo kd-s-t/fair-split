@@ -56,7 +56,7 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
             className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {message.role !== 'user' && (
-              <div className="rounded-full bg-[#FEB64D] self-start">
+              <div className="rounded-full bg-[#FEB64D] self-start p-1">
                 <BotMessageSquare />
               </div>
             )}

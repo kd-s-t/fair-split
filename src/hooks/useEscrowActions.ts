@@ -235,7 +235,7 @@ export function useEscrowActions(editTxId?: string) {
       }
     },
 
-    [principal, dispatch, getBitcoinAddressForPrincipal, fetchAndStoreTransactions, updateBalance, router]
+    [principal, dispatch, fetchAndStoreTransactions, updateBalance, router]
   );
 
   const updateEscrow = useCallback(

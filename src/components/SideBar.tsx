@@ -17,19 +17,19 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="h-screen w-48 flex flex-col text-sm bg-[#222222] m-4 rounded-xl">
-      <div className="p-4 w-full flex items-center justify-center">
+    <aside className="h-full w-full flex flex-col text-sm bg-[#222222] p-4 rounded-xl overflow-hidden">
+      <div className="w-full flex items-center justify-center mb-4">
         <Image
           src="/safesplit.svg"
           alt="Logo"
           width={160}
           height={40}
           priority
-          className="object-contain w-40 h-10"
+          className="object-contain w-32 h-8"
         />
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-4 space-y-3">
+      <nav className="flex-1 overflow-y-auto space-y-2">
         {nav.map((link) => {
           const isDashboardActive =
             link.href === "/dashboard" &&
@@ -41,7 +41,7 @@ export default function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-white rounded-md px-4 py-3 text-sm transition-colors flex items-center gap-2 ${isActive
+              className={`text-white rounded-md px-3 py-2 text-sm transition-colors flex items-center gap-2 ${isActive
                   ? "bg-[#FEB64D] !text-[#0D0D0D] font-semibold"
                   : "hover:bg-[#FEB64D]/20 text-slate-800"
                 }`}

@@ -23,8 +23,8 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 focus:outline-none cursor-pointer hover:bg-gray-800 rounded-lg px-2 py-1 transition-colors">
-            <div className="relative w-8 h-8 overflow-hidden rounded-full">
+          <button className="flex items-center gap-2 focus:outline-none cursor-pointer hover:bg-gray-800 rounded-lg px-2 py-1 transition-colors min-w-0">
+            <div className="relative w-8 h-8 overflow-hidden rounded-full flex-shrink-0">
               <Image
                 src={getAvatarUrl()}
                 alt={'User avatar'}
@@ -33,8 +33,8 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
                 className="object-cover"
               />
             </div>
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-medium text-white">
+            <div className="flex flex-col items-start min-w-0 flex-1">
+              <span className="text-sm font-medium text-white truncate max-w-32">
                 {displayName && displayName.trim() !== '' ? displayName : truncatePrincipal(principalId)}
               </span>
             </div>

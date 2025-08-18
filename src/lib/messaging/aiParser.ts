@@ -26,7 +26,8 @@ export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | Bitco
 
 export async function parseUserMessageWithAI(message: string, apiKey?: string): Promise<ParsedAction> {
   try {
-    if (!apiKey) {
+    if (!apiKey || apiKey.trim() === '' || apiKey === 'sk-proj-YOUR_OPENAI_API_KEY_HERE') {
+      console.warn('OpenAI API key is missing or invalid');
       return null;
     }
 

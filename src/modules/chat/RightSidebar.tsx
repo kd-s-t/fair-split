@@ -82,12 +82,14 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
 
       let parsedAction: ParsedAction = null;
 
-      if (apiKey) {
+      if (apiKey && apiKey.trim() !== '' && apiKey !== 'sk-proj-YOUR_OPENAI_API_KEY_HERE') {
         try {
           parsedAction = await parseUserMessageWithAI(content, apiKey);
         } catch (aiError) {
           console.warn('AI parser failed, falling back to local parser:', aiError);
         }
+      } else {
+        console.info('OpenAI API key not configured, using local parser only');
       }
 
       if (!parsedAction) {
@@ -183,44 +185,33 @@ export default function RightSidebar({ isOpen, onToggle }: RightSidebarProps) {
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="h-screen w-80 bg-[#222222] border-l border-[#303434] z-40 shadow-2xl"
-          >
-            <div className="flex flex-col h-full p-4 space-y-4">
-              <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg min-h-0">
-                <div className="flex items-center justify-between p-3 border-b border-[#303434] flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <BotMessageSquare color="#FEB64D" />
-                    <Typography variant='h4'>SplitSafe AI</Typography>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onToggle}
-                  >
-                    <X size={14} />
-                  </Button>
-                </div>
-                <div className="flex-1 overflow-y-auto min-h-0">
-                  <ChatInterface
-                    messages={messages}
-                    onSendMessage={handleSendMessage}
-                    onClearChat={handleClearChat}
-                    isLoading={isLoading}
-                  />
-                </div>
-              </div>
+    <div className="h-full bg-[#222222] border-l border-[#303434] shadow-2xl">
+      <div className="flex flex-col h-full p-4 space-y-4 overflow-hidden">
+        <div className="flex-1 flex flex-col bg-[#1a1a1a] border border-[#303434] rounded-lg min-h-0 overflow-hidden">
+          <div className="flex items-center justify-between p-3 border-b border-[#303434] flex-shrink-0 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <BotMessageSquare color="#FEB64D" />
+              <Typography variant='h4' className="truncate">SplitSafe AI</Typography>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="flex-shrink-0"
+            >
+              <X size={14} />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-0 min-w-0">
+            <ChatInterface
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              onClearChat={handleClearChat}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

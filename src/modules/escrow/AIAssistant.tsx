@@ -103,7 +103,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
         <div className="space-y-6">
             <Accordion key="ai-assistant" type="single" collapsible className="w-full">
                 <AccordionItem value="ai-assistant" className="border-[#2A2A2A] bg-[#1A1A1A] rounded-[20px]">
-                    <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                    <AccordionTrigger className="px-5 py-4 hover:no-underline cursor-pointer no-underline [&>svg]:text-[#FEB64D] [&>svg]:transition-transform [&>svg]:duration-200 [&>svg]:ease-in-out [&[data-state=open]>svg]:rotate-180 [&:hover]:no-underline [&:focus]:no-underline [&:active]:no-underline">
                         <div className='flex flex-col'>
                             <div className="flex items-center gap-2">
                                 <Bot color='#FEB64D' className="h-5 w-5" />

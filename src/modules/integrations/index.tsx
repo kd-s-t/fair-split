@@ -9,7 +9,7 @@ import { Bitcoin, Copy, Check, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setTitle, setSubtitle } from '@/lib/redux/store';
-import { setCkbtcAddress, setCkbtcBalance } from '@/lib/redux/userSlice';
+import { setCkbtcAddress, setCkbtcBalance, setIcpBalance } from '@/lib/redux/userSlice';
 import { useUser } from '@/hooks/useUser';
 import ICPBalance from './ICPBalance';
 import CKBTCBalance from './CKBTCBalance';
@@ -37,6 +37,15 @@ export default function Integrations() {
 			try {
 				const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
 				const actor = await createSplitDappActor();
+
+				// Get ICP balance
+				try {
+					const icpBalanceResult = await actor.getBalance(principal) as bigint;
+					dispatch(setIcpBalance(icpBalanceResult.toString()));
+				} catch (error) {
+					console.error('Failed to get ICP balance:', error);
+					dispatch(setIcpBalance('0'));
+				}
 
 				// Get cKBTC balance (anonymous for local development)
 				const balanceResult = await actor.getCkbtcBalanceAnonymous() as { ok: number } | { err: string };

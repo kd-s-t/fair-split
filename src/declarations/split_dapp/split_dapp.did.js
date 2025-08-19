@@ -1,3 +1,4 @@
+// @ts-nocheck - ICP generated file, do not edit
 export const idlFactory = ({ IDL }) => {
   const FraudActivity = IDL.Record({
     'activityType' : IDL.Text,

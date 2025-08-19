@@ -6,11 +6,9 @@ import { useUser } from '@/hooks/useUser';
 import { setSeiBalance } from '@/lib/redux/userSlice';
 import { createSplitDappActor } from '@/lib/icp/splitDapp';
 import { Principal } from '@dfinity/principal';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { toast } from 'sonner';
 import { ExternalLink, RefreshCw } from 'lucide-react';
-import { SEI_NETWORKS, SEI_FAUCETS } from '@/lib/constants';
 
 export default function SEIBalance() {
 	const dispatch = useDispatch();
@@ -26,7 +24,7 @@ export default function SEIBalance() {
 	} | null>(null);
 	const [faucetUrl, setFaucetUrl] = useState<string | null>(null);
 
-	const updateSeiBalance = async () => {
+	const updateSeiBalance = useCallback(async () => {
 		if (!principal) return;
 
 		setIsRefreshing(true);
@@ -48,7 +46,7 @@ export default function SEIBalance() {
 		} finally {
 			setIsRefreshing(false);
 		}
-	};
+	}, [principal, dispatch]);
 
 	const getNetworkInfo = async () => {
 		try {
@@ -76,7 +74,7 @@ export default function SEIBalance() {
 	useEffect(() => {
 		updateSeiBalance();
 		getNetworkInfo();
-	}, [principal]);
+	}, [principal, updateSeiBalance]);
 
 	return (
 		<Card className="bg-[#222222] border-[#303434] text-white">

@@ -28,7 +28,7 @@ export function useEscrowActions(editTxId?: string) {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const updateBalance = async () => {
+  const updateBalance = useCallback(async () => {
     if (principal && authClient) {
       try {
         const actor = await createSplitDappActor();
@@ -63,9 +63,9 @@ export function useEscrowActions(editTxId?: string) {
         dispatch(setSeiBalance(null));
       }
     }
-  };
+  }, [principal, authClient, dispatch]);
 
-  const fetchAndStoreTransactions = async () => {
+  const fetchAndStoreTransactions = useCallback(async () => {
     if (!principal) return;
     if (!authClient) return;
     const actor = await createSplitDappActor();
@@ -140,7 +140,7 @@ export function useEscrowActions(editTxId?: string) {
       };
     });
     dispatch(setTransactions(serializableTxs));
-  };
+  }, [principal, authClient, dispatch]);
 
 
 

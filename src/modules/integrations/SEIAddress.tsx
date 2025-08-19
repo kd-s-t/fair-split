@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
 import { setSeiAddress } from '@/lib/redux/userSlice';
 import { createSplitDappActor } from '@/lib/icp/splitDapp';
-import { Principal } from '@dfinity/principal';
+
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';

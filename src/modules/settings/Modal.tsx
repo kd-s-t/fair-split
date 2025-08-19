@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Copy } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setUserName } from "@/lib/redux/userSlice";
@@ -17,7 +16,7 @@ import { SettingsModalProps } from './types';
 export default function EditNameModal({
   open,
   onClose,
-  principalId,
+
   onNameSaved,
 }: SettingsModalProps) {
   const name = useAppSelector((state: RootState) => state.user.name);

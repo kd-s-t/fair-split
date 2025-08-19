@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { Bitcoin, Trash2, Sparkles, Upload, Info, Plus, ChevronRight, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { useFieldArray, UseFormReturn } from "react-hook-form";
 import z from "zod";
 import { escrowFormSchema } from "@/validation/escrow";
 import { useUser } from "@/hooks/useUser";
-import { useState } from "react";
+
 
 type FormData = z.infer<typeof escrowFormSchema>;
 

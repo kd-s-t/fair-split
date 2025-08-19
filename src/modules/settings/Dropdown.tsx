@@ -3,22 +3,20 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { getAvatarUrl, truncatePrincipal } from '@/lib/utils';
+import { getAvatarUrl } from '@/lib/utils';
 import EditNameModal from './Modal';
 import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
-import { Settings, ChevronDown, User, CreditCard, Wallet, Users, UserPlus, Plus, Github, HelpCircle, FileText, LogOut } from 'lucide-react';
+import { ChevronDown, User, Wallet } from 'lucide-react';
 
 // Wallet Modal Component
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
-  const [copied, setCopied] = useState(false);
+
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(principalId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy: ', err);
     }

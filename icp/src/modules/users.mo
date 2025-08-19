@@ -51,4 +51,37 @@ module {
             func(entry) { entry }
         )
     };
+
+    // Username Management Functions
+    public func setUsername(
+        usernames : HashMap.HashMap<Principal, Text>,
+        principal : Principal,
+        username : Text
+    ) {
+        usernames.put(principal, username);
+    };
+
+    public func getUsername(
+        usernames : HashMap.HashMap<Principal, Text>,
+        principal : Principal
+    ) : ?Text {
+        usernames.get(principal);
+    };
+
+    public func removeUsername(
+        usernames : HashMap.HashMap<Principal, Text>,
+        principal : Principal
+    ) {
+        usernames.delete(principal);
+    };
+
+    public func getAllUsernames(
+        usernames : HashMap.HashMap<Principal, Text>
+    ) : [(Principal, Text)] {
+        let entries = Iter.toArray(usernames.entries());
+        Array.map<(Principal, Text), (Principal, Text)>(
+            entries,
+            func(entry) { entry }
+        )
+    };
 }; 

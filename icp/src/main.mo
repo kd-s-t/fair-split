@@ -19,6 +19,7 @@ import Users "modules/users";
 import Admin "modules/admin";
 import Bitcoin "modules/bitcoin";
 import CKBTC "modules/ckbtc";
+import SEI "modules/sei";
 
 
 
@@ -28,9 +29,13 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   transient let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   transient let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
   transient let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+  transient let usernames = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
   
   // Bitcoin balance storage
   transient let bitcoinBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  
+  // SEI balance storage
+  transient let seiBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   
   // Reputation system
   transient let reputation = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
@@ -39,10 +44,33 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   
   // User Bitcoin address storage
   transient let userBitcoinAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+  
+  // User SEI address storage
+  transient let userSeiAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
 
   // Bitcoin integration - Dynamic cKBTC canister ID
   // For now, use a placeholder that won't cause initialization errors
   transient let bitcoinIntegration = Bitcoin.BitcoinIntegration("2vxsx-fae"); // Placeholder
+  
+  // SEI integration with Atlantic-2 testnet configuration
+  transient let seiNetworkConfig : SEI.SeiNetwork = {
+    name = "Atlantic-2 Testnet";
+    chainId = "atlantic-2";
+    rpcUrl = "https://rpc.atlantic-2.seinetwork.io";
+    explorerUrl = "https://atlantic-2.sei.explorers.guru";
+    prefix = "sei";
+    isTestnet = true;
+  };
+  transient let seiIntegration = SEI.SEIIntegration("2vxsx-fae", seiNetworkConfig);
+  
+  // Initialize testnet SEI balances for development
+  private func initializeTestnetSeiBalances() {
+    // Set some test SEI balances for development
+    seiIntegration.clearBalanceCache();
+    Debug.print("🚀 SEI TESTNET: Initialized with Atlantic-2 testnet configuration");
+    Debug.print("🔗 SEI RPC: " # seiNetworkConfig.rpcUrl);
+    Debug.print("🔍 SEI EXPLORER: " # seiNetworkConfig.explorerUrl);
+  };
   // Temporarily disable cKBTC integration for local deployment
   // transient let ckbtcIntegration = CKBTC.CKBTCIntegration(_ckbtcCanisterId, "ckbtc-minter-canister-id", Principal.fromText("aaaaa-aa"));
   
@@ -63,18 +91,16 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     );
     
     // Get current mock balance
-    let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = caller; subaccount = null })) {
-      case (#ok(balance)) balance;
-      case (#err(_)) 0;
-    };
+    let currentMockBalance = await getUserBitcoinBalance(caller);
     
     // Check if user has sufficient balance
     if (currentMockBalance < totalAmount) {
       return "Error: Insufficient cKBTC balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(currentMockBalance) # " satoshis";
     };
     
-    // Deduct from mock balance first
+    // Deduct from both balance systems to keep them synchronized
     bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance - totalAmount);
+    bitcoinBalances.put(caller, currentMockBalance - totalAmount);
     
     // Then proceed with escrow creation
     let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);
@@ -82,13 +108,15 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     switch (result.success, result.escrowId, result.error) {
       case (true, ?escrowId, null) { escrowId };
       case (false, null, ?error) { 
-        // If escrow creation failed, restore the balance
+        // If escrow creation failed, restore the balance in both systems
         bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
+        bitcoinBalances.put(caller, currentMockBalance);
         error 
       };
       case (_, _, _) { 
-        // If unexpected result, restore the balance
+        // If unexpected result, restore the balance in both systems
         bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
+        bitcoinBalances.put(caller, currentMockBalance);
         "Error: Unexpected result from escrow module" 
       };
     };
@@ -108,73 +136,25 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     idx : Nat,
     recipient : Principal,
   ) : async () {
-    // Get the transaction to find the declined amount
-    let txs = switch (transactions.get(sender)) {
-      case (?list) list;
-      case null [];
-    };
-    
-    if (idx < txs.size()) {
-      let tx = txs[idx];
-      if (tx.status == "pending" or tx.status == "confirmed") {
-        // Find the recipient's amount to refund
-        let recipientEntry = Array.find<TransactionTypes.ToEntry>(
-          tx.to,
-          func(entry) { entry.principal == recipient }
-        );
-        
-        switch (recipientEntry) {
-          case (?entry) {
-            // Refund the declined amount to sender's mock balance
-            let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = sender; subaccount = null })) {
-              case (#ok(balance)) balance;
-              case (#err(_)) 0;
-            };
-            bitcoinIntegration.setMockBitcoinBalance(sender, currentMockBalance + entry.amount);
-          };
-          case null {
-            // Recipient not found, this shouldn't happen but handle gracefully
-            Debug.print("Warning: Recipient not found in transaction for decline");
-          };
-        };
-      };
-    };
-    
     let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, bitcoinBalances, reputation, fraudHistory, logs);
     logs := result.newLogs;
+    
+    // Synchronize the mock balance system with the internal balance system
+    if (result.success) {
+      let currentInternalBalance = Balance.getBalance(bitcoinBalances, sender);
+      bitcoinIntegration.setMockBitcoinBalance(sender, currentInternalBalance);
+    };
   };
 
   public shared func cancelSplit(caller : Principal) : async () {
-    // Get all pending transactions for the caller
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null [];
-    };
-    
-    // Calculate total amount to refund from pending transactions
-    var totalRefundAmount : Nat = 0;
-    for (tx in txs.vals()) {
-      if (tx.status == "pending") {
-        let txAmount = Array.foldLeft<TransactionTypes.ToEntry, Nat>(
-          tx.to,
-          0,
-          func(acc, entry) { acc + entry.amount }
-        );
-        totalRefundAmount := totalRefundAmount + txAmount;
-      };
-    };
-    
-    // Refund the total amount to the caller's mock balance
-    if (totalRefundAmount > 0) {
-      let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = caller; subaccount = null })) {
-        case (#ok(balance)) balance;
-        case (#err(_)) 0;
-      };
-      bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance + totalRefundAmount);
-    };
-    
     let result = Escrow.cancelSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
+    
+    // Synchronize the mock balance system with the internal balance system
+    if (result.success) {
+      let currentInternalBalance = Balance.getBalance(bitcoinBalances, caller);
+      bitcoinIntegration.setMockBitcoinBalance(caller, currentInternalBalance);
+    };
   };
 
   public shared func refundSplit(caller : Principal) : async () {
@@ -189,8 +169,12 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     let result = Escrow.releaseSplit(caller, txId, transactions, balances, bitcoinBalances, reputation, logs);
     logs := result.newLogs;
     
-    // If escrow was successfully released, update recipient mock balances
+    // If escrow was successfully released, synchronize balances
     if (result.success) {
+      // Synchronize sender's mock balance with internal balance
+      let senderInternalBalance = Balance.getBalance(bitcoinBalances, caller);
+      bitcoinIntegration.setMockBitcoinBalance(caller, senderInternalBalance);
+      
       // Get the transaction to find recipients
       let transaction = await getTransaction(txId, caller);
       switch (transaction) {
@@ -312,6 +296,23 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     Users.getAllNicknames(names);
   };
 
+  // Username management functions
+  public shared func setUsername(p : Principal, username : Text) : async () {
+    Users.setUsername(usernames, p, username);
+  };
+
+  public query func getUsername(p : Principal) : async ?Text {
+    return Users.getUsername(usernames, p);
+  };
+
+  public shared func removeUsername(principal : Principal) : async () {
+    Users.removeUsername(usernames, principal);
+  };
+
+  public query func getAllUsernames() : async [(Principal, Text)] {
+    Users.getAllUsernames(usernames);
+  };
+
   public query func getAdmin() : async Principal {
     return admin;
   };
@@ -358,16 +359,30 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     };
   };
 
-  // Anonymous versions for local development
-  public shared func requestCkbtcWalletAnonymous() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
-    // Generate realistic-looking fake Bitcoin address for presentation
-    let fakeAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-    
-    #ok({
-      btcAddress = fakeAddress;
-      owner = Principal.fromText("2vxsx-fae");
-      subaccount = subaccountFromPrincipal(Principal.fromText("2vxsx-fae"));
-    })
+  // Get or request cKBTC wallet address
+  public shared({ caller }) func getOrRequestCkbtcWallet() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
+    // Check if address already exists for this caller
+    switch (userBitcoinAddresses.get(caller)) {
+      case (?existingAddress) {
+        // Return existing address
+        #ok({
+          btcAddress = existingAddress;
+          owner = caller;
+          subaccount = subaccountFromPrincipal(caller);
+        })
+      };
+      case null {
+        // Generate new address only if none exists
+        let fakeAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+        userBitcoinAddresses.put(caller, fakeAddress);
+        
+        #ok({
+          btcAddress = fakeAddress;
+          owner = caller;
+          subaccount = subaccountFromPrincipal(caller);
+        })
+      };
+    }
   };
 
   public shared func getCkbtcBalanceAnonymous() : async { #ok : Nat; #err : Text } {
@@ -387,6 +402,61 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
       else 0
     });
     Blob.fromArray(out)
+  };
+
+  // SEI balance and wallet functions
+  public shared func getSeiBalance(user : Principal) : async { #ok : Nat; #err : Text } {
+    // Use mock SEI balance from the SEI integration module
+    let result = await seiIntegration.getSeiBalance({ owner = user; subaccount = null });
+    switch (result) {
+      case (#ok(balance)) { #ok(balance) };
+      case (#err(error)) { #err(error) };
+    };
+  };
+
+  public shared({ caller }) func getOrRequestSeiWallet() : async { #ok : { seiAddress : Text; owner : Principal }; #err : Text } {
+    // Check if address already exists for this caller
+    switch (userSeiAddresses.get(caller)) {
+      case (?existingAddress) {
+        // Return existing address
+        #ok({
+          seiAddress = existingAddress;
+          owner = caller;
+        })
+      };
+      case null {
+        // Generate new address only if none exists
+        let fakeAddress = "sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+        userSeiAddresses.put(caller, fakeAddress);
+        
+        #ok({
+          seiAddress = fakeAddress;
+          owner = caller;
+        })
+      };
+    }
+  };
+
+  public shared func getSeiBalanceAnonymous() : async { #ok : Nat; #err : Text } {
+    // Return placeholder balance for local testing
+    #ok(0)
+  };
+
+  // Get SEI network information
+  public query func getSeiNetworkInfo() : async {
+    name : Text;
+    chainId : Text;
+    rpcUrl : Text;
+    explorerUrl : Text;
+    prefix : Text;
+    isTestnet : Bool;
+  } {
+    seiIntegration.getNetworkInfo()
+  };
+
+  // Get SEI faucet URL if on testnet
+  public query func getSeiFaucetUrl() : async ?Text {
+    seiIntegration.getFaucetUrl()
   };
 
   // Bitcoin address management functions
@@ -419,10 +489,41 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     };
   };
 
+  // SEI address management functions
+  public shared func setSeiAddress(caller : Principal, address : Text) : async Bool {
+    // Basic SEI address validation
+    if (address.size() < 26 or address.size() > 90) {
+      return false;
+    };
+    
+    // Check if it starts with valid SEI address prefixes
+    if (not (Text.startsWith(address, #text "sei1"))) {
+      return false;
+    };
+    
+    userSeiAddresses.put(caller, address);
+    true
+  };
+
+  public query func getSeiAddress(user : Principal) : async ?Text {
+    userSeiAddresses.get(user)
+  };
+
+  public shared func removeSeiAddress(caller : Principal) : async Bool {
+    switch (userSeiAddresses.get(caller)) {
+      case (?_address) {
+        userSeiAddresses.delete(caller);
+        true
+      };
+      case null false;
+    };
+  };
+
   // Bitcoin balance management functions
   public shared func setBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
     if (caller == admin) {
       bitcoinBalances.put(user, amount);
+      bitcoinIntegration.setMockBitcoinBalance(user, amount);
       true
     } else {
       false
@@ -442,7 +543,9 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
         case (?balance) balance;
         case null 0;
       };
-      bitcoinBalances.put(user, currentBalance + amount);
+      let newBalance = currentBalance + amount;
+      bitcoinBalances.put(user, newBalance);
+      bitcoinIntegration.setMockBitcoinBalance(user, newBalance);
       true
     } else {
       false
@@ -475,6 +578,69 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
         case null 0;
       };
       bitcoinBalances.put(user, currentBitcoinBalance + bitcoinSatoshis);
+      
+      true
+    } else {
+      false
+    }
+  };
+
+  // SEI balance management functions
+  public shared func setSeiBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      seiBalances.put(user, amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  public query func getUserSeiBalance(user : Principal) : async Nat {
+    switch (seiBalances.get(user)) {
+      case (?balance) balance;
+      case null 0;
+    }
+  };
+
+  public shared func addSeiBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      let currentBalance = switch (seiBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      seiBalances.put(user, currentBalance + amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  // ICP to SEI conversion function
+  public shared func convertIcpToSei(caller : Principal, user : Principal, icpAmount : Nat) : async Bool {
+    if (caller == admin) {
+      // Get current ICP balance
+      let currentIcpBalance = Balance.getBalance(balances, user);
+      
+      // Check if user has enough ICP
+      if (currentIcpBalance < icpAmount) {
+        return false;
+      };
+      
+      // Convert ICP e8s to SEI usei
+      // Using a simplified conversion rate: 1 ICP ≈ 0.0001 SEI
+      // In production, you'd use real-time exchange rates
+      let seiUsei = if (icpAmount >= 10_000_000) { icpAmount / 10_000_000 } else { 0 }; // Safe division
+      
+      // Deduct ICP from user's balance
+      let newIcpBalance : Nat = currentIcpBalance - icpAmount;
+      balances.put(user, newIcpBalance);
+      
+      // Add SEI to user's balance
+      let currentSeiBalance = switch (seiBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      seiBalances.put(user, currentSeiBalance + seiUsei);
       
       true
     } else {

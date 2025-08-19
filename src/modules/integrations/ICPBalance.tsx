@@ -39,21 +39,13 @@ const ICPBalance: React.FC = () => {
     <Card className="bg-[#222222] border-[#303434] text-white">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          ICP Balance
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={refreshBalance}
-              disabled={isRefreshing}
-              className="p-1 h-auto"
-            >
-              <RefreshCw 
-                className={`h-4 w-4 text-[#007AFF] ${isRefreshing ? 'animate-spin' : ''}`} 
-              />
-            </Button>
-            <Coins color='#007AFF' />
+            ICP Balance
+            <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">
+              Local
+            </span>
           </div>
+          <Coins color='#007AFF' />
         </CardTitle>
         <CardDescription className='text-[#BCBCBC]'>
           Your current ICP balance

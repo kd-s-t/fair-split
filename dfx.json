@@ -42,6 +42,24 @@
       "providers": [
         "https://icp0.io"
       ]
+    },
+    "sei_atlantic": {
+      "type": "persistent",
+      "providers": [
+        "https://rpc.atlantic-2.seinetwork.io"
+      ]
+    },
+    "sei_pacific": {
+      "type": "persistent",
+      "providers": [
+        "https://rpc.pacific-1.seinetwork.io"
+      ]
+    },
+    "sei_arctic": {
+      "type": "persistent",
+      "providers": [
+        "https://rpc.arctic-1.seinetwork.io"
+      ]
     }
   },
   "version": 1

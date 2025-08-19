@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { useUser } from '@/hooks/useUser';
-import { Check, CircleCheckBig, Copy, Edit, Trash2, Wallet } from 'lucide-react';
+import { Check, CircleCheckBig, Copy, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -47,22 +47,6 @@ const BitcoinAddress: React.FC = () => {
             className="text-gray-300 border-gray-600 hover:bg-gray-700"
           >
             {isCopied ? <Check size={14} /> : <Copy size={14} />}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyAddress}
-            className="text-gray-300 border-gray-600 hover:bg-gray-700"
-          >
-            <Edit size={14} />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyAddress}
-            className="text-gray-300 border-gray-600 hover:bg-gray-700"
-          >
-            <Trash2 color="#EB4C5C" size={14} />
           </Button>
         </div>
       </div>

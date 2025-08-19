@@ -1,3 +1,4 @@
+// @ts-nocheck - ICP generated file, do not edit
 export const idlFactory = ({ IDL }) => {
   const FraudActivity = IDL.Record({
     'activityType' : IDL.Text,
@@ -49,6 +50,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'addSeiBalance' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'canUserCreateEscrow' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'cancelSplit' : IDL.Func([IDL.Principal], [], []),
     'convertIcpToBitcoin' : IDL.Func(
@@ -56,8 +62,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         [],
       ),
+    'convertIcpToSei' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
     'getAdmin' : IDL.Func([], [IDL.Principal], ['query']),
     'getAllNicknames' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Text))],
+        ['query'],
+      ),
+    'getAllUsernames' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Text))],
         ['query'],
@@ -101,6 +117,32 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getSeiAddress' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
+    'getSeiBalance' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'getSeiBalanceAnonymous' : IDL.Func(
+        [],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'getSeiFaucetUrl' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+    'getSeiNetworkInfo' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'name' : IDL.Text,
+            'rpcUrl' : IDL.Text,
+            'explorerUrl' : IDL.Text,
+            'prefix' : IDL.Text,
+            'isTestnet' : IDL.Bool,
+            'chainId' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'getTransaction' : IDL.Func(
         [IDL.Text, IDL.Principal],
         [IDL.Opt(Transaction)],
@@ -119,6 +161,8 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getUserBitcoinBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'getUserReputationScore' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'getUserSeiBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'getUsername' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
     'initiateEscrow' : IDL.Func(
         [IDL.Principal, IDL.Vec(ParticipantShare), IDL.Text],
         [IDL.Text],
@@ -145,6 +189,8 @@ export const idlFactory = ({ IDL }) => {
     'releaseSplit' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'removeBitcoinAddress' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'removeNickname' : IDL.Func([IDL.Principal], [], []),
+    'removeSeiAddress' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+    'removeUsername' : IDL.Func([IDL.Principal], [], []),
     'requestCkbtcWallet' : IDL.Func(
         [],
         [
@@ -173,6 +219,19 @@ export const idlFactory = ({ IDL }) => {
         ],
         [],
       ),
+    'requestSeiWalletAnonymous' : IDL.Func(
+        [],
+        [
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'owner' : IDL.Principal,
+              'seiAddress' : IDL.Text,
+            }),
+            'err' : IDL.Text,
+          }),
+        ],
+        [],
+      ),
     'resetUserReputation' : IDL.Func([IDL.Principal, IDL.Principal], [], []),
     'setBitcoinAddress' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
     'setBitcoinBalance' : IDL.Func(
@@ -188,6 +247,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     'setMockBitcoinBalance' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'setNickname' : IDL.Func([IDL.Principal, IDL.Text], [], []),
+    'setSeiAddress' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
+    'setSeiBalance' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [IDL.Bool],
+        [],
+      ),
+    'setUsername' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'updateEscrow' : IDL.Func(
         [IDL.Principal, IDL.Text, IDL.Vec(ParticipantShare)],
         [],

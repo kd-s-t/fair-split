@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Copy } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setUserName } from "@/lib/redux/userSlice";
@@ -17,13 +16,12 @@ import { SettingsModalProps } from './types';
 export default function EditNameModal({
   open,
   onClose,
-  principalId,
+
   onNameSaved,
 }: SettingsModalProps) {
   const name = useAppSelector((state: RootState) => state.user.name);
   const [nameInput, setNameInput] = useState(name || "");
   const [isSaving, setIsSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const { authClient } = useAuth();
@@ -34,8 +32,13 @@ export default function EditNameModal({
       if (!principal) throw new Error("No principal found");
       if (!authClient) throw new Error("No auth client found");
       const actor = await createSplitDappActor();
+      
+      // Save both name and username
       await actor.setNickname(Principal.fromText(principal), nameInput);
-      toast.success("Nickname updated successfully!");
+      const username = nameInput.toLowerCase().replace(/\s+/g, '');
+      await actor.setUsername(Principal.fromText(principal), username);
+      
+      toast.success("Profile updated successfully!");
       dispatch(setUserName(nameInput));
       onClose();
       if (onNameSaved) onNameSaved();
@@ -44,81 +47,91 @@ export default function EditNameModal({
     }
   };
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(principalId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  };
+
 
   if (!open) return null;
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-[#222222] border border-[#303434] p-6 rounded-xl shadow-xl w-full max-w-xs"
+        className="bg-[#2A2A2A] border border-[#404040] rounded-xl w-[540px] max-w-[90vw] max-h-[90vh] overflow-hidden shadow-lg"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ duration: 0.2 }}
       >
-        <h2 className="text-lg font-semibold mb-2 text-white">Edit Display Name</h2>
-        <div className="mb-4 flex flex-col items-start">
-          <span className="text-xs text-gray-400 mb-1">
-            Principal ID
-          </span>
-          <div className="relative flex items-center gap-2 w-full">
-            <span className="font-mono text-xs bg-[#2C2C2C] text-white px-2 py-1 rounded break-all select-all border border-[#303434] w-full">
-              {principalId}
-            </span>
+        {/* Header */}
+        <div className="p-6 border-b border-[#404040]">
+          <div className="flex items-center justify-between">
+            <h2 className="text-white text-lg font-semibold">Edit profile</h2>
             <button
-              type="button"
-              className="p-1 rounded hover:bg-yellow-100 dark:hover:bg-yellow-900 border border-transparent hover:border-yellow-400 transition cursor-pointer"
-              onClick={handleCopy}
-              aria-label="Copy principal ID"
+              onClick={onClose}
+              className="text-white hover:text-gray-300 transition-colors"
             >
-              <Copy className="w-4 h-4 text-yellow-500" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </button>
-            <AnimatePresence>
-              {copied && (
-                <motion.span
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-8 bg-yellow-400 text-black px-3 py-1 rounded shadow font-semibold text-xs z-10 pointer-events-none"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  Copied!
-                </motion.span>
-              )}
-            </AnimatePresence>
+          </div>
+          <p className="text-[#B0B0B0] text-sm mt-2">
+            Make changes to your profile here. Click save when you&apos;re done.
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          <div className="space-y-4">
+            {/* Name Input */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">Name</label>
+              <div className="bg-[#353535] border border-[#505050] rounded-md p-3">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="w-full bg-transparent text-white placeholder-[#B0B0B0] outline-none"
+                  placeholder="Enter your nickname"
+                />
+              </div>
+            </div>
+
+            {/* Username Input */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">Username</label>
+              <div className="bg-[#353535] border border-[#505050] rounded-md p-3">
+                <input
+                  type="text"
+                  value={`@${nameInput.toLowerCase().replace(/\s+/g, '')}`}
+                  readOnly
+                  className="w-full bg-transparent text-white placeholder-[#B0B0B0] outline-none"
+                  placeholder="@username"
+                />
+              </div>
+            </div>
           </div>
         </div>
-        <input
-          className="w-full border border-[#303434] bg-[#2C2C2C] text-white rounded px-3 py-2 mb-4 placeholder-gray-400"
-          value={nameInput}
-          onChange={(e) => setNameInput(e.target.value)}
-          placeholder="Enter your nickname"
-        />
-        <div className="flex justify-end gap-2">
+
+        {/* Footer */}
+        <div className="p-6 border-t border-[#404040] flex justify-end gap-3">
           <button
-            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 cursor-pointer"
             onClick={onClose}
+            className="px-4 py-2 text-white border border-[#7A7A7A] rounded-md hover:bg-[#353535] transition-colors bg-[#2A2A2A]"
             disabled={isSaving}
           >
             Cancel
           </button>
           <button
-            className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 font-semibold flex items-center justify-center cursor-pointer"
             onClick={handleSaveName}
+            className="bg-[#FEB64D] text-[#0D0D0D] px-4 py-2 rounded-md hover:bg-[#FEB64D]/90 transition-colors font-semibold flex items-center gap-2"
             disabled={isSaving}
           >
             {isSaving ? (
               <svg
-                className="animate-spin h-4 w-4 mr-2 text-black"
+                className="animate-spin h-4 w-4"
                 viewBox="0 0 24 24"
               >
                 <circle
@@ -137,7 +150,7 @@ export default function EditNameModal({
                 />
               </svg>
             ) : null}
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? "Saving..." : "Save changes"}
           </button>
         </div>
       </motion.div>

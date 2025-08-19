@@ -128,7 +128,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto" side="left" align="start">
           <motion.div
-            className="px-3 py-2 font-semibold border-b border-slate-700"
+                            className="px-3 py-2 font-semibold border-b border-[#424444]"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}

@@ -19,7 +19,7 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ["src/declarations/**/*.d.ts"],
+    ignores: ["src/declarations/**/*"],
   },
 ];
 

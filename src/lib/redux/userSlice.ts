@@ -6,6 +6,8 @@ interface UserState {
   icpBalance?: string | null;
   ckbtcAddress?: string | null;
   ckbtcBalance?: string | null;
+  seiAddress?: string | null;
+  seiBalance?: string | null;
 }
 
 const initialState: UserState = {
@@ -14,6 +16,8 @@ const initialState: UserState = {
   icpBalance: null,
   ckbtcAddress: null,
   ckbtcBalance: null,
+  seiAddress: null,
+  seiBalance: null,
 };
 
 const userSlice = createSlice({
@@ -30,6 +34,8 @@ const userSlice = createSlice({
       state.icpBalance = null;
       state.ckbtcAddress = null;
       state.ckbtcBalance = null;
+      state.seiAddress = null;
+      state.seiBalance = null;
     },
     setUserName(state, action: PayloadAction<string | null>) {
       state.name = action.payload;
@@ -43,6 +49,12 @@ const userSlice = createSlice({
     setCkbtcBalance(state, action: PayloadAction<string | null>) {
       state.ckbtcBalance = action.payload;
     },
+    setSeiAddress(state, action: PayloadAction<string | null>) {
+      state.seiAddress = action.payload;
+    },
+    setSeiBalance(state, action: PayloadAction<string | null>) {
+      state.seiBalance = action.payload;
+    },
   },
 });
 
@@ -52,6 +64,8 @@ export const {
   setUserName, 
   setIcpBalance,
   setCkbtcAddress,
-  setCkbtcBalance
+  setCkbtcBalance,
+  setSeiAddress,
+  setSeiBalance
 } = userSlice.actions;
 export default userSlice.reducer; 

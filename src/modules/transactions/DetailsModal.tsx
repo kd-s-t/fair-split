@@ -11,7 +11,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-xl w-full max-w-md relative"
+        className="bg-[#212121] border border-[#303333] p-6 rounded-xl shadow-xl w-full max-w-md relative"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}

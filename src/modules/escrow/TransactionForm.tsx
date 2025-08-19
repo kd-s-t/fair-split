@@ -65,6 +65,7 @@ const TransactionForm = () => {
           // Convert recipients to the form format
           const formRecipients = tx.to.map((recipient: ToEntry, index: number) => ({
             id: `recipient-${index + 1}`,
+            name: "",
             principal: typeof recipient.principal === "string" ? recipient.principal : (recipient.principal as { toText: () => string }).toText(),
             percentage: Number(recipient.percentage)
           }));
@@ -86,10 +87,14 @@ const TransactionForm = () => {
 
   const onSubmit = async (data: FormData) => {
     console.log("Form submitted:", data);
+    const formDataWithTokenType = {
+      ...data,
+      tokenType: 'btc' as const
+    };
     if (editTxId) {
-      await updateEscrow(data);
+      await updateEscrow(formDataWithTokenType);
     } else {
-      await createEscrow(data);
+      await createEscrow(formDataWithTokenType);
     }
   };
 
@@ -102,12 +107,14 @@ const TransactionForm = () => {
   };
 
   return (
-    <div className="flex gap-6 p-6 min-h-screen bg-[#0A0A0A]">
-      <div className="w-[70%] min-w-[340px]">
+    <div className="flex gap-4 min-h-screen w-full">
+      <div className="flex-1 min-w-0">
         <AIAssistant form={form} />
         <Form form={form} />
       </div>
-      <Summary {...summaryProps} />
+      <div className="w-80 flex-shrink-0">
+        <Summary {...summaryProps} />
+      </div>
 
       <TransactionDialog
         open={showDialog}

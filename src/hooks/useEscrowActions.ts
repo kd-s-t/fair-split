@@ -34,14 +34,9 @@ export function useEscrowActions(editTxId?: string) {
         const actor = await createSplitDappActor();
         
         // Update cKBTC balance
-        const balanceResult = await actor.getCkbtcBalance(Principal.fromText(principal.toText())) as { ok: number } | { err: string };
-        if ('ok' in balanceResult) {
-          const formatted = (Number(balanceResult.ok) / 1e8).toFixed(8);
-          dispatch(setCkbtcBalance(formatted));
-        } else {
-          console.error('Failed to get cKBTC balance:', balanceResult.err);
-          dispatch(setCkbtcBalance(null));
-        }
+        const balanceResult = await actor.getUserBitcoinBalance(Principal.fromText(principal.toText())) as number;
+        const formatted = (Number(balanceResult) / 1e8).toFixed(8);
+        dispatch(setCkbtcBalance(formatted));
 
         // Update SEI balance
         try {
@@ -182,16 +177,10 @@ export function useEscrowActions(editTxId?: string) {
         console.log('🔄 Escrow creation: Checking balance for principal:', callerPrincipal.toText());
         
         if (data.tokenType === 'btc') {
-          const ckbtcBalanceResult = await actor.getCkbtcBalance(callerPrincipal) as { ok: number } | { err: string };
+          const ckbtcBalanceResult = await actor.getUserBitcoinBalance(callerPrincipal) as number;
           console.log('🔄 Escrow creation: cKBTC Balance result:', ckbtcBalanceResult);
           
-          if ('err' in ckbtcBalanceResult) {
-            console.error('🔄 Escrow creation: cKBTC Balance check failed:', ckbtcBalanceResult.err);
-            toast.error(`Failed to get Bitcoin balance: ${ckbtcBalanceResult.err}`);
-            return;
-          }
-          
-          const ckbtcBalance = BigInt(ckbtcBalanceResult.ok);
+          const ckbtcBalance = BigInt(ckbtcBalanceResult);
           const requiredAmount = BigInt(Math.round(Number(data.btcAmount) * 1e8));
           
           console.log('🔄 Escrow creation: Available cKBTC balance:', ckbtcBalance.toString(), 'satoshis');

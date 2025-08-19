@@ -31,6 +31,12 @@ export default function Integrations() {
 			if (!principal) return;
 
 			setIsInitializing(true);
+			
+			// Add timeout to prevent getting stuck
+			const timeout = setTimeout(() => {
+				console.warn('Wallet initialization timed out');
+				setIsInitializing(false);
+			}, 10000); // 10 second timeout
 			try {
 				const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
 				const actor = await createSplitDappActor();
@@ -45,61 +51,60 @@ export default function Integrations() {
 				}
 
 				// Get cKBTC balance for the specific user
-				const balanceResult = await actor.getCkbtcBalance(principal) as { ok: number } | { err: string };
-				if ('ok' in balanceResult) {
-					dispatch(setCkbtcBalance(balanceResult.ok.toString()));
-				} else {
-					console.error('Failed to get cKBTC balance:', balanceResult.err);
-					dispatch(setCkbtcBalance('0'));
-				}
+				const balanceResult = await actor.getUserBitcoinBalance(principal) as number;
+				console.log('🔍 DEBUG: Raw balance from canister:', balanceResult);
+				console.log('🔍 DEBUG: Balance in satoshis:', balanceResult);
+				const formattedBalance = (Number(balanceResult) / 1e8).toFixed(8);
+				console.log('🔍 DEBUG: Balance in BTC:', formattedBalance);
+				dispatch(setCkbtcBalance(formattedBalance));
 
 				// Get SEI balance for the specific user
 				try {
 					const seiBalanceResult = await actor.getSeiBalance(principal) as { ok: number } | { err: string };
 					if ('ok' in seiBalanceResult) {
-						dispatch(setSeiBalance(seiBalanceResult.ok.toString()));
+						const formattedSeiBalance = (Number(seiBalanceResult.ok) / 1e6).toFixed(6);
+						dispatch(setSeiBalance(formattedSeiBalance));
 					} else {
 						console.error('Failed to get SEI balance:', seiBalanceResult.err);
-						dispatch(setSeiBalance('0'));
+						dispatch(setSeiBalance('0.000000'));
 					}
 				} catch (error) {
 					console.error('Failed to get SEI balance:', error);
-					dispatch(setSeiBalance('0'));
+					dispatch(setSeiBalance('0.000000'));
 				}
 
-				// If no cKBTC address exists, generate one
+				// Generate cKBTC address if not already present
 				if (!ckbtcAddress) {
-					const walletResult = await actor.requestCkbtcWalletAnonymous() as { ok: { btcAddress: string } } | { err: string };
-					if ('ok' in walletResult) {
-						dispatch(setCkbtcAddress(walletResult.ok.btcAddress));
-					} else {
-						console.error('Failed to generate cKBTC wallet:', walletResult.err);
-						toast.error('Failed to generate cKBTC wallet: ' + walletResult.err);
+					try {
+						const walletResult = await actor.getOrRequestCkbtcWallet() as { ok: { btcAddress: string } } | { err: string };
+						if ('ok' in walletResult) {
+							dispatch(setCkbtcAddress(walletResult.ok.btcAddress));
+						} else {
+							console.error('Failed to generate cKBTC wallet:', walletResult.err);
+						}
+					} catch (error) {
+						console.error('Error generating cKBTC wallet:', error);
 					}
 				}
 
-				// If no SEI address exists, generate one
+				// Generate SEI address if not already present
 				if (!seiAddress) {
 					try {
-						const seiWalletResult = await actor.requestSeiWalletAnonymous() as { ok: { seiAddress: string } } | { err: string };
+						const seiWalletResult = await actor.getOrRequestSeiWallet() as { ok: { seiAddress: string } } | { err: string };
 						if ('ok' in seiWalletResult) {
 							dispatch(setSeiAddress(seiWalletResult.ok.seiAddress));
 						} else {
 							console.error('Failed to generate SEI wallet:', seiWalletResult.err);
-							toast.error('Failed to generate SEI wallet: ' + seiWalletResult.err);
 						}
 					} catch (error) {
-						console.error('Failed to generate SEI wallet:', error);
-						toast.error('Failed to generate SEI wallet. Please try again.');
+						console.error('Error generating SEI wallet:', error);
 					}
 				}
 			} catch (error) {
-				console.error('Error initializing wallets:', error);
-				// Only show error if we don't already have addresses
-				if (!ckbtcAddress && !seiAddress) {
-					toast.error('Failed to initialize wallets. Please try again.');
-				}
+				console.error('Error fetching balances:', error);
+				toast.error('Failed to fetch balances. Please try again.');
 			} finally {
+				clearTimeout(timeout);
 				setIsInitializing(false);
 			}
 		};
@@ -107,16 +112,100 @@ export default function Integrations() {
 		if (principal) {
 			initializeWallets();
 		}
-	}, [principal, dispatch, ckbtcAddress, seiAddress]);
+	}, [principal, dispatch]);
 
 	if (!principal) {
 		return (
-			<div className="container mx-auto px-4 py-8">
-				<div className="max-w-2xl mx-auto">
-					<Card className="bg-[#222222] border-[#303434] text-white">
-						<CardContent className="flex items-center justify-center py-12">
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-							<span className="ml-3 text-gray-300">Loading your wallets...</span>
+			<div className="space-y-6">
+				{/* Top Row - Balance Cards */}
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					{/* ICP Balance Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="flex items-center justify-between mb-4">
+									<div className="h-6 bg-gray-700 rounded w-24"></div>
+									<div className="h-6 w-6 bg-gray-700 rounded"></div>
+								</div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="h-8 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-24"></div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* Bitcoin Balance Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="flex items-center justify-between mb-4">
+									<div className="h-6 bg-gray-700 rounded w-32"></div>
+									<div className="h-6 w-6 bg-gray-700 rounded"></div>
+								</div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="h-8 bg-gray-700 rounded w-40 mb-4"></div>
+								<div className="h-10 bg-gray-700 rounded w-full"></div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* SEI Balance Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="flex items-center justify-between mb-4">
+									<div className="h-6 bg-gray-700 rounded w-24"></div>
+									<div className="h-6 w-6 bg-gray-700 rounded"></div>
+								</div>
+								<div className="h-4 bg-gray-700 rounded w-32 mb-2"></div>
+								<div className="h-4 bg-gray-700 rounded w-24 mb-6"></div>
+								<div className="h-8 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="flex gap-2">
+									<div className="h-10 bg-gray-700 rounded flex-1"></div>
+									<div className="h-10 bg-gray-700 rounded flex-1"></div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Bottom Row - Address Cards */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{/* Bitcoin Address Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="flex items-center justify-between mb-4">
+									<div className="flex items-center gap-3 flex-1">
+										<div className="h-10 w-10 bg-gray-700 rounded-full"></div>
+										<div className="h-4 bg-gray-700 rounded w-64"></div>
+									</div>
+									<div className="flex gap-2">
+										<div className="h-8 w-8 bg-gray-700 rounded"></div>
+									</div>
+								</div>
+								<div className="flex items-start gap-2 p-3 bg-green-900/20 rounded">
+									<div className="h-5 w-5 bg-green-600 rounded-full mt-0.5"></div>
+									<div className="flex-1">
+										<div className="h-4 bg-green-600 rounded w-32 mb-2"></div>
+										<div className="h-3 bg-gray-600 rounded w-64"></div>
+									</div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* SEI Address Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="h-10 bg-gray-700 rounded w-full mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-32"></div>
+							</div>
 						</CardContent>
 					</Card>
 				</div>
@@ -126,12 +215,98 @@ export default function Integrations() {
 
 	if (isInitializing) {
 		return (
-			<div className="container mx-auto px-4 py-8">
-				<div className="max-w-2xl mx-auto">
-					<Card className="bg-[#222222] border-[#303434] text-white">
-						<CardContent className="flex items-center justify-center py-12">
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
-							<span className="ml-3 text-gray-300">Initializing wallets...</span>
+			<div className="space-y-6">
+				{/* Top Row - Balance Cards */}
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					{/* ICP Balance Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="flex items-center justify-between mb-4">
+									<div className="h-6 bg-gray-700 rounded w-24"></div>
+									<div className="h-6 w-6 bg-gray-700 rounded"></div>
+								</div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="h-8 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-24"></div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* Bitcoin Balance Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="flex items-center justify-between mb-4">
+									<div className="h-6 bg-gray-700 rounded w-32"></div>
+									<div className="h-6 w-6 bg-gray-700 rounded"></div>
+								</div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="h-8 bg-gray-700 rounded w-40 mb-4"></div>
+								<div className="h-10 bg-gray-700 rounded w-full"></div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* SEI Balance Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="flex items-center justify-between mb-4">
+									<div className="h-6 bg-gray-700 rounded w-24"></div>
+									<div className="h-6 w-6 bg-gray-700 rounded"></div>
+								</div>
+								<div className="h-4 bg-gray-700 rounded w-32 mb-2"></div>
+								<div className="h-4 bg-gray-700 rounded w-24 mb-6"></div>
+								<div className="h-8 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="flex gap-2">
+									<div className="h-10 bg-gray-700 rounded flex-1"></div>
+									<div className="h-10 bg-gray-700 rounded flex-1"></div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Bottom Row - Address Cards */}
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{/* Bitcoin Address Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="flex items-center justify-between mb-4">
+									<div className="flex items-center gap-3 flex-1">
+										<div className="h-10 w-10 bg-gray-700 rounded-full"></div>
+										<div className="h-4 bg-gray-700 rounded w-64"></div>
+									</div>
+									<div className="flex gap-2">
+										<div className="h-8 w-8 bg-gray-700 rounded"></div>
+										<div className="h-8 w-8 bg-gray-700 rounded"></div>
+										<div className="h-8 w-8 bg-gray-700 rounded"></div>
+									</div>
+								</div>
+								<div className="flex items-start gap-2 p-3 bg-green-900/20 rounded">
+									<div className="h-5 w-5 bg-green-600 rounded-full mt-0.5"></div>
+									<div className="flex-1">
+										<div className="h-4 bg-green-600 rounded w-32 mb-2"></div>
+										<div className="h-3 bg-gray-600 rounded w-64"></div>
+									</div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* SEI Address Skeleton */}
+					<Card className="bg-[#222222] border-[#303434]">
+						<CardContent className="p-6">
+							<div className="animate-pulse">
+								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-48 mb-6"></div>
+								<div className="h-10 bg-gray-700 rounded w-full mb-4"></div>
+								<div className="h-4 bg-gray-700 rounded w-32"></div>
+							</div>
 						</CardContent>
 					</Card>
 				</div>

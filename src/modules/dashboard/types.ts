@@ -8,6 +8,7 @@ export interface StatCardProps {
   label: string;
   value: number | string;
   icon: React.ReactNode;
+  additionalInfo?: string;
 }
 
 export interface DashboardStatsProps {

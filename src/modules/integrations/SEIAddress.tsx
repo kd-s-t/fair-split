@@ -5,16 +5,18 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
 import { setSeiAddress } from '@/lib/redux/userSlice';
 import { createSplitDappActor } from '@/lib/icp/splitDapp';
+import { Typography } from '@/components/ui/typography';
 
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Copy, RefreshCw, Wallet, Check, CircleCheckBig } from 'lucide-react';
 
 export default function SEIAddress() {
 	const dispatch = useDispatch();
 	const { principal, seiAddress } = useUser();
 	const [isGenerating, setIsGenerating] = useState(false);
+	const [isCopied, setIsCopied] = useState(false);
 
 	const generateSeiAddress = async () => {
 		if (!principal) {
@@ -46,7 +48,9 @@ export default function SEIAddress() {
 		if (seiAddress) {
 			try {
 				await navigator.clipboard.writeText(seiAddress);
+				setIsCopied(true);
 				toast.success('SEI address copied to clipboard!');
+				setTimeout(() => setIsCopied(false), 2000);
 			} catch (error) {
 				console.error('Failed to copy address:', error);
 				toast.error('Failed to copy address to clipboard');
@@ -55,64 +59,40 @@ export default function SEIAddress() {
 	};
 
 	return (
-		<Card className="bg-[#222222] border-[#303434] text-white">
-			<CardHeader className="pb-3">
-				<CardTitle className="text-lg font-semibold flex items-center gap-2">
-					<div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-						<span className="text-xs font-bold text-white">S</span>
-					</div>
-					SEI Wallet Address
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div className="space-y-4">
-					{seiAddress ? (
-						<div className="space-y-3">
-							<div className="bg-[#1a1a1a] p-3 rounded-lg border border-[#404040]">
-								<div className="text-sm text-gray-400 mb-1">Your SEI Address</div>
-								<div className="font-mono text-sm text-purple-300 break-all">
-									{seiAddress}
-								</div>
-							</div>
-							<div className="flex gap-2">
-								<Button
-									onClick={copyAddress}
-									variant="outline"
-									size="sm"
-									className="flex-1 bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]"
-								>
-									<Copy className="w-4 h-4 mr-2" />
-									Copy Address
-								</Button>
-								<Button
-									onClick={generateSeiAddress}
-									disabled={isGenerating}
-									variant="outline"
-									size="sm"
-									className="flex-1 bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]"
-								>
-									<RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-									{isGenerating ? 'Generating...' : 'Regenerate'}
-								</Button>
-							</div>
-						</div>
-					) : (
-						<div className="space-y-3">
-							<div className="text-center text-gray-400 py-4">
-								No SEI wallet address found. Generate one to start using SEI tokens.
-							</div>
-							<Button
-								onClick={generateSeiAddress}
-								disabled={isGenerating}
-								className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-							>
-								<RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-								{isGenerating ? 'Generating SEI Wallet...' : 'Generate SEI Wallet'}
-							</Button>
-						</div>
-					)}
+		<div className="container space-y-4 space-x-2 !p-5">
+			<div className="flex justify-between">
+				<div>
+					<Typography variant='h3'>SEI address</Typography>
+					<Typography variant='muted'>Your SEI address for receiving payments</Typography>
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+			<div className="container flex items-center justify-between">
+				<div className='flex items-center gap-2'>
+					<div className="bg-[#4F3F27] p-2 rounded-full">
+						<Wallet color="#FEB64D" />
+					</div>
+					<Typography variant='muted'>{seiAddress}</Typography>
+				</div>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={copyAddress}
+						className="text-gray-300 border-gray-600 hover:bg-gray-700"
+					>
+						{isCopied ? <Check size={14} /> : <Copy size={14} />}
+					</Button>
+				</div>
+			</div>
+			<div className="container-success flex items-start gap-2">
+				<div className="h5">
+					<CircleCheckBig color="#00C287" />
+				</div>
+				<div>
+					<Typography variant='base' className='text-[#00C287]'>Address configured</Typography>
+					<Typography variant='muted' className='text-white'>Default address will be used when escrows are released, unless otherwise selected.</Typography>
+				</div>
+			</div>
+		</div>
 	);
 }

@@ -79,16 +79,18 @@ export default function SEIBalance() {
 	return (
 		<Card className="bg-[#222222] border-[#303434] text-white">
 			<CardHeader className="pb-3">
-				<CardTitle className="text-lg font-semibold flex items-center gap-2">
+				<CardTitle className="text-lg font-semibold flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						SEI Balance
+						{networkInfo && (
+							<span className="text-xs bg-purple-600 px-2 py-1 rounded-full">
+								{networkInfo.name}
+							</span>
+						)}
+					</div>
 					<div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
 						<span className="text-xs font-bold text-white">S</span>
 					</div>
-					SEI Balance
-					{networkInfo && (
-						<span className="text-xs bg-purple-600 px-2 py-1 rounded-full">
-							{networkInfo.name}
-						</span>
-					)}
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
@@ -110,44 +112,27 @@ export default function SEIBalance() {
 						</div>
 					)}
 
-					<div className="flex gap-2">
+					{faucetUrl && (
 						<Button
-							onClick={updateSeiBalance}
-							disabled={isRefreshing}
-							className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+							onClick={() => window.open(faucetUrl, '_blank')}
+							variant="outline"
+							size="sm"
+							className="bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]"
 						>
-							<RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-							{isRefreshing ? 'Refreshing...' : 'Refresh Balance'}
+							<ExternalLink className="w-4 h-4 mr-2" />
+							Faucet
 						</Button>
-						
-						{faucetUrl && (
-							<Button
-								onClick={() => window.open(faucetUrl, '_blank')}
-								variant="outline"
-								size="sm"
-								className="bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]"
-							>
-								<ExternalLink className="w-4 h-4 mr-2" />
-								Faucet
-							</Button>
-						)}
-					</div>
-
-					{networkInfo && networkInfo.explorerUrl && (
-						<div className="text-xs">
-							<Button
-								onClick={() => window.open(networkInfo.explorerUrl, '_blank')}
-								variant="ghost"
-								size="sm"
-								className="text-purple-400 hover:text-purple-300 p-0 h-auto"
-							>
-								<ExternalLink className="w-3 h-3 mr-1" />
-								View on Explorer
-							</Button>
-						</div>
 					)}
+
 				</div>
 			</CardContent>
+			
+			<div className="px-6 pb-6 pt-4">
+				<Button variant="outline" className='w-full bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]'>
+					<ExternalLink className="w-4 h-4 mr-2" />
+					<span>View on explorer</span>
+				</Button>
+			</div>
 		</Card>
 	);
 }

@@ -64,7 +64,7 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
                 </div>
                 <button
                   onClick={copyToClipboard}
-                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#2A2A2A] transition-colors"
+                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#3A3A3A] transition-colors bg-[#2A2A2A]"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <rect x="5.33" y="5.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>

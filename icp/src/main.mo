@@ -91,18 +91,16 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     );
     
     // Get current mock balance
-    let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = caller; subaccount = null })) {
-      case (#ok(balance)) balance;
-      case (#err(_)) 0;
-    };
+    let currentMockBalance = await getUserBitcoinBalance(caller);
     
     // Check if user has sufficient balance
     if (currentMockBalance < totalAmount) {
       return "Error: Insufficient cKBTC balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(currentMockBalance) # " satoshis";
     };
     
-    // Deduct from mock balance first
+    // Deduct from both balance systems to keep them synchronized
     bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance - totalAmount);
+    bitcoinBalances.put(caller, currentMockBalance - totalAmount);
     
     // Then proceed with escrow creation
     let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);
@@ -110,13 +108,15 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     switch (result.success, result.escrowId, result.error) {
       case (true, ?escrowId, null) { escrowId };
       case (false, null, ?error) { 
-        // If escrow creation failed, restore the balance
+        // If escrow creation failed, restore the balance in both systems
         bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
+        bitcoinBalances.put(caller, currentMockBalance);
         error 
       };
       case (_, _, _) { 
-        // If unexpected result, restore the balance
+        // If unexpected result, restore the balance in both systems
         bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
+        bitcoinBalances.put(caller, currentMockBalance);
         "Error: Unexpected result from escrow module" 
       };
     };
@@ -136,73 +136,25 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     idx : Nat,
     recipient : Principal,
   ) : async () {
-    // Get the transaction to find the declined amount
-    let txs = switch (transactions.get(sender)) {
-      case (?list) list;
-      case null [];
-    };
-    
-    if (idx < txs.size()) {
-      let tx = txs[idx];
-      if (tx.status == "pending" or tx.status == "confirmed") {
-        // Find the recipient's amount to refund
-        let recipientEntry = Array.find<TransactionTypes.ToEntry>(
-          tx.to,
-          func(entry) { entry.principal == recipient }
-        );
-        
-        switch (recipientEntry) {
-          case (?entry) {
-            // Refund the declined amount to sender's mock balance
-            let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = sender; subaccount = null })) {
-              case (#ok(balance)) balance;
-              case (#err(_)) 0;
-            };
-            bitcoinIntegration.setMockBitcoinBalance(sender, currentMockBalance + entry.amount);
-          };
-          case null {
-            // Recipient not found, this shouldn't happen but handle gracefully
-            Debug.print("Warning: Recipient not found in transaction for decline");
-          };
-        };
-      };
-    };
-    
     let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, bitcoinBalances, reputation, fraudHistory, logs);
     logs := result.newLogs;
+    
+    // Synchronize the mock balance system with the internal balance system
+    if (result.success) {
+      let currentInternalBalance = Balance.getBalance(bitcoinBalances, sender);
+      bitcoinIntegration.setMockBitcoinBalance(sender, currentInternalBalance);
+    };
   };
 
   public shared func cancelSplit(caller : Principal) : async () {
-    // Get all pending transactions for the caller
-    let txs = switch (transactions.get(caller)) {
-      case (?list) list;
-      case null [];
-    };
-    
-    // Calculate total amount to refund from pending transactions
-    var totalRefundAmount : Nat = 0;
-    for (tx in txs.vals()) {
-      if (tx.status == "pending") {
-        let txAmount = Array.foldLeft<TransactionTypes.ToEntry, Nat>(
-          tx.to,
-          0,
-          func(acc, entry) { acc + entry.amount }
-        );
-        totalRefundAmount := totalRefundAmount + txAmount;
-      };
-    };
-    
-    // Refund the total amount to the caller's mock balance
-    if (totalRefundAmount > 0) {
-      let currentMockBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = caller; subaccount = null })) {
-        case (#ok(balance)) balance;
-        case (#err(_)) 0;
-      };
-      bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance + totalRefundAmount);
-    };
-    
     let result = Escrow.cancelSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
+    
+    // Synchronize the mock balance system with the internal balance system
+    if (result.success) {
+      let currentInternalBalance = Balance.getBalance(bitcoinBalances, caller);
+      bitcoinIntegration.setMockBitcoinBalance(caller, currentInternalBalance);
+    };
   };
 
   public shared func refundSplit(caller : Principal) : async () {
@@ -217,8 +169,12 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     let result = Escrow.releaseSplit(caller, txId, transactions, balances, bitcoinBalances, reputation, logs);
     logs := result.newLogs;
     
-    // If escrow was successfully released, update recipient mock balances
+    // If escrow was successfully released, synchronize balances
     if (result.success) {
+      // Synchronize sender's mock balance with internal balance
+      let senderInternalBalance = Balance.getBalance(bitcoinBalances, caller);
+      bitcoinIntegration.setMockBitcoinBalance(caller, senderInternalBalance);
+      
       // Get the transaction to find recipients
       let transaction = await getTransaction(txId, caller);
       switch (transaction) {
@@ -403,16 +359,30 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     };
   };
 
-  // Anonymous versions for local development
-  public shared func requestCkbtcWalletAnonymous() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
-    // Generate realistic-looking fake Bitcoin address for presentation
-    let fakeAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-    
-    #ok({
-      btcAddress = fakeAddress;
-      owner = Principal.fromText("2vxsx-fae");
-      subaccount = subaccountFromPrincipal(Principal.fromText("2vxsx-fae"));
-    })
+  // Get or request cKBTC wallet address
+  public shared({ caller }) func getOrRequestCkbtcWallet() : async { #ok : { btcAddress : Text; owner : Principal; subaccount : CKBTC.Subaccount }; #err : Text } {
+    // Check if address already exists for this caller
+    switch (userBitcoinAddresses.get(caller)) {
+      case (?existingAddress) {
+        // Return existing address
+        #ok({
+          btcAddress = existingAddress;
+          owner = caller;
+          subaccount = subaccountFromPrincipal(caller);
+        })
+      };
+      case null {
+        // Generate new address only if none exists
+        let fakeAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+        userBitcoinAddresses.put(caller, fakeAddress);
+        
+        #ok({
+          btcAddress = fakeAddress;
+          owner = caller;
+          subaccount = subaccountFromPrincipal(caller);
+        })
+      };
+    }
   };
 
   public shared func getCkbtcBalanceAnonymous() : async { #ok : Nat; #err : Text } {
@@ -444,14 +414,27 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     };
   };
 
-  public shared func requestSeiWalletAnonymous() : async { #ok : { seiAddress : Text; owner : Principal }; #err : Text } {
-    // Generate realistic-looking fake SEI address for presentation
-    let fakeAddress = "sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-    
-    #ok({
-      seiAddress = fakeAddress;
-      owner = Principal.fromText("2vxsx-fae");
-    })
+  public shared({ caller }) func getOrRequestSeiWallet() : async { #ok : { seiAddress : Text; owner : Principal }; #err : Text } {
+    // Check if address already exists for this caller
+    switch (userSeiAddresses.get(caller)) {
+      case (?existingAddress) {
+        // Return existing address
+        #ok({
+          seiAddress = existingAddress;
+          owner = caller;
+        })
+      };
+      case null {
+        // Generate new address only if none exists
+        let fakeAddress = "sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+        userSeiAddresses.put(caller, fakeAddress);
+        
+        #ok({
+          seiAddress = fakeAddress;
+          owner = caller;
+        })
+      };
+    }
   };
 
   public shared func getSeiBalanceAnonymous() : async { #ok : Nat; #err : Text } {
@@ -540,6 +523,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   public shared func setBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
     if (caller == admin) {
       bitcoinBalances.put(user, amount);
+      bitcoinIntegration.setMockBitcoinBalance(user, amount);
       true
     } else {
       false
@@ -559,7 +543,9 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
         case (?balance) balance;
         case null 0;
       };
-      bitcoinBalances.put(user, currentBalance + amount);
+      let newBalance = currentBalance + amount;
+      bitcoinBalances.put(user, newBalance);
+      bitcoinIntegration.setMockBitcoinBalance(user, newBalance);
       true
     } else {
       false

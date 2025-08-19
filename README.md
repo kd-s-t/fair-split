@@ -40,6 +40,7 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
   <img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" />
   <img src="https://img.shields.io/badge/bitcoin-2F3134?style=for-the-badge&logo=bitcoin&logoColor=white" />
   <img src="https://img.shields.io/badge/SEI-000000?style=for-the-badge&logo=sei&logoColor=white" />
+  <img src="https://img.shields.io/badge/SEI_Network-000000?style=for-the-badge&logo=https://avatars.githubusercontent.com/u/101956417?s=200&v=4" />
 	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 </div>
 

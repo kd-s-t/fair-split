@@ -20,6 +20,8 @@ const CKBTCBalance: React.FC = () => {
   // Debug logging
   console.log('🔍 CKBTCBalance component - principal:', principal?.toText());
   console.log('🔍 CKBTCBalance component - ckbtcBalance from Redux:', ckbtcBalance);
+  console.log('🔍 CKBTCBalance component - ckbtcBalance type:', typeof ckbtcBalance);
+  console.log('🔍 CKBTCBalance component - ckbtcBalance value:', ckbtcBalance);
 
 
 
@@ -53,7 +55,12 @@ const CKBTCBalance: React.FC = () => {
     <Card className="bg-[#222222] border-[#303434]">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Bitcoin Balance
+          <div className="flex items-center gap-2">
+            Bitcoin Balance
+            <span className="text-xs bg-orange-600 px-2 py-1 rounded-full">
+              Mock
+            </span>
+          </div>
           <Bitcoin color="#F97415" size={24} />
         </CardTitle>
         <CardDescription className='text-[#BCBCBC]'>
@@ -61,31 +68,22 @@ const CKBTCBalance: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-3">
-            <Typography variant="h2">
-              {ckbtcBalance ? `${ckbtcBalance} ` : 'Loading...'}
-            </Typography>
-            {ckbtcBalance && (
-              <Typography variant="h2" className='text-[#F97415]'>cKBTC</Typography>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refreshCkbtcBalance}
-              className="text-yellow-500 border-yellow-500 hover:bg-yellow-900/20"
-            >
-              <RefreshCw size={14} />
-            </Button>
-          </div>
+                <div className="flex items-center gap-3 mt-4">
+          <Typography variant="h2">
+            {ckbtcBalance ? `${ckbtcBalance} ` : 'Loading...'}
+          </Typography>
+          {ckbtcBalance && (
+            <Typography variant="h2" className='text-[#F97415]'>cKBTC</Typography>
+          )}
         </div>
-        <Button variant="outline" className='mt-4 w-full'>
-          <ExternalLink />
-          <Typography variant='small'>View on explorer</Typography>
-        </Button>
       </CardContent>
+      
+      <div className="px-6 pb-6 pt-4">
+        <Button variant="outline" className='w-full bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]'>
+          <ExternalLink className="w-4 h-4 mr-2" />
+          <span>View on explorer</span>
+        </Button>
+      </div>
     </Card>
   )
 };

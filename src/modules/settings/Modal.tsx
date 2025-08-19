@@ -52,20 +52,20 @@ export default function EditNameModal({
   if (!open) return null;
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-[#212121] border border-[#303333] rounded-xl w-[540px] max-w-[90vw] max-h-[90vh] overflow-hidden shadow-lg"
+        className="bg-[#2A2A2A] border border-[#404040] rounded-xl w-[540px] max-w-[90vw] max-h-[90vh] overflow-hidden shadow-lg"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ duration: 0.2 }}
       >
         {/* Header */}
-        <div className="p-6 border-b border-[#303333]">
+        <div className="p-6 border-b border-[#404040]">
           <div className="flex items-center justify-between">
             <h2 className="text-white text-lg font-semibold">Edit profile</h2>
             <button
@@ -77,7 +77,7 @@ export default function EditNameModal({
               </svg>
             </button>
           </div>
-          <p className="text-[#A1A1A1] text-sm mt-2">
+          <p className="text-[#B0B0B0] text-sm mt-2">
             Make changes to your profile here. Click save when you&apos;re done.
           </p>
         </div>
@@ -88,12 +88,12 @@ export default function EditNameModal({
             {/* Name Input */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">Name</label>
-              <div className="bg-[#2B2B2B] border border-[#424444] rounded-md p-3">
+              <div className="bg-[#353535] border border-[#505050] rounded-md p-3">
                 <input
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-transparent text-white placeholder-[#A1A1A1] outline-none"
+                  className="w-full bg-transparent text-white placeholder-[#B0B0B0] outline-none"
                   placeholder="Enter your nickname"
                 />
               </div>
@@ -102,12 +102,12 @@ export default function EditNameModal({
             {/* Username Input */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">Username</label>
-              <div className="bg-[#2B2B2B] border border-[#424444] rounded-md p-3">
+              <div className="bg-[#353535] border border-[#505050] rounded-md p-3">
                 <input
                   type="text"
                   value={`@${nameInput.toLowerCase().replace(/\s+/g, '')}`}
                   readOnly
-                  className="w-full bg-transparent text-white placeholder-[#A1A1A1] outline-none"
+                  className="w-full bg-transparent text-white placeholder-[#B0B0B0] outline-none"
                   placeholder="@username"
                 />
               </div>
@@ -116,10 +116,10 @@ export default function EditNameModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-[#303333] flex justify-end gap-3">
+        <div className="p-6 border-t border-[#404040] flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-white border border-[#7A7A7A] rounded-md hover:bg-[#2A2A2A] transition-colors"
+            className="px-4 py-2 text-white border border-[#7A7A7A] rounded-md hover:bg-[#353535] transition-colors bg-[#2A2A2A]"
             disabled={isSaving}
           >
             Cancel

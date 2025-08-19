@@ -13,17 +13,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { StatCardProps } from './types';
 import Withdraw from "./Withdraw";
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
-  <Card className="bg-[#222222] border-[#303434] text-white p-4">
-    <div className="flex items-center justify-between mb-2">
-      <Typography variant="muted" className="text-sm">
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, additionalInfo }) => (
+  <Card className="bg-[#222222] border-[#303434] text-white p-5 rounded-[20px] min-h-[132px]">
+    <div className="flex items-center justify-between mb-6">
+      <Typography variant="muted" className="text-[#BBBBBB] text-sm">
         {label}
       </Typography>
-      {icon}
+      <div className="bg-[#323232] rounded-full p-1.5">
+        {icon}
+      </div>
     </div>
-    <Typography variant="h3" className="font-semibold text-2xl">
-      {value}
-    </Typography>
+    <div className="flex items-center justify-between">
+      <Typography variant="h3" className="font-semibold text-3xl text-white">
+        {value}
+      </Typography>
+      {additionalInfo && (
+        <Typography variant="small" className="text-[#00E19C] text-sm self-end">
+          {additionalInfo}
+        </Typography>
+      )}
+    </div>
   </Card>
 );
 
@@ -57,6 +66,49 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   const activeEscrows = transactions ? transactions.filter(tx => tx.status === 'confirmed').length : 0;
   const completedEscrows = transactions ? transactions.filter(tx => tx.status === 'released').length : 0;
   const pendingEscrows = transactions ? transactions.filter(tx => tx.status === 'pending').length : 0;
+
+  // Calculate weekly escrow data for each category
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  // Debug: Log the date range and transaction dates
+  console.log('🔄 Weekly calculation debug:');
+  console.log('  Now:', now.toISOString());
+  console.log('  One week ago:', oneWeekAgo.toISOString());
+  
+  const weeklyTotalEscrows = transactions ? transactions.filter(tx => {
+    console.log(`  Transaction ${tx.id}: createdAt = "${tx.createdAt}" (type: ${typeof tx.createdAt})`);
+    // Convert from nanoseconds to milliseconds (divide by 1,000,000)
+    const txDate = new Date(Number(tx.createdAt) / 1000000);
+    console.log(`  Transaction ${tx.id}: converted date = ${txDate}`);
+    
+    // Check if the date is valid
+    if (isNaN(txDate.getTime())) {
+      console.log(`  Transaction ${tx.id}: INVALID DATE - skipping`);
+      return false;
+    }
+    
+    const isThisWeek = txDate >= oneWeekAgo;
+    console.log(`  Transaction ${tx.id}: ${txDate.toISOString()} - This week: ${isThisWeek}`);
+    return isThisWeek;
+  }).length : 0;
+  
+  console.log('  Weekly total escrows:', weeklyTotalEscrows);
+  
+  const weeklyActiveEscrows = transactions ? transactions.filter(tx => {
+    const txDate = new Date(Number(tx.createdAt) / 1000000);
+    return txDate >= oneWeekAgo && tx.status === 'confirmed';
+  }).length : 0;
+  
+  const weeklyCompletedEscrows = transactions ? transactions.filter(tx => {
+    const txDate = new Date(Number(tx.createdAt) / 1000000);
+    return txDate >= oneWeekAgo && tx.status === 'released';
+  }).length : 0;
+  
+  const weeklyPendingEscrows = transactions ? transactions.filter(tx => {
+    const txDate = new Date(Number(tx.createdAt) / 1000000);
+    return txDate >= oneWeekAgo && tx.status === 'pending';
+  }).length : 0;
 
   // Calculate ICP metrics (stored for potential future use)
   // const _totalIcpAmount = transactions ? transactions.reduce((sum, tx) => {
@@ -178,6 +230,11 @@ export default function DashboardStats({ transactions }: { transactions: Normali
             <Typography variant="muted">
               {showBalance ? displayUsd : '••••••••'}
             </Typography>
+            {showBalance && (
+              <div className="bg-[#242424] text-[#00E19C] text-xs px-2 py-0.5 rounded-[14px] w-10 h-[19px] flex items-center justify-center">
+                24H
+              </div>
+            )}
           </motion.div>
         </div>
         <div className="flex items-center gap-2">
@@ -225,21 +282,25 @@ export default function DashboardStats({ transactions }: { transactions: Normali
           label="Total escrows"
           value={totalEscrows}
           icon={<Shield className="text-yellow-400 text-2xl" />}
+          additionalInfo={totalEscrows > 0 && weeklyTotalEscrows > 0 ? `+ ${weeklyTotalEscrows} this week` : undefined}
         />
         <StatCard
           label="Active escrows"
           value={activeEscrows}
           icon={<Zap className="text-blue-400 text-2xl" />}
+          additionalInfo={activeEscrows > 0 && weeklyActiveEscrows > 0 ? `+ ${weeklyActiveEscrows} this week` : undefined}
         />
         <StatCard
           label="Completed escrows"
           value={completedEscrows}
           icon={<CircleCheck className="text-green-400 text-2xl" />}
+          additionalInfo={completedEscrows > 0 && weeklyCompletedEscrows > 0 ? `+ ${weeklyCompletedEscrows} this week` : undefined}
         />
         <StatCard
           label="Pending escrows"
           value={pendingEscrows}
           icon={<Clock8 className="text-gray-400 text-2xl" />}
+          additionalInfo={pendingEscrows > 0 && weeklyPendingEscrows > 0 ? `+ ${weeklyPendingEscrows} this week` : undefined}
         />
       </div>
 

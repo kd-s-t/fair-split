@@ -70,6 +70,27 @@ persistent actor {
     let transactions = await SplitDApp.getTransactionsPaginated(alice, 0, 10);
     Debug.print("Transaction count: " # Nat.toText(transactions.totalCount));
     
+    // Test 8: Username Management
+    Debug.print("📋 Test 8: Username Management");
+    await SplitDApp.setUsername(alice, "alice");
+    await SplitDApp.setUsername(bob, "bob");
+    
+    let aliceUsername = await SplitDApp.getUsername(alice);
+    let bobUsername = await SplitDApp.getUsername(bob);
+    
+    switch (aliceUsername) {
+      case (?username) Debug.print("Alice username: " # username);
+      case null Debug.print("Alice username: null");
+    };
+    
+    switch (bobUsername) {
+      case (?username) Debug.print("Bob username: " # username);
+      case null Debug.print("Bob username: null");
+    };
+    
+    let allUsernames = await SplitDApp.getAllUsernames();
+    Debug.print("Total usernames: " # Nat.toText(Array.size(allUsernames)));
+    
     Debug.print("🎉 All simple tests completed!");
   };
 };

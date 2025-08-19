@@ -129,4 +129,4 @@ main.tf
 └── ecr (container registry)
 ```
 
-The modules are designed to be independent and reusable across different environments. 
+The modules are designed to be independent and reusable across different environments.

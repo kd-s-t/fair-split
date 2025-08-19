@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { setNewTxId } from "@/lib/redux/escrowSlice";
 import { setTransactions } from "@/lib/redux/transactionsSlice";
-import { setCkbtcBalance } from "@/lib/redux/userSlice";
+import { setCkbtcBalance, setSeiBalance } from "@/lib/redux/userSlice";
 import { Principal } from "@dfinity/principal";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
@@ -17,6 +17,8 @@ type Recipient = {
 
 type FormData = {
   btcAmount: string;
+  seiAmount?: string;
+  tokenType: 'btc' | 'sei';
   recipients: Recipient[];
   title?: string;
 };
@@ -30,6 +32,8 @@ export function useEscrowActions(editTxId?: string) {
     if (principal && authClient) {
       try {
         const actor = await createSplitDappActor();
+        
+        // Update cKBTC balance
         const balanceResult = await actor.getCkbtcBalance(Principal.fromText(principal.toText())) as { ok: number } | { err: string };
         if ('ok' in balanceResult) {
           const formatted = (Number(balanceResult.ok) / 1e8).toFixed(8);
@@ -38,9 +42,25 @@ export function useEscrowActions(editTxId?: string) {
           console.error('Failed to get cKBTC balance:', balanceResult.err);
           dispatch(setCkbtcBalance(null));
         }
+
+        // Update SEI balance
+        try {
+          const seiBalanceResult = await actor.getSeiBalance(Principal.fromText(principal.toText())) as { ok: number } | { err: string };
+          if ('ok' in seiBalanceResult) {
+            const formatted = (Number(seiBalanceResult.ok) / 1e6).toFixed(6);
+            dispatch(setSeiBalance(formatted));
+          } else {
+            console.error('Failed to get SEI balance:', seiBalanceResult.err);
+            dispatch(setSeiBalance(null));
+          }
+        } catch (error) {
+          console.error('Error updating SEI balance:', error);
+          dispatch(setSeiBalance(null));
+        }
       } catch (error) {
-        console.error('Error updating cKBTC balance:', error);
+        console.error('Error updating balances:', error);
         dispatch(setCkbtcBalance(null));
+        dispatch(setSeiBalance(null));
       }
     }
   };
@@ -160,34 +180,67 @@ export function useEscrowActions(editTxId?: string) {
         const callerPrincipal = principal; // principal is already a Principal object
 
         console.log('🔄 Escrow creation: Checking balance for principal:', callerPrincipal.toText());
-        const ckbtcBalanceResult = await actor.getCkbtcBalance(callerPrincipal) as { ok: number } | { err: string };
-        console.log('🔄 Escrow creation: Balance result:', ckbtcBalanceResult);
         
-        if ('err' in ckbtcBalanceResult) {
-          console.error('🔄 Escrow creation: Balance check failed:', ckbtcBalanceResult.err);
-          toast.error(`Failed to get Bitcoin balance: ${ckbtcBalanceResult.err}`);
-          return;
-        }
-        
-        const ckbtcBalance = BigInt(ckbtcBalanceResult.ok);
-        const requiredAmount = BigInt(Math.round(Number(data.btcAmount) * 1e8));
-        
-        console.log('🔄 Escrow creation: Available balance:', ckbtcBalance.toString(), 'satoshis');
-        console.log('🔄 Escrow creation: Required amount:', requiredAmount.toString(), 'satoshis');
+        if (data.tokenType === 'btc') {
+          const ckbtcBalanceResult = await actor.getCkbtcBalance(callerPrincipal) as { ok: number } | { err: string };
+          console.log('🔄 Escrow creation: cKBTC Balance result:', ckbtcBalanceResult);
+          
+          if ('err' in ckbtcBalanceResult) {
+            console.error('🔄 Escrow creation: cKBTC Balance check failed:', ckbtcBalanceResult.err);
+            toast.error(`Failed to get Bitcoin balance: ${ckbtcBalanceResult.err}`);
+            return;
+          }
+          
+          const ckbtcBalance = BigInt(ckbtcBalanceResult.ok);
+          const requiredAmount = BigInt(Math.round(Number(data.btcAmount) * 1e8));
+          
+          console.log('🔄 Escrow creation: Available cKBTC balance:', ckbtcBalance.toString(), 'satoshis');
+          console.log('🔄 Escrow creation: Required amount:', requiredAmount.toString(), 'satoshis');
 
-        if (ckbtcBalance < requiredAmount) {
-          console.error('🔄 Escrow creation: Insufficient balance');
-          toast.error(
-            `Insufficient Bitcoin balance. You have ${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC, but need ${data.btcAmount} BTC`
-          );
-          return;
+          if (ckbtcBalance < requiredAmount) {
+            console.error('🔄 Escrow creation: Insufficient cKBTC balance');
+            toast.error(
+              `Insufficient Bitcoin balance. You have ${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC, but need ${data.btcAmount} BTC`
+            );
+            return;
+          }
+        } else if (data.tokenType === 'sei') {
+          const seiBalanceResult = await actor.getSeiBalance(callerPrincipal) as { ok: number } | { err: string };
+          console.log('🔄 Escrow creation: SEI Balance result:', seiBalanceResult);
+          
+          if ('err' in seiBalanceResult) {
+            console.error('🔄 Escrow creation: SEI Balance check failed:', seiBalanceResult.err);
+            toast.error(`Failed to get SEI balance: ${seiBalanceResult.err}`);
+            return;
+          }
+          
+          const seiBalance = BigInt(seiBalanceResult.ok);
+          const requiredAmount = BigInt(Math.round(Number(data.seiAmount || '0') * 1e6));
+          
+          console.log('🔄 Escrow creation: Available SEI balance:', seiBalance.toString(), 'usei');
+          console.log('🔄 Escrow creation: Required amount:', requiredAmount.toString(), 'usei');
+
+          if (seiBalance < requiredAmount) {
+            console.error('🔄 Escrow creation: Insufficient SEI balance');
+            toast.error(
+              `Insufficient SEI balance. You have ${(Number(seiBalance) / 1e6).toFixed(6)} SEI, but need ${data.seiAmount} SEI`
+            );
+            return;
+          }
         }
 
         const participants = await Promise.all(
           data.recipients.map(async (r) => {
+            let amount: bigint;
+            if (data.tokenType === 'btc') {
+              amount = BigInt(Math.round(((Number(data.btcAmount) * r.percentage) / 100) * 1e8));
+            } else {
+              amount = BigInt(Math.round(((Number(data.seiAmount || '0') * r.percentage) / 100) * 1e6));
+            }
+            
             return {
               principal: Principal.fromText(r.principal),
-              amount: BigInt(Math.round(((Number(data.btcAmount) * r.percentage) / 100) * 1e8)),
+              amount: amount,
               nickname: r.principal || "Recipient",
               percentage: BigInt(r.percentage),
             };

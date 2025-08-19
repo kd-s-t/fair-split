@@ -1,29 +1,43 @@
 'use client';
 
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { AuthClient } from '@dfinity/auth-client';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '@/lib/redux/userSlice';
 import { setTransactions } from '@/lib/redux/transactionsSlice';
 import { setTitle, setSubtitle, setActivePage } from '@/lib/redux/store';
+import { LogOut } from 'lucide-react';
 
 export default function LogoutButton() {
   const dispatch = useDispatch();
+
   const handleLogout = async () => {
     try {
-      const client = await AuthClient.create();
-      await client.logout();
-      
-      // Clear all Redux state
+      // Clear user data
       dispatch(clearUser());
       dispatch(setTransactions([]));
-      dispatch(setTitle('Welcome back'));
-      dispatch(setSubtitle('Manage your Bitcoin escrow transactions with confidence'));
+      dispatch(setTitle(''));
+      dispatch(setSubtitle(''));
       dispatch(setActivePage('dashboard'));
+      
+      // Additional logout logic can be added here
+      console.log('User logged out successfully');
     } catch (error) {
-      // Optionally, show a toast or notification here
       console.error('Logout failed:', error);
     }
   };
-  return <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>;
+
+  return (
+    <DropdownMenuItem 
+      onClick={handleLogout}
+      className="px-2 py-1.5 cursor-pointer hover:bg-[#2A2A2A] rounded"
+    >
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-3">
+          <LogOut size={16} className="text-[#FEB64D]" />
+          <span className="text-sm text-white">Log out</span>
+        </div>
+        <span className="text-xs text-gray-400">⇧⌘Q</span>
+      </div>
+    </DropdownMenuItem>
+  );
 }

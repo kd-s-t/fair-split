@@ -30,7 +30,7 @@ const Summary = ({
   const recipients = watch("recipients");
 
   return (
-    <div className="w-[35%] min-w-[220px]">
+    <div className="w-full">
       <Card className="h-fit">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">

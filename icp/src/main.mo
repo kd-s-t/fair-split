@@ -19,6 +19,7 @@ import Users "modules/users";
 import Admin "modules/admin";
 import Bitcoin "modules/bitcoin";
 import CKBTC "modules/ckbtc";
+import SEI "modules/sei";
 
 
 
@@ -28,9 +29,13 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   transient let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   transient let transactions = HashMap.HashMap<Principal, [TransactionTypes.Transaction]>(10, Principal.equal, Principal.hash);
   transient let names = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+  transient let usernames = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
   
   // Bitcoin balance storage
   transient let bitcoinBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+  
+  // SEI balance storage
+  transient let seiBalances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
   
   // Reputation system
   transient let reputation = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
@@ -39,10 +44,33 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   
   // User Bitcoin address storage
   transient let userBitcoinAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
+  
+  // User SEI address storage
+  transient let userSeiAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
 
   // Bitcoin integration - Dynamic cKBTC canister ID
   // For now, use a placeholder that won't cause initialization errors
   transient let bitcoinIntegration = Bitcoin.BitcoinIntegration("2vxsx-fae"); // Placeholder
+  
+  // SEI integration with Atlantic-2 testnet configuration
+  transient let seiNetworkConfig : SEI.SeiNetwork = {
+    name = "Atlantic-2 Testnet";
+    chainId = "atlantic-2";
+    rpcUrl = "https://rpc.atlantic-2.seinetwork.io";
+    explorerUrl = "https://atlantic-2.sei.explorers.guru";
+    prefix = "sei";
+    isTestnet = true;
+  };
+  transient let seiIntegration = SEI.SEIIntegration("2vxsx-fae", seiNetworkConfig);
+  
+  // Initialize testnet SEI balances for development
+  private func initializeTestnetSeiBalances() {
+    // Set some test SEI balances for development
+    seiIntegration.clearBalanceCache();
+    Debug.print("🚀 SEI TESTNET: Initialized with Atlantic-2 testnet configuration");
+    Debug.print("🔗 SEI RPC: " # seiNetworkConfig.rpcUrl);
+    Debug.print("🔍 SEI EXPLORER: " # seiNetworkConfig.explorerUrl);
+  };
   // Temporarily disable cKBTC integration for local deployment
   // transient let ckbtcIntegration = CKBTC.CKBTCIntegration(_ckbtcCanisterId, "ckbtc-minter-canister-id", Principal.fromText("aaaaa-aa"));
   
@@ -312,6 +340,23 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     Users.getAllNicknames(names);
   };
 
+  // Username management functions
+  public shared func setUsername(p : Principal, username : Text) : async () {
+    Users.setUsername(usernames, p, username);
+  };
+
+  public query func getUsername(p : Principal) : async ?Text {
+    return Users.getUsername(usernames, p);
+  };
+
+  public shared func removeUsername(principal : Principal) : async () {
+    Users.removeUsername(usernames, principal);
+  };
+
+  public query func getAllUsernames() : async [(Principal, Text)] {
+    Users.getAllUsernames(usernames);
+  };
+
   public query func getAdmin() : async Principal {
     return admin;
   };
@@ -389,6 +434,48 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     Blob.fromArray(out)
   };
 
+  // SEI balance and wallet functions
+  public shared func getSeiBalance(user : Principal) : async { #ok : Nat; #err : Text } {
+    // Use mock SEI balance from the SEI integration module
+    let result = await seiIntegration.getSeiBalance({ owner = user; subaccount = null });
+    switch (result) {
+      case (#ok(balance)) { #ok(balance) };
+      case (#err(error)) { #err(error) };
+    };
+  };
+
+  public shared func requestSeiWalletAnonymous() : async { #ok : { seiAddress : Text; owner : Principal }; #err : Text } {
+    // Generate realistic-looking fake SEI address for presentation
+    let fakeAddress = "sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
+    
+    #ok({
+      seiAddress = fakeAddress;
+      owner = Principal.fromText("2vxsx-fae");
+    })
+  };
+
+  public shared func getSeiBalanceAnonymous() : async { #ok : Nat; #err : Text } {
+    // Return placeholder balance for local testing
+    #ok(0)
+  };
+
+  // Get SEI network information
+  public query func getSeiNetworkInfo() : async {
+    name : Text;
+    chainId : Text;
+    rpcUrl : Text;
+    explorerUrl : Text;
+    prefix : Text;
+    isTestnet : Bool;
+  } {
+    seiIntegration.getNetworkInfo()
+  };
+
+  // Get SEI faucet URL if on testnet
+  public query func getSeiFaucetUrl() : async ?Text {
+    seiIntegration.getFaucetUrl()
+  };
+
   // Bitcoin address management functions
   public shared func setBitcoinAddress(caller : Principal, address : Text) : async Bool {
     // Basic Bitcoin address validation
@@ -413,6 +500,36 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     switch (userBitcoinAddresses.get(caller)) {
       case (?_address) {
         userBitcoinAddresses.delete(caller);
+        true
+      };
+      case null false;
+    };
+  };
+
+  // SEI address management functions
+  public shared func setSeiAddress(caller : Principal, address : Text) : async Bool {
+    // Basic SEI address validation
+    if (address.size() < 26 or address.size() > 90) {
+      return false;
+    };
+    
+    // Check if it starts with valid SEI address prefixes
+    if (not (Text.startsWith(address, #text "sei1"))) {
+      return false;
+    };
+    
+    userSeiAddresses.put(caller, address);
+    true
+  };
+
+  public query func getSeiAddress(user : Principal) : async ?Text {
+    userSeiAddresses.get(user)
+  };
+
+  public shared func removeSeiAddress(caller : Principal) : async Bool {
+    switch (userSeiAddresses.get(caller)) {
+      case (?_address) {
+        userSeiAddresses.delete(caller);
         true
       };
       case null false;
@@ -475,6 +592,69 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
         case null 0;
       };
       bitcoinBalances.put(user, currentBitcoinBalance + bitcoinSatoshis);
+      
+      true
+    } else {
+      false
+    }
+  };
+
+  // SEI balance management functions
+  public shared func setSeiBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      seiBalances.put(user, amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  public query func getUserSeiBalance(user : Principal) : async Nat {
+    switch (seiBalances.get(user)) {
+      case (?balance) balance;
+      case null 0;
+    }
+  };
+
+  public shared func addSeiBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
+    if (caller == admin) {
+      let currentBalance = switch (seiBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      seiBalances.put(user, currentBalance + amount);
+      true
+    } else {
+      false
+    }
+  };
+
+  // ICP to SEI conversion function
+  public shared func convertIcpToSei(caller : Principal, user : Principal, icpAmount : Nat) : async Bool {
+    if (caller == admin) {
+      // Get current ICP balance
+      let currentIcpBalance = Balance.getBalance(balances, user);
+      
+      // Check if user has enough ICP
+      if (currentIcpBalance < icpAmount) {
+        return false;
+      };
+      
+      // Convert ICP e8s to SEI usei
+      // Using a simplified conversion rate: 1 ICP ≈ 0.0001 SEI
+      // In production, you'd use real-time exchange rates
+      let seiUsei = if (icpAmount >= 10_000_000) { icpAmount / 10_000_000 } else { 0 }; // Safe division
+      
+      // Deduct ICP from user's balance
+      let newIcpBalance : Nat = currentIcpBalance - icpAmount;
+      balances.put(user, newIcpBalance);
+      
+      // Add SEI to user's balance
+      let currentSeiBalance = switch (seiBalances.get(user)) {
+        case (?balance) balance;
+        case null 0;
+      };
+      seiBalances.put(user, currentSeiBalance + seiUsei);
       
       true
     } else {

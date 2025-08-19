@@ -15,11 +15,14 @@ export interface ParticipantShare {
 }
 export interface SplitDApp {
   'addBitcoinBalance' : ActorMethod<[Principal, Principal, bigint], boolean>,
+  'addSeiBalance' : ActorMethod<[Principal, Principal, bigint], boolean>,
   'canUserCreateEscrow' : ActorMethod<[Principal], boolean>,
   'cancelSplit' : ActorMethod<[Principal], undefined>,
   'convertIcpToBitcoin' : ActorMethod<[Principal, Principal, bigint], boolean>,
+  'convertIcpToSei' : ActorMethod<[Principal, Principal, bigint], boolean>,
   'getAdmin' : ActorMethod<[], Principal>,
   'getAllNicknames' : ActorMethod<[], Array<[Principal, string]>>,
+  'getAllUsernames' : ActorMethod<[], Array<[Principal, string]>>,
   'getBalance' : ActorMethod<[Principal], bigint>,
   'getBitcoinAddress' : ActorMethod<[Principal], [] | [string]>,
   'getCkbtcBalance' : ActorMethod<
@@ -44,6 +47,29 @@ export interface SplitDApp {
       'isFlagged' : boolean,
     }
   >,
+  'getSeiAddress' : ActorMethod<[Principal], [] | [string]>,
+  'getSeiBalance' : ActorMethod<
+    [Principal],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'getSeiBalanceAnonymous' : ActorMethod<
+    [],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'getSeiFaucetUrl' : ActorMethod<[], [] | [string]>,
+  'getSeiNetworkInfo' : ActorMethod<
+    [],
+    {
+      'name' : string,
+      'rpcUrl' : string,
+      'explorerUrl' : string,
+      'prefix' : string,
+      'isTestnet' : boolean,
+      'chainId' : string,
+    }
+  >,
   'getTransaction' : ActorMethod<[string, Principal], [] | [Transaction]>,
   'getTransactionsPaginated' : ActorMethod<
     [Principal, bigint, bigint],
@@ -55,6 +81,8 @@ export interface SplitDApp {
   >,
   'getUserBitcoinBalance' : ActorMethod<[Principal], bigint>,
   'getUserReputationScore' : ActorMethod<[Principal], bigint>,
+  'getUserSeiBalance' : ActorMethod<[Principal], bigint>,
+  'getUsername' : ActorMethod<[Principal], [] | [string]>,
   'initiateEscrow' : ActorMethod<
     [Principal, Array<ParticipantShare>, string],
     string
@@ -77,6 +105,8 @@ export interface SplitDApp {
   'releaseSplit' : ActorMethod<[Principal, string], undefined>,
   'removeBitcoinAddress' : ActorMethod<[Principal], boolean>,
   'removeNickname' : ActorMethod<[Principal], undefined>,
+  'removeSeiAddress' : ActorMethod<[Principal], boolean>,
+  'removeUsername' : ActorMethod<[Principal], undefined>,
   'requestCkbtcWallet' : ActorMethod<
     [],
     {
@@ -99,6 +129,11 @@ export interface SplitDApp {
       } |
       { 'err' : string }
   >,
+  'requestSeiWalletAnonymous' : ActorMethod<
+    [],
+    { 'ok' : { 'owner' : Principal, 'seiAddress' : string } } |
+      { 'err' : string }
+  >,
   'resetUserReputation' : ActorMethod<[Principal, Principal], undefined>,
   'setBitcoinAddress' : ActorMethod<[Principal, string], boolean>,
   'setBitcoinBalance' : ActorMethod<[Principal, Principal, bigint], boolean>,
@@ -106,6 +141,9 @@ export interface SplitDApp {
   'setInitialBalance' : ActorMethod<[Principal, bigint, Principal], undefined>,
   'setMockBitcoinBalance' : ActorMethod<[Principal, bigint], undefined>,
   'setNickname' : ActorMethod<[Principal, string], undefined>,
+  'setSeiAddress' : ActorMethod<[Principal, string], boolean>,
+  'setSeiBalance' : ActorMethod<[Principal, Principal, bigint], boolean>,
+  'setUsername' : ActorMethod<[Principal, string], undefined>,
   'updateEscrow' : ActorMethod<
     [Principal, string, Array<ParticipantShare>],
     undefined

@@ -13,11 +13,16 @@
 </div>
 
 # SplitSafe
-A decentralized, trustless Bitcoin escrow and split payment system using Internet Computer (ICP) and modern web technologies. It utilizes ICP's native Bitcoin integration via cKBTC (Chain-Key Bitcoin) to facilitate secure, programmable, and decentralized multi-party payment flows, eliminating the need for bridges, wrapped BTC, or intermediaries.
+A decentralized, trustless multi-chain escrow and split payment system using Internet Computer (ICP) and SEI Network with modern web technologies. It utilizes ICP's native Bitcoin integration via cKBTC (Chain-Key Bitcoin) and SEI's high-performance blockchain to facilitate secure, programmable, and decentralized multi-party payment flows, eliminating the need for bridges, wrapped tokens, or intermediaries.
 
-Senders can lock cKBTC into escrow, define payout rules, and automatically release funds once the specified conditions are met. Recipients receive cKBTC in predefined split proportions, which can be converted to native Bitcoin through ICP's Bitcoin integration, all managed by canister logic on the Internet Computer.
+Senders can lock cKBTC or SEI tokens into escrow, define payout rules, and automatically release funds once the specified conditions are met. Recipients receive tokens in predefined split proportions, which can be converted to native Bitcoin through ICP's Bitcoin integration or used directly on SEI Network, all managed by canister logic on the Internet Computer.
 
-Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, and any scenarios requiring trust-minimized Bitcoin settlements.
+**Multi-Chain Support:**
+- **Bitcoin (cKBTC)**: Native Bitcoin integration via ICP
+- **SEI Network**: High-performance Layer 1 blockchain for fast transactions
+- **Testnet Ready**: Atlantic-2 testnet integration for safe development
+
+Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, gaming payments, DeFi integrations, and any scenarios requiring trust-minimized multi-chain settlements.
 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 
@@ -34,6 +39,7 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 <div align="center"> 
   <img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" />
   <img src="https://img.shields.io/badge/bitcoin-2F3134?style=for-the-badge&logo=bitcoin&logoColor=white" />
+  <img src="https://img.shields.io/badge/SEI-000000?style=for-the-badge&logo=sei&logoColor=white" />
 	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 </div>
 
@@ -58,10 +64,12 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 
 **Features demonstrated:**
 - ✅ Complete escrow lifecycle (create → approve → release)
+- ✅ Multi-chain support (Bitcoin cKBTC + SEI Network)
 - ✅ Sender cancellation with full refund
 - ✅ Recipient decline with reputation penalty
 - ✅ Real-time balance management
 - ✅ Transaction history and status tracking
+- ✅ SEI testnet integration with faucet
 - ✅ Modern, intuitive user interface
 
 ### National Round Demo
@@ -74,11 +82,16 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 - Docker (for containerized deployment)
 - dfx (for ICP canister deployment)
 
-### Deploy Canisters
-```bash
-chmod +x scripts/nuke.sh
-./scripts/nuke.sh
-```
+### SEI Testnet Integration
+SafeSplit includes full SEI Network integration with Atlantic-2 testnet support:
+
+- **Testnet RPC**: https://rpc.atlantic-2.seinetwork.io
+- **Testnet Explorer**: https://atlantic-2.sei.explorers.guru
+- **Testnet Faucet**: https://atlantic-2.sei.explorers.guru/faucet
+- **Chain ID**: `atlantic-2`
+
+Get free test SEI tokens from the faucet to test escrow functionality without using real funds.
+
 
 ### Run Frontend Development Server
 ```bash
@@ -106,50 +119,30 @@ docker compose -f docker/local/docker-compose.yml up --build
 docker compose -f docker/local/docker-compose.yml down
 ```
 
-### Development Deployment with Docker
-```bash
-# Start development environment
-docker compose -f docker/development/docker-compose.yml up --build
-
-# Stop the containers
-docker compose -f docker/development/docker-compose.yml down
-```
-
-## AWS Infrastructure with Terraform
-
-### Deploy EC2 Instance
-```bash
-cd terraform
-terraform init
-terraform plan
-terraform apply
-```
-
-### Destroy Infrastructure
-```bash
-cd terraform
-terraform destroy
-```
-
-### Terraform Outputs
-- `public_ip` - EC2 instance public IP
-- `instance_id` - EC2 instance ID
-
-## Configuration
-
-### Environment Variables
-Copy the example environment file and configure your settings:
-```bash
-cp env.example .env
-```
-
-### Principals
-After setting up, a `principals.json` will be generated with sample users for testing.
-
 ## Testing
 
+### SEI Testnet Testing
+Test our SEI integration with the following commands:
+
+```bash
+# Test SEI network info
+dfx canister call split_dapp getSeiNetworkInfo
+
+# Test SEI balance query
+dfx canister call split_dapp getSeiBalance '(principal "2vxsx-fae")'
+
+# Test SEI wallet generation
+dfx canister call split_dapp requestSeiWalletAnonymous
+
+# Test SEI faucet URL
+dfx canister call split_dapp getSeiFaucetUrl
+
+# Run complete SEI test suite
+./scripts/test-sei-testnet.sh
+```
+
 ### Withdrawal Testing
-The application includes comprehensive withdrawal functionality for both ICP and ckBTC. You can test withdrawals using the following sample addresses:
+The application includes comprehensive withdrawal functionality for both ICP, ckBTC, and SEI. You can test withdrawals using the following sample addresses:
 
 #### Valid Bitcoin Addresses for Testing:
 - `bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh` ✅ (Tested and working)
@@ -157,22 +150,12 @@ The application includes comprehensive withdrawal functionality for both ICP and
 - `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa` (Legacy format)
 - `3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy` (P2SH format)
 
-#### Test Withdrawal Commands:
-```bash
-# Test ckBTC withdrawal (0.1 ckBTC = 10,000,000 satoshis)
-dfx canister call split_dapp withdrawBtc "(principal \"YOUR_PRINCIPAL\", 10_000_000 : nat, \"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\")"
+#### SEI Testnet Testing:
+- **Test SEI Balance**: 5,000,000 usei (5 SEI) available for testing
+- **SEI Address Format**: `sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
+- **Testnet Faucet**: Get free SEI tokens for testing
 
-# Test ICP withdrawal (10 ICP = 1,000,000,000 e8s)
-dfx canister call split_dapp withdrawIcp "(principal \"YOUR_PRINCIPAL\", 1_000_000_000 : nat, \"test-icp-address-123456789012345678901234567890\")"
-```
-
-#### Run Complete Withdrawal Tests:
-```bash
-# Run the full withdrawal test suite
-./scripts/tests/test-withdraw.sh
-```
-
-**Note**: These addresses work because the system uses mock balances for development. When deploying to mainnet, real Bitcoin address validation and actual transfer mechanisms will be used.
+**Note**: These addresses work because the system uses mock balances for development. When deploying to mainnet, real address validation and actual transfer mechanisms will be used.
 
 ## Authors
 

@@ -37,12 +37,19 @@ type SplitDApp =
  service {
    addBitcoinBalance: (caller: principal, user: principal, amount: nat) ->
     (bool);
+   addSeiBalance: (caller: principal, user: principal, amount: nat) -> (bool);
    canUserCreateEscrow: (user: principal) -> (bool) query;
    cancelSplit: (caller: principal) -> ();
    convertIcpToBitcoin: (caller: principal, user: principal, icpAmount:
     nat) -> (bool);
+   convertIcpToSei: (caller: principal, user: principal, icpAmount: nat) ->
+    (bool);
    getAdmin: () -> (principal) query;
    getAllNicknames: () -> (vec record {
+                                 principal;
+                                 text;
+                               }) query;
+   getAllUsernames: () -> (vec record {
                                  principal;
                                  text;
                                }) query;
@@ -66,6 +73,25 @@ type SplitDApp =
        isFlagged: bool;
        reputation: nat;
      }) query;
+   getSeiAddress: (user: principal) -> (opt text) query;
+   getSeiBalance: (user: principal) -> (variant {
+                                          err: text;
+                                          ok: nat;
+                                        });
+   getSeiBalanceAnonymous: () -> (variant {
+                                    err: text;
+                                    ok: nat;
+                                  });
+   getSeiFaucetUrl: () -> (opt text) query;
+   getSeiNetworkInfo: () ->
+    (record {
+       chainId: text;
+       explorerUrl: text;
+       isTestnet: bool;
+       name: text;
+       prefix: text;
+       rpcUrl: text;
+     }) query;
    getTransaction: (id: text, caller: principal) -> (opt Transaction);
    getTransactionsPaginated: (p: principal, page: nat, pageSize: nat) ->
     (record {
@@ -75,6 +101,8 @@ type SplitDApp =
      });
    getUserBitcoinBalance: (user: principal) -> (nat) query;
    getUserReputationScore: (user: principal) -> (nat) query;
+   getUserSeiBalance: (user: principal) -> (nat) query;
+   getUsername: (p: principal) -> (opt text) query;
    initiateEscrow: (caller: principal, participants: vec ParticipantShare,
     title: text) -> (text);
    isUserFlaggedForFraud: (user: principal) -> (bool) query;
@@ -89,6 +117,8 @@ type SplitDApp =
    releaseSplit: (caller: principal, txId: text) -> ();
    removeBitcoinAddress: (caller: principal) -> (bool);
    removeNickname: ("principal": principal) -> ();
+   removeSeiAddress: (caller: principal) -> (bool);
+   removeUsername: ("principal": principal) -> ();
    requestCkbtcWallet: () ->
     (variant {
        err: text;
@@ -107,6 +137,14 @@ type SplitDApp =
              subaccount: Subaccount;
            };
      });
+   requestSeiWalletAnonymous: () ->
+    (variant {
+       err: text;
+       ok: record {
+             owner: principal;
+             seiAddress: text;
+           };
+     });
    resetUserReputation: (user: principal, caller: principal) -> ();
    setBitcoinAddress: (caller: principal, address: text) -> (bool);
    setBitcoinBalance: (caller: principal, user: principal, amount: nat) ->
@@ -115,6 +153,9 @@ type SplitDApp =
    setInitialBalance: (p: principal, amount: nat, caller: principal) -> ();
    setMockBitcoinBalance: ("principal": principal, amount: nat) -> ();
    setNickname: (p: principal, name: text) -> ();
+   setSeiAddress: (caller: principal, address: text) -> (bool);
+   setSeiBalance: (caller: principal, user: principal, amount: nat) -> (bool);
+   setUsername: (p: principal, username: text) -> ();
    updateEscrow: (caller: principal, txId: text, updatedParticipants:
     vec ParticipantShare) -> ();
    withdrawBtc: (caller: principal, amount: nat, recipientAddress: text) ->

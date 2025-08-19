@@ -10,10 +10,10 @@ export const DropdownMenuContent = React.forwardRef<
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
       ref={ref}
-      className={
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-slate-700 bg-slate-900 p-1 text-yellow-400 shadow-lg animate-in fade-in-0' +
-        (className ? ' ' + className : '')
-      }
+              className={
+          'z-50 min-w-[8rem] overflow-hidden rounded-md border border-[#303333] bg-[#212121] p-1 text-white shadow-lg animate-in fade-in-0' +
+          (className ? ' ' + className : '')
+        }
       {...props}
     />
   </DropdownMenuPrimitive.Portal>
@@ -56,10 +56,10 @@ export const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={
-      'my-1 h-px bg-slate-700' +
-      (className ? ' ' + className : '')
-    }
+          className={
+        'my-1 h-px bg-[#424444]' +
+        (className ? ' ' + className : '')
+      }
     {...props}
   />
 ))

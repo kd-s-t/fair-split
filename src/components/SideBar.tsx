@@ -29,7 +29,6 @@ export default function SideBar() {
         />
         <div className="flex items-center gap-1">
           <span className="text-[#FEB64D] font-semibold text-lg">SplitSafe</span>
-          <span className="text-[#131313] font-medium text-lg">OrangeFarm</span>
         </div>
       </div>
 

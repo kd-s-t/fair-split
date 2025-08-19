@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { Bitcoin, Trash2, Sparkles, Upload, Info } from "lucide-react";
+import { Bitcoin, Trash2, Sparkles, Upload, Info, Plus, ChevronRight, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,6 +11,7 @@ import { useFieldArray, UseFormReturn } from "react-hook-form";
 import z from "zod";
 import { escrowFormSchema } from "@/validation/escrow";
 import { useUser } from "@/hooks/useUser";
+import { useState } from "react";
 
 type FormData = z.infer<typeof escrowFormSchema>;
 
@@ -19,16 +20,16 @@ interface FormProps {
 }
 
 const Form = ({ form }: FormProps) => {
-
-  const { getValues, setValue, control, watch, register, formState: { errors } } = form
-  const { ckbtcBalance } = useUser()
-
-
+  const { getValues, setValue, control, watch, register, formState: { errors } } = form;
+  const { ckbtcBalance } = useUser();
 
   const { fields, append, remove } = useFieldArray({
     control: control,
     name: "recipients"
   });
+
+  const watchedRecipients = watch("recipients");
+  const totalAllocation = watchedRecipients?.reduce((sum, recipient) => sum + (recipient.percentage || 0), 0) || 0;
 
   const generateTitle = () => {
     const titles = [
@@ -88,6 +89,7 @@ const Form = ({ form }: FormProps) => {
         // Create new recipients array from JSON data
         const newRecipients = jsonData.recipients.map((principal: string, index: number) => ({
           id: `recipient-${index + 1}`,
+          name: "",
           principal,
           percentage: Math.floor(100 / jsonData.recipients.length)
         }));
@@ -99,291 +101,247 @@ const Form = ({ form }: FormProps) => {
           newRecipients[0].percentage += remainder;
         }
 
-        // Replace all recipients at once
+        // Replace existing recipients with new ones
         setValue("recipients", newRecipients);
 
-        toast.success(`Loaded ${jsonData.recipients.length} recipients and amount from JSON file`);
+        toast.success(`Successfully imported ${newRecipients.length} recipients`);
       } catch (error) {
-        console.error("JSON upload error:", error);
-        toast.error("Invalid JSON file. Please check the format.");
+        console.error("Error parsing JSON:", error);
+        toast.error("Invalid JSON file");
       }
     };
+
     reader.readAsText(file);
   };
 
-  const handleAddRecipient = () => {
-    const currentRecipients = getValues("recipients");
-    const newRecipient = {
-      id: `recipient-${currentRecipients.length + 1}`,
+  const addRecipient = () => {
+    const newId = `recipient-${fields.length + 1}`;
+    append({
+      id: newId,
       name: "",
       principal: "",
       percentage: 0
-    };
-    append(newRecipient);
+    });
   };
 
-  const handleRemoveRecipient = (idx: number) => {
+  const removeRecipient = (index: number) => {
     if (fields.length > 1) {
-      remove(idx);
-      // Redistribute percentages after removal
-      const remainingRecipients = getValues("recipients").filter((_, index) => index !== idx);
+      remove(index);
+      // Redistribute percentages
+      const remainingRecipients = getValues("recipients").filter((_, i) => i !== index);
       if (remainingRecipients.length > 0) {
         const equalPercentage = Math.floor(100 / remainingRecipients.length);
-        const remainder = 100 % remainingRecipients.length;
-
-        remainingRecipients.forEach((recipient, index) => {
-          const newPercentage = equalPercentage + (index < remainder ? 1 : 0);
-          setValue(`recipients.${index}.percentage`, newPercentage);
-        });
+        const remainder = 100 - (equalPercentage * remainingRecipients.length);
+        
+        const updatedRecipients = remainingRecipients.map((recipient, i) => ({
+          ...recipient,
+          name: recipient.name || "",
+          percentage: equalPercentage + (i === 0 ? remainder : 0)
+        }));
+        
+        setValue("recipients", updatedRecipients);
       }
     }
   };
-
-  const handlePercentageChange = (idx: number, value: string) => {
-    const numValue = Number(value);
-
-    // Prevent negative values
-    if (numValue < 0) {
-      setValue(`recipients.${idx}.percentage`, 0);
-      toast.warning("Percentage cannot be negative");
-      return;
-    }
-
-    // Handle empty or invalid input
-    if (isNaN(numValue) || value === '') {
-      setValue(`recipients.${idx}.percentage`, 0);
-      return;
-    }
-
-    // Cap at 100%
-    if (numValue > 100) {
-      setValue(`recipients.${idx}.percentage`, 100);
-      toast.warning("Percentage cannot exceed 100%");
-      return;
-    }
-
-    // Calculate total percentage excluding current field
-    const recipients = getValues("recipients");
-    const totalOtherPercentage = recipients.reduce((sum, recipient, index) => {
-      if (index !== idx) {
-        return sum + (recipient.percentage || 0);
-      }
-      return sum;
-    }, 0);
-
-    // Check if new total would exceed 100%
-    if (totalOtherPercentage + numValue > 100) {
-      const maxAllowed = 100 - totalOtherPercentage;
-      setValue(`recipients.${idx}.percentage`, maxAllowed);
-      toast.warning(`Maximum allowed: ${maxAllowed}% (total cannot exceed 100%)`);
-      return;
-    }
-
-    setValue(`recipients.${idx}.percentage`, numValue);
-  };
-
-  const calculateTotalAllocation = () => {
-    const recipients = watch("recipients");
-    return recipients.reduce((sum, recipient) => sum + (recipient.percentage || 0), 0);
-  };
-
-  const isTotalValid = calculateTotalAllocation() === 100;
 
   return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bitcoin color="#F97415" />
-          <Typography variant="large">Escrow setup</Typography>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 mt-4">
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-[#A1A1AA]">
-              Title
-            </label>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={generateTitle}
-                className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
-              >
-                <Sparkles size={14} className="mr-1" />
-                Generate
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => document.getElementById('json-upload')?.click()}
-                className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-0 h-auto"
-              >
-                <Upload size={14} className="mr-1" />
-                Upload JSON
-              </Button>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="json-upload"
-              />
+    <div className="flex flex-col gap-4 w-full max-w-none">
+      {/* Escrow Setup Section */}
+      <Card className="bg-[#212121] border-[#303333] w-full">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <Bitcoin className="w-5 h-5 text-[#F97A15]" />
+            <Typography variant="large" className="text-white">Escrow setup</Typography>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Title Input */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-[#A1A1A1]">Title</label>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={generateTitle}
+                  className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-1 h-auto"
+                >
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  Generate
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => document.getElementById('json-upload')?.click()}
+                  className="text-[#FEB64D] hover:text-[#FEB64D] hover:bg-[#FEB64D]/10 p-1 h-auto"
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload JSON
+                </Button>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="json-upload"
+                />
+              </div>
             </div>
+            <Input
+              {...register("title")}
+              placeholder="e.g., Freelance project payment"
+              className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+            />
+            {errors.title && (
+              <div className="text-red-400 text-sm">{errors.title.message}</div>
+            )}
           </div>
-          <Input
-            className="mt-1"
-            type="text"
-            {...register("title")}
-            placeholder="e.g., Freelance project payment"
-          />
-          {errors.title && (
-            <div className="text-red-400 text-sm mt-1">{errors.title.message}</div>
-          )}
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-[#A1A1AA]">
-              BTC amount
-            </label>
-            <div className="flex items-center gap-1">
-              <Typography variant="muted">{ckbtcBalance}</Typography>
-              <Typography variant="small">BTC</Typography>
-            </div>
-          </div>
-          <Input
-            className="mt-1"
-            type="number"
-            min="0"
-            step="0.00000001"
-            {...register("btcAmount")}
-            placeholder="0.00000000"
-          />
-          {errors.btcAmount && (
-            <div className="text-red-400 text-sm mt-1">{errors.btcAmount.message}</div>
-          )}
-        </div>
-        <hr className="mt-6 mb-6 text-[#424444]" />
-        <div className="flex items-center justify-between">
-          <Typography variant="large">Recipients & split allocation</Typography>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleAddRecipient}
-            type="button"
-          >
-            + Add recipient
-          </Button>
-        </div>
-        <div className="container-blue flex gap-2">
-          <Info />
-          <div>
-            <Typography variant="base" className="text-[#71B5FF]">Recipient address</Typography>
-            <Typography variant="small" className="text-white">Enter the recipient&apos;s ICP Principal ID. The system will automatically convert to BTC addresses.</Typography>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <AnimatePresence>
-            {fields.map((field, idx) => (
-              <motion.div
-                key={field.id}
-                layout
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.25 }}
-                className="container bg-[#2C2C2C] rounded-lg relative"
-              >
-                <div className="flex items-center justify-between">
-                  <Typography variant="base" className="font-semibold text-[#FEB64D]">{field.name || `Recipient ${idx + 1}`}</Typography>
-                  {fields.length > 1 && (
-                    <Button
-                      variant="secondary"
-                      className="!rounded-full !border-none bg-[#353535]"
-                      onClick={() => handleRemoveRecipient(idx)}
-                      type="button"
-                      size="icon"
-                      aria-label="Remove recipient"
-                    >
-                      <Trash2 size={16} className="text-[#F64C4C]" />
-                    </Button>
-                  )}
-                </div>
 
-                <div className="grid grid-cols-8 gap-4">
-                  <div className="col-span-6">
-                    <label className="text-sm font-medium text-[#A1A1AA]">
-                      ICP address
-                    </label>
-                    <Input
-                      type="text"
-                      value={watch(`recipients.${idx}.principal`) || ''}
-                      placeholder="ICP Principal ID"
-                      className="mt-1"
-                      autoComplete="off"
-                      onChange={(e) => {
-                        setValue(`recipients.${idx}.principal`, e.target.value);
-                      }}
-                    />
-                    {errors.recipients?.[idx]?.principal && (
-                      <div className="text-red-400 text-sm mt-1">
-                        {errors.recipients[idx]?.principal?.message}
-                      </div>
+          {/* BTC Amount Input */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-[#A1A1A1]">BTC amount</label>
+              <span className="text-white text-sm">
+                {ckbtcBalance ? `${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC` : "0.00000000 BTC"}
+              </span>
+            </div>
+            <Input
+              {...register("btcAmount")}
+              type="number"
+              step="0.00000001"
+              placeholder="0.00000000"
+              className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+            />
+            {errors.btcAmount && (
+              <div className="text-red-400 text-sm">{errors.btcAmount.message}</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recipients and Split Allocation */}
+      <Card className="bg-[#212121] border-[#303333] w-full">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <Typography variant="large" className="text-white">Recipients & split allocation</Typography>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={addRecipient}
+              className="text-white hover:bg-[#303333] gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add recipient
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Info Banner */}
+          <div className="bg-[#1F374F] border border-[#0077FF] rounded-lg p-3">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-[#71B5FF] mt-0.5 flex-shrink-0" />
+              <div>
+                <Typography variant="base" className="text-[#71B5FF] font-medium mb-1">
+                  Recipient ID required
+                </Typography>
+                <Typography variant="small" className="text-white">
+                  Enter recipient&apos;s ICP Principal ID. SplitSafe will route BTC payouts automatically.
+                </Typography>
+              </div>
+            </div>
+          </div>
+
+          {/* Recipients List */}
+          <div className="space-y-3">
+            <AnimatePresence>
+              {fields.map((field, index) => (
+                <motion.div
+                  key={field.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-[#2B2B2B] border border-[#424242] rounded-lg p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <Typography variant="base" className="text-white font-medium">
+                      Recipient {index + 1}
+                    </Typography>
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeRecipient(index)}
+                        className="w-8 h-8 p-0 bg-[#353535] hover:bg-[#404040]"
+                      >
+                        <Trash2 className="w-4 h-4 text-[#F64B4B]" />
+                      </Button>
                     )}
                   </div>
-                  <div className="flex gap-2 items-center col-span-2">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium text-[#A1A1AA]">
-                        Percentage (%)
-                      </label>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="col-span-3 space-y-2">
+                      <label className="text-[#A1A1A1] text-sm">ICP address</label>
                       <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={watch(`recipients.${idx}.percentage`)}
-                        onChange={(e) => handlePercentageChange(idx, e.target.value)}
-                        onKeyDown={(e) => {
-                          // Prevent negative sign, e, and other non-numeric characters
-                          if (['-', 'e', 'E'].includes(e.key)) {
-                            e.preventDefault();
-                          }
-                        }}
-                        className="mt-1"
+                        {...register(`recipients.${index}.principal`)}
+                        placeholder="ICP Principal ID"
+                        className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
                       />
-                      {errors.recipients?.[idx]?.percentage && (
-                        <div className="text-red-400 text-sm mt-1">
-                          {errors.recipients[idx]?.percentage?.message}
+                      {errors.recipients?.[index]?.principal && (
+                        <div className="text-red-400 text-sm">
+                          {errors.recipients[index]?.principal?.message}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[#A1A1A1] text-sm">Percentage</label>
+                      <div className="relative">
+                        <Input
+                          {...register(`recipients.${index}.percentage`)}
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="0"
+                          className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1] pr-8"
+                        />
+                        <ChevronsUpDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
+                      </div>
+                      {errors.recipients?.[index]?.percentage && (
+                        <div className="text-red-400 text-sm">
+                          {errors.recipients[index]?.percentage?.message}
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-        <div className="flex items-center justify-between">
-          <Typography variant="muted">Total allocation:</Typography>
-          <Typography
-            variant="small"
-            className={`${isTotalValid ? 'text-[#FEB64D]' : 'text-red-400'}`}
-          >
-            {calculateTotalAllocation()}%
-          </Typography>
-        </div>
-        {!isTotalValid && calculateTotalAllocation() > 0 && (
-          <div className="text-red-400 text-sm">
-            Total allocation must equal 100%
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        )}
-        {errors.recipients && (
-          <div className="text-red-400 text-sm">
-            {errors.recipients.message}
+
+          {/* Total Allocation */}
+          <div className="flex justify-between items-center pt-3 border-t border-[#424242]">
+            <Typography variant="muted" className="text-[#9F9F9F]">Total allocation:</Typography>
+            <Typography
+              variant="small"
+              className={`font-medium ${totalAllocation === 100 ? 'text-[#FEB64D]' : 'text-red-400'}`}
+            >
+              {totalAllocation}%
+            </Typography>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          {totalAllocation !== 100 && totalAllocation > 0 && (
+            <div className="text-red-400 text-sm">
+              Total allocation must equal 100%
+            </div>
+          )}
+          {errors.recipients && (
+            <div className="text-red-400 text-sm">
+              {errors.recipients.message}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

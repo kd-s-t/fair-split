@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import { TransactionLifecycleProps, Step } from './types';
+import { Typography } from '@/components/ui/typography';
+import { CircleCheck } from 'lucide-react';
 
 const defaultSteps: Step[] = [
   { label: 'Locked', description: 'Signed by ICP threshold ECDSA' },
@@ -12,42 +14,74 @@ const defaultSteps: Step[] = [
 
 export function TransactionLifecycle({ currentStep, steps = defaultSteps }: TransactionLifecycleProps) {
   return (
-      <ol className="relative ml-4 mb-6">
-        {steps.map((step, idx, array) => {
+    <div className="bg-[#212121] border border-[#303434] rounded-[20px] p-5 space-y-6 w-[30%]">
+      {/* Banner */}
+      <div className="bg-[#48342A] border border-[#BD823D] rounded-[10px] p-4">
+        <Typography variant="base" className="text-white">
+          Native Bitcoin Escrow — No bridges or wrapped tokens
+        </Typography>
+      </div>
+
+      {/* Timeline */}
+      <div className="space-y-0">
+        {steps.map((step, idx) => {
           const isCompleted = idx < currentStep;
           const isCurrent = idx === currentStep;
-          const isLastIdx = idx === array.length - 1;
+          const isLast = idx === steps.length - 1;
 
           return (
-            <li key={step.label} className={`pl-6 pb-8 last:pb-0 relative ${isLastIdx ? '!border-none': ''} border-l-2 ${(isCurrent || isCompleted) ? 'border-[#FEB64D]' : 'border-[#424444]'} `}>
-              <span className={
-                [
-                  'absolute -left-4 flex items-center justify-center w-7 h-7 rounded-full border-2',
-                  isCompleted ? 'bg-[#181818] border-[#FEB64D]' : isCurrent ? 'bg-[#FEB64D] border-[#FEB64D]' : 'bg-[#222] border-[#444]',
-                ].join(' ')
-              }>
-                {isCompleted || (isCurrent && isLastIdx) ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="#FEB64D" strokeWidth="2" fill="none" />
-                    <path d="M7 13l3 3 7-7" stroke="#FEB64D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  </svg>
-                ) : isCurrent ? (
-                  <span className="block w-3 h-3 bg-[#FEB64D] rounded-full"></span>
-                ) : (
-                  <span className="block w-3 h-3 bg-[#222] rounded-full"></span>
+            <div key={step.label} className="flex items-start space-x-3">
+              {/* Timeline Column */}
+              <div className="flex flex-col items-center w-6">
+                {/* Circle */}
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  isCompleted 
+                    ? 'bg-[#FEB64D] border-[#FEB64D]' 
+                    : 'bg-[#0D0D0D] border-[#424444]'
+                }`}>
+                  {isCompleted ? (
+                    <CircleCheck size={16} className="text-[#0D0D0D]" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-[#5F5F5F]"></div>
+                  )}
+                </div>
+                
+                {/* Line */}
+                {!isLast && (
+                  <div className={`w-0.5 h-20 mt-0 ${
+                    isCompleted ? 'bg-[#FEB64D]' : 'bg-[#424444]'
+                  }`}></div>
                 )}
-              </span>
-              <div className={isCompleted || isCurrent ? 'text-white' : 'text-gray-500'}>
-                <div className="font-semibold text-base">
-                  {step.label}
-                </div>
-                <div className="text-sm text-[#9F9F9F]">
-                    <span>{step.description}</span>
-                </div>
               </div>
-            </li>
+
+              {/* Content */}
+              <div className="flex-1 pb-6">
+                <Typography 
+                  variant="base" 
+                  className={`font-semibold ${
+                    isCompleted ? 'text-white' : 'text-[#9F9F9F]'
+                  }`}
+                >
+                  {step.label}
+                </Typography>
+                <Typography 
+                  variant="small" 
+                  className="text-[#9F9F9F] mt-2"
+                >
+                  {step.description}
+                </Typography>
+              </div>
+            </div>
           );
         })}
-      </ol>
+      </div>
+
+      {/* Bottom Banner */}
+      <div className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4">
+        <Typography variant="small" className="text-[#9F9F9F]">
+          This escrow is executed fully on-chain using Internet Computer. No human mediation.
+        </Typography>
+      </div>
+    </div>
   );
 } 

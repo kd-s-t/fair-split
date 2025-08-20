@@ -113,6 +113,8 @@ export interface ActivityItem {
 export interface PendingEscrowDetailsProps {
   transaction: EscrowTransaction;
   onCancel?: () => void;
+  onApprove?: () => void;
+  onDecline?: () => void;
 }
 
 export interface EditEscrowDetailsProps {

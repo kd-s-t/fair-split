@@ -566,45 +566,7 @@ export default function TransactionsPage() {
                     </div>
                   )}
 
-                  {/* Approval/Decline Buttons */}
-                  {pendingApproval && !isSentByUser(tx) && tx.status !== 'cancelled' && (
-                    <div className="flex justify-end space-x-3 mt-4">
-                      <Button
-                        className={`bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        onClick={() => handleApprove(tx)}
-                        disabled={isApproving === getTxId(tx)}
-                      >
-                        {isApproving === getTxId(tx) ? (
-                          <span className="flex items-center space-x-2">
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                            Approving...
-                          </span>
-                        ) : (
-                          'Approve'
-                        )}
-                      </Button>
-                      <Button
-                        className={`bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        onClick={() => handleDecline(tx)}
-                        disabled={isDeclining === getTxId(tx)}
-                      >
-                        {isDeclining === getTxId(tx) ? (
-                          <span className="flex items-center space-x-2">
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                            Declining...
-                          </span>
-                        ) : (
-                          'Decline'
-                        )}
-                      </Button>
-                    </div>
-                  )}
+
                 </motion.div>
               );
             })}

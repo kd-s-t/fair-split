@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { House, Wallet, History, Zap, ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -21,23 +22,35 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
   ];
 
   return (
-    <div className={`${isOpen ? 'w-[210px]' : 'w-[60px]'} h-screen bg-[#1C1D1D]/80 border border-[#2A2B2B] shadow-lg flex flex-col relative rounded-[12px] transition-all duration-300`}>
+    <div className={`w-full h-screen bg-[#1C1D1D]/80 border border-[#2A2B2B] shadow-lg flex flex-col relative rounded-[12px] transition-all duration-300`}>
       {/* Logo Section */}
       <div className="px-3 py-4 flex items-center justify-center gap-2">
         {!isOpen && (
-          <Image
-            src="/logo.svg"
-            alt="Logo"
-            width={50}
-            height={50}
-            priority
-            className="object-contain"
-          />
+          <motion.div
+            className="flex items-center gap-1"
+            initial={{ rotateY: -180, opacity: 0 }}
+            animate={{ rotateY: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            <Image
+              src="/logo.svg"
+              alt="Logo"
+              width={40}
+              height={40}
+              priority
+              className="object-contain"
+            />
+          </motion.div>
         )}
         {isOpen && (
-          <div className="flex items-center gap-1">
-            <span className="text-[#FEB64D] font-semibold text-lg">SplitSafe</span>
-          </div>
+            <Image
+              src="/safesplit-logo.svg"
+              alt="SplitSafe Logo"
+              width={120}
+              height={40}
+              priority
+              className="object-contain"
+            />
         )}
       </div>
 
@@ -50,8 +63,8 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
               key={link.href}
               href={link.href}
               className={`rounded-lg py-2 text-sm transition-colors flex items-center gap-4 h-10 ${isActive
-                  ? "bg-[#FEB64D] !text-[#0D0D0D] font-semibold px-4"
-                  : "hover:bg-[#FEB64D]/20 text-white px-3"
+                ? "bg-[#FEB64D] !text-[#0D0D0D] font-semibold px-4"
+                : "hover:bg-[#FEB64D]/20 text-white px-3"
                 }`}
               style={{ minHeight: '40px' }}
               title={isOpen ? link.name : link.name}
@@ -63,12 +76,12 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
       </div>
 
       {/* Collapse Button */}
-      <div className={`absolute top-6 transition-all duration-300 ${isOpen ? 'left-[195px]' : 'left-[45px]'}`}>
-        <button 
+      <div className="absolute top-6 right-[-12px] transition-all duration-300">
+        <button
           onClick={onToggle}
           className="w-6 h-6 bg-[#343737] border border-[#2A2B2B] rounded-lg flex items-center justify-center hover:bg-[#404040] transition-colors cursor-pointer"
         >
-          <ChevronLeft size={18} className="text-white" />
+          <ChevronLeft size={18} className={`text-white transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
         </button>
       </div>
     </div>

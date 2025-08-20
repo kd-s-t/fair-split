@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useAuth } from "@/contexts/auth-context";
@@ -378,10 +378,12 @@ export default function TransactionDetailsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
-        <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start">
-          <ChevronLeft /> Back to dashboard
+        <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start hover:-translate-x-1 transition-all duration-200 group">
+          <ChevronLeft className="group-hover:-translate-x-1 transition-transform duration-200" /> Back to dashboard
         </Button>
-        <TimeRemaining createdAt={transaction.createdAt} />
+        {statusKey !== TRANSACTION_STATUS.RELEASED && (
+          <TimeRemaining createdAt={transaction.createdAt} />
+        )}
       </div>
 
       <AnimatePresence>

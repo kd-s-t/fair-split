@@ -16,7 +16,7 @@ type HeaderProps = {
 
 export default function Header({ title, subtitle, user }: HeaderProps) {
   return (
-    <header className="h-[55px] px-6 mt-[10px] flex items-center justify-between text-foreground min-w-0 overflow-hidden">
+    <header className="h-[55px] pl-[16px] pr-[16px] mt-[16px] flex items-center justify-between text-foreground min-w-0 overflow-hidden">
       {/* Title Bar */}
       <div className="flex flex-col space-y-2">
         <Typography variant="h3" className="text-white text-[30px] leading-[30px] font-normal">

@@ -28,12 +28,12 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   }
 
   return (
-        <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden">
       {/* Left Sidebar */}
-      <div className={`${isLeftSidebarOpen ? 'w-64' : 'w-20'} flex-shrink-0 p-5 transition-all duration-300`} data-section="sidebar">
+      <div className={`${isLeftSidebarOpen ? 'w-[15%]' : 'w-[5%]'} flex-shrink-0 mt-[16px] ml-[16px] transition-all duration-300`} data-section="sidebar">
         <Sidebar isOpen={isLeftSidebarOpen} onToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)} />
       </div>
-      
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -47,15 +47,15 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
             }}
           />
         </div>
-        
+
         {/* Main Content + AI Assistant Container */}
-        <div className="flex-1 overflow-hidden" data-section="main-content">
+        <div className="flex-1 overflow-hidden ml-[16px] mt-[16px] mr-[16px] mb-[16px]" data-section="main-content">
           <div className="flex h-full">
             {/* Main Content - flex-1 when AI closed, flex-[8] when AI open */}
             <div className={`transition-all duration-300 ${isRightSidebarOpen ? 'flex-[8]' : 'flex-1'}`} data-section="content">
-              <div className="h-full min-w-0 overflow-y-auto p-8 pr-10">{children}</div>
+              <div className="h-full min-w-0 overflow-y-auto">{children}</div>
             </div>
-            
+
             {/* AI Assistant - slides in from right */}
             <AnimatePresence>
               {isRightSidebarOpen && (
@@ -64,7 +64,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
                   animate={{ width: 320, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-80 flex-shrink-0 overflow-hidden"
+                  className="w-80 flex-shrink-0 overflow-hidden ml-[16px] mr-[16px] mt-[16px] mb-[16px]"
                   data-section="right-sidebar"
                 >
                   <RightSidebar onToggle={toggleRightSidebar} />
@@ -74,7 +74,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
           </div>
         </div>
       </div>
-      
+
       {/* Chat Button - fixed position */}
       {!isRightSidebarOpen && (
         <button
@@ -84,7 +84,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
           <BotMessageSquare />
         </button>
       )}
-      
+
       <AuthOverlay />
     </div>
   )

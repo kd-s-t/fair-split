@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
 import { setSeiAddress } from '@/lib/redux/userSlice';
@@ -10,7 +10,7 @@ import { Typography } from '@/components/ui/typography';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
-import { Copy, RefreshCw, Wallet, Check, CircleCheckBig } from 'lucide-react';
+import { Copy, Wallet, Check, CircleCheckBig } from 'lucide-react';
 
 export default function SEIAddress() {
 	const dispatch = useDispatch();

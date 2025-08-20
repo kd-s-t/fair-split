@@ -19,6 +19,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   const title = useSelector((state: RootState) => state.layout.title)
   const subtitle = useSelector((state: RootState) => state.layout.subtitle)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true)
 
   // No need to prevent body scroll for overlay sidebar
 
@@ -27,46 +28,50 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="grid grid-cols-10 grid-rows-[auto_1fr] h-screen w-screen overflow-hidden p-5">
-      {/* Left Sidebar - spans both rows */}
-      <div className="col-span-1 row-span-2">
-        <Sidebar />
+        <div className="flex h-screen w-screen overflow-hidden">
+      {/* Left Sidebar */}
+      <div className={`${isLeftSidebarOpen ? 'w-64' : 'w-20'} flex-shrink-0 p-5 transition-all duration-300`} data-section="sidebar">
+        <Sidebar isOpen={isLeftSidebarOpen} onToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)} />
       </div>
       
-      {/* Header - row 1, columns 2-10 */}
-      <div className="col-span-9 row-span-1 overflow-hidden p-10">
-        <Header
-          title={title}
-          subtitle={subtitle}
-          user={{
-            principalId: principal ?? '',
-            name: name || undefined,
-          }}
-        />
-      </div>
-      
-      {/* Main Content + AI Assistant Container - row 2, columns 2-10 */}
-      <div className="col-span-9 row-span-1 overflow-y-auto" >
-                 <div className="flex h-full pl-10">
-          {/* Main Content - flex-1 when AI closed, flex-[8] when AI open */}
-          <div className={`transition-all duration-300 ${isRightSidebarOpen ? 'flex-[8]' : 'flex-1'}`}>
-            <div className="h-full m-5 min-w-0 overflow-y-auto">{children}</div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0" data-section="header">
+          <Header
+            title={title}
+            subtitle={subtitle}
+            user={{
+              principalId: principal ?? '',
+              name: name || undefined,
+            }}
+          />
+        </div>
+        
+        {/* Main Content + AI Assistant Container */}
+        <div className="flex-1 overflow-hidden" data-section="main-content">
+          <div className="flex h-full">
+            {/* Main Content - flex-1 when AI closed, flex-[8] when AI open */}
+            <div className={`transition-all duration-300 ${isRightSidebarOpen ? 'flex-[8]' : 'flex-1'}`} data-section="content">
+              <div className="h-full min-w-0 overflow-y-auto p-8 pr-10">{children}</div>
+            </div>
+            
+            {/* AI Assistant - slides in from right */}
+            <AnimatePresence>
+              {isRightSidebarOpen && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 320, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="w-80 flex-shrink-0 overflow-hidden"
+                  data-section="right-sidebar"
+                >
+                  <RightSidebar onToggle={toggleRightSidebar} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          
-          {/* AI Assistant - slides in from right */}
-          <AnimatePresence>
-            {isRightSidebarOpen && (
-              <motion.div
-                initial={{ transform: 'translateX(100%)' }}
-                animate={{ transform: 'translateX(0%)' }}
-                exit={{ transform: 'translateX(100%)' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="w-[20%] flex-shrink-0 overflow-hidden"
-              >
-                <RightSidebar onToggle={toggleRightSidebar} />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
       

@@ -25,7 +25,7 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
       {/* Timeline */}
       <div className="space-y-0">
         {steps.map((step, idx) => {
-          const isCompleted = idx < currentStep;
+          const isCompleted = idx <= currentStep;
 
           const isLast = idx === steps.length - 1;
 

@@ -381,7 +381,9 @@ export default function TransactionDetailsPage() {
         <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start hover:-translate-x-1 transition-all duration-200 group">
           <ChevronLeft className="group-hover:-translate-x-1 transition-transform duration-200" /> Back to dashboard
         </Button>
-        <TimeRemaining createdAt={transaction.createdAt} />
+        {statusKey !== TRANSACTION_STATUS.RELEASED && (
+          <TimeRemaining createdAt={transaction.createdAt} />
+        )}
       </div>
 
       <AnimatePresence>

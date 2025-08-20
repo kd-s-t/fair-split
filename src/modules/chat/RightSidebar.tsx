@@ -218,7 +218,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
   };
 
   return (
-    <div className="w-full h-full bg-[#222222] border border-[#FEB64D] rounded-[2%] flex flex-col">
+    <div className="w-full h-full bg-[#222222] border border-[#FEB64D] rounded-[16px] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-[#303434]">
         <div className="flex items-center space-x-3">

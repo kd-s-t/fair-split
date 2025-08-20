@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { getAvatarUrl } from '@/lib/utils';
@@ -9,31 +9,48 @@ import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
 import { ChevronDown, User, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Wallet Modal Component
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
+  const { icpBalance, ckbtcAddress, ckbtcBalance, seiAddress, seiBalance } = useAppSelector((state: RootState) => state.user);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  const copyToClipboard = async () => {
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(principalId);
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard!');
     } catch (err) {
       console.error('Failed to copy: ', err);
+      toast.error('Failed to copy to clipboard');
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#212121] border border-[#303333] rounded-xl w-[540px] max-w-[90vw] max-h-[90vh] overflow-hidden shadow-lg">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-[#212121] border border-[#303333] rounded-xl w-[540px] max-w-[90vw] max-h-[90vh] overflow-hidden shadow-lg" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-6 border-b border-[#303333]">
           <div className="flex items-center justify-between">
             <h2 className="text-white text-lg font-semibold">Wallet</h2>
             <button
               onClick={onClose}
-              className="text-white hover:text-gray-300 transition-colors"
+              className="text-white hover:text-gray-300 transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -41,15 +58,16 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
             </button>
           </div>
           <p className="text-[#A1A1A1] text-sm mt-2">
-            This is your wallet-linked Principal ID. You can copy it for reference or use in transactions.
+            Your multi-chain wallet information. You can copy addresses for reference or use in transactions.
           </p>
         </div>
 
         {/* Content */}
         <div className="p-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* ICP Principal */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Wallet address</label>
+              <label className="block text-white text-sm font-medium mb-2">ICP Principal ID</label>
               <div className="flex gap-4">
                 <div className="flex-1">
                   <div className="bg-[#2B2B2B] border border-[#424444] rounded-md p-3">
@@ -58,13 +76,13 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
                       value={principalId}
                       readOnly
                       className="w-full bg-transparent text-white placeholder-[#A1A1A1] outline-none"
-                      placeholder="Your wallet address"
+                      placeholder="Your ICP Principal ID"
                     />
                   </div>
                 </div>
                 <button
-                  onClick={copyToClipboard}
-                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#3A3A3A] transition-colors bg-[#2A2A2A]"
+                  onClick={() => copyToClipboard(principalId)}
+                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#3A3A3A] transition-colors bg-[#2A2A2A] cursor-pointer"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <rect x="5.33" y="5.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
@@ -72,6 +90,77 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
                   </svg>
                 </button>
               </div>
+              {icpBalance && (
+                <div className="mt-2 text-sm text-[#A1A1A1]">
+                  Balance: {Number(icpBalance).toFixed(4)} ICP
+                </div>
+              )}
+            </div>
+
+            {/* ckBTC Address */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">cKBTC Address</label>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <div className="bg-[#2B2B2B] border border-[#424444] rounded-md p-3">
+                    <input
+                      type="text"
+                      value={ckbtcAddress || "No address generated"}
+                      readOnly
+                      className="w-full bg-transparent text-white placeholder-[#A1A1A1] outline-none"
+                      placeholder="Your cKBTC address"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(ckbtcAddress || "")}
+                  disabled={!ckbtcAddress}
+                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#3A3A3A] transition-colors bg-[#2A2A2A] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="5.33" y="5.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
+                    <rect x="1.33" y="1.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                </button>
+              </div>
+              {ckbtcBalance && (
+                <div className="mt-2 text-sm text-[#A1A1A1]">
+                  Balance: {ckbtcBalance} BTC
+                </div>
+              )}
+            </div>
+
+            {/* SEI Address */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">SEI Address</label>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <div className="bg-[#2B2B2B] border border-[#424444] rounded-md p-3">
+                    <input
+                      type="text"
+                      value={seiAddress || "No address generated"}
+                      readOnly
+                      className="w-full bg-transparent text-white placeholder-[#A1A1A1] outline-none"
+                      placeholder="Your SEI address"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(seiAddress || "")}
+                  disabled={!seiAddress}
+                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#3A3A3A] transition-colors bg-[#2A2A2A] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="5.33" y="5.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
+                    <rect x="1.33" y="1.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                </button>
+              </div>
+              {seiBalance && (
+                <div className="mt-2 text-sm text-[#A1A1A1]">
+                  Balance: {seiBalance} SEI
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -80,16 +169,9 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
         <div className="p-6 border-t border-[#303333] flex justify-end">
           <button
             onClick={onClose}
-            className="bg-[#FEB64D] text-[#0D0D0D] px-4 py-2 rounded-md hover:bg-[#FEB64D]/90 transition-colors flex items-center gap-2"
+            className="bg-[#FEB64D] text-[#0D0D0D] px-4 py-3 rounded-[6px] hover:bg-[#FEB64D]/90 transition-colors cursor-pointer h-10 font-medium"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M0.67 2L14.67 2L14.67 14" stroke="currentColor" strokeWidth="2"/>
-              <path d="M0.67 4L14.67 4L14.67 9.33" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-            <span>Done</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M5.33 3.33L10.67 8L5.33 12.67" stroke="currentColor" strokeWidth="2"/>
-            </svg>
+            Done
           </button>
         </div>
       </div>

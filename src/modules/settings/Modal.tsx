@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
@@ -25,6 +25,27 @@ export default function EditNameModal({
   const dispatch = useDispatch();
   const principal = useAppSelector((state: RootState) => state.user.principal);
   const { authClient } = useAuth();
+
+  // Update input field when modal opens or name changes
+  useEffect(() => {
+    if (open) {
+      setNameInput(name || "");
+    }
+  }, [open, name]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
 
   const handleSaveName = async () => {
     setIsSaving(true);
@@ -70,7 +91,7 @@ export default function EditNameModal({
             <h2 className="text-white text-lg font-semibold">Edit profile</h2>
             <button
               onClick={onClose}
-              className="text-white hover:text-gray-300 transition-colors"
+              className="text-white hover:text-gray-300 transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -116,17 +137,10 @@ export default function EditNameModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-[#404040] flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-white border border-[#7A7A7A] rounded-md hover:bg-[#353535] transition-colors bg-[#2A2A2A]"
-            disabled={isSaving}
-          >
-            Cancel
-          </button>
+        <div className="p-6 border-t border-[#404040] flex justify-end">
           <button
             onClick={handleSaveName}
-            className="bg-[#FEB64D] text-[#0D0D0D] px-4 py-2 rounded-md hover:bg-[#FEB64D]/90 transition-colors font-semibold flex items-center gap-2"
+            className="bg-[#FEB64D] text-[#0D0D0D] px-4 py-3 rounded-[6px] hover:bg-[#FEB64D]/90 transition-colors font-medium flex items-center gap-2 cursor-pointer h-10"
             disabled={isSaving}
           >
             {isSaving ? (

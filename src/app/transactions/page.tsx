@@ -433,7 +433,7 @@ export default function TransactionsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  className={`bg-[#222222] rounded-[20px] p-4 md:p-5 border border-[#303434] w-full ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors cursor-pointer' : ''}`}
+                  className={`bg-[#222222] rounded-[20px] p-4 md:p-5 border-0 w-full ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors cursor-pointer' : ''}`}
                   onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
                 >
                   <div className="flex items-start justify-between mb-4 min-w-0">
@@ -544,14 +544,14 @@ export default function TransactionsPage() {
                     </div>
 
                     <div>
-                      <p className="text-[#BCBCBC] text-sm mb-1">Transaction hash</p>
+                      <p className="text-[#BCBCBC] text-sm mb-1">Bitcoin block</p>
                       <a 
-                        href={`${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL}/transaction/${tx.id}`}
+                        href={`https://blockstream.info/block/00000000000000000001bb418ff8dfff65ea0dab3d9f53923112d2b2f12f4ee7`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-semibold text-[#FEB64D] font-mono text-sm hover:underline"
                       >
-                        {truncateHash(tx.id)}
+                        {truncateHash('00000000000000000001bb418ff8dfff65ea0dab3d9f53923112d2b2f12f4ee7')}
                       </a>
                     </div>
                   </div>

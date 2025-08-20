@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
 import { StatCardProps } from './types';
 import Withdraw from "./Withdraw";
-import FilterBar from "./FilterBar";
+
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon, additionalInfo }) => (
   <Card className="bg-[#222222] border-[#303434] text-white p-5 rounded-[20px] min-h-[132px]">
@@ -279,16 +279,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
         </Typography>
       </div>
 
-      {/* Filter Bar */}
-      <div className="mt-6">
-        <FilterBar
-          onSearchChange={(value) => console.log('Search:', value)}
-          onCategoryChange={(value) => console.log('Category:', value)}
-          onStatusChange={(value) => console.log('Status:', value)}
-          onRefresh={() => console.log('Refresh clicked')}
-          searchPlaceholder="Search escrows..."
-        />
-      </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <StatCard

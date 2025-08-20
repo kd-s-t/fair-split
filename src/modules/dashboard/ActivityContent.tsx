@@ -45,151 +45,211 @@ const ActivityContent = ({
   };
 
   return (
-    <Card key={idx}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex justify-between flex-1">
-          <div className="flex gap-2">
-            <div>
-              <div className="flex gap-2">
-                <Typography
-                  variant="large"
-                  className="font-semibold leading-none"
-                >
-                  {activity.title || 'Untitled Transaction'}
-                </Typography>
-                {activity.status && getTransactionStatusBadge(activity.status)}
-              </div>
+    <Card key={idx} className="bg-[#212121] border-0 rounded-[20px] p-5">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <Typography
+              variant="large"
+              className="text-white text-xl font-semibold"
+            >
+              {activity.title || 'Untitled Transaction'}
+            </Typography>
+            {activity.status && getTransactionStatusBadge(activity.status)}
+          </div>
 
-              <div className="flex items-center gap-2">
-                <Typography
-                  variant="muted"
-                  className="text-xs text[rgba(159, 159, 159, 1)]"
-                >
-                  {activity.createdAt ? new Date(Number(activity.createdAt) / 1_000_000).toLocaleString() : 'Unknown date'}
-                </Typography>
-
-                <span className="text-white">•</span>
-                {category === "sent" ? (
-                  <div className="flex items-center gap-1 text-[#007AFF]">
-                    <ArrowUpRight size={14} />
-                    <Typography
-                      variant="muted"
-                      className="!text-[#007AFF]"
-                    >
-                      Sent
-                    </Typography>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-[#00C287]">
-                    <ArrowDownLeft size={14} />
-                    <Typography
-                      variant="muted"
-                      className="!text-[#00C287]"
-                    >
-                      Receiving
-                    </Typography>
-                  </div>
-                )}
+          <div className="flex items-center gap-2 text-[#9F9F9F] text-sm">
+            <span>
+              {activity.createdAt ? new Date(Number(activity.createdAt) / 1_000_000).toLocaleString() : 'Unknown date'}
+            </span>
+            <span className="text-white">•</span>
+            {category === "sent" ? (
+              <div className="flex items-center gap-1 text-[#007AFF]">
+                <ArrowUpRight size={18} />
+                <span>Sent</span>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-1 text-[#00C287]">
+                <ArrowDownLeft size={18} />
+                <span>Receiving</span>
+              </div>
+            )}
           </div>
         </div>
-        {/* View escrow button/link */}
-        {txUrl && (
-          <div className="flex justify-end mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-[#7A7A7A]"
-              onClick={() => router.push(txUrl)}
-            >
-              <Eye className="mr-2" /> View escrow
-            </Button>
+        
+        {/* Action button - show for all transactions except withdrawal complete */}
+        {txUrl && activity.status !== "withdraw_complete" && (
+          <div className="flex gap-2">
+            {activity.status === "released" || activity.status === "completed" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#7A7A7A] text-white hover:bg-[#2a2a2a] h-10"
+                onClick={() => router.push(txUrl)}
+              >
+                <Eye className="mr-2" size={16} /> View escrow
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-[#7A7A7A] text-white hover:bg-[#2a2a2a] h-10"
+                onClick={() => router.push(txUrl)}
+              >
+                <UserRound className="mr-2" size={16} /> Manage escrow
+              </Button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Recipients List and Total Escrow logic remains unchanged */}
+      {/* Recipients Section */}
       {activity.to &&
         Array.isArray(activity.to) &&
         activity.to.length > 0 && (
-          <div className="mt-4 bg-[#232323] rounded-xl">
+          <div className="space-y-4">
 
             {category === "sent" && (
               <Fragment>
-                <div className="flex items-center gap-2 py-2 font-semibold text-white">
-                  <UsersRound size={18} /> Recipients (
-                  {activity.to.length})
-                </div>
-
-                <div className="container !p-0">
-                  {activity.to.map((recipient, idx: number) => (
-                    <div
-                      key={idx}
-                      className="flex justify-between items-center border-b border-[#333] p-3 last:border-b-0 text-white"
-                    >
-                      <span className="font-mono text-sm">
-                        {String(recipient.principal)}
-                      </span>
-                      <span className="text-xs text-[#bdbdbd]">
-                        {recipient.percentage ? String(recipient.percentage) + "%" : ""} • {" "}
-                        {recipient.amount ? formatBTC(Number(recipient.amount)) : "0"} BTC
-                      </span>
+                {activity.status === "released" || activity.status === "completed" ? (
+                  // Completed sent transaction - simplified layout
+                  <Fragment>
+                    <div className="flex items-center gap-3">
+                      <UsersRound size={20} className="text-white" />
+                      <span className="text-white font-medium">Recipients ({activity.to?.length || 0})</span>
                     </div>
-                  ))}
-                </div>
-                <div className="container-error flex justify-between items-center mt-2">
-                  <Typography variant="small" className="text-[#FEB64D]">
-                    Total escrow:
-                  </Typography>
-                  <Typography variant="small" className="text-[#FEB64D] gap-1 flex items-center">
-                    <Bitcoin size={16} />
-                                            {formatBTC(
-                          activity.to.reduce(
-                            (sum: number, recipient) =>
-                              sum + (recipient.amount ? Number(recipient.amount) : 0),
-                            0
-                          ) || 0
-                        )}
-                    BTC
-                  </Typography>
-                </div>
+                    <Card className="bg-[#362825] border border-[#715A24] rounded-[10px] p-4 flex justify-between items-center">
+                      <span className="text-white">Total escrow: 1</span>
+                      <div className="flex items-center gap-2">
+                        <Bitcoin size={20} className="text-[#F9A214]" />
+                        <span className="text-white font-medium">
+                          {formatBTC(
+                            activity.to?.reduce(
+                              (sum: number, recipient) =>
+                                sum + (recipient.amount ? Number(recipient.amount) : 0),
+                              0
+                            ) || 0
+                          )}
+                        </span>
+                        <span className="text-[#9F9F9F] text-sm">BTC</span>
+                      </div>
+                    </Card>
+                  </Fragment>
+                ) : (
+                  // Active/pending sent transaction - full layout with recipients table
+                  <Fragment>
+                    {/* Recipients Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <UsersRound size={20} className="text-white" />
+                        <span className="text-white font-medium">Recipients ({activity.to?.length || 0})</span>
+                      </div>
+
+                      {/* Recipients Table */}
+                      <div className="border border-[#424444] rounded-[10px] overflow-hidden">
+                        {activity.to?.map((recipient, idx: number) => (
+                          <div
+                            key={idx}
+                            className={`flex justify-between items-center p-4 text-white ${
+                              idx % 2 === 0 ? 'bg-[#2B2B2B]' : 'bg-[#2B2B2B]'
+                            } ${idx !== (activity.to?.length || 0) - 1 ? 'border-b border-[#424444]' : ''}`}
+                          >
+                            <span className="font-mono text-sm">
+                              {String(recipient.principal).slice(0, 20)}...{String(recipient.principal).slice(-8)}
+                            </span>
+                            <span className="text-sm">
+                              {recipient.percentage ? String(recipient.percentage) + "%" : ""} • {" "}
+                              {recipient.amount ? formatBTC(Number(recipient.amount)) : "0"} BTC
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+
+
+                      {/* Total Escrow Section */}
+                      <Card className="bg-[#362825] border border-[#715A24] rounded-[10px] p-4 flex justify-between items-center">
+                        <span className="text-white">Total escrow:</span>
+                        <div className="flex items-center gap-2">
+                          <Bitcoin size={20} className="text-[#F9A214]" />
+                          <span className="text-white font-medium">
+                            {formatBTC(
+                              activity.to?.reduce(
+                                (sum: number, recipient) =>
+                                  sum + (recipient.amount ? Number(recipient.amount) : 0),
+                                0
+                              ) || 0
+                            )}
+                          </span>
+                          <span className="text-[#9F9F9F] text-sm">BTC</span>
+                        </div>
+                      </Card>
+                    </div>
+                  </Fragment>
+                )}
               </Fragment>
             )}
 
             {category === "received" && (
               <Fragment>
-                <div className="flex items-center gap-2 py-2 font-semibold text-white">
-                  <UserRound size={18} /> Sender:
-                  <Typography variant="muted">{String(activity.from)}</Typography>
-                </div>
-                <div className="container-success mt-2">
-                  <Typography variant="small">
-                    You’ll receive:
-                  </Typography>
-                  <div className="flex items-center gap-2">
-                    <Bitcoin size={16} />
-                    <Typography>
-                      {formatBTC(
-                        activity.to.reduce(
-                          (sum: number, recipient) =>
-                            sum + Number(recipient.amount),
-                          0
-                        )
-                      )}
-                      BTC
-                    </Typography>
-                    <Typography variant="small" className="text-[rgba(159, 159, 159, 1)]">
-                      (100%)
-                    </Typography>
-                  </div>
-                </div>
+                {activity.status === "released" || activity.status === "completed" ? (
+                  // Completed received transaction - simplified layout
+                  <Fragment>
+                    <div className="flex items-center gap-3">
+                      <UserRound size={20} className="text-white" />
+                      <span className="text-white font-medium">Sender: {String(activity.from).slice(0, 20)}...{String(activity.from).slice(-8)}</span>
+                    </div>
+                    <Card className="bg-[#1B2E25] border border-[#2A6239] rounded-[10px] p-4">
+                      <div className="space-y-2">
+                        <span className="text-white text-sm">You&apos;ll receive:</span>
+                        <div className="flex items-center gap-2">
+                          <Bitcoin size={20} className="text-[#F9A214]" />
+                          <span className="text-white font-medium">
+                            {formatBTC(
+                              (activity.to ? activity.to.reduce(
+                                (sum: number, recipient) =>
+                                  sum + Number(recipient.amount),
+                                0
+                              ) : 0)
+                            )}
+                          </span>
+                          <span className="text-[#9F9F9F] text-sm">BTC</span>
+                          <span className="text-white text-sm">(100%)</span>
+                        </div>
+                      </div>
+                    </Card>
+                  </Fragment>
+                ) : (
+                  // Active/pending received transaction - standard layout
+                  <Fragment>
+                    <div className="flex items-center gap-3">
+                      <UserRound size={20} className="text-white" />
+                      <span className="text-white font-medium">Sender: {String(activity.from).slice(0, 20)}...{String(activity.from).slice(-8)}</span>
+                    </div>
+                    <Card className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4">
+                      <div className="flex items-center gap-2">
+                        <Bitcoin size={20} className="text-[#F9A214]" />
+                        <span className="text-white font-medium">
+                          {formatBTC(
+                            activity.to?.reduce(
+                              (sum: number, recipient) =>
+                                sum + Number(recipient.amount),
+                              0
+                            ) || 0
+                          )}
+                        </span>
+                        <span className="text-[#9F9F9F] text-sm">BTC</span>
+                        <span className="text-[#9F9F9F] text-sm">(100%)</span>
+                      </div>
+                    </Card>
+                  </Fragment>
+                )}
               </Fragment>
             )}
           </div>
         )
       }
-    </Card >
+    </Card>
   )
 }
 

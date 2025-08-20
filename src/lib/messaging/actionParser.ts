@@ -22,7 +22,12 @@ export interface PositiveAcknowledgmentAction {
   type: 'positive_acknowledgment';
 }
 
-export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | null;
+export interface NavigationAction {
+  type: 'navigate';
+  destination: 'dashboard' | 'escrow' | 'transactions' | 'integrations' | 'settings';
+}
+
+export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
 
 // Bitcoin address validation function
 function isValidBitcoinAddress(address: string): boolean {
@@ -161,7 +166,49 @@ export function parseUserMessage(message: string): ParsedAction {
     }
   }
   
-  // Pattern 5: Positive acknowledgments
+  // Pattern 5: Navigation requests
+  const navigationPatterns = [
+    // Dashboard navigation
+    /(?:go to|show|open|navigate to|take me to).*(?:dashboard|home|main)/i,
+    /(?:dashboard|home|main)/i,
+    
+    // Escrow navigation
+    /(?:go to|show|open|navigate to|take me to).*(?:escrow|create|new)/i,
+    /(?:escrow|create|new).*(?:escrow|transaction)/i,
+    
+    // Transactions navigation
+    /(?:go to|show|open|navigate to|take me to).*(?:transactions?|history|activity)/i,
+    /(?:transactions?|history|activity)/i,
+    
+    // Integrations navigation
+    /(?:go to|show|open|navigate to|take me to).*(?:integrations?|settings?|bitcoin|sei)/i,
+    /(?:integrations?|settings?|bitcoin|sei)/i,
+    
+    // Settings navigation
+    /(?:go to|show|open|navigate to|take me to).*(?:settings?|preferences?|config)/i,
+    /(?:settings?|preferences?|config)/i
+  ];
+  
+  for (const pattern of navigationPatterns) {
+    const match = message.match(pattern);
+    if (match) {
+      const lowerMessage = message.toLowerCase();
+      
+      if (lowerMessage.includes('dashboard') || lowerMessage.includes('home') || lowerMessage.includes('main')) {
+        return { type: 'navigate', destination: 'dashboard' };
+      } else if (lowerMessage.includes('escrow') || lowerMessage.includes('create') || lowerMessage.includes('new')) {
+        return { type: 'navigate', destination: 'escrow' };
+      } else if (lowerMessage.includes('transaction') || lowerMessage.includes('history') || lowerMessage.includes('activity')) {
+        return { type: 'navigate', destination: 'transactions' };
+      } else if (lowerMessage.includes('integration') || lowerMessage.includes('bitcoin') || lowerMessage.includes('sei')) {
+        return { type: 'navigate', destination: 'integrations' };
+      } else if (lowerMessage.includes('setting') || lowerMessage.includes('preference') || lowerMessage.includes('config')) {
+        return { type: 'navigate', destination: 'settings' };
+      }
+    }
+  }
+
+  // Pattern 6: Positive acknowledgments
   const positiveAckPatterns = [
     /^(nice|great|awesome|excellent|perfect|sweet|cool|good|ok|okay|yeah|yes|yep|yup|👍|✅|🎉|😊|😄|😎)$/i,
     /^(thanks?|thank you|thx|ty|appreciate it|grateful)$/i,

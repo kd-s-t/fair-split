@@ -39,22 +39,22 @@ export default function RecentActivities() {
 
       <Tabs defaultValue="all" className="mt-4">
         <div className="flex items-center justify-between">
-          <TabsList>
+          <TabsList className="bg-[#2B2B2B] border border-[#424444]">
             <TabsTrigger
               value="all"
-              className="text-muted-foreground font-medium"
+              className="text-white font-medium data-[state=active]:bg-[#FEB64D] data-[state=active]:text-black"
             >
               All transactions ({activities.length})
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="text-muted-foreground font-medium"
+              className="text-white font-medium data-[state=active]:bg-[#FEB64D] data-[state=active]:text-black"
             >
               Send ({sentCount})
             </TabsTrigger>
             <TabsTrigger
               value="completed"
-              className="text-muted-foreground font-medium"
+              className="text-white font-medium data-[state=active]:bg-[#FEB64D] data-[state=active]:text-black"
             >
               Received ({receivedCount})
             </TabsTrigger>
@@ -62,6 +62,7 @@ export default function RecentActivities() {
           <Button
             variant="ghost"
             onClick={() => (window.location.href = "/transactions")}
+            className="text-white hover:bg-[#2a2a2a]"
           >
             View all transactions <ChevronRight />
           </Button>

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { BotMessageSquare, X, Send } from 'lucide-react';
 import { Message } from './ChatInterface';
-import { saveMessages, loadMessages } from '@/lib/messaging/storage';
+import { saveMessages, loadMessages, scrollToBottomOnOpen } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
+import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 
 import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState } from '@/lib/messaging/chatState';
@@ -22,6 +23,7 @@ interface RightSidebarProps {
 export default function RightSidebar({ onToggle }: RightSidebarProps) {
   const router = useRouter();
   const { principal, icpBalance, ckbtcAddress, ckbtcBalance } = useUser();
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {
     const globalState = getGlobalChatState();
@@ -66,6 +68,13 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
     globalState.messages = messages;
   }, [messages]);
 
+  // Auto-scroll to bottom when chat opens or messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      scrollToBottomOnOpen(chatContainerRef);
+    }
+  }, [messages]);
+
   const handleSendMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -96,26 +105,29 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         isValidApiKey 
       });
 
-      // Temporarily disable AI parser to test local parser
-      console.info('Using local parser only for testing');
-      
-      // if (isValidApiKey) {
-      //   try {
-      //     parsedAction = await parseUserMessageWithAI(content, apiKey);
-      //   } catch (aiError) {
-      //     console.warn('AI parser failed, falling back to local parser:', aiError);
-      //     // Continue to fallback logic
-      //   }
-      // } else {
-      //   console.info('OpenAI API key not configured or invalid, using local parser only');
-      // }
+      // Try AI parser first, then fallback to local parser
+      if (isValidApiKey) {
+        try {
+          parsedAction = await parseUserMessageWithAI(content, apiKey);
+        } catch (aiError) {
+          console.warn('AI parser failed, falling back to local parser:', aiError);
+          // Continue to fallback logic
+        }
+      } else {
+        console.info('OpenAI API key not configured or invalid, using local parser only');
+      }
 
       if (!parsedAction) {
         // Fallback to local parsing logic
         const lowerContent = content.toLowerCase();
         console.log('Local parser analyzing:', { content, lowerContent });
 
-        if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('escrow') || lowerContent.includes('make')) {
+        // Check for approval suggestions FIRST (before escrow creation)
+        if (lowerContent.includes('approve') || lowerContent.includes('decline') || 
+            lowerContent.includes('decide') || lowerContent.includes('good') ||
+            (lowerContent.includes('escrow') && (lowerContent.includes('approve') || lowerContent.includes('decide')))) {
+          parsedAction = { type: 'approval_suggestion' };
+        } else if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('make')) {
           // Extract recipient IDs (ICP principal format)
           const recipientMatch = content.match(/[a-z0-9-]{63}/g);
           const recipients = recipientMatch || [];
@@ -130,8 +142,6 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           parsedAction = { type: 'set_bitcoin_address', address: 'invalid' };
         } else if (lowerContent.includes('balance') || lowerContent.includes('principal')) {
           parsedAction = { type: 'query', query: 'all' };
-        } else if (lowerContent.includes('approve') || lowerContent.includes('decline')) {
-          parsedAction = { type: 'approval_suggestion' };
         }
       }
 
@@ -238,7 +248,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       {/* Body */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-4 min-h-0">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 min-h-0">
           <div className="space-y-4">
             {messages.map((message) => (
               <div

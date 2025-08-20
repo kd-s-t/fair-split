@@ -1,3 +1,6 @@
+dfx start -clean
+
+
 
 dfx identity whoami
 dfx identity get-principal

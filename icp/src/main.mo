@@ -817,5 +817,31 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     #ok("BTC withdrawal successful. Transaction ID: " # withdrawalId)
   };
 
+  // SEI Wallet Anonymous Request
+  public shared({caller}) func requestSeiWalletAnonymous() : async { #ok : { owner : Principal; seiAddress : Text }; #err : Text } {
+    // Generate a SEI address for the caller
+    let seiAddress = seiIntegration.generateSeiAddress(caller);
+    
+    // Store the SEI address for the user
+    userSeiAddresses.put(caller, seiAddress);
+    
+    // Initialize testnet balance if not exists
+    switch (seiBalances.get(caller)) {
+      case null {
+        // Set initial testnet balance for development
+        seiBalances.put(caller, 5_000_000); // 5 SEI in usei
+        Debug.print("💰 SEI WALLET: Initialized testnet balance for " # Principal.toText(caller) # ": 5 SEI");
+      };
+      case (?_) {}; // Balance already exists
+    };
+    
+    Debug.print("🔗 SEI WALLET: Generated address for " # Principal.toText(caller) # ": " # seiAddress);
+    
+    #ok({
+      owner = caller;
+      seiAddress = seiAddress;
+    })
+  };
+
 
 };

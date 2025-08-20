@@ -29,14 +29,11 @@ export default function TransactionCardDemo() {
           status="pending"
           date="Jul 20, 03:32 PM"
           type="received"
-          amount="0.00900000"
           amountBtc="0.00900000 BTC"
           transactionHash="e3c1d7f0a8426a9b8f3c"
           yourShare="30%"
           isApproved={false}
-          actionType="view"
           onClick={handleTransactionClick}
-          onActionClick={handleActionClick}
         />
 
         <TransactionCard
@@ -44,14 +41,11 @@ export default function TransactionCardDemo() {
           status="active"
           date="Jul 15, 06:30 PM"
           type="sent"
-          amount="0.00500000"
           amountBtc="0.00500000 BTC"
           transactionHash="a1b2c3d4e5f678901234"
           recipients="2 recipients"
           isApproved={false}
-          actionType="manage"
           onClick={handleTransactionClick}
-          onActionClick={handleActionClick}
         />
 
         <TransactionCard
@@ -59,14 +53,11 @@ export default function TransactionCardDemo() {
           status="completed"
           date="Jul 12, 07:29 PM"
           type="received"
-          amount="0.00500000"
           amountBtc="0.00500000 BTC"
           transactionHash="e3c1d7f0a8426a9b8f3c"
           yourShare="80%"
           isApproved={false}
-          actionType="view"
           onClick={handleTransactionClick}
-          onActionClick={handleActionClick}
         />
 
         <TransactionCard
@@ -74,13 +65,10 @@ export default function TransactionCardDemo() {
           status="pending"
           date="Jul 12, 11:45 PM"
           type="sent"
-          amount="0.00300000"
           amountBtc="0.00300000 BTC"
           recipients="1 recipient"
           isApproved={false}
-          actionType="manage"
           onClick={handleTransactionClick}
-          onActionClick={handleActionClick}
         />
       </div>
 

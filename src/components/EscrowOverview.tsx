@@ -161,9 +161,13 @@ export default function EscrowOverview({
               disabled={isLoading}
               className="bg-[#FEB64D] text-black hover:bg-[#FEB64D]/90 font-semibold h-10"
             >
-              <CircleCheckBig className="w-4 h-4 mr-2" />
-              Release Payment
-              <ChevronRight className="w-4 h-4 ml-2" />
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
+              ) : (
+                <CircleCheckBig className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? "Releasing..." : "Release Payment"}
+              {!isLoading && <ChevronRight className="w-4 h-4 ml-2" />}
             </Button>
             <Button
               variant="outline"
@@ -171,8 +175,12 @@ export default function EscrowOverview({
               disabled={isLoading}
               className="border-[#7A7A7A] text-white hover:bg-[#404040] h-10"
             >
-              <CircleAlert className="w-4 h-4 mr-2" />
-              Refund
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+              ) : (
+                <CircleAlert className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? "Refunding..." : "Refund"}
             </Button>
           </div>
 

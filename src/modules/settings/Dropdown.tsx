@@ -8,6 +8,7 @@ import EditNameModal from './Modal';
 import LogoutButton from './Button';
 import { useAppSelector } from '@/lib/redux/store';
 import type { RootState } from '@/lib/redux/store';
+
 import { ChevronDown, User, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,6 +29,8 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+
 
   const copyToClipboard = async (text: string) => {
     try {

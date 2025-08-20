@@ -1,4 +1,4 @@
-import { EscrowCreateAction, ApprovalSuggestionAction, BitcoinAddressSetAction } from './actionParser';
+import { EscrowCreateAction, ApprovalSuggestionAction, BitcoinAddressSetAction, NavigationAction as ParsedNavigationAction } from './actionParser';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export interface NavigationAction {
@@ -49,6 +49,23 @@ export function handleApprovalSuggestion(_action: ApprovalSuggestionAction): Nav
   return {
     type: 'redirect',
     path: '/transactions'
+  };
+}
+
+export function handleNavigation(action: ParsedNavigationAction): NavigationAction {
+  const pathMap: Record<string, string> = {
+    'dashboard': '/dashboard',
+    'escrow': '/escrow',
+    'transactions': '/transactions',
+    'integrations': '/integrations',
+    'settings': '/settings'
+  };
+  
+  const path = pathMap[action.destination] || '/dashboard';
+  
+  return {
+    type: 'redirect',
+    path
   };
 }
 

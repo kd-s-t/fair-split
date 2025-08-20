@@ -22,10 +22,17 @@ export interface PositiveAcknowledgmentAction {
   type: 'positive_acknowledgment';
 }
 
-export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | null;
+export interface NavigationAction {
+  type: 'navigate';
+  destination: 'dashboard' | 'escrow' | 'transactions' | 'integrations' | 'settings';
+}
+
+export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
 
 export async function parseUserMessageWithAI(message: string, apiKey?: string): Promise<ParsedAction> {
   try {
+    console.log('🔍 AI Parser Debug: API Key received:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
+    
     if (!apiKey || apiKey.trim() === '' || apiKey === 'sk-proj-YOUR_OPENAI_API_KEY_HERE') {
       console.warn('OpenAI API key is missing or invalid');
       return null;
@@ -73,6 +80,12 @@ If the user wants APPROVAL SUGGESTIONS (any mention of approving, declining, sug
 If the user wants POSITIVE ACKNOWLEDGMENTS (any mention of "thanks", "ok", "got it", "cool", "nice", "great", "awesome", "perfect", "sweet", "excellent", "brilliant", "sounds good", "looks good", "that works", "yeah", "yes", "yep", "yup", "👍", "✅", "🎉", "😊", "😄", "😎"), respond with JSON:
 {
   "action": "positive_acknowledgment"
+}
+
+If the user wants to NAVIGATE to different pages (any mention of "go to dashboard", "show transactions", "open escrow", "navigate to settings", etc.), respond with JSON:
+{
+  "action": "navigate",
+  "destination": "dashboard|escrow|transactions|integrations|settings"
 }
 
 If the message is just casual conversation, acknowledgments, or doesn't match any action, respond with JSON:
@@ -145,6 +158,11 @@ IMPORTANT:
       } else if (parsed.action === 'positive_acknowledgment') {
         return {
           type: 'positive_acknowledgment'
+        };
+      } else if (parsed.action === 'navigate') {
+        return {
+          type: 'navigate',
+          destination: parsed.destination
         };
       }
     } catch (parseError) {

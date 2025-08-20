@@ -115,12 +115,14 @@ export interface PendingEscrowDetailsProps {
   onCancel?: () => void;
   onApprove?: () => void;
   onDecline?: () => void;
+  isLoading?: "approve" | "decline" | "cancel" | "release" | "refund" | null;
 }
 
 export interface EditEscrowDetailsProps {
   transaction: EscrowTransaction | NormalizedTransaction;
   onCancel?: () => void;
   onEdit?: () => void;
+  isLoading?: "edit" | "cancel" | "approve" | "decline" | "release" | "refund" | null;
 }
 
 export interface CancelledEscrowDetailsProps {
@@ -133,7 +135,7 @@ export interface RefundedEscrowDetailsProps {
 
 export interface ConfirmedEscrowActionsProps {
   transaction: EscrowTransaction | NormalizedTransaction;
-  isLoading: "release" | "refund" | null;
+  isLoading: "release" | "refund" | "approve" | "decline" | "cancel" | null;
   onRelease: (id: unknown) => void;
   onRefund: () => void;
 }

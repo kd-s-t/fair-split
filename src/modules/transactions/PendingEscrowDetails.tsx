@@ -11,7 +11,8 @@ export default function PendingEscrowDetails({
   transaction,
   onCancel,
   onApprove,
-  onDecline
+  onDecline,
+  isLoading = null
 }: PendingEscrowDetailsProps) {
 
 
@@ -49,10 +50,10 @@ export default function PendingEscrowDetails({
   return (
     <div className="bg-[#212121] border border-[#303434] rounded-[20px] p-5 space-y-6">
 
-      {/* Stats Widgets */}
+      {/* Stats Information (without cards) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Your Share Widget */}
-        <div className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4 flex flex-col items-center space-y-3">
+        {/* Your Share Info */}
+        <div className="flex flex-col items-center space-y-3">
           <div className="w-11 h-11 bg-[#4F3F27] rounded-full flex items-center justify-center">
             <Bitcoin size={24} className="text-[#FEB64D]" />
           </div>
@@ -64,8 +65,8 @@ export default function PendingEscrowDetails({
           </div>
         </div>
 
-        {/* Total Recipients Widget */}
-        <div className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4 flex flex-col items-center space-y-3">
+        {/* Total Recipients Info */}
+        <div className="flex flex-col items-center space-y-3">
           <div className="w-11 h-11 bg-[#4F3F27] rounded-full flex items-center justify-center">
             <Users size={24} className="text-[#FEB64D]" />
           </div>
@@ -77,8 +78,8 @@ export default function PendingEscrowDetails({
           </div>
         </div>
 
-        {/* Status Widget */}
-        <div className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4 flex flex-col items-center space-y-3">
+        {/* Status Info */}
+        <div className="flex flex-col items-center space-y-3">
           <div className="w-11 h-11 bg-[#4F3F27] rounded-full flex items-center justify-center">
             <Zap size={24} className="text-[#FEB64D]" />
           </div>
@@ -120,9 +121,14 @@ export default function PendingEscrowDetails({
               <Button
                 className="flex-1 bg-[#FEB64D] hover:bg-[#FEB64D]/90 text-black font-semibold h-10"
                 onClick={onApprove}
+                disabled={isLoading === "approve"}
               >
-                <CircleCheckBig size={16} className="mr-2" />
-                Approve
+                {isLoading === "approve" ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
+                ) : (
+                  <CircleCheckBig size={16} className="mr-2" />
+                )}
+                {isLoading === "approve" ? "Approving..." : "Approve"}
               </Button>
             )}
             {onDecline && (
@@ -130,9 +136,14 @@ export default function PendingEscrowDetails({
                 variant="outline"
                 className="flex-1 border-[#7A7A7A] text-[#F64C4C] hover:bg-[#F64C4C]/10 h-10"
                 onClick={onDecline}
+                disabled={isLoading === "decline"}
               >
-                <CircleX size={16} className="mr-2" />
-                Decline
+                {isLoading === "decline" ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2" />
+                ) : (
+                  <CircleX size={16} className="mr-2" />
+                )}
+                {isLoading === "decline" ? "Declining..." : "Decline"}
               </Button>
             )}
           </div>
@@ -181,14 +192,19 @@ export default function PendingEscrowDetails({
               variant="outline"
               className="text-[#F64C4C] !border-[#303434] !bg-transparent hover:!border-[#F64C4C] hover:!bg-[#F64C4C]/10"
               onClick={onCancel}
+              disabled={isLoading === "cancel"}
             >
-              <motion.div
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
-              >
-                <CircleX size={16} />
-              </motion.div>
-              Cancel escrow
+              {isLoading === "cancel" ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2" />
+              ) : (
+                <motion.div
+                  animate={{ rotate: [0, -10, 10, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                >
+                  <CircleX size={16} />
+                </motion.div>
+              )}
+              {isLoading === "cancel" ? "Cancelling..." : "Cancel escrow"}
             </Button>
           </motion.div>
           <motion.div

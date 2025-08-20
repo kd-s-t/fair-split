@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // output: 'standalone', // Commented out for dfx compatibility
+  
+  // Suppress hydration warnings in development
+  reactStrictMode: false,
+  
   images: {
     remotePatterns: [
       {

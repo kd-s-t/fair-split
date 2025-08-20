@@ -7,19 +7,63 @@ import { useUser } from '@/hooks/useUser'
 import RightSidebar from '@/modules/chat/RightSidebar'
 import { BotMessageSquare } from 'lucide-react'
 import { ReactNode, useState } from 'react'
-import { Provider, useSelector } from 'react-redux'
+import { Provider, useSelector, useDispatch } from 'react-redux'
 import { RootState, store } from '../lib/redux/store'
 import { AnimatePresence, motion } from 'framer-motion'
+import { setCkbtcAddress, setSeiAddress } from '@/lib/redux/userSlice'
+import { createSplitDappActor } from '@/lib/icp/splitDapp'
+import { useEffect } from 'react'
 
 
 function ClientLayoutContent({ children }: { children: ReactNode }) {
 
   const { principal, name } = useUser()
+  const dispatch = useDispatch()
+  const { ckbtcAddress, seiAddress } = useSelector((state: RootState) => state.user)
 
   const title = useSelector((state: RootState) => state.layout.title)
   const subtitle = useSelector((state: RootState) => state.layout.subtitle)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true)
+
+  // Auto-generate addresses when user is authenticated
+  useEffect(() => {
+    if (principal) {
+      const generateAddresses = async () => {
+        try {
+          const actor = await createSplitDappActor();
+          
+          // Generate cKBTC address if not exists
+          if (!ckbtcAddress) {
+            try {
+              const ckbtcResult = await actor.requestCkbtcWallet() as { ok: { btcAddress: string } } | { err: string };
+              if ('ok' in ckbtcResult) {
+                dispatch(setCkbtcAddress(ckbtcResult.ok.btcAddress));
+              }
+            } catch (error) {
+              console.error('Failed to generate cKBTC address:', error);
+            }
+          }
+          
+          // Generate SEI address if not exists
+          if (!seiAddress) {
+            try {
+              const seiResult = await actor.requestSeiWalletAnonymous() as { ok: { seiAddress: string } } | { err: string };
+              if ('ok' in seiResult) {
+                dispatch(setSeiAddress(seiResult.ok.seiAddress));
+              }
+            } catch (error) {
+              console.error('Failed to generate SEI address:', error);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to generate addresses:', error);
+        }
+      };
+      
+      generateAddresses();
+    }
+  }, [principal, ckbtcAddress, seiAddress, dispatch]);
 
   // No need to prevent body scroll for overlay sidebar
 
@@ -28,7 +72,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden mt-2.5">
       {/* Left Sidebar */}
       <div className={`${isLeftSidebarOpen ? 'w-[15%]' : 'w-[5%]'} flex-shrink-0 mt-[16px] ml-[16px] transition-all duration-300`} data-section="sidebar">
         <Sidebar isOpen={isLeftSidebarOpen} onToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)} />

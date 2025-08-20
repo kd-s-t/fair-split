@@ -37,7 +37,7 @@ export default function Withdraw({
     watch, 
     register, 
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { errors },
     reset,
     setValue
   } = useForm<FormData>({
@@ -50,7 +50,7 @@ export default function Withdraw({
     mode: "onChange"
   });
 
-  const { isAcceptedTerms, amount } = watch();
+  const { isAcceptedTerms } = watch();
 
   // Reset form when currency changes
   const handleCurrencyChange = (currency: 'BTC' | 'ICP') => {
@@ -143,15 +143,15 @@ export default function Withdraw({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <Card className='!border-0 !p-0  !bg-[#313030]'>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-start">
-              <div className='flex text-left gap-2'>
-                <ArrowUpRight color='#FEB64D' size={14} />
+        <Card className='!border-0 !p-0 !bg-[#313030] rounded-[24px] shadow-[0_0_32px_rgba(0,0,0,0.04)]' >
+          <CardHeader className="p-6">
+            <CardTitle className="flex justify-between items-start" >
+              <div className='flex text-left gap-3'>
+                <ArrowUpRight color='#FEB64D' size={20} />
                 <div>
-                  <Typography variant="large">Withdraw funds</Typography>
-                  <Typography variant="muted" className="text-[#A1A1AA]">
-                    Withdraw your funds to your wallet
+                  <Typography variant="large" className="text-white">Withdraw funds</Typography>
+                  <Typography variant="muted" className="text-[#BCBCBC]">
+                    Describe your payment split in natural language
                   </Typography>
                 </div>
               </div>
@@ -160,40 +160,40 @@ export default function Withdraw({
                 variant="ghost"
                 size="icon"
                 onClick={handleClose}
-                className="text-[#A1A1AA] hover:text-[#FAFAFA]"
+                className="text-[#F1F1F1] hover:text-[#FAFAFA]"
                 aria-label="Close withdrawal dialog"
               >
-                <X size={14} />
+                <X size={24} />
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 mt-4">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className='w-full flex items-center'>
+          <CardContent className="px-6 pb-6 space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              <div className='w-full flex items-center bg-[#212121] rounded-xl p-1'>
                 <Button
                   type="button"
                   variant={selectedCurrency === 'BTC' ? 'outline' : 'ghost'}
                   onClick={() => handleCurrencyChange('BTC')}
-                  className={`flex-1 h-12 ${selectedCurrency === 'BTC'
-                    ? 'text-[#FEB64D] border-[#FEB64D] !border !bg-[#2A2A2A]'
-                    : 'bg-[#222222] text-[#A1A1AA]'
+                  className={`flex-1 h-10 ${selectedCurrency === 'BTC'
+                    ? 'text-[#FEB64D] border-[#FEB64D] !border !bg-[#2F2F2F] shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                    : 'bg-transparent text-[#A1A1AA]'
                     }`}
                   aria-label="Select ckBTC"
                 >
-                  <Bitcoin size={14} color={`${selectedCurrency === 'BTC' ? '#FEB64D' : '#F1F1F1'}`} />
-                  ckBTC
+                  <Bitcoin size={20} color={`${selectedCurrency === 'BTC' ? '#FEB64D' : '#F1F1F1'}`} />
+                  BTC
                 </Button>
                 <Button
                   type="button"
                   variant={selectedCurrency === 'ICP' ? 'outline' : 'ghost'}
                   onClick={() => handleCurrencyChange('ICP')}
-                  className={`flex-1 h-12 ${selectedCurrency === 'ICP'
-                    ? 'text-[#FEB64D] border-[#FEB64D] !border !bg-[#2A2A2A]'
-                    : 'bg-[#222222] text-[#A1A1AA] border-[#5A5E5E]'
+                  className={`flex-1 h-10 ${selectedCurrency === 'ICP'
+                    ? 'text-[#FEB64D] border-[#FEB64D] !border !bg-[#2F2F2F] shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                    : 'bg-transparent text-[#A1A1AA]'
                     }`}
                   aria-label="Select ICP"
                 >
-                  <Coins size={16} color={`${selectedCurrency === 'ICP' ? '#FEB64D' : '#F1F1F1'}`} />
+                  <Coins size={20} color={`${selectedCurrency === 'ICP' ? '#FEB64D' : '#F1F1F1'}`} />
                   ICP
                 </Button>
               </div>
@@ -250,8 +250,8 @@ export default function Withdraw({
                 )}
               </div>
 
-              <div className="container-blue flex items-center gap-2">
-                <Info size={14} color='#71B5FF' />
+              <div className="bg-[#1F374F] border border-[#007AFF] rounded-[10px] flex items-center gap-3 p-4">
+                <Info size={20} color='#71B5FF' />
                 <Typography variant="small" className="text-white">
                   {selectedCurrency === 'BTC' ? 'ckBTC to BTC' : 'ICP'} withdrawals will be sent to your selected wallet.
                 </Typography>
@@ -290,27 +290,13 @@ export default function Withdraw({
               )}
 
               <hr className='bg-[#424444]' />
-              
-              {/* Debug Info */}
-              <div className="text-xs text-gray-400 mb-2">
-                Debug: isDirty={isDirty.toString()}, isValid={isValid.toString()}, isLoading={isLoading.toString()}
-                <div>Amount: &quot;{amount}&quot; (length: {amount.length})</div>
-                <div>Address: &quot;{watch('address')}&quot; (length: {watch('address').length})</div>
-                <div>Terms: {isAcceptedTerms.toString()}</div>
-                <div>Form Values: {JSON.stringify({amount: watch('amount'), address: watch('address'), isAcceptedTerms: watch('isAcceptedTerms')})}</div>
-                {Object.keys(errors).length > 0 && (
-                  <div>
-                    Errors: {Object.keys(errors).map(key => `${key}: ${errors[key as keyof typeof errors]?.message || 'unknown error'}`).join(', ')}
-                  </div>
-                )}
-              </div>
 
               <div className="flex gap-3">
                 <Button
                   type="submit"
                   variant="default"
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 bg-[#FEB64D] text-black font-medium hover:bg-[#FEB64D]/90"
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
@@ -326,7 +312,7 @@ export default function Withdraw({
                   variant="outline"
                   onClick={handleClose}
                   disabled={isLoading}
-                  className="bg-[#2A2A2A] text-[#FAFAFA] border-[#5A5E5E] hover:bg-[#3A3A3A]"
+                  className="bg-transparent text-white border-[#7A7A7A] hover:bg-[#2A2A2A]"
                 >
                   Cancel
                 </Button>

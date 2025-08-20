@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { Sparkles, Bitcoin, Bot } from "lucide-react";
+import { Sparkles, Bitcoin, Bot, ChevronDown } from "lucide-react";
 import { Typography } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
 import { UseFormReturn } from "react-hook-form";
 import z from 'zod';
 import { escrowFormSchema } from '@/validation/escrow';
+import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
+import { handleNavigation, executeNavigation } from '@/lib/messaging/navigationService';
+import { toast } from 'sonner';
 
 type FormData = z.infer<typeof escrowFormSchema>;
 
@@ -37,25 +40,119 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [setup, setSetup] = useState<AiGeneratedSetup | null>(null);
 
+
     const generateSplit = async () => {
+        if (!description.trim()) {
+            toast.error("Please describe your payment split");
+            return;
+        }
+
+
+
         setIsGenerating(true);
 
-        // Parse the description to extract information
-        const parsed = parseDescription(description);
-        setSetup(parsed);
-        setIsGenerating(false);
+        try {
+            // Use the existing AI parser to understand the user's description
+            const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+            console.log('🔍 AIAssistant Debug: API Key from env:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
+            
+            const parsedAction = await parseUserMessageWithAI(description, apiKey);
+
+            if (parsedAction && parsedAction.type === 'create_escrow') {
+                // Extract information from the AI parsed action
+                const totalAmount = parseFloat(parsedAction.amount) || 0.03;
+                const recipients = parsedAction.recipients || [];
+
+                // Generate title based on recipients or use a default
+                const title = recipients.length > 0
+                    ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
+                    : "Payment Split";
+
+                // Create recipient objects with equal distribution
+                const recipientObjects: Recipient[] = recipients.map((recipient, index) => {
+                    const percentage = Math.floor(100 / recipients.length);
+                    const amount = (percentage / 100) * totalAmount;
+                    
+                    return {
+                        name: `Recipient ${index + 1}`,
+                        percentage,
+                        amount,
+                        address: recipient // This will be the ICP principal ID
+                    };
+                });
+
+                // Handle remainder for equal distribution
+                if (recipientObjects.length > 0) {
+                    const totalAssigned = recipientObjects.reduce((sum, r) => sum + r.percentage, 0);
+                    const remainder = 100 - totalAssigned;
+                    if (remainder > 0) {
+                        recipientObjects[0].percentage += remainder;
+                        recipientObjects[0].amount = (recipientObjects[0].percentage / 100) * totalAmount;
+                    }
+                }
+
+                const generatedSetup: AiGeneratedSetup = {
+                    title,
+                    totalAmount,
+                    recipients: recipientObjects
+                };
+
+                setSetup(generatedSetup);
+                
+
+                
+                toast.success("AI generated setup ready!");
+            } else if (parsedAction && parsedAction.type === 'navigate') {
+                // Handle navigation requests
+                const navigation = handleNavigation(parsedAction);
+                executeNavigation(navigation);
+                
+
+            } else {
+                // Fallback to local parsing if AI doesn't work
+                const parsed = parseDescription(description);
+                setSetup(parsed);
+                toast.success("Setup generated using local parser");
+            }
+        } catch (error) {
+            console.error('Error generating split:', error);
+            // Fallback to local parsing
+            const parsed = parseDescription(description);
+            setSetup(parsed);
+            toast.success("Setup generated using local parser");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const parseDescription = (desc: string): AiGeneratedSetup => {
         // Extract amount
-        const amountMatch = desc.match(/(\d+\.?\d*)\s*BTC/);
+        const amountMatch = desc.match(/(\d+\.?\d*)\s*btc/i);
         const totalAmount = amountMatch ? parseFloat(amountMatch[1]) : 0.03;
 
-        // Extract recipients and percentages
+        // Extract recipients - look for ICP principals or addresses
         const recipients: Recipient[] = [];
+        
+        // Pattern 1: Look for ICP principals (long alphanumeric strings with hyphens)
+        const icpPrincipalMatches = desc.match(/[a-zA-Z0-9\-]{20,}/g);
+        
+        if (icpPrincipalMatches) {
+            icpPrincipalMatches.forEach((principal, index) => {
+                // Skip if it looks like a number or short string
+                if (principal.length < 20 || /^\d+$/.test(principal)) return;
+                
+                recipients.push({
+                    name: `Recipient ${index + 1}`,
+                    percentage: Math.floor(100 / icpPrincipalMatches.length),
+                    amount: (Math.floor(100 / icpPrincipalMatches.length) / 100) * totalAmount,
+                    address: principal
+                });
+            });
+        }
+        
+        // Pattern 2: Look for percentage patterns (fallback)
         const recipientMatches = desc.match(/(\d+)%\s*to\s+(\w+)/g);
-
-        if (recipientMatches) {
+        if (recipientMatches && recipients.length === 0) {
             recipientMatches.forEach(match => {
                 const percentageMatch = match.match(/(\d+)%\s*to\s+(\w+)/);
                 if (percentageMatch) {
@@ -73,10 +170,21 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
             });
         }
 
+        // Handle equal distribution if we have recipients but no percentages
+        if (recipients.length > 0) {
+            const equalPercentage = Math.floor(100 / recipients.length);
+            const remainder = 100 - (equalPercentage * recipients.length);
+            
+            recipients.forEach((recipient, index) => {
+                recipient.percentage = equalPercentage + (index === 0 ? remainder : 0);
+                recipient.amount = (recipient.percentage / 100) * totalAmount;
+            });
+        }
+
         // Generate title based on recipients
         const title = recipients.length > 0
-            ? `${recipients.map(r => r.name).join(", ")} Team`
-            : "Software Development Team";
+            ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
+            : "Payment Split";
 
         return {
             title,
@@ -96,7 +204,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
             const formRecipients = setup.recipients.map((recipient, index) => ({
                 id: `recipient-${index + 1}`,
                 name: recipient.name,
-                principal: "",
+                principal: recipient.address, // Use the address field for ICP principal
                 percentage: recipient.percentage
             }));
 
@@ -104,114 +212,116 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
             setSetup(null);
             setDescription("");
+            toast.success("Setup applied to form!");
         }
     };
 
     return (
-        <div className="space-y-6 mb-6">
-            <Accordion key="ai-assistant" type="single" collapsible className="w-full">
-                <AccordionItem value="ai-assistant" className="border-[#2A2A2A] bg-[#1A1A1A] rounded-[20px]">
-                    <AccordionTrigger className="px-5 py-4 hover:no-underline cursor-pointer no-underline [&>svg]:text-[#FEB64D] [&>svg]:transition-transform [&>svg]:duration-200 [&>svg]:ease-in-out [&[data-state=open]>svg]:rotate-180 [&:hover]:no-underline [&:focus]:no-underline [&:active]:no-underline">
-                        <div className='flex flex-col'>
-                            <div className="flex items-center gap-2">
-                                <Bot color='#FEB64D' className="h-5 w-5" />
-                                <Typography variant="h4">
-                                    AI assistant
-                                </Typography>
-                                <Badge
-                                    variant="outline"
-                                    className="!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D] uppercase"
-                                >
-                                    Beta
-                                </Badge>
-                            </div>
-                            <Typography variant="muted">
-                                Describe your payment split in natural language
-                            </Typography>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <hr className='text-[#303434]' />
-                        <div className="px-5 py-3 space-y-2">
-                            <Label className='font-semibold'>Describe your payment split</Label>
+        <Accordion type="single" collapsible defaultValue="" className="mb-6 rounded-[20px] overflow-hidden">
+            <AccordionItem value="ai-assistant" className="bg-[#1A1A1A] data-[state=open]:border data-[state=open]:border-[#FEB64D] rounded-[20px] transition-all duration-300 ease-in-out">
+                <AccordionTrigger className="px-5 py-4 hover:no-underline !hover:no-underline cursor-pointer transition-all duration-200 hover:bg-[#2A2A2A]/50">
+                    <div className="flex items-center gap-2">
+                        <Bot color='#FEB64D' className="h-5 w-5 transition-transform duration-200 hover:scale-110" />
+                        <Typography variant="h4" className="text-[#FAFAFA] no-underline hover:no-underline">
+                            AI Assistant
+                        </Typography>
+                        <Badge
+                            variant="outline"
+                            className="!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D] uppercase"
+                        >
+                            Beta
+                        </Badge>
+                    </div>
+                </AccordionTrigger>
+                
+                <AccordionContent className="px-5 pb-5">
+                    <div className="space-y-4">
+                        {/* Input Section */}
+                        <div className="space-y-2">
+                            <Label className='font-semibold text-[#A1A1AA]'>Describe your payment split</Label>
                             <Textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Describe your payment split..."
-                                className='h-24'
+                                placeholder="e.g., Send 0.03 BTC — 60% to Dev, 30% to Designer, 10% to QA"
+                                className='h-20 bg-[#2A2A2A] border-[#3A3A3A]'
                             />
-                            <Typography variant="muted" className='font-normal'>
-                                Example: &quot;Send 0.03 BTC — 60% to Dev, 30% to Designer, 10% to QA&quot;
-                            </Typography>
                             <Button
                                 variant="outline"
                                 onClick={generateSplit}
                                 disabled={isGenerating}
-                                className="w-full mt-4"
+                                className="w-full transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
                             >
                                 <Sparkles size={16} />
                                 {isGenerating ? "Generating..." : "Generate split"}
                             </Button>
                         </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
 
-            {setup && (
-                <div className="border-[#2A2A2A] bg-[#1A1A1A] rounded-[20px] p-5">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="text-[#FEB64D] h-4 w-4" />
-                        <Typography variant="h4" className="text-[#FAFAFA]">
-                            AI generated setup
-                        </Typography>
-                    </div>
+                        {/* AI Generated Setup */}
+                        {setup && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles className="text-[#FEB64D] h-4 w-4" />
+                                    <Typography variant="h4" className="text-[#FAFAFA]">
+                                        AI Generated Setup
+                                    </Typography>
+                                </div>
 
-                    <div className="space-y-4 mt-4">
-                        <div>
-                            <Label className="text-[#A1A1AA] mb-2">Title</Label>
-                            <Input
-                                value={setup.title}
-                                onChange={(e) => setSetup({ ...setup, title: e.target.value })}
-                                className="bg-[#2A2A2A] border-[#3A3A3A]"
-                            />
-                        </div>
-                        <div>
-                            <Label className="text-[#A1A1AA] mb-2">Total amount</Label>
-                            <div className="flex items-center gap-2 text-[#FAFAFA]">
-                                <Bitcoin color='#F97415' />
-                                <Typography variant="base" className="font-semibold">{setup.totalAmount} BTC</Typography>
-                            </div>
-                        </div>
-                        <div>
-                            <Typography variant='small' className="mb-2">Recipients</Typography>
-                            <div className='container !p-0'>
-                                {setup.recipients.map((recipient, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 border-b border-b-[#626262] last:border-b-0">
-                                        <div>
-                                            <Typography variant="base">{recipient.name}</Typography>
-                                            <Typography variant="small" className="text-[#9F9F9F]" >
-                                                {recipient.percentage} % • Address needed
-                                            </Typography>
-                                        </div>
-                                        <Typography variant="base" className="text-[#FEB64D]">
-                                            {recipient.amount.toFixed(8)} BTC
-                                        </Typography>
+                                <div className="space-y-4">
+                                    <div>
+                                        <Label className="text-[#A1A1AA] mb-2">Title</Label>
+                                        <Input
+                                            value={setup.title}
+                                            onChange={(e) => setSetup({ ...setup, title: e.target.value })}
+                                            className="bg-[#2A2A2A] border-[#3A3A3A]"
+                                        />
                                     </div>
-                                ))}
+                                    <div>
+                                        <Label className="text-[#A1A1AA] mb-2">Total amount</Label>
+                                        <div className="flex items-center gap-2 text-[#FAFAFA]">
+                                            <Bitcoin color='#F97415' />
+                                            <Typography variant="base" className="font-semibold">{setup.totalAmount} BTC</Typography>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label className="text-[#A1A1AA] mb-2">Recipients</Label>
+                                        <div className="border border-[#626262] rounded-lg overflow-hidden">
+                                            {setup.recipients.map((recipient, index) => (
+                                                <div 
+                                                    key={index} 
+                                                    className={`flex items-center justify-between p-4 ${
+                                                        index !== setup.recipients.length - 1 ? 'border-b border-[#626262]' : ''
+                                                    } bg-[#2B2B2B]`}
+                                                >
+                                                    <div className="flex-1">
+                                                        <Typography variant="base" className="text-white font-medium">
+                                                            {recipient.name}
+                                                        </Typography>
+                                                        <Typography variant="small" className="text-[#9F9F9F]">
+                                                            {recipient.percentage}% • {recipient.address || "Address needed"}
+                                                        </Typography>
+                                                    </div>
+                                                    <Typography variant="base" className="text-[#FEB64D] font-semibold">
+                                                        {recipient.amount.toFixed(8)} BTC
+                                                    </Typography>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="default"
+                                        onClick={handleConfirmSetup}
+                                        className="w-full transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+                                    >
+                                        <Sparkles size={16} />
+                                        Confirm setup
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                        <Button
-                            variant="default"
-                            onClick={handleConfirmSetup}
-                            className="w-full mt-6"
-                        >
-                            <Sparkles size={16} />
-                            Confirm setup
-                        </Button>
+                        )}
                     </div>
-                </div>
-            )}
-        </div>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
     );
 };
 

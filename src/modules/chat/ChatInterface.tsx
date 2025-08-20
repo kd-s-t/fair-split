@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { BotMessageSquare, Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { smoothScrollToBottom, scrollToBottomOnOpen } from '@/lib/messaging/storage';
 
 export interface Message {
   id: string;
@@ -22,14 +23,25 @@ interface ChatInterfaceProps {
 export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      smoothScrollToBottom(messagesContainerRef);
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Scroll to bottom when component mounts (chat opens)
+  useEffect(() => {
+    scrollToBottomOnOpen(messagesContainerRef);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +61,7 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
   return (
     <div className="flex flex-col h-full">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}

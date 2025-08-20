@@ -39,4 +39,29 @@ export function clearMessages(): void {
   } catch (error) {
     console.error('Failed to clear messages from localStorage:', error);
   }
+}
+
+// Auto-scroll utility function
+export function scrollToBottom(containerRef: React.RefObject<HTMLElement | null>): void {
+  if (containerRef.current) {
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
+  }
+}
+
+// Smooth scroll to bottom utility function
+export function smoothScrollToBottom(containerRef: React.RefObject<HTMLElement | null>): void {
+  if (containerRef.current) {
+    containerRef.current.scrollTo({
+      top: containerRef.current.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+}
+
+// Auto-scroll to bottom when chat opens
+export function scrollToBottomOnOpen(containerRef: React.RefObject<HTMLElement | null>): void {
+  // Use setTimeout to ensure the chat is fully rendered before scrolling
+  setTimeout(() => {
+    smoothScrollToBottom(containerRef);
+  }, 100);
 } 

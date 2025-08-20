@@ -16,9 +16,29 @@ if (typeof window !== 'undefined' && !window.crypto) {
   })
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode
+}) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Suppress hydration warnings caused by browser extensions
+              const originalError = console.error;
+              console.error = (...args) => {
+                if (args[0]?.includes?.('Hydration failed') || args[0]?.includes?.('Warning: Text content did not match')) {
+                  return;
+                }
+                originalError.apply(console, args);
+              };
+            `,
+          }}
+        />
+      </head>
       <body>
         <Provider store={store}>
           <AuthProvider>

@@ -149,9 +149,9 @@ const Form = ({ form }: FormProps) => {
       {/* Escrow Setup Section */}
       <Card className="bg-[#212121] border-[#303333] w-full">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <Bitcoin className="w-5 h-5 text-[#F97A15]" />
+          <div className="flex items-center justify-between">
             <Typography variant="large" className="text-white">Escrow setup</Typography>
+            <Bitcoin className="w-5 h-5 text-[#F97A15]" />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -217,10 +217,9 @@ const Form = ({ form }: FormProps) => {
             )}
           </div>
         </CardContent>
-      </Card>
-
-      {/* Recipients and Split Allocation */}
-      <Card className="bg-[#212121] border-[#303333] w-full">
+        <br/>
+        <hr/>
+        <br/>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <Typography variant="large" className="text-white">Recipients & split allocation</Typography>

@@ -76,7 +76,7 @@ export default function TransactionCard({
       className={className}
     >
       <Card 
-        className="bg-[#222222] border-[#303434] rounded-[20px] p-5 hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+        className="bg-[#222222] border-0 rounded-[20px] p-5 hover:bg-[#2a2a2a] transition-colors cursor-pointer"
         onClick={onClick}
       >
         {/* Top Bar */}

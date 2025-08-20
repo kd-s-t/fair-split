@@ -31,8 +31,8 @@ const Summary = ({
 
   return (
     <div className="w-full">
-      <Card className="h-fit">
-        <CardHeader>
+      <Card className="bg-[#212121] border-[#303333] rounded-[20px] h-fit">
+        <CardHeader >
           <CardTitle className="flex items-center justify-between">
             <Typography variant="large">Escrow summary</Typography>
             <Shield color="#FEB64D" />
@@ -45,7 +45,7 @@ const Summary = ({
             </Typography>
             <Badge
               variant="outline"
-              className="!bg-[#48351A] !border-[#BD822D] !text-[#FEB64D]"
+              className="!bg-[#48342A] !border-[#BD8239] !text-[#FEB64D]"
             >
               Pending
             </Badge>
@@ -83,11 +83,11 @@ const Summary = ({
           >
             <Button
               variant="default"
-              className="w-full text-sm"
+              className="w-full text-sm bg-[#FEB64D] text-black font-medium hover:bg-[#FEB64D]/90"
               disabled={isSubmitting}
               onClick={handleSubmit(handleInitiateEscrow)}
             >
-              <Send size={16} />
+              <Send size={16} className="mr-2" />
               {isSubmitting ? "Processing..." : isEditMode ? "Update escrow" : "Initiate escrow"}
             </Button>
             <motion.div

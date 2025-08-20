@@ -31,7 +31,7 @@ import { useDispatch } from "react-redux";
 import { setTitle, setSubtitle } from "@/lib/redux/store";
 
 export default function TransactionDetailsPage() {
-  const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
+  const [isLoading, setIsLoading] = useState<"release" | "refund" | "approve" | "decline" | "cancel" | null>(null);
   const [transaction, setTransaction] = useState<NormalizedTransaction | null>(null);
   const [isTxLoading, setIsTxLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -156,7 +156,7 @@ export default function TransactionDetailsPage() {
   };
 
   const handleCancel = async () => {
-    setIsLoading("refund");
+    setIsLoading("cancel");
     try {
       const actor = await createSplitDappActor();
       await actor.cancelSplit(Principal.fromText(
@@ -251,6 +251,7 @@ export default function TransactionDetailsPage() {
   const handleApprove = async () => {
     if (!transaction || !principal) return;
     
+    setIsLoading("approve");
     try {
       const actor = await createSplitDappActor();
       const senderPrincipal = typeof transaction.from === "string" ? Principal.fromText(transaction.from) : transaction.from;
@@ -293,12 +294,15 @@ export default function TransactionDetailsPage() {
     } catch (err) {
       console.error("Approve error:", err);
       toast.error("Failed to approve escrow");
+    } finally {
+      setIsLoading(null);
     }
   };
 
   const handleDecline = async () => {
     if (!transaction || !principal) return;
     
+    setIsLoading("decline");
     try {
       const actor = await createSplitDappActor();
       const senderPrincipal = typeof transaction.from === "string" ? Principal.fromText(transaction.from) : transaction.from;
@@ -351,6 +355,8 @@ export default function TransactionDetailsPage() {
     } catch (err) {
       console.error("Decline error:", err);
       toast.error("Failed to decline escrow");
+    } finally {
+      setIsLoading(null);
     }
   };
 
@@ -451,6 +457,7 @@ export default function TransactionDetailsPage() {
                   transaction={transactionData}
                   onCancel={handleCancel}
                   onEdit={handleEdit}
+                  isLoading={isLoading}
                 />
               ) : (
                 <PendingEscrowDetails
@@ -458,6 +465,7 @@ export default function TransactionDetailsPage() {
                   onCancel={undefined}
                   onApprove={handleApprove}
                   onDecline={handleDecline}
+                  isLoading={isLoading}
                 />
               );
             })()

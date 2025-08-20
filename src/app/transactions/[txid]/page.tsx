@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useAuth } from "@/contexts/auth-context";

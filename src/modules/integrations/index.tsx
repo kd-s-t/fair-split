@@ -112,7 +112,7 @@ export default function Integrations() {
 		if (principal) {
 			initializeWallets();
 		}
-	}, [principal, dispatch]);
+	}, [principal, dispatch, ckbtcAddress, seiAddress]);
 
 	if (!principal) {
 		return (

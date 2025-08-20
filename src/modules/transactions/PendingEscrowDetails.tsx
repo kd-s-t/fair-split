@@ -1,13 +1,9 @@
 "use client";
 
-import { Copy, Shield, CircleX, CircleAlert, Bitcoin, Users, Zap, CircleCheckBig, Settings } from "lucide-react";
+import { Shield, CircleX, CircleAlert, Bitcoin, Users, Zap, CircleCheckBig, Settings } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
-import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";
 import { PendingEscrowDetailsProps } from "./types";
-import RecipientsList from "./RecipientsList";
-import TimeRemaining from "./TimeRemaining";
-import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 
@@ -17,9 +13,7 @@ export default function PendingEscrowDetails({
   onApprove,
   onDecline
 }: PendingEscrowDetailsProps) {
-  const depositAddress = useMemo(() => {
-    return transaction?.bitcoinAddress || transaction?.depositAddress || "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-  }, [transaction?.bitcoinAddress, transaction?.depositAddress]);
+
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0

@@ -9,7 +9,7 @@ import TransactionExplorerLinks from "./TransactionExplorerLinks";
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
   // Calculate total released BTC
   const totalBTC = Array.isArray(transaction.to)
-    ? transaction.to.reduce((sum: number, toEntry: any) => sum + Number(toEntry.amount), 0) / 1e8
+    ? transaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
 
   const recipientCount = transaction.to?.length || 0;

@@ -6,7 +6,7 @@ import { BotMessageSquare, X, Send } from 'lucide-react';
 import { Message } from './ChatInterface';
 import { saveMessages, loadMessages } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
-import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
+
 import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';

@@ -3,17 +3,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
 import { useUser } from '@/hooks/useUser';
-import { Coins, RefreshCw } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useDispatch } from 'react-redux';
 import { setIcpBalance } from '@/lib/redux/userSlice';
-import { Button } from '@/components/ui/button';
+
 import { toast } from 'sonner';
 
 const ICPBalance: React.FC = () => {
   const { icpBalance } = useUser();
-  const { principal } = useAuth();
+    const { principal } = useAuth();
   const dispatch = useDispatch();
   const [isRefreshing, setIsRefreshing] = useState(false);
 

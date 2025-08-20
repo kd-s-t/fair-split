@@ -12,6 +12,8 @@ import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
+import TransactionStats from "@/components/TransactionStats";
+import TimeRemaining from "@/modules/transactions/TimeRemaining";
 import type { NormalizedTransaction, ApiToEntry } from "@/modules/transactions/types";
 
 // Type for Principal objects that might have toText method
@@ -386,12 +388,35 @@ export default function TransactionDetailsPage() {
           )}
 
           {statusKey === TRANSACTION_STATUS.CONFIRMED && (
-            <ConfirmedEscrowActions
-              transaction={transaction}
-              isLoading={isLoading}
-              onRelease={handleRelease}
-              onRefund={handleRefund}
-            />
+            (() => {
+              const isSender = principal && String(transaction.from) === String(principal);
+              return isSender ? (
+                <ConfirmedEscrowActions
+                  transaction={transaction}
+                  isLoading={isLoading}
+                  onRelease={handleRelease}
+                  onRefund={handleRefund}
+                />
+              ) : (
+                <div className="container !rounded-2xl !p-6">
+                  <Typography variant="large" className="mb-4">Escrow overview</Typography>
+                  <TransactionStats
+                    totalBTC={Array.isArray(transaction.to)
+                      ? transaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
+                      : 0}
+                    recipientCount={transaction.to?.length || 0}
+                    status={transaction.status}
+                  />
+                  <TimeRemaining createdAt={transaction.createdAt} />
+                  <hr className="my-6 text-[#424444] h-[1px]" />
+                  <div className="text-center py-8">
+                    <Typography variant="base" className="text-[#9F9F9F]">
+                      Waiting for sender to release or refund the escrow...
+                    </Typography>
+                  </div>
+                </div>
+              );
+            })()
           )}
         </div>
 

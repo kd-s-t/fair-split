@@ -82,22 +82,50 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
 
       let parsedAction: ParsedAction = null;
 
-      if (apiKey && apiKey.trim() !== '' && apiKey !== 'sk-proj-YOUR_OPENAI_API_KEY_HERE') {
-        try {
-          parsedAction = await parseUserMessageWithAI(content, apiKey);
-        } catch (aiError) {
-          console.warn('AI parser failed, falling back to local parser:', aiError);
-        }
-      } else {
-        console.info('OpenAI API key not configured, using local parser only');
-      }
+      // Check if API key is valid and properly configured
+      const isValidApiKey = apiKey && 
+        apiKey.trim() !== '' && 
+        apiKey !== 'sk-proj-YOUR_OPENAI_API_KEY_HERE' &&
+        apiKey.startsWith('sk-') &&
+        apiKey.length > 20;
+
+      console.log('API Key validation:', { 
+        hasApiKey: !!apiKey, 
+        apiKeyLength: apiKey?.length, 
+        apiKeyPrefix: apiKey?.substring(0, 3),
+        isValidApiKey 
+      });
+
+      // Temporarily disable AI parser to test local parser
+      console.info('Using local parser only for testing');
+      
+      // if (isValidApiKey) {
+      //   try {
+      //     parsedAction = await parseUserMessageWithAI(content, apiKey);
+      //   } catch (aiError) {
+      //     console.warn('AI parser failed, falling back to local parser:', aiError);
+      //     // Continue to fallback logic
+      //   }
+      // } else {
+      //   console.info('OpenAI API key not configured or invalid, using local parser only');
+      // }
 
       if (!parsedAction) {
         // Fallback to local parsing logic
         const lowerContent = content.toLowerCase();
+        console.log('Local parser analyzing:', { content, lowerContent });
 
-        if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('escrow')) {
-          parsedAction = { type: 'create_escrow', recipients: [], amount: '0' };
+        if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('escrow') || lowerContent.includes('make')) {
+          // Extract recipient IDs (ICP principal format)
+          const recipientMatch = content.match(/[a-z0-9-]{63}/g);
+          const recipients = recipientMatch || [];
+          
+          // Extract amount (look for numbers)
+          const amountMatch = content.match(/(\d+(?:\.\d+)?)/);
+          const amount = amountMatch ? amountMatch[1] : '1';
+          
+          console.log('Local parser found escrow creation:', { recipients, amount });
+          parsedAction = { type: 'create_escrow', recipients, amount };
         } else if (lowerContent.includes('bitcoin') && lowerContent.includes('address')) {
           parsedAction = { type: 'set_bitcoin_address', address: 'invalid' };
         } else if (lowerContent.includes('balance') || lowerContent.includes('principal')) {

@@ -478,7 +478,8 @@ export default function TransactionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-[#7A7A7A] text-white whitespace-nowrap"
+                          className="border-[#7A7A7A] text-white whitespace-nowrap hover:bg-[#2A2A2A] transition-colors"
+                          onClick={() => router.push(`/transactions/${tx.id}`)}
                         >
                           <Wallet className="w-4 h-4 mr-2" />
                           Manage escrow
@@ -487,7 +488,8 @@ export default function TransactionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-[#7A7A7A] text-white whitespace-nowrap"
+                          className="border-[#7A7A7A] text-white whitespace-nowrap hover:bg-[#2A2A2A] transition-colors"
+                          onClick={() => router.push(`/transactions/${tx.id}`)}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View escrow

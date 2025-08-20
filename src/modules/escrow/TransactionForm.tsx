@@ -85,6 +85,43 @@ const TransactionForm = () => {
     loadTransactionForEdit();
   }, [editTxId, principal, setValue]);
 
+  // Load data from AI assistant chat
+  useEffect(() => {
+    const loadChatData = () => {
+      try {
+        const chatData = sessionStorage.getItem('splitsafe_chat_data');
+        if (chatData) {
+          const data = JSON.parse(chatData);
+          console.log('Loading chat data:', data);
+          
+          // Populate amount if provided
+          if (data.amount) {
+            setValue("btcAmount", data.amount);
+          }
+          
+          // Populate recipients if provided
+          if (data.recipients && Array.isArray(data.recipients) && data.recipients.length > 0) {
+            const formRecipients = data.recipients.map((recipient: string, index: number) => ({
+              id: `recipient-${index + 1}`,
+              name: "",
+              principal: recipient,
+              percentage: data.recipients.length === 1 ? 100 : Math.floor(100 / data.recipients.length)
+            }));
+            
+            setValue("recipients", formRecipients);
+          }
+          
+          // Clear the sessionStorage data after using it
+          sessionStorage.removeItem('splitsafe_chat_data');
+        }
+      } catch (error) {
+        console.error('Failed to load chat data:', error);
+      }
+    };
+
+    loadChatData();
+  }, [setValue]);
+
   const onSubmit = async (data: FormData) => {
     console.log("Form submitted:", data);
     const formDataWithTokenType = {

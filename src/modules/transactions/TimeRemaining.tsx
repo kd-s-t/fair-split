@@ -91,18 +91,10 @@ export default function TimeRemaining({ createdAt }: TimeRemainingProps) {
   }
 
   return (
-    <div className="bg-[#2a2a2a] rounded-lg p-4 border border-[#FEB64D] mb-6">
-      <div className="flex items-center gap-3">
-        <Clock className="text-[#FEB64D]" size={20} />
-        <div>
-          <Typography variant="base" className="text-[#FEB64D] font-semibold">
-            Time Remaining
-          </Typography>
-          <Typography variant="small" className="text-white">
-            {timeRemaining} until escrow expires
-          </Typography>
-        </div>
-      </div>
+    <div className="flex items-center gap-2">
+      <Clock className="text-[#FEB64D]" size={20} />
+      <span className="text-[#FEB64D] font-semibold">Time remaining:</span>
+      <span className="text-white">{timeRemaining} until escrow expires</span>
     </div>
   );
 } 

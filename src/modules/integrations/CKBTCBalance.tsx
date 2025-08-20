@@ -5,16 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Typography } from '@/components/ui/typography';
 import { useAuth } from '@/contexts/auth-context';
 import { useUser } from '@/hooks/useUser';
-import { setCkbtcBalance } from '@/lib/redux/userSlice';
-import { Bitcoin, ExternalLink, RefreshCw } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { toast } from 'sonner';
+import { Bitcoin, ExternalLink } from 'lucide-react';
 
 
 const CKBTCBalance: React.FC = () => {
 
   const { principal } = useAuth();
-  const dispatch = useDispatch()
   const { ckbtcBalance } = useUser()
 
   // Debug logging
@@ -25,31 +21,7 @@ const CKBTCBalance: React.FC = () => {
 
 
 
-  const refreshCkbtcBalance = async () => {
-    if (!principal) return;
 
-    try {
-      console.log('🔄 Refreshing ckBTC balance for principal:', principal.toText());
-      const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
-      const actor = await createSplitDappActor();
-      const result = await actor.getUserBitcoinBalance(principal) as number;
-
-      console.log('🔄 ckBTC balance result:', result);
-
-      if (typeof result === 'bigint' || typeof result === 'number') {
-        const formattedCkbtc = (Number(result) / 1e8).toFixed(8);
-        console.log('🔄 Setting ckBTC balance to:', formattedCkbtc);
-        dispatch(setCkbtcBalance(formattedCkbtc));
-        toast.success('cKBTC balance updated!');
-      } else {
-        console.error('Failed to get ckBTC balance:', result);
-        toast.error('Failed to refresh ckBTC balance');
-      }
-    } catch (error) {
-      console.error('🔄 Error refreshing ckBTC balance:', error);
-      toast.error('Failed to refresh ckBTC balance');
-    }
-  };
 
   return (
     <Card className="bg-[#222222] border-[#303434]">

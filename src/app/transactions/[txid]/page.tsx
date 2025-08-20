@@ -12,6 +12,8 @@ import EditEscrowDetails from "@/modules/transactions/EditEscrowDetails";
 import { TransactionLifecycle } from "@/modules/transactions/Lifecycle";
 import PendingEscrowDetails from "@/modules/transactions/PendingEscrowDetails";
 import RefundedEscrowDetails from "@/modules/transactions/RefundedEscrowDetails";
+import TransactionStats from "@/components/TransactionStats";
+import TimeRemaining from "@/modules/transactions/TimeRemaining";
 import type { NormalizedTransaction, ApiToEntry } from "@/modules/transactions/types";
 
 // Type for Principal objects that might have toText method
@@ -25,6 +27,8 @@ import { ChevronLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { setTitle, setSubtitle } from "@/lib/redux/store";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | null>(null);
@@ -34,6 +38,7 @@ export default function TransactionDetailsPage() {
   const { txid } = useParams();
   const { principal } = useAuth();
   const router = useRouter();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchTransaction = async () => {
@@ -87,6 +92,30 @@ export default function TransactionDetailsPage() {
     };
     fetchTransaction();
   }, [txid, principal, router]);
+
+  // Set title and subtitle when transaction loads
+  useEffect(() => {
+    if (transaction) {
+      dispatch(setTitle(transaction.title || 'Transaction Details'));
+      
+      // Set subtitle based on status
+      const statusKey = transaction.status || "unknown";
+      let subtitle = '';
+      if (statusKey === TRANSACTION_STATUS.PENDING) {
+        subtitle = 'Waiting for Bitcoin deposit to activate';
+      } else if (statusKey === TRANSACTION_STATUS.CONFIRMED) {
+        subtitle = 'Waiting for sender to release or refund';
+      } else if (statusKey === TRANSACTION_STATUS.RELEASED) {
+        subtitle = 'Escrow completed successfully';
+      } else if (statusKey === TRANSACTION_STATUS.REFUND) {
+        subtitle = 'Escrow has been refunded';
+      } else if (statusKey === TRANSACTION_STATUS.CANCELLED || statusKey === TRANSACTION_STATUS.DECLINED) {
+        subtitle = 'Escrow has been cancelled';
+      }
+      
+      dispatch(setSubtitle(subtitle));
+    }
+  }, [transaction, dispatch]);
 
   const handleRelease = async (id: unknown) => {
     setIsLoading("release");
@@ -219,6 +248,112 @@ export default function TransactionDetailsPage() {
     router.push(`/escrow?edit=${txid}`);
   };
 
+  const handleApprove = async () => {
+    if (!transaction || !principal) return;
+    
+    try {
+      const actor = await createSplitDappActor();
+      const senderPrincipal = typeof transaction.from === "string" ? Principal.fromText(transaction.from) : transaction.from;
+      const principalStr = typeof principal === "string" ? principal : principal.toText();
+      const recipientEntry = transaction.to.find((entry) => String(entry.principal) === principalStr);
+      
+      if (!recipientEntry) {
+        toast.error('Recipient entry not found.');
+        return;
+      }
+      
+      const recipientPrincipal = typeof recipientEntry.principal === "string"
+        ? Principal.fromText(recipientEntry.principal)
+        : recipientEntry.principal;
+
+      await actor.recipientApproveEscrow(senderPrincipal, transaction.id, recipientPrincipal);
+      toast.success("Escrow approved!");
+      
+      // Fetch updated transaction and update state
+      const updated = await actor.getTransaction(transaction.id, principal);
+      if (Array.isArray(updated) && updated.length > 0) {
+        const serializedUpdated = {
+          ...updated[0],
+          timestamp: updated[0].createdAt?.toString() || "0",
+          createdAt: updated[0].createdAt?.toString() || "0",
+          confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
+          cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,
+          refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
+          releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
+          readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ApiToEntry) => ({
+            ...toEntry,
+            approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
+            declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
+            readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
+          })) : []
+        };
+        setTransaction(serializedUpdated);
+      }
+    } catch (err) {
+      console.error("Approve error:", err);
+      toast.error("Failed to approve escrow");
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!transaction || !principal) return;
+    
+    try {
+      const actor = await createSplitDappActor();
+      const senderPrincipal = typeof transaction.from === "string" ? Principal.fromText(transaction.from) : transaction.from;
+      const principalStr = typeof principal === "string" ? principal : principal.toText();
+      const recipientEntry = transaction.to.find((entry) => String(entry.principal) === principalStr);
+      
+      if (!recipientEntry) {
+        toast.error('Recipient entry not found.');
+        return;
+      }
+      
+      const recipientPrincipal = typeof recipientEntry.principal === "string"
+        ? Principal.fromText(recipientEntry.principal)
+        : recipientEntry.principal;
+
+      // Get the sender's transactions to find the correct index
+      const senderPrincipalStr = typeof transaction.from === "string" ? transaction.from : (transaction.from as { toText: () => string }).toText();
+      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
+      const txIndex = txs.transactions.findIndex((t: unknown) => (t as { id: string }).id === transaction.id);
+
+      if (txIndex === -1) {
+        toast.error('Transaction not found.');
+        return;
+      }
+
+      await actor.recipientDeclineEscrow(senderPrincipal, txIndex, recipientPrincipal);
+      toast.success("Escrow declined!");
+      
+      // Fetch updated transaction and update state
+      const updated = await actor.getTransaction(transaction.id, principal);
+      if (Array.isArray(updated) && updated.length > 0) {
+        const serializedUpdated = {
+          ...updated[0],
+          timestamp: updated[0].createdAt?.toString() || "0",
+          createdAt: updated[0].createdAt?.toString() || "0",
+          confirmedAt: updated[0].confirmedAt ? updated[0].confirmedAt.toString() : undefined,
+          cancelledAt: updated[0].cancelledAt ? updated[0].cancelledAt.toString() : undefined,
+          refundedAt: updated[0].refundedAt ? updated[0].refundedAt.toString() : undefined,
+          releasedAt: updated[0].releasedAt ? updated[0].releasedAt.toString() : undefined,
+          readAt: updated[0].readAt ? updated[0].readAt.toString() : undefined,
+          to: Array.isArray(updated[0].to) ? updated[0].to.map((toEntry: ApiToEntry) => ({
+            ...toEntry,
+            approvedAt: toEntry.approvedAt ? toEntry.approvedAt.toString() : undefined,
+            declinedAt: toEntry.declinedAt ? toEntry.declinedAt.toString() : undefined,
+            readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
+          })) : []
+        };
+        setTransaction(serializedUpdated);
+      }
+    } catch (err) {
+      console.error("Decline error:", err);
+      toast.error("Failed to decline escrow");
+    }
+  };
+
   if (isTxLoading) {
     return <div className="p-6">Loading...</div>;
   }
@@ -232,7 +367,7 @@ export default function TransactionDetailsPage() {
   let currentStep = 0;
   if (statusKey === TRANSACTION_STATUS.RELEASED) currentStep = 3;
   else if (statusKey === TRANSACTION_STATUS.CONFIRMED) currentStep = 2;
-  else if (statusKey === TRANSACTION_STATUS.PENDING) currentStep = 0;
+  else if (statusKey === TRANSACTION_STATUS.PENDING) currentStep = 1;
   else if (statusKey === TRANSACTION_STATUS.CANCELLED) currentStep = 0;
   else if (statusKey === TRANSACTION_STATUS.REFUND) currentStep = 0;
 
@@ -242,9 +377,12 @@ export default function TransactionDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start">
-        <ChevronLeft /> Back to dashboard
-      </Button>
+      <div className="flex justify-between items-center">
+        <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start">
+          <ChevronLeft /> Back to dashboard
+        </Button>
+        <TimeRemaining createdAt={transaction.createdAt} />
+      </div>
 
       <AnimatePresence>
         {statusKey === TRANSACTION_STATUS.RELEASED && (
@@ -315,7 +453,9 @@ export default function TransactionDetailsPage() {
               ) : (
                 <PendingEscrowDetails
                   transaction={transactionData}
-                  onCancel={handleCancel}
+                  onCancel={undefined}
+                  onApprove={handleApprove}
+                  onDecline={handleDecline}
                 />
               );
             })()
@@ -386,25 +526,38 @@ export default function TransactionDetailsPage() {
           )}
 
           {statusKey === TRANSACTION_STATUS.CONFIRMED && (
-            <ConfirmedEscrowActions
-              transaction={transaction}
-              isLoading={isLoading}
-              onRelease={handleRelease}
-              onRefund={handleRefund}
-            />
+            (() => {
+              const isSender = principal && String(transaction.from) === String(principal);
+              return isSender ? (
+                <ConfirmedEscrowActions
+                  transaction={transaction}
+                  isLoading={isLoading}
+                  onRelease={handleRelease}
+                  onRefund={handleRefund}
+                />
+              ) : (
+                <div className="container !rounded-2xl !p-6">
+                  <Typography variant="large" className="mb-4">Escrow overview</Typography>
+                  <TransactionStats
+                    totalBTC={Array.isArray(transaction.to)
+                      ? transaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
+                      : 0}
+                    recipientCount={transaction.to?.length || 0}
+                    status={transaction.status}
+                  />
+                  <hr className="my-6 text-[#424444] h-[1px]" />
+                  <div className="text-center py-8">
+                    <Typography variant="base" className="text-[#9F9F9F]">
+                      Waiting for sender to release or refund the escrow...
+                    </Typography>
+                  </div>
+                </div>
+              );
+            })()
           )}
         </div>
 
-        <Card className="w-full md:w-90 bg-[#222222] border-[#303434] text-white flex flex-col gap-4">
-          <Typography variant="large">Transaction lifecycle</Typography>
-          <div className="container-primary text-sm">
-            Native Bitcoin Escrow — No bridges or wrapped tokens
-          </div>
-          <TransactionLifecycle currentStep={currentStep} />
-          <div className="container-gray text-sm text-[#9F9F9F]">
-            This escrow is executed fully on-chain using Internet Computer. No human mediation.
-          </div>
-        </Card>
+        <TransactionLifecycle currentStep={currentStep} />
 
 
       </div>

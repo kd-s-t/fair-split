@@ -66,6 +66,7 @@ import {
   ArrowUpRight,
   Bitcoin,
   Wallet,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -355,7 +356,7 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="flex flex-col space-y-6" >
       {/* AI Approval Suggestions */}
       <ApprovalSuggestions transactions={localTransactions} />
 
@@ -364,7 +365,7 @@ export default function TransactionsPage() {
         <div className="flex items-center space-x-4">
           {/* Search Bar */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#BCBCBC]" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[#BCBCBC]" />
             <input
               type="text"
               placeholder="Search transactions..."
@@ -414,12 +415,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions List */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6"
-      >
+      <div className="space-y-6">
         {!isLoading && !error && (
           <>
             {localTransactions.length === 0 && (
@@ -437,18 +433,24 @@ export default function TransactionsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  className={`bg-[#222222] rounded-5xl p-5 border border-[#303434] ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors cursor-pointer' : ''}`}
+                  className={`bg-[#222222] rounded-[20px] p-4 md:p-5 border border-[#303434] w-full ${!pendingApproval || getTransactionCategory(tx) === "sent" ? 'hover:bg-[#2a2a2a] transition-colors cursor-pointer' : ''}`}
                   onClick={isRowClickable ? () => handleRowClick(tx) : undefined}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
+                  <div className="flex items-start justify-between mb-4 min-w-0">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-xl font-semibold text-white">{tx.title}</h3>
+                        <h3 className="text-xl font-semibold text-white truncate">{tx.title}</h3>
                         {getTransactionStatusBadge(tx.status)}
                       </div>
                       
                       <div className="flex items-center space-x-4 text-sm text-[#BCBCBC]">
-                        <span>{new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}</span>
+                        <span>{new Date(Number(tx.createdAt) / 1_000_000).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true
+                        })}</span>
                         {getTransactionCategory(tx) === "sent" ? (
                           <div className="flex items-center space-x-1 text-[#007AFF]">
                             <ArrowUpRight size={14} />
@@ -471,24 +473,37 @@ export default function TransactionsPage() {
                       </div>
                     </div>
                     
-                    {getTransactionCategory(tx) === "sent" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#7A7A7A] text-white"
-                      >
-                        <Wallet className="w-4 h-4 mr-2" />
-                        Manage escrow
-                      </Button>
-                    )}
+                    <div className="flex-shrink-0 ml-4">
+                      {getTransactionCategory(tx) === "sent" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-[#7A7A7A] text-white whitespace-nowrap hover:bg-[#2A2A2A] transition-colors"
+                          onClick={() => router.push(`/transactions/${tx.id}`)}
+                        >
+                          <Wallet className="w-4 h-4 mr-2" />
+                          Manage escrow
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-[#7A7A7A] text-white whitespace-nowrap hover:bg-[#2A2A2A] transition-colors"
+                          onClick={() => router.push(`/transactions/${tx.id}`)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View escrow
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Transaction Details Grid */}
-                  <div className="grid grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 rounded-[10px]">
                     <div>
                       <p className="text-[#BCBCBC] text-sm mb-1">Amount</p>
                       <div className="flex items-center space-x-2">
-                        <Bitcoin size={16} className="text-[#F97415]" />
+                        <Bitcoin size={20} className="text-[#F97415]" />
                         <span className="font-semibold text-white">
                           {(() => {
                             if (isSentByUser(tx)) {
@@ -529,23 +544,16 @@ export default function TransactionsPage() {
                     </div>
 
                     <div>
-                      <p className="text-[#BCBCBC] text-sm mb-1">Status</p>
-                      <p className="font-semibold text-[#FEB64D]">
-                        {tx.status === 'cancelled' ? 'Cancelled' :
-                          tx.status === 'released' ? 'Released' :
-                            tx.status === 'confirmed' ? 'Active' :
-                              tx.status === 'pending' ? 'Pending' :
-                                tx.status}
-                      </p>
+                      <p className="text-[#BCBCBC] text-sm mb-1">Transaction hash</p>
+                      <a 
+                        href={`${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL}/transaction/${tx.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-[#FEB64D] font-mono text-sm hover:underline"
+                      >
+                        {truncateHash(tx.id)}
+                      </a>
                     </div>
-                  </div>
-
-                  {/* Bitcoin Address */}
-                  <div className="mt-4">
-                    <p className="text-[#BCBCBC] text-sm mb-1">Bitcoin Address</p>
-                    <p className="font-semibold text-[#FEB64D] truncate" title={tx.bitcoinAddress || 'No address available'}>
-                      {tx.bitcoinAddress ? truncateHash(tx.bitcoinAddress) : (tx.status === 'cancelled' ? 'Cancelled' : 'Pending')}
-                    </p>
                   </div>
 
                   {/* AI Suggestion */}
@@ -558,52 +566,14 @@ export default function TransactionsPage() {
                     </div>
                   )}
 
-                  {/* Approval/Decline Buttons */}
-                  {pendingApproval && !isSentByUser(tx) && tx.status !== 'cancelled' && (
-                    <div className="flex justify-end space-x-3 mt-4">
-                      <Button
-                        className={`bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition ${isApproving === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        onClick={() => handleApprove(tx)}
-                        disabled={isApproving === getTxId(tx)}
-                      >
-                        {isApproving === getTxId(tx) ? (
-                          <span className="flex items-center space-x-2">
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                            Approving...
-                          </span>
-                        ) : (
-                          'Approve'
-                        )}
-                      </Button>
-                      <Button
-                        className={`bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition ${isDeclining === getTxId(tx) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        onClick={() => handleDecline(tx)}
-                        disabled={isDeclining === getTxId(tx)}
-                      >
-                        {isDeclining === getTxId(tx) ? (
-                          <span className="flex items-center space-x-2">
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                            Declining...
-                          </span>
-                        ) : (
-                          'Decline'
-                        )}
-                      </Button>
-                    </div>
-                  )}
+
                 </motion.div>
               );
             })}
           </>
         )}
         {error && <div className="text-red-500 text-center">{error}</div>}
-      </motion.div>
+      </div>
     </div>
   );
 }

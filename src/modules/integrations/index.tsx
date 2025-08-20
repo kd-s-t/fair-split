@@ -76,7 +76,7 @@ export default function Integrations() {
 				// Generate cKBTC address if not already present
 				if (!ckbtcAddress) {
 					try {
-						const walletResult = await actor.getOrRequestCkbtcWallet() as { ok: { btcAddress: string } } | { err: string };
+						const walletResult = await actor.requestCkbtcWallet() as { ok: { btcAddress: string } } | { err: string };
 						if ('ok' in walletResult) {
 							dispatch(setCkbtcAddress(walletResult.ok.btcAddress));
 						} else {
@@ -90,7 +90,7 @@ export default function Integrations() {
 				// Generate SEI address if not already present
 				if (!seiAddress) {
 					try {
-						const seiWalletResult = await actor.getOrRequestSeiWallet() as { ok: { seiAddress: string } } | { err: string };
+						const seiWalletResult = await actor.requestSeiWalletAnonymous() as { ok: { seiAddress: string } } | { err: string };
 						if ('ok' in seiWalletResult) {
 							dispatch(setSeiAddress(seiWalletResult.ok.seiAddress));
 						} else {

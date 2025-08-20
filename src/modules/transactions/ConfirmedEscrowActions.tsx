@@ -28,22 +28,16 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
     onRefund();
   };
 
-  const handleViewInvoice = () => {
-    // TODO: Implement invoice viewing functionality
-    console.log("View invoice clicked");
-  };
+
 
   return (
     <EscrowOverview
       totalBTC={totalBTC}
       recipientCount={recipientCount}
       status={transaction.status}
-      invoiceId="INV001"
-      invoiceAmount="$250.00"
       recipients={recipients}
       onRelease={handleRelease}
       onRefund={handleRefund}
-      onViewInvoice={handleViewInvoice}
       isLoading={isLoading === "release" || isLoading === "refund"}
     />
   );

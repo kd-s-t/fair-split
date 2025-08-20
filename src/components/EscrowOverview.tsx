@@ -1,6 +1,6 @@
 "use client";
 
-import { Bitcoin, UsersRound, Zap, ExternalLink, Settings, CircleCheckBig, CircleAlert, Shield, ChevronRight } from "lucide-react";
+import { Bitcoin, UsersRound, Zap, CircleCheckBig, CircleAlert, Shield, ChevronRight } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 
@@ -9,8 +9,6 @@ interface EscrowOverviewProps {
   totalBTC: number;
   recipientCount: number;
   status: string;
-  invoiceId?: string;
-  invoiceAmount?: string;
   recipients?: Array<{
     id: string;
     amount: number;
@@ -18,7 +16,6 @@ interface EscrowOverviewProps {
   }>;
   onRelease?: () => void;
   onRefund?: () => void;
-  onViewInvoice?: () => void;
   isLoading?: boolean;
 }
 
@@ -26,12 +23,9 @@ export default function EscrowOverview({
   totalBTC,
   recipientCount,
   status,
-  invoiceId = "INV001",
-  invoiceAmount = "$250.00",
   recipients = [],
   onRelease,
   onRefund,
-  onViewInvoice,
   isLoading = false
 }: EscrowOverviewProps) {
   const getStatusLabel = (status: string) => {
@@ -126,32 +120,7 @@ export default function EscrowOverview({
           </div>
         </div>
 
-        {/* Transaction Details Row */}
-        <div className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Typography variant="small" className="text-[#9F9F9F]">
-                Data → {invoiceAmount}
-              </Typography>
-              <Typography variant="base" className="text-white">
-                Data → {invoiceId}
-              </Typography>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onViewInvoice}
-              className="border-[#7A7A7A] text-white hover:bg-[#404040]"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View Invoice
-              <Settings className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </div>
 
-        {/* Divider */}
-        <div className="h-px bg-[#424444]" />
 
         {/* Recipients Breakdown */}
         <div>
@@ -204,7 +173,6 @@ export default function EscrowOverview({
             >
               <CircleAlert className="w-4 h-4 mr-2" />
               Refund
-              <Settings className="w-4 h-4 ml-2" />
             </Button>
           </div>
 

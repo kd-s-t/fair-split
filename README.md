@@ -68,13 +68,26 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 **Features demonstrated:**
 - ✅ Complete escrow lifecycle (create → approve → release)
 - ✅ Bitcoin escrow via cKBTC with native BTC conversion
-- ✅ SEI Network integration for fast transaction processing
+- ✅ Sender initiate escrow BTC gets hold
 - ✅ Sender cancellation with full refund
-- ✅ Recipient decline with reputation penalty
-- ✅ Real-time balance management
+- ✅ Recipient decline and approve
 - ✅ Transaction history and status tracking
-- ✅ SEI testnet integration with faucet
 - ✅ Modern, intuitive user interface
+
+**Coming in National Round:**
+- ✅ SEI Layer 1 Network integration for fast transaction processing
+- ✅ Real-time balance management
+- ✅ ICP and cKBTC withdrawal support
+- ✅ AI Assistant for intelligent decision making
+- ✅ Sender can edit escrow amount, title and recipients
+- ✅ Reputation system (beta)
+
+**Coming in Global Round:**
+- 🔄 Withdrawal support (SEI)
+
+**Coming in Final Round:**
+- 🔄 Advanced analytics dashboard
+- 🔄 Own API for third-party integrations and documentation
 
 ### National Round Demo
 **Coming Soon** - Stay tuned for our enhanced demo showcasing advanced features and improvements!

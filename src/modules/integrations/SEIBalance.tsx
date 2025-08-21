@@ -13,7 +13,7 @@ import { ExternalLink } from 'lucide-react';
 export default function SEIBalance() {
 	const dispatch = useDispatch();
 	const { principal, seiBalance } = useUser();
-	const [isRefreshing, setIsRefreshing] = useState(false);
+	const [, setIsRefreshing] = useState(false);
 	const [networkInfo, setNetworkInfo] = useState<{
 		name: string;
 		chainId: string;

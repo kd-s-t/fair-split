@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 // Wallet Modal Component
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
-  const { icpBalance, ckbtcAddress, ckbtcBalance, seiAddress, seiBalance } = useAppSelector((state: RootState) => state.user);
+  const { icpBalance, ckbtcAddress } = useAppSelector((state: RootState) => state.user);
 
   // Prevent body scroll when modal is open
   useEffect(() => {

@@ -44,7 +44,7 @@ export async function approveTransactionById(
     const recipientEntry = transaction.to.find((entry: Record<string, unknown>) => {
       const entryPrincipal = typeof entry.principal === 'string' 
         ? entry.principal 
-        : (entry.principal as any)?.toText?.() || String(entry.principal);
+        : (entry.principal as { toText?: () => string })?.toText?.() || String(entry.principal);
       return entryPrincipal === callerPrincipal;
     });
     
@@ -56,7 +56,7 @@ export async function approveTransactionById(
     // Get the sender principal
     const senderPrincipal = typeof transaction.from === 'string' 
       ? transaction.from 
-      : (transaction.from as any)?.toText?.() || String(transaction.from);
+      : (transaction.from as { toText?: () => string })?.toText?.() || String(transaction.from);
     
     // Approve the transaction
     await actor.recipientApproveEscrow(

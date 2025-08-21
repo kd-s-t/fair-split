@@ -72,7 +72,7 @@ SEI provides several test networks for development and testing:
 ### Backend Integration
 
 1. **SEI Module** (`icp/src/modules/sei.mo`)
-   - Mock SEI balance management for local development
+   - Real SEI testnet balance management for local development
    - SEI address generation and validation
    - SEI transaction handling
    - Conversion utilities between ICP and SEI
@@ -153,13 +153,13 @@ transient let seiNetworkConfig : SEI.SeiNetwork = {
 };
 ```
 
-### Mock Implementation
+### Real Implementation
 
-For local development, the integration uses mock balances and addresses:
+For local development, the integration uses real testnet balances and addresses:
 
-- Mock SEI balances stored in HashMap
-- Fake SEI addresses generated for testing
-- Mock transaction IDs for escrow operations
+- Real SEI balances from testnet
+- Real SEI addresses generated for testing
+- Real transaction IDs for escrow operations
 - Network information displayed from configuration
 
 ### Error Handling

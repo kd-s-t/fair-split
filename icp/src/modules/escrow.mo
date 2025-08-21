@@ -135,7 +135,7 @@ module {
             func(acc, p) { acc + p.amount }
         );
 
-        // Balance check is now handled in the main canister using mock balances
+        // Balance check is now handled in the main canister using real cKBTC
         // Skip balance check here since it's already validated
         Debug.print("🔍 Backend: Balance check skipped - handled in main canister");
         Debug.print("🔍 Backend: totalCkbtcAmount = " # Nat.toText(totalCkbtcAmount) # " satoshis");
@@ -143,7 +143,7 @@ module {
 
         var updatedLogs = logs;
 
-        // Balance deduction is now handled in the main canister using mock balances
+        // Balance deduction is now handled in the main canister using real cKBTC
         // Skip balance deduction here since it's already handled
         Debug.print("🔍 Backend: Balance deduction skipped - handled in main canister");
 

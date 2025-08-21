@@ -2,6 +2,7 @@ export interface EscrowCreateAction {
   type: 'create_escrow';
   amount: string;
   recipients: string[];
+  originalCurrency?: string; // Track original currency for conversion
 }
 
 export interface ApprovalSuggestionAction {
@@ -51,11 +52,21 @@ export async function parseUserMessageWithAI(message: string, apiKey?: string): 
             role: 'system',
             content: `You are a parser for SplitSafe escrow actions. Analyze user messages and extract structured data.
 
+IMPORTANT CURRENCY CONVERSION RULES:
+- When users mention fiat currency amounts (like $5, €10, £20, etc.), convert them to BTC using these approximate rates:
+  * $1 USD ≈ 0.000025 BTC (1 BTC ≈ $40,000)
+  * €1 EUR ≈ 0.000027 BTC (1 BTC ≈ €37,000)
+  * £1 GBP ≈ 0.000032 BTC (1 BTC ≈ £31,000)
+  * ¥1 JPY ≈ 0.00000017 BTC (1 BTC ≈ ¥6,000,000)
+- Always convert fiat amounts to BTC before creating escrows
+- Include the original currency in your response for reference
+
 If the user wants to CREATE an escrow (any mention of sending, transferring, creating, or making payments), respond with JSON:
 {
   "action": "create_escrow",
-  "amount": "0.5",
-  "recipients": ["id1", "id2", "id3"]
+  "amount": "0.000125",
+  "recipients": ["id1", "id2", "id3"],
+  "originalCurrency": "$5"
 }
 
 If the user wants to SET their Bitcoin address (any mention of setting, using, or providing a Bitcoin address), respond with JSON:
@@ -93,9 +104,14 @@ If the message is just casual conversation, acknowledgments, or doesn't match an
   "action": null
 }
 
+EXAMPLES:
+- "send $5 to user123" → {"action": "create_escrow", "amount": "0.000125", "recipients": ["user123"], "originalCurrency": "$5"}
+- "transfer €10 to alice and bob" → {"action": "create_escrow", "amount": "0.00027", "recipients": ["alice", "bob"], "originalCurrency": "€10"}
+- "send 0.5 btc to user456" → {"action": "create_escrow", "amount": "0.5", "recipients": ["user456"]}
+
 IMPORTANT: 
 - Be very flexible and understand natural language in any format
-- Extract ANY amount mentioned (numbers, decimals, fractions)
+- Extract ANY amount mentioned (numbers, decimals, fractions, currency symbols)
 - Extract ANY recipient IDs mentioned (ICP principals, usernames, addresses)
 - Extract ANY Bitcoin address mentioned (starts with 1, 3, or bc1)
 - Don't require specific keywords or formats
@@ -134,11 +150,12 @@ IMPORTANT:
       console.log('AI Parser Response:', parsed);
       
       if (parsed.action === 'create_escrow') {
-        console.log('Creating escrow with:', { amount: parsed.amount, recipients: parsed.recipients });
+        console.log('Creating escrow with:', { amount: parsed.amount, recipients: parsed.recipients, originalCurrency: parsed.originalCurrency });
         return {
           type: 'create_escrow',
           amount: parsed.amount,
-          recipients: parsed.recipients || []
+          recipients: parsed.recipients || [],
+          originalCurrency: parsed.originalCurrency
         };
       } else if (parsed.action === 'set_bitcoin_address') {
         console.log('Setting Bitcoin address:', parsed.address);

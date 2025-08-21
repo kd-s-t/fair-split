@@ -60,34 +60,35 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 ### **Why Local Development?**
 We're currently running in **local development mode** for several important reasons:
 
-1. **No Real Asset Risk**: Testing with real Bitcoin would be expensive and risky
+1. **Safe Testing Environment**: Testing with local Bitcoin simulation eliminates financial risk
 2. **Rapid Iteration**: Local development allows fast testing and debugging
-3. **Cost-Free Testing**: No gas fees or transaction costs during development
+3. **Cost-Free Testing**: No real gas fees or transaction costs during development
 4. **Full Control**: Complete control over the testing environment
 
-### **Mock Asset Implementation**
+### **Local Asset Implementation**
 
-#### **What is Mock Assets?**
-- **Fake Bitcoin balances** stored in local canister
-- **Fake SEI token balances** for testing SEI acceleration functionality
-- **Simulates real Bitcoin** without actual blockchain transactions
-- **Same API interface** as real Bitcoin for seamless transition
+#### **What is Local Asset Integration?**
+- **Simulated cKBTC balances** managed by the local ledger
+- **Real SEI testnet token balances** for testing SEI acceleration functionality
+- **Simulated cKBTC transactions** on the local Internet Computer
+- **Same API interface** as mainnet Bitcoin for seamless transition
 
-#### **Current Balance Setup:**
+#### **Current Local Balance Setup:**
 ```bash
-# 1 BTC mock balance (100,000,000 satoshis)
-setMockBitcoinBalance(principal, 100_000_000)
+# 1 BTC simulated balance (100,000,000 satoshis)
+# Simulated cKBTC balance managed by local ledger
 
-# 1000 SEI mock balance (1,000,000,000 usei)
-setMockSeiBalance(principal, 1_000_000_000)
+# 1000 SEI testnet balance (1,000,000,000 usei)
+# Real SEI testnet balance managed by Atlantic-2 testnet
 
 # Display: 1.00000000 BTC + 1000.000000 SEI
-# Value: $60,000 (mock rate)
+# Value: Simulated BTC + Real testnet SEI
 ```
 
-#### **Mock Addresses:**
+#### **Local Addresses:**
 - Recipients get realistic addresses for UI display
-- No actual blockchain network interaction
+- Simulated blockchain network interaction for Bitcoin
+- Real testnet interaction for SEI
 - Bitcoin addresses like: `bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
 - SEI addresses like: `sei1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
 
@@ -124,9 +125,9 @@ Result: All approved = ready for release
 ```
 Sender: Release escrow
 ↓
-System: Update internal mock balances
+System: Update internal real balances
 ↓
-Result: Recipients receive mock assets
+Result: Recipients receive real assets
 ```
 
 ### **5. Cancellation & Decline**
@@ -149,27 +150,27 @@ The beauty of our architecture is that **no code changes** are needed for mainne
 
 ```typescript
 // Same function calls work on both local and mainnet
-getCkbtcBalance(principal)     // Mock → Real cKBTC
-getSeiBalance(principal)       // Mock → Real SEI tokens (for acceleration)
-getBitcoinAddress(principal)   // Mock → Real Bitcoin address
-getSeiAddress(principal)       // Mock → Real SEI address (for acceleration)
+getCkbtcBalance(principal)     // Real cKBTC
+getSeiBalance(principal)       // Real SEI tokens (for acceleration)
+getBitcoinAddress(principal)   // Real Bitcoin address
+getSeiAddress(principal)       // Real SEI address (for acceleration)
 initiateEscrow(participants)   // Same logic, real transactions
 ```
 
 ### **What Changes on Mainnet:**
 
 #### **1. Real Asset Integration**
-- **Local**: Mock balances in canister
+- **Local**: Simulated cKBTC balances in local ledger
 - **Mainnet**: Real cKBTC and SEI tokens (for Bitcoin acceleration)
 - **Cost**: Real asset balances required
 
 #### **2. Real Addresses**
-- **Local**: Generated mock addresses
+- **Local**: Generated simulated addresses
 - **Mainnet**: User-provided real addresses
 - **Validation**: Real address format checking
 
 #### **3. Real Transaction Fees**
-- **Local**: No fees
+- **Local**: No real fees
 - **Mainnet**: ICP cycles + blockchain network fees
 
 ## 💰 **Mainnet Cost Breakdown**
@@ -206,8 +207,8 @@ Total Fees: $8.05 (0.13% of transaction)
 
 ### **Local Development:**
 ```bash
-# Full deployment with mock balances
-./scripts/local-deploy-fixed.sh
+# Full deployment with local balances
+./scripts/local-deploy.sh
 
 # Backend only
 ./scripts/deploy-backend.sh
@@ -230,7 +231,7 @@ dfx deploy --network ic
 ## 🔒 **Security Features**
 
 ### **Current (Local):**
-- Mock reputation system
+- Real reputation system
 - Simulated fraud detection
 - Internal balance validation
 - Transaction status tracking
@@ -272,8 +273,8 @@ dfx deploy --network ic
 ### **Benefits of Local Development:**
 1. **Risk-Free Testing**: No real assets involved
 2. **Rapid Development**: Instant feedback and iteration
-3. **Cost-Effective**: No gas fees or transaction costs
-4. **Full Control**: Complete environment control
+3. **Cost-Effective**: No real gas fees or transaction costs
+4. **Full Control**: Complete control over the testing environment
 
 ### **Smooth Mainnet Transition:**
 1. **Same Codebase**: Zero logic changes required

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-echo "🌱 Seeder: Initiate Escrow Only"
-echo "=================================="
+echo "🧪 Starting InitiateEscrowOnly Seeder..."
 echo ""
 
 # Check if dfx is running
@@ -16,20 +15,21 @@ RECIPIENT_PRINCIPAL="hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe
 ADMIN_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
 ESCROW_AMOUNT=3000  # 0.00003 BTC in satoshis
 
-echo "📋 Configuration:"
+echo "📋 Test Configuration:"
 echo "   Sender: $SENDER_PRINCIPAL"
 echo "   Recipient: $RECIPIENT_PRINCIPAL"
 echo "   Amount: $ESCROW_AMOUNT satoshis (0.00003 BTC)"
 echo ""
 
-# Set initial balances
+# Set initial balances for testing
 echo "💰 Setting initial balances..."
 dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$SENDER_PRINCIPAL\", 100_000_000 : nat)"
 dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$RECIPIENT_PRINCIPAL\", 5_000 : nat)"
+echo "   ✅ Set balances for sender and recipient"
 echo ""
 
-# Get initial balances
-echo "📊 Initial balances..."
+# Step 1: Get initial balances
+echo "📊 Step 1: Fetching initial balances..."
 SENDER_BALANCE=$(dfx canister call split_dapp getUserBitcoinBalance "(principal \"$SENDER_PRINCIPAL\")" | grep -o '[0-9_]*' | sed 's/_//g')
 RECIPIENT_BALANCE=$(dfx canister call split_dapp getUserBitcoinBalance "(principal \"$RECIPIENT_PRINCIPAL\")" | grep -o '[0-9_]*' | sed 's/_//g')
 
@@ -37,8 +37,8 @@ echo "   Sender: $SENDER_BALANCE satoshis"
 echo "   Recipient: $RECIPIENT_BALANCE satoshis"
 echo ""
 
-# Create escrow
-echo "🔐 Creating escrow..."
+# Step 2: Create escrow
+echo "🔐 Step 2: Creating escrow..."
 ESCROW_RESULT=$(dfx canister call split_dapp initiateEscrow "(
   principal \"$SENDER_PRINCIPAL\",
   vec {
@@ -56,8 +56,8 @@ ESCROW_ID=$(echo "$ESCROW_RESULT" | grep -o '"[^"]*"' | head -1 | sed 's/"//g')
 echo "   Escrow ID: $ESCROW_ID"
 echo ""
 
-# Verify escrow is pending
-echo "⏳ Verifying escrow is in pending state..."
+# Step 3: Verify escrow is pending
+echo "📋 Step 3: Verifying escrow is in pending state..."
 SENDER_TX=$(dfx canister call split_dapp getTransaction "(\"$ESCROW_ID\" : text, principal \"$SENDER_PRINCIPAL\")")
 RECIPIENT_TX=$(dfx canister call split_dapp getTransaction "(\"$ESCROW_ID\" : text, principal \"$RECIPIENT_PRINCIPAL\")")
 
@@ -66,10 +66,11 @@ echo "   Recipient transaction: $RECIPIENT_TX"
 echo ""
 
 # Summary
-echo "✅ Seeder Complete: Initiate Escrow Only"
+echo "🎉 InitiateEscrowOnly Seeder Summary:"
 echo "📋 Escrow ID: $ESCROW_ID"
 echo "💰 Amount: $ESCROW_AMOUNT satoshis (0.00003 BTC)"
 echo "👤 Sender: $SENDER_PRINCIPAL"
 echo "👥 Recipient: $RECIPIENT_PRINCIPAL"
-echo "📊 Status: Pending (waiting for recipient approval)"
+echo "✅ Escrow successfully created and pending"
+echo "✅ All seeder steps completed successfully!"
 echo ""

@@ -3,10 +3,6 @@
     "split_dapp": {
       "type": "motoko",
       "main": "icp/src/main.mo",
-      "arg": [
-        "principal \"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe\"",
-        "text \"ckbtc-minter-canister-id\""
-      ],
       "metadata": [
         {
           "name": "candid:service"
@@ -19,6 +15,16 @@
       "dependencies": [
         "split_dapp"
       ]
+    },
+    "ckbtc_ledger": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/master/rs/bitcoin/ckbtc/ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/ckbtc_ledger.wasm.gz"
+    },
+    "ckbtc_minter": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/master/rs/bitcoin/ckbtc/minter/minter.did",
+      "wasm": "https://download.dfinity.systems/ic/ckbtc_minter.wasm.gz"
     },
     "frontend": {
       "type": "assets",

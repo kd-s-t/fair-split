@@ -74,6 +74,9 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 - ✅ Transaction history and status tracking
 - ✅ Modern, intuitive user interface
 
+### National Round Demo  
+SafeSplit Demo - National Round  
+
 **Coming in National Round:**
 - ✅ SEI Layer 1 Network integration for fast transaction processing
 - ✅ Real-time balance management
@@ -82,41 +85,26 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 - ✅ AI Assistant for initiate escrow
 - ✅ AI Assistant for decision making
 - ✅ Sender can edit escrow amount, title and recipients
-- ✅ Reputation system (beta)
+- ✅ Reputation system with fraud detection
+- ✅ Call limiting and access control
 
-**Coming in Global Round:**
+### Regional Round Demo  
+SafeSplit Demo - Regional Round  
+**Coming in Regional Round:**
 - 🔄 Withdrawal support (SEI)
 - 🔄 AI Assistant for withdrawal
 
-**Coming in Final Round:**
+### Global Round Demo  
+SafeSplit Demo - Global Round  
+**Coming in Global Round:**
 - 🔄 Advanced analytics dashboard
 - 🔄 Own API for third-party integrations and documentation
 
-### National Round Demo
-**Coming Soon** - Stay tuned for our enhanced demo showcasing advanced features and improvements!
 
 ## Quick Start
 
-### Prerequisites
-- Node.js 20.13.1 (use `nvm use` to switch to the correct version)
-- Docker (for containerized deployment)
-- dfx (for ICP canister deployment)
-
-### SEI Testnet Integration
-SafeSplit includes full SEI Network integration with Atlantic-2 testnet support:
-
-- **Testnet RPC**: https://rpc.atlantic-2.seinetwork.io
-- **Testnet Explorer**: https://atlantic-2.sei.explorers.guru
-- **Testnet Faucet**: https://atlantic-2.sei.explorers.guru/faucet
-- **Chain ID**: `atlantic-2`
-
-Get free test SEI tokens from the faucet to test escrow functionality without using real funds.
-
-
 ### Run Frontend Development Server
 ```bash
-npm install -g npm@11.5.2
-# Switch to correct Node version
 nvm use
 
 # Install dependencies
@@ -126,40 +114,98 @@ npm install
 npm run dev
 ```
 
+### Run ICP host and deploy canisters
+```bash
+# Option 1: Use the automated deployment script (recommended)
+./scripts/local-deploy-canisters.sh
+
+# Option 2: Use custom admin principal
+./scripts/local-deploy-canisters.sh your-principal-id-here
+
+# if you want to add more BTC
+./scripts/balance-scripts/set-bitcoin-balance.sh your-principal-id-here 100000000  # Set 1 BTC
+
+# Check balances
+./scripts/balance-scripts/get-user-bitcoin-balance.sh your-principal-id-here
+
+# Option 3: Manual deployment (if needed)
+# Step 1: Start the host first
+pkill -f dfx
+dfx stop
+rm -rf .dfx/local
+dfx start --clean --background
+sleep 10 && dfx ping local
+
+# Step 2: Then deploy canisters to the running host
+dfx deploy split_dapp --network local --mode=reinstall
+```
+
 The application will be available at http://localhost:3000
 
-## Docker Deployment
+## 🧪 Testing
 
-### Local Development with Docker
-```bash
-# Start local development environment
-docker compose -f docker/local/docker-compose.yml up --build
+### Available E2E Integration Tests
 
-# Stop the containers
-docker compose -f docker/local/docker-compose.yml down
-```
-
-## Testing
-
-### SEI Testnet Testing
-Test our SEI integration with the following commands:
+After deployment, you can run the following end-to-end integration tests:
 
 ```bash
-# Test SEI network info
-dfx canister call split_dapp getSeiNetworkInfo
+# Test withdrawal functionality (ICP and ckBTC)
+./scripts/tests/test-withdraw.sh
 
-# Test SEI balance query
-dfx canister call split_dapp getSeiBalance '(principal "2vxsx-fae")'
+# Test escrow decline functionality
+./scripts/tests/test-decline-split.sh
 
-# Test SEI wallet generation
-dfx canister call split_dapp requestSeiWalletAnonymous
+# Test escrow cancellation functionality
+./scripts/tests/test-cancel-split.sh
 
-# Test SEI faucet URL
-dfx canister call split_dapp getSeiFaucetUrl
+# Test escrow release functionality
+./scripts/tests/test-release-split.sh
 
-# Run complete SEI test suite
-./scripts/test-sei-testnet.sh
+# Test SEI integration
+./scripts/tests/test-sei-testnet.sh
+
+# Run all tests (recommended)
+./scripts/tests/run-all-tests.sh
 ```
+
+### Test Requirements
+
+Before running tests, ensure:
+- ✅ Canisters are deployed and running
+- ✅ Users have sufficient balances (use balance scripts in `scripts/balance-scripts/`)
+- ✅ dfx is running locally
+
+### Test Types
+
+These are **End-to-End (E2E) Integration Tests** that:
+- Test complete user workflows
+- Use real canister function calls
+- Verify balance changes and transaction states
+- Simulate actual user interactions
+
+### Database Seeding for Testing
+
+To populate the database with test data for development and testing:
+
+```bash
+# Run all seeder scripts to create sample escrows
+./scripts/seeders/run-all-seeders.sh
+
+# Or run individual seeders:
+./scripts/seeders/initiate-escrow-only.sh      # Creates pending escrow
+./scripts/seeders/initiate-and-approve.sh      # Creates approved escrow
+./scripts/seeders/initiate-and-decline.sh      # Creates declined escrow
+./scripts/seeders/initiate-and-cancel.sh       # Creates canceled escrow
+```
+
+**Seeder Scripts Create:**
+- ✅ Pending escrows (waiting for approval)
+- ✅ Approved escrows (ready for release)
+- ✅ Declined escrows (funds returned)
+- ✅ Canceled escrows (funds returned)
+
+**Note:** Seeders automatically set up balances and create realistic test scenarios for each escrow lifecycle state.
+
 
 ### Withdrawal Testing
 The application includes comprehensive withdrawal functionality for both ICP, ckBTC, and SEI. You can test withdrawals using the following sample addresses:
@@ -175,7 +221,7 @@ The application includes comprehensive withdrawal functionality for both ICP, ck
 - **SEI Address Format**: `sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
 - **Testnet Faucet**: Get free SEI tokens for testing
 
-**Note**: These addresses work because the system uses mock balances for development. When deploying to mainnet, real address validation and actual transfer mechanisms will be used.
+**Note**: These addresses work with real cKBTC and SEI testnet integrations. When deploying to mainnet, real address validation and actual transfer mechanisms will be used.
 
 ## Authors
 

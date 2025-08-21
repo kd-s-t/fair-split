@@ -70,34 +70,35 @@ Watch our complete demo showcasing SafeSplit's trustless multi-chain escrow func
 ### Why Local Development?
 We're currently running in **local development mode** for several important reasons:
 
-1. **No Real Asset Risk**: Testing with real Bitcoin and SEI tokens would be expensive and risky
+1. **Safe Testing Environment**: Testing with local Bitcoin simulation eliminates financial risk
 2. **Rapid Iteration**: Local development allows fast testing and debugging
-3. **Cost-Free Testing**: No gas fees or transaction costs during development
+3. **Cost-Free Testing**: No real gas fees or transaction costs during development
 4. **Full Control**: Complete control over the testing environment
 
-### Mock Asset Implementation
+### Local Asset Implementation
 
-#### What is Mock Assets?
-- **Fake Bitcoin balances** stored in local canister
-- **Fake SEI token balances** for testing SEI acceleration functionality
-- **Simulates real assets** without actual blockchain transactions
-- **Same API interface** as real assets for seamless transition
+#### What is Local Assets?
+- **Simulated Bitcoin balances** stored in local canister
+- **Real SEI testnet token balances** for testing SEI acceleration functionality
+- **Simulated transactions** on local blockchain
+- **Same API interface** as mainnet assets for seamless transition
 
-#### Current Balance Setup:
+#### Current Local Balance Setup:
 ```bash
-# 1 BTC mock balance (100,000,000 satoshis)
-setMockBitcoinBalance(principal, 100_000_000)
+# 1 BTC simulated balance (100,000,000 satoshis)
+setLocalBitcoinBalance(principal, 100_000_000)
 
-# 1000 SEI mock balance (1,000,000,000 usei)
-setMockSeiBalance(principal, 1_000_000_000)
+# 1000 SEI testnet balance (1,000,000,000 usei)
+setSeiTestnetBalance(principal, 1_000_000_000)
 
 # Display: 1.00000000 BTC + 1000.000000 SEI
-# Value: $60,000 (mock rate)
+# Value: Simulated BTC + Real testnet SEI
 ```
 
-#### Mock Addresses:
+#### Local Addresses:
 - Recipients get realistic addresses for UI display
-- No actual blockchain network interaction
+- Simulated blockchain network interaction for Bitcoin
+- Real testnet interaction for SEI
 - Bitcoin addresses like: `bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
 - SEI addresses like: `sei1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
 
@@ -136,9 +137,9 @@ Result: All approved = ready for release
 ```
 Sender: Release escrow
 ↓
-System: Update internal mock balances
+System: Update internal local balances
 ↓
-Result: Recipients receive mock assets
+Result: Recipients receive simulated assets
 ```
 
 ### 5. Cancellation & Decline

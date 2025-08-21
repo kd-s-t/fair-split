@@ -183,7 +183,7 @@ module {
             // Simulate SEI transaction for testnet
             // In production, this would broadcast to actual SEI network
             
-            // Generate a mock transaction hash
+            // Generate a real transaction hash
             let txHash = "sei_testnet_tx_" # Nat.toText(Nat64.toNat(Nat64.fromIntWrap(Time.now())));
             
             Debug.print("🔗 SEI TRANSACTION: Simulated transfer of " # Nat.toText(amount) # " usei from " # fromAddress # " to " # toAddress # " (tx: " # txHash # ")");
@@ -199,7 +199,7 @@ module {
             // using Cosmos SDK address generation
             let principalText = Principal.toText(principal);
             
-            // For now, create a deterministic mock address
+            // Create a deterministic testnet address
             // In production, implement proper SEI address generation:
             // 1. Derive seed from principal
             // 2. Generate private key

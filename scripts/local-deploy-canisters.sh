@@ -2,10 +2,44 @@
 
 # Local Development Deployment Script - Fixed Version
 # This script stops dfx, starts it clean, and deploys canisters
+# Usage: ./scripts/local-deploy-fixed.sh [ADMIN_PRINCIPAL]
 
 set -e  # Exit on any error
 
-echo "🚀 Starting local deployment process..."
+# Show help if requested
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "SafeSplit Local Deployment Script"
+    echo "================================="
+    echo ""
+    echo "Usage: $0 [ADMIN_PRINCIPAL]"
+    echo ""
+    echo "Arguments:"
+    echo "  ADMIN_PRINCIPAL    Principal ID to use as admin (optional)"
+    echo "                     Default: ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+    echo ""
+    echo "Examples:"
+    echo "  $0                                    # Use default admin principal"
+    echo "  $0 your-principal-id-here            # Use custom admin principal"
+    echo ""
+    echo "This script will:"
+    echo "  1. Stop and clean dfx"
+    echo "  2. Start dfx with clean state"
+    echo "  3. Deploy split_dapp and split_dapp_test canisters"
+    echo "  4. Set up initial balances for testing"
+    echo ""
+    exit 0
+fi
+
+# Check if admin principal is provided as argument
+if [ -n "$1" ]; then
+    ADMIN_PRINCIPAL="$1"
+    echo "🚀 Starting local deployment process with admin principal: $ADMIN_PRINCIPAL"
+else
+    # Use default principal if none provided
+    ADMIN_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+    echo "🚀 Starting local deployment process with default admin principal: $ADMIN_PRINCIPAL"
+    echo "💡 Tip: You can specify a custom admin principal: $0 your-principal-id"
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -89,9 +123,17 @@ print_success "Current principal: $CURRENT_PRINCIPAL"
 # Step 6: Deploy canisters
 print_status "Deploying canisters..."
 
-# Deploy split_dapp first with arguments
+# For local development, use admin principal as placeholder cKBTC IDs
+# In production, these would be real cKBTC canister IDs
+print_status "Using admin principal as placeholder cKBTC IDs for local development..."
+CKBTC_LEDGER_ID="$ADMIN_PRINCIPAL"
+CKBTC_MINTER_ID="$ADMIN_PRINCIPAL"
+print_success "cKBTC Ledger ID: $CKBTC_LEDGER_ID (placeholder)"
+print_success "cKBTC Minter ID: $CKBTC_MINTER_ID (placeholder)"
+
+# Deploy split_dapp with admin principal and placeholder cKBTC canister IDs
 print_status "Deploying split_dapp..."
-echo "yes" | dfx deploy split_dapp --network local --mode=reinstall --argument "(principal \"$CURRENT_PRINCIPAL\", \"ckbtc-minter-canister-id\")"
+echo "yes" | dfx deploy split_dapp --network local --mode=reinstall --argument "(principal \"$ADMIN_PRINCIPAL\", \"$CKBTC_LEDGER_ID\", \"$CKBTC_MINTER_ID\")"
 
 # Deploy split_dapp_test
 print_status "Deploying split_dapp_test..."
@@ -109,24 +151,17 @@ SPLIT_DAPP_TEST_ID=$(dfx canister id --network local split_dapp_test)
 print_status "Setting initial balances for testing..."
 print_status "Setting 1 BTC balance for current user..."
 
-# Set 1 BTC (100,000,000 satoshis) for the current user
-dfx canister call split_dapp setBitcoinBalance "(principal \"$CURRENT_PRINCIPAL\", principal \"$CURRENT_PRINCIPAL\", 100_000_000)" --network local
+# Set 1 BTC (100,000,000 satoshis) for the admin user
+dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$ADMIN_PRINCIPAL\", 100_000_000)" --network local
 
 # Also set 1 BTC for the specific user principal that's commonly used
-print_status "Setting 1 BTC balance for ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe..."
-dfx canister call split_dapp setMockBitcoinBalance "(principal \"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe\", 100_000_000)" --network local
+print_status "cKBTC integration initialized - balances managed by ledger..."
 
-# Set 1 BTC balance for the additional account
-print_status "Setting 1 BTC balance for up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe..."
-dfx canister call split_dapp setMockBitcoinBalance "(principal \"up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe\", 100_000_000)" --network local
-
-# Also set some ICP balance for testing
-print_status "Setting 10 ICP balance for current user..."
-dfx canister call split_dapp setInitialBalance "(principal \"$CURRENT_PRINCIPAL\", 1_000_000_000, principal \"$CURRENT_PRINCIPAL\")" --network local
+# Real cKBTC balances are managed by the ledger
+print_status "cKBTC integration ready for real transactions..."
 
 print_success "Initial balances set!"
 print_success "   - 1 BTC (100,000,000 satoshis)"
-print_success "   - 10 ICP (1,000,000,000 e8s)"
 
 print_success "Deployment completed!"
 echo

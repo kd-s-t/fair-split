@@ -2,6 +2,36 @@
 
 Welcome to the SafeSplit guides directory! This folder contains comprehensive documentation for setting up, deploying, and maintaining the SafeSplit application.
 
+## 📋 Table of Contents
+
+### 🚀 **Deployment & Infrastructure**
+- [EC2 Subdomain Setup](./EC2_SUBDOMAIN_SETUP.md) - Complete EC2 deployment with custom domain
+- [Terraform Deployment](./TERRAFORM_DEPLOYMENT.md) - Infrastructure as Code with Terraform
+
+### 🔧 **Backend & Blockchain**
+- [ICP Backend](./ICP_BACKEND.md) - Internet Computer Backend Architecture
+- [SEI Integration](./SEI_INTEGRATION.md) - SEI Network Integration Guide
+- [Bitcoin Integration](./BITCOIN_INTEGRATION.md) - Bitcoin Integration with ICP
+
+### 📊 **Documentation & Presentations**
+- [Presentation README](./PRESENTATION_README.md) - Project presentation and overview
+- [Mainnet Deployment](./MAINNET_DEPLOYMENT.md) - Mainnet deployment guide
+- [Security Features](./SECURITY_FEATURES.md) - Enterprise-grade security features
+
+### 🛠️ **Development Workflow**
+- [Quick Start Guide](#-quick-start-guide)
+- [Development Workflow](#-development-workflow)
+- [Testing](#testing)
+- [Deployment](#deployment)
+
+### 📚 **Resources & Support**
+- [Project Structure](#project-structure)
+- [External Resources](#external-resources)
+- [Support & Troubleshooting](#-support--troubleshooting)
+- [Contributing](#contributing)
+
+---
+
 ## 📚 Available Guides
 
 ### 🚀 **Deployment & Infrastructure**
@@ -169,10 +199,10 @@ cd safesplit
 npm install
 npm run dev
 
-# Start DFX for ICP development
+# Start DFX for ICP local development
 cd icp
 dfx start --background
-dfx deploy
+dfx deploy --network local
 ```
 
 ### 2. Testing
@@ -188,7 +218,7 @@ dfx canister call split_dapp_test runAllTests
 ### 3. Deployment
 ```bash
 # Deploy to local network
-dfx deploy
+dfx deploy --network local
 
 # Deploy to mainnet
 dfx deploy --network ic

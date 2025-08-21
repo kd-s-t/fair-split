@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Shield, Edit, CircleAlert, Mail, QrCode, ExternalLink } from "lucide-react";
+import { Shield, Edit, CircleAlert, QrCode, ExternalLink } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";

@@ -1,19 +1,13 @@
 "use client";
 
-import { Copy, Shield, QrCode, ExternalLink, CircleCheckBig } from "lucide-react";
+import { QrCode, ExternalLink, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import TransactionStats from "@/components/TransactionStats";
 
 import { CancelledEscrowDetailsProps } from "./types";
-import { useMemo } from "react";
 
 export default function CancelledEscrowDetails({ transaction }: CancelledEscrowDetailsProps) {
-  const depositAddress = useMemo(() => {
-    return ('bitcoinAddress' in transaction ? transaction.bitcoinAddress : undefined) ||
-      ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
-      "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-  }, [transaction]);
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0

@@ -13,12 +13,12 @@ export default function DashboardPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setTitle("Dashboard"));
-    dispatch(setSubtitle("Your dashboard overview"));
+    dispatch(setTitle("Welcome back"));
+    dispatch(setSubtitle("Manage your Bitcoin escrow transactions with confidence"));
   }, [dispatch]);
 
   const transactions = useSelector((state: RootState) => state.transactions.transactions)
-  
+
   return (
     <motion.div
       initial={{ opacity: 0 }}

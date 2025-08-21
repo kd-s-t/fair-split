@@ -28,7 +28,7 @@ export default function SettingsPage() {
     // Load existing Bitcoin address from backend
     const loadBitcoinAddress = async () => {
       if (!principal) return;
-      
+
       try {
         const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
         const actor = await createSplitDappActor();
@@ -61,7 +61,7 @@ export default function SettingsPage() {
       const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
       const actor = await createSplitDappActor();
       const success = await actor.setBitcoinAddress(principal, bitcoinAddress);
-      
+
       if (success) {
         toast.success('Bitcoin address saved successfully!');
       } else {
@@ -90,7 +90,7 @@ export default function SettingsPage() {
       const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
       const actor = await createSplitDappActor();
       const success = await actor.removeBitcoinAddress(principal);
-      
+
       if (success) {
         setBitcoinAddress('');
         toast.success('Bitcoin address removed');
@@ -105,7 +105,7 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        
+
         {/* Bitcoin Integration Settings */}
         <Card className="bg-[#222222] border-[#303434] text-white">
           <CardHeader>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-200">
                 Bitcoin Address
@@ -202,7 +202,7 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-200">
                 ICP Principal ID
@@ -221,7 +221,7 @@ export default function SettingsPage() {
 
             <div className="p-3 bg-gray-800 rounded-lg">
               <Typography variant="small" className="text-gray-400">
-                <strong>Note:</strong> Your ICP account is automatically created when you first use SafeSplit. 
+                <strong>Note:</strong> Your ICP account is automatically created when you first use SafeSplit.
                 All escrow transactions use ICP tokens, which are automatically converted to Bitcoin when released.
               </Typography>
             </div>

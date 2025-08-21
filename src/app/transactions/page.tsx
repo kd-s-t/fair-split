@@ -96,7 +96,7 @@ export default function TransactionsPage() {
   const { principal } = useAuth();
   const dispatch = useDispatch();
   const { transactions } = useTransactions();
-  
+
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
     dispatch(setSubtitle('View all your escrow transactions'));
@@ -374,14 +374,14 @@ export default function TransactionsPage() {
               className="w-full pl-10 pr-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-[#BCBCBC] focus:outline-none focus:border-[#FEB64D]"
             />
           </div>
-          
+
           {/* Category Filter */}
           <select className="px-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D] min-w-[156px]">
             <option value="all">All categories</option>
             {availableCategories.includes('sent') && <option value="sent">Sent</option>}
             {availableCategories.includes('received') && <option value="received">Received</option>}
           </select>
-          
+
           {/* Status Filter */}
           <select
             value={statusFilter}
@@ -395,7 +395,7 @@ export default function TransactionsPage() {
             {availableStatuses.includes('cancelled') && <option value="cancelled">Cancelled</option>}
             {availableStatuses.includes('declined') && <option value="declined">Declined</option>}
           </select>
-          
+
           {/* Refresh Button */}
           <button
             ref={refreshIconRef}
@@ -407,7 +407,7 @@ export default function TransactionsPage() {
             <span>Refresh</span>
           </button>
         </div>
-        
+
         {/* Transaction Count */}
         <p className="text-[#BCBCBC] text-sm">
           Showing {currentTransactions.length} of {localTransactions.length} transactions
@@ -424,8 +424,8 @@ export default function TransactionsPage() {
 
             {currentTransactions.map((tx, idx: number) => {
               const pendingApproval = isPendingApproval(tx);
-              const isRowClickable = (!pendingApproval && getTransactionCategory(tx) === "sent") && 
-                                    (tx.status !== "withdraw_complete" && tx.status !== "withdraw_pending");
+              const isRowClickable = (!pendingApproval && getTransactionCategory(tx) === "sent") &&
+                (tx.status !== "withdraw_complete" && tx.status !== "withdraw_pending");
 
               return (
                 <motion.div
@@ -442,7 +442,7 @@ export default function TransactionsPage() {
                         <h3 className="text-xl font-semibold text-white truncate">{tx.title}</h3>
                         {getTransactionStatusBadge(tx.status)}
                       </div>
-                      
+
                       <div className="flex items-center space-x-4 text-sm text-[#BCBCBC]">
                         <span>{new Date(Number(tx.createdAt) / 1_000_000).toLocaleDateString('en-US', {
                           month: 'short',
@@ -472,7 +472,7 @@ export default function TransactionsPage() {
                           )}
                       </div>
                     </div>
-                    
+
                     <div className="flex-shrink-0 ml-4">
                       {getTransactionCategory(tx) === "sent" ? (
                         <Button
@@ -545,7 +545,7 @@ export default function TransactionsPage() {
 
                     <div>
                       <p className="text-[#BCBCBC] text-sm mb-1">Bitcoin block</p>
-                      <a 
+                      <a
                         href={`https://blockstream.info/block/00000000000000000001bb418ff8dfff65ea0dab3d9f53923112d2b2f12f4ee7`}
                         target="_blank"
                         rel="noopener noreferrer"

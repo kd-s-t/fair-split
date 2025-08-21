@@ -31,7 +31,7 @@ const Summary = ({
 
   return (
     <div className="w-full">
-      <Card className="bg-[#212121] border-[#303333] rounded-[20px] h-fit">
+      <Card className="h-fit">
         <CardHeader >
           <CardTitle className="flex items-center justify-between">
             <Typography variant="large">Escrow summary</Typography>

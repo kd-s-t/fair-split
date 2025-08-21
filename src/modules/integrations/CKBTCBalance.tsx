@@ -19,12 +19,8 @@ const CKBTCBalance: React.FC = () => {
   console.log('🔍 CKBTCBalance component - ckbtcBalance type:', typeof ckbtcBalance);
   console.log('🔍 CKBTCBalance component - ckbtcBalance value:', ckbtcBalance);
 
-
-
-
-
   return (
-    <Card className="bg-[#222222] border-[#303434]">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -40,7 +36,7 @@ const CKBTCBalance: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-                <div className="flex items-center gap-3 mt-4">
+        <div className="flex items-center gap-3 mt-4">
           <Typography variant="h2">
             {ckbtcBalance ? `${ckbtcBalance} ` : 'Loading...'}
           </Typography>
@@ -49,7 +45,7 @@ const CKBTCBalance: React.FC = () => {
           )}
         </div>
       </CardContent>
-      
+
       <div className="px-6 pb-6 pt-4">
         <Button variant="outline" className='w-full bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]'>
           <ExternalLink className="w-4 h-4 mr-2" />

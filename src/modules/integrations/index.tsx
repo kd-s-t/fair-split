@@ -31,7 +31,7 @@ export default function Integrations() {
 			if (!principal) return;
 
 			setIsInitializing(true);
-			
+
 			// Add timeout to prevent getting stuck
 			const timeout = setTimeout(() => {
 				console.warn('Wallet initialization timed out');
@@ -126,7 +126,7 @@ export default function Integrations() {
 				{/* Top Row - Balance Cards */}
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					{/* ICP Balance Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="flex items-center justify-between mb-4">
@@ -141,7 +141,7 @@ export default function Integrations() {
 					</Card>
 
 					{/* Bitcoin Balance Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="flex items-center justify-between mb-4">
@@ -156,7 +156,7 @@ export default function Integrations() {
 					</Card>
 
 					{/* SEI Balance Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="flex items-center justify-between mb-4">
@@ -178,7 +178,7 @@ export default function Integrations() {
 				{/* Bottom Row - Address Cards */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{/* Bitcoin Address Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
@@ -204,7 +204,7 @@ export default function Integrations() {
 					</Card>
 
 					{/* SEI Address Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
@@ -225,7 +225,7 @@ export default function Integrations() {
 				{/* Top Row - Balance Cards */}
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					{/* ICP Balance Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="flex items-center justify-between mb-4">
@@ -240,7 +240,7 @@ export default function Integrations() {
 					</Card>
 
 					{/* Bitcoin Balance Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="flex items-center justify-between mb-4">
@@ -255,7 +255,7 @@ export default function Integrations() {
 					</Card>
 
 					{/* SEI Balance Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="flex items-center justify-between mb-4">
@@ -277,7 +277,7 @@ export default function Integrations() {
 				{/* Bottom Row - Address Cards */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{/* Bitcoin Address Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>
@@ -305,7 +305,7 @@ export default function Integrations() {
 					</Card>
 
 					{/* SEI Address Skeleton */}
-					<Card className="bg-[#222222] border-[#303434]">
+					<Card>
 						<CardContent className="p-6">
 							<div className="animate-pulse">
 								<div className="h-6 bg-gray-700 rounded w-32 mb-4"></div>

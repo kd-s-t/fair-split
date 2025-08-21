@@ -33,9 +33,9 @@ export default function Withdraw({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { 
-    watch, 
-    register, 
+  const {
+    watch,
+    register,
     handleSubmit,
     formState: { errors },
     reset,
@@ -63,16 +63,16 @@ export default function Withdraw({
   const validateAmount = (value: string) => {
     const numValue = Number(value);
     const maxBalance = selectedCurrency === 'BTC' ? ckbtcBalance : icpBalance;
-    
+
     if (maxBalance === null || maxBalance === undefined) {
       return `Unable to verify balance. Please try again.`;
     }
-    
+
     const maxBalanceNum = Number(maxBalance);
     if (isNaN(maxBalanceNum)) {
       return `Invalid balance format. Please try again.`;
     }
-    
+
     if (numValue > maxBalanceNum) {
       return `Amount cannot exceed your ${selectedCurrency === 'BTC' ? 'ckBTC' : 'ICP'} balance of ${maxBalance}`;
     }
@@ -95,9 +95,9 @@ export default function Withdraw({
       }
 
       const actor = await createSplitDappActor();
-      
+
       // Convert amount to the appropriate unit (e8s for ICP, satoshis for BTC)
-      const amountInSmallestUnit = selectedCurrency === 'BTC' 
+      const amountInSmallestUnit = selectedCurrency === 'BTC'
         ? Math.floor(Number(data.amount) * 100_000_000) // Convert BTC to satoshis
         : Math.floor(Number(data.amount) * 100_000_000); // Convert ICP to e8s
 
@@ -143,28 +143,28 @@ export default function Withdraw({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <Card className='!border-0 !p-0 !bg-[#313030] rounded-[24px] shadow-[0_0_32px_rgba(0,0,0,0.04)]' >
+        <Card className='!border-0 !p-0 !bg-[#313030] shadow-[0_0_32px_rgba(0,0,0,0.04)] !w-[680px]'>
           <CardHeader className="p-6">
-            <CardTitle className="flex justify-between items-start" >
-              <div className='flex text-left gap-3'>
-                <ArrowUpRight color='#FEB64D' size={20} />
-                <div>
+            <CardTitle className="flex flex-col items-start">
+              <div className="flex justify-between items-start w-full">
+                <div className='flex text-left gap-3'>
+                  <ArrowUpRight color='#FEB64D' size={20} />
                   <Typography variant="large" className="text-white">Withdraw funds</Typography>
-                  <Typography variant="muted" className="text-[#BCBCBC]">
-                    Describe your payment split in natural language
-                  </Typography>
                 </div>
-              </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                className="text-[#F1F1F1] hover:text-[#FAFAFA]"
-                aria-label="Close withdrawal dialog"
-              >
-                <X size={24} />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClose}
+                  className="text-[#F1F1F1] hover:text-[#FAFAFA] !h-5 !w-5"
+                  aria-label="Close withdrawal dialog"
+                >
+                  <X size={24} />
+                </Button>
+              </div>
+              <Typography variant="muted" className="text-[#BCBCBC]">
+                Describe your payment split in natural language
+              </Typography>
             </CardTitle>
           </CardHeader>
           <CardContent className="px-6 pb-6 space-y-6">
@@ -205,7 +205,9 @@ export default function Withdraw({
                   </Label>
 
                   <Typography variant="small" className="text-white whitespace-nowrap">
-                    {selectedCurrency === 'BTC' ? `${ckbtcBalance} ckBTC` : `${icpBalance} ICP`}
+                    {selectedCurrency === 'BTC'
+                      ? (ckbtcBalance === null || ckbtcBalance === undefined ? '' : `${ckbtcBalance} ckBTC`)
+                      : (icpBalance === null || icpBalance === undefined ? '' : `${icpBalance} ICP`)}
                   </Typography>
                 </div>
 
@@ -289,14 +291,14 @@ export default function Withdraw({
                 </div>
               )}
 
-              <hr className='bg-[#424444]' />
+              <hr className='text-[#424444]' />
 
               <div className="flex gap-3">
                 <Button
                   type="submit"
                   variant="default"
                   disabled={isLoading}
-                  className="flex-1 bg-[#FEB64D] text-black font-medium hover:bg-[#FEB64D]/90"
+                  className="bg-[#FEB64D] text-black font-medium hover:bg-[#FEB64D]/90"
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">

@@ -45,7 +45,7 @@ const ActivityContent = ({
   };
 
   return (
-    <Card key={idx} className="bg-[#212121] border-0 rounded-[20px] p-5">
+    <Card key={idx} className="p-5">
       <div className="flex items-center justify-between mb-6">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -76,7 +76,7 @@ const ActivityContent = ({
             )}
           </div>
         </div>
-        
+
         {/* Action button - show for all transactions except withdrawal complete */}
         {txUrl && activity.status !== "withdraw_complete" && (
           <div className="flex gap-2">
@@ -118,7 +118,7 @@ const ActivityContent = ({
                       <UsersRound size={20} className="text-white" />
                       <span className="text-white font-medium">Recipients ({activity.to?.length || 0})</span>
                     </div>
-                    <Card className="bg-[#362825] border border-[#715A24] rounded-[10px] p-4 flex justify-between items-center">
+                    <div className="container-error flex justify-between items-center">
                       <span className="text-white">Total escrow:</span>
                       <div className="flex items-center gap-2">
                         <Bitcoin size={20} className="text-[#F9A214]" />
@@ -133,7 +133,7 @@ const ActivityContent = ({
                         </span>
                         <span className="text-[#9F9F9F] text-sm">BTC</span>
                       </div>
-                    </Card>
+                    </div>
                   </Fragment>
                 ) : (
                   // Active/pending sent transaction - full layout with recipients table
@@ -150,9 +150,8 @@ const ActivityContent = ({
                         {activity.to?.map((recipient, idx: number) => (
                           <div
                             key={idx}
-                            className={`flex justify-between items-center p-4 text-white ${
-                              idx % 2 === 0 ? 'bg-[#2B2B2B]' : 'bg-[#2B2B2B]'
-                            } ${idx !== (activity.to?.length || 0) - 1 ? 'border-b border-[#424444]' : ''}`}
+                            className={`flex justify-between items-center p-4 text-white ${idx % 2 === 0 ? 'bg-[#2B2B2B]' : 'bg-[#2B2B2B]'
+                              } ${idx !== (activity.to?.length || 0) - 1 ? 'border-b border-[#424444]' : ''}`}
                           >
                             <span className="font-mono text-sm">
                               {String(recipient.principal).slice(0, 20)}...{String(recipient.principal).slice(-8)}
@@ -165,10 +164,8 @@ const ActivityContent = ({
                         ))}
                       </div>
 
-
-
                       {/* Total Escrow Section */}
-                      <Card className="bg-[#362825] border border-[#715A24] rounded-[10px] p-4 flex justify-between items-center">
+                      <div className="bg-[#362825] border border-[#715A24] rounded-[10px] p-4 flex justify-between items-center">
                         <span className="text-white">Total escrow:</span>
                         <div className="flex items-center gap-2">
                           <Bitcoin size={20} className="text-[#F9A214]" />
@@ -183,7 +180,7 @@ const ActivityContent = ({
                           </span>
                           <span className="text-[#9F9F9F] text-sm">BTC</span>
                         </div>
-                      </Card>
+                      </div>
                     </div>
                   </Fragment>
                 )}
@@ -199,7 +196,7 @@ const ActivityContent = ({
                       <UserRound size={20} className="text-white" />
                       <span className="text-white font-medium">Sender: {String(activity.from).slice(0, 20)}...{String(activity.from).slice(-8)}</span>
                     </div>
-                    <Card className="bg-[#1B2E25] border border-[#2A6239] rounded-[10px] p-4">
+                    <div className="container-success">
                       <div className="space-y-2">
                         <span className="text-white text-sm">You&apos;ll receive:</span>
                         <div className="flex items-center gap-2">
@@ -217,7 +214,7 @@ const ActivityContent = ({
                           <span className="text-white text-sm">(100%)</span>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   </Fragment>
                 ) : (
                   // Active/pending received transaction - standard layout
@@ -226,7 +223,7 @@ const ActivityContent = ({
                       <UserRound size={20} className="text-white" />
                       <span className="text-white font-medium">Sender: {String(activity.from).slice(0, 20)}...{String(activity.from).slice(-8)}</span>
                     </div>
-                    <Card className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4">
+                    <div className="container-gray">
                       <div className="flex items-center gap-2">
                         <Bitcoin size={20} className="text-[#F9A214]" />
                         <span className="text-white font-medium">
@@ -241,7 +238,7 @@ const ActivityContent = ({
                         <span className="text-[#9F9F9F] text-sm">BTC</span>
                         <span className="text-[#9F9F9F] text-sm">(100%)</span>
                       </div>
-                    </Card>
+                    </div>
                   </Fragment>
                 )}
               </Fragment>

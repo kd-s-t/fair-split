@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { Bitcoin, Trash2, Sparkles, Upload, Info, Plus, ChevronRight, ChevronsUpDown } from "lucide-react";
+import { Bitcoin, Trash2, Sparkles, Upload, Info, Plus, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
@@ -132,13 +132,13 @@ const Form = ({ form }: FormProps) => {
       if (remainingRecipients.length > 0) {
         const equalPercentage = Math.floor(100 / remainingRecipients.length);
         const remainder = 100 - (equalPercentage * remainingRecipients.length);
-        
+
         const updatedRecipients = remainingRecipients.map((recipient, i) => ({
           ...recipient,
           name: recipient.name || "",
           percentage: equalPercentage + (i === 0 ? remainder : 0)
         }));
-        
+
         setValue("recipients", updatedRecipients);
       }
     }
@@ -147,11 +147,11 @@ const Form = ({ form }: FormProps) => {
   return (
     <div className="flex flex-col gap-4 w-full max-w-none">
       {/* Escrow Setup Section */}
-      <Card className="bg-[#212121] border-[#303333] w-full">
+      <Card className="w-full">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <Typography variant="large" className="text-white">Escrow setup</Typography>
+          <div className="flex items-center gap-2">
             <Bitcoin className="w-5 h-5 text-[#F97A15]" />
+            <Typography variant="large" className="text-white">Escrow setup</Typography>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -217,9 +217,7 @@ const Form = ({ form }: FormProps) => {
             )}
           </div>
         </CardContent>
-        <br/>
-        <hr/>
-        <br/>
+        <hr className="text-[#424444] mt-6 mb-4" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <Typography variant="large" className="text-white">Recipients & split allocation</Typography>
@@ -231,12 +229,10 @@ const Form = ({ form }: FormProps) => {
             >
               <Plus className="w-4 h-4" />
               Add recipient
-              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Info Banner */}
           <div className="bg-[#1F374F] border border-[#0077FF] rounded-lg p-3">
             <div className="flex items-start gap-3">
               <Info className="w-5 h-5 text-[#71B5FF] mt-0.5 flex-shrink-0" />
@@ -272,7 +268,7 @@ const Form = ({ form }: FormProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeRecipient(index)}
-                        className="w-8 h-8 p-0 bg-[#353535] hover:bg-[#404040]"
+                        className="w-8 h-8 !p-0 bg-[#353535] hover:bg-[#404040] !rounded-full"
                       >
                         <Trash2 className="w-4 h-4 text-[#F64B4B]" />
                       </Button>

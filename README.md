@@ -14,16 +14,16 @@
 </div>
 
 # SplitSafe
-A decentralized, trustless multi-chain escrow and split payment system using Internet Computer (ICP) and SEI Network with modern web technologies. It utilizes ICP's native Bitcoin integration via cKBTC (Chain-Key Bitcoin) and SEI's high-performance blockchain to facilitate secure, programmable, and decentralized multi-party payment flows, eliminating the need for bridges, wrapped tokens, or intermediaries.
+A decentralized, trustless escrow and split payment system using Internet Computer (ICP) with Bitcoin integration and SEI Network for fast transactions. It utilizes ICP's native Bitcoin integration via cKBTC (Chain-Key Bitcoin) for secure Bitcoin escrow and SEI's high-performance blockchain for rapid transaction processing, eliminating the need for bridges, wrapped tokens, or intermediaries.
 
-Senders can lock cKBTC or SEI tokens into escrow, define payout rules, and automatically release funds once the specified conditions are met. Recipients receive tokens in predefined split proportions, which can be converted to native Bitcoin through ICP's Bitcoin integration or used directly on SEI Network, all managed by canister logic on the Internet Computer.
+Senders can lock cKBTC into escrow, define payout rules, and automatically release funds once the specified conditions are met. Recipients receive tokens in predefined split proportions, which can be converted to native Bitcoin through ICP's Bitcoin integration or processed via SEI Network for faster settlements, all managed by canister logic on the Internet Computer.
 
-**Multi-Chain Support:**
-- **Bitcoin (cKBTC)**: Native Bitcoin integration via ICP
-- **SEI Network**: High-performance Layer 1 blockchain for fast transactions
+**Technology Stack:**
+- **Bitcoin (cKBTC → BTC)**: Native Bitcoin integration via ICP for secure escrow
+- **SEI Network**: High-performance blockchain for fast transaction processing
 - **Testnet Ready**: Atlantic-2 testnet integration for safe development
 
-Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, gaming payments, DeFi integrations, and any scenarios requiring trust-minimized multi-chain settlements.
+Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, gaming payments, DeFi integrations, and any scenarios requiring trust-minimized Bitcoin escrow with fast settlement options.
 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 
@@ -34,15 +34,13 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 	<img src="https://img.shields.io/badge/Framer Motion-EF008F?style=for-the-badge&logo=framer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/chatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=https://raw.githubusercontent.com/sei-protocol/sei-chain/refs/heads/main/assets/openai.png&logoColor=white" /> 
 </div>
-
 <div align="center"> 
   <img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" />
   <img src="https://img.shields.io/badge/bitcoin-2F3134?style=for-the-badge&logo=bitcoin&logoColor=white" />
-  <img src="https://img.shields.io/badge/SEI-000000?style=for-the-badge&logo=sei&logoColor=white" />
-  <img src="https://img.shields.io/badge/SEI_Network-000000?style=for-the-badge&logo=https://avatars.githubusercontent.com/u/101956417?s=200&v=4" />
-	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
+  <img src="https://img.shields.io/badge/SEI-000000?style=for-the-badge&logo=https://raw.githubusercontent.com/sei-protocol/sei-chain/refs/heads/main/assets/SeiLogo.png&logoColor=white" />
+	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge&logo=https://raw.githubusercontent.com/sei-protocol/sei-chain/refs/heads/main/assets/motoko.png&logoColor=white" /> 
 </div>
 
 <div align="center"> 
@@ -62,11 +60,12 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 ### Qualification Round Demo
 Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow functionality:
 
-[![SafeSplit Demo - Qualification Round](https://img.shields.io/badge/Watch_Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.loom.com/share/6048358153c04dae899d0b2902f2fd9e?sid=d9b720fa-452b-4e3c-903b-1cf0f0856a20)
+[![SafeSplit Demo - Qualification Round](https://img.shields.io/badge/Watch_Demo-6255F1?style=for-the-badge&logo=loom&logoColor=white)](https://www.loom.com/share/6048358153c04dae899d0b2902f2fd9e?sid=d9b720fa-452b-4e3c-903b-1cf0f0856a20)
 
 **Features demonstrated:**
 - ✅ Complete escrow lifecycle (create → approve → release)
-- ✅ Multi-chain support (Bitcoin cKBTC + SEI Network)
+- ✅ Bitcoin escrow via cKBTC with native BTC conversion
+- ✅ SEI Network integration for fast transaction processing
 - ✅ Sender cancellation with full refund
 - ✅ Recipient decline with reputation penalty
 - ✅ Real-time balance management

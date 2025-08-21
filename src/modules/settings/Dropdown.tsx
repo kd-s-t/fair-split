@@ -205,7 +205,7 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
               <span className="text-white text-[19px] leading-[19px] font-normal">
                 {displayName && displayName.trim() !== '' ? displayName : 'User'}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-white rotate-90" />
+              <ChevronDown className="w-3.5 h-3.5 text-white" />
             </div>
           </button>
         </DropdownMenuTrigger>

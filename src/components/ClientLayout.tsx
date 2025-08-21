@@ -72,7 +72,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden mt-2.5">
+    <div className="flex h-screen w-screen overflow-hidden">
       {/* Left Sidebar */}
       <div className={`${isLeftSidebarOpen ? 'w-[15%]' : 'w-[5%]'} flex-shrink-0 mt-[16px] ml-[16px] transition-all duration-300`} data-section="sidebar">
         <Sidebar isOpen={isLeftSidebarOpen} onToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)} />

@@ -48,15 +48,21 @@ export default function Integrations() {
 					dispatch(setIcpBalance(icpBalanceResult.toString()));
 				} catch (error) {
 					console.error('Failed to get ICP balance:', error);
+					dispatch(setIcpBalance('0'));
 				}
 
 				// Get cKBTC balance for the specific user
-				const balanceResult = await actor.getUserBitcoinBalance(principal) as number;
-				console.log('🔍 DEBUG: Raw balance from canister:', balanceResult);
-				console.log('🔍 DEBUG: Balance in satoshis:', balanceResult);
-				const formattedBalance = (Number(balanceResult) / 1e8).toFixed(8);
-				console.log('🔍 DEBUG: Balance in BTC:', formattedBalance);
-				dispatch(setCkbtcBalance(formattedBalance));
+				try {
+					const balanceResult = await actor.getUserBitcoinBalance(principal) as number;
+					console.log('🔍 DEBUG: Raw balance from canister:', balanceResult);
+					console.log('🔍 DEBUG: Balance in satoshis:', balanceResult);
+					const formattedBalance = (Number(balanceResult) / 1e8).toFixed(8);
+					console.log('🔍 DEBUG: Balance in BTC:', formattedBalance);
+					dispatch(setCkbtcBalance(formattedBalance));
+				} catch (error) {
+					console.error('Failed to get cKBTC balance:', error);
+					dispatch(setCkbtcBalance('0.00000000'));
+				}
 
 				// Get SEI balance for the specific user
 				try {

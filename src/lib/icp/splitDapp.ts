@@ -28,8 +28,15 @@ export const createSplitDappActor = async () => {
     host
   })
   
-  // Always fetch root key since we're using a local replica behind the domain
-  await agent.fetchRootKey()
+  // Only fetch root key for local development
+  if (IS_LOCAL) {
+    try {
+      await agent.fetchRootKey()
+    } catch (error) {
+      console.warn('Failed to fetch root key for local development. Make sure your local replica is running with: dfx start --clean', error)
+      // Continue without root key for local development
+    }
+  }
 
   return Actor.createActor(idlFactory, {
     agent,
@@ -64,8 +71,15 @@ export const createSplitDappActorWithDfxKey = async () => {
     identity 
   })
   
-  // Always fetch root key since we're using a local replica behind the domain
-  await agent.fetchRootKey()
+  // Only fetch root key for local development
+  if (IS_LOCAL) {
+    try {
+      await agent.fetchRootKey()
+    } catch (error) {
+      console.warn('Failed to fetch root key for local development:', error)
+      // Continue without root key for local development
+    }
+  }
 
   return Actor.createActor(idlFactory, {
     agent,
@@ -87,8 +101,15 @@ export const createSplitDappActorAnonymous = async () => {
 
   const agent = new HttpAgent({ host })
 
-  // Always fetch root key since we're using a local replica behind the domain
-  await agent.fetchRootKey()
+  // Only fetch root key for local development
+  if (IS_LOCAL) {
+    try {
+      await agent.fetchRootKey()
+    } catch (error) {
+      console.warn('Failed to fetch root key for local development:', error)
+      // Continue without root key for local development
+    }
+  }
 
   return Actor.createActor(idlFactory, {
     agent,

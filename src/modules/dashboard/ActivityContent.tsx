@@ -119,7 +119,7 @@ const ActivityContent = ({
                       <span className="text-white font-medium">Recipients ({activity.to?.length || 0})</span>
                     </div>
                     <Card className="bg-[#362825] border border-[#715A24] rounded-[10px] p-4 flex justify-between items-center">
-                      <span className="text-white">Total escrow: 1</span>
+                      <span className="text-white">Total escrow:</span>
                       <div className="flex items-center gap-2">
                         <Bitcoin size={20} className="text-[#F9A214]" />
                         <span className="text-white font-medium">

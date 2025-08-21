@@ -78,12 +78,15 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 - ✅ SEI Layer 1 Network integration for fast transaction processing
 - ✅ Real-time balance management
 - ✅ ICP and cKBTC withdrawal support
-- ✅ AI Assistant for intelligent decision making
+- ✅ AI Assistant for navigating routes
+- ✅ AI Assistant for initiate escrow
+- ✅ AI Assistant for decision making
 - ✅ Sender can edit escrow amount, title and recipients
 - ✅ Reputation system (beta)
 
 **Coming in Global Round:**
 - 🔄 Withdrawal support (SEI)
+- 🔄 AI Assistant for withdrawal
 
 **Coming in Final Round:**
 - 🔄 Advanced analytics dashboard

@@ -104,5 +104,47 @@ module {
             Text.startsWith(address, #text "3") or 
             Text.startsWith(address, #text "bc1")
         };
+
+        // Real cKBTC methods
+        public func getBitcoinBalance(account : Account) : async Result.Result<Nat, Text> {
+            try {
+                let balance = await ledger.icrc1_balance_of(account);
+                #ok(balance)
+            } catch (_error) {
+                #err("Failed to get Bitcoin balance")
+            }
+        };
+
+        public func transferBitcoin(
+            fromAccount : Account,
+            toAccount : Account,
+            amount : Nat,
+            memo : Nat64
+        ) : async Result.Result<Nat, Text> {
+            try {
+                let transferArgs : TransferArgs = {
+                    memo = memo;
+                    amount = amount;
+                    fee = 0;
+                    from_subaccount = fromAccount.subaccount;
+                    to = toAccount;
+                    created_at_time = null;
+                };
+                let result = await ledger.transfer(transferArgs);
+                switch (result) {
+                    case (#Ok(txId)) { #ok(txId) };
+                    case (#Err(error)) { #err("Transfer failed") };
+                }
+            } catch (_error) {
+                #err("Transfer failed")
+            }
+        };
+
+        public func createBitcoinEscrowAccount(escrowId : Text) : Account {
+            return {
+                owner = me;
+                subaccount = null;
+            };
+        };
     };
 };

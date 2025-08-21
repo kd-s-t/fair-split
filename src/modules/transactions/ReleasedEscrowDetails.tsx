@@ -1,8 +1,9 @@
 'use client'
 
 import { Typography } from "@/components/ui/typography";
+import { Button } from "@/components/ui/button";
 import { ReleasedEscrowDetailsProps } from "./types";
-import { CircleCheckBig } from "lucide-react";
+import { CircleCheckBig, QrCode, ExternalLink } from "lucide-react";
 
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
   const releasedAt = transaction.releasedAt ? new Date(Number(transaction.releasedAt) / 1000000) : new Date();
@@ -112,6 +113,26 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
         <Typography variant="small" className="text-[#9F9F9F] mt-2">
           No middleman. No human intervention. Fully automated on-chain execution.
         </Typography>
+      </div>
+
+      {/* View Explorer Buttons */}
+      <div className="flex gap-4">
+        <Button 
+          variant="outline" 
+          className="flex-1 flex items-center gap-2"
+          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
+        >
+          <QrCode className="w-4 h-4" />
+          <span>View Explorer</span>
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex-1 flex items-center gap-2"
+          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>View Explorer</span>
+        </Button>
       </div>
     </div>
   );

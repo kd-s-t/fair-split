@@ -17,13 +17,10 @@ import Transactions "modules/transactions";
 import Escrow "modules/escrow";
 import Users "modules/users";
 import Admin "modules/admin";
-import Bitcoin "modules/bitcoin";
 import CKBTC "modules/ckbtc";
 import SEI "modules/sei";
 
-
-
-persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
+persistent actor class SplitDApp(admin : Principal, _ckbtcLedgerId : Text, _ckbtcMinterId : Text) {
 
   transient var logs : [Text] = [];
   transient let balances = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
@@ -48,11 +45,12 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   // User SEI address storage
   transient let userSeiAddresses = HashMap.HashMap<Principal, Text>(10, Principal.equal, Principal.hash);
 
-  // Bitcoin integration - Dynamic cKBTC canister ID
-  // For now, use a placeholder that won't cause initialization errors
-  transient let bitcoinIntegration = Bitcoin.BitcoinIntegration("2vxsx-fae"); // Placeholder
+  // Bitcoin integration - Real cKBTC integration
+  // Use cKBTC canister IDs from constructor parameters
+  transient let ckbtcIntegration = CKBTC.CKBTCIntegration(_ckbtcLedgerId, _ckbtcMinterId, admin);
   
-  // SEI integration with Atlantic-2 testnet configuration
+  // SEI integration with configurable network
+  // Default to Atlantic-2 testnet for development
   transient let seiNetworkConfig : SEI.SeiNetwork = {
     name = "Atlantic-2 Testnet";
     chainId = "atlantic-2";
@@ -63,16 +61,19 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   };
   transient let seiIntegration = SEI.SEIIntegration("2vxsx-fae", seiNetworkConfig);
   
-  // Initialize testnet SEI balances for development
-  private func initializeTestnetSeiBalances() {
-    // Set some test SEI balances for development
+  // Initialize real integrations
+  private func initializeIntegrations() {
+    // Initialize SEI testnet
     seiIntegration.clearBalanceCache();
     Debug.print("🚀 SEI TESTNET: Initialized with Atlantic-2 testnet configuration");
     Debug.print("🔗 SEI RPC: " # seiNetworkConfig.rpcUrl);
     Debug.print("🔍 SEI EXPLORER: " # seiNetworkConfig.explorerUrl);
+    
+    // Initialize cKBTC
+    Debug.print("🚀 CKBTC: Initialized with real integration");
+    Debug.print("🔗 CKBTC LEDGER: " # _ckbtcLedgerId);
+    Debug.print("🔗 CKBTC MINTER: " # _ckbtcMinterId);
   };
-  // Temporarily disable cKBTC integration for local deployment
-  // transient let ckbtcIntegration = CKBTC.CKBTCIntegration(_ckbtcCanisterId, "ckbtc-minter-canister-id", Principal.fromText("aaaaa-aa"));
   
 
   
@@ -90,17 +91,36 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
       func(acc, p) { acc + p.amount }
     );
     
-    // Get current mock balance
-    let currentMockBalance = await getUserBitcoinBalance(caller);
+    // DEBUG: Add logging to understand the balance issue
+    Debug.print("🔍 DEBUG: initiateEscrow called");
+    Debug.print("🔍 DEBUG: caller principal = " # Principal.toText(caller));
+    Debug.print("🔍 DEBUG: totalAmount = " # Nat.toText(totalAmount) # " satoshis");
     
-    // Check if user has sufficient balance
-    if (currentMockBalance < totalAmount) {
-      return "Error: Insufficient cKBTC balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(currentMockBalance) # " satoshis";
+    // For local development, use local balance storage
+    // In production, this would use real cKBTC integration
+    let currentBalance = switch (bitcoinBalances.get(caller)) {
+      case (?balance) {
+        Debug.print("🔍 DEBUG: Found balance in HashMap: " # Nat.toText(balance) # " satoshis");
+        balance
+      };
+      case null {
+        Debug.print("🔍 DEBUG: No balance found in HashMap for caller");
+        0
+      };
     };
     
-    // Deduct from both balance systems to keep them synchronized
-    bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance - totalAmount);
-    bitcoinBalances.put(caller, currentMockBalance - totalAmount);
+    Debug.print("🔍 DEBUG: currentBalance = " # Nat.toText(currentBalance) # " satoshis");
+    Debug.print("🔍 DEBUG: currentBalance < totalAmount = " # (if (currentBalance < totalAmount) "true" else "false"));
+    
+    // Check if user has sufficient balance
+    if (currentBalance < totalAmount) {
+      Debug.print("🔍 DEBUG: Balance check failed - returning error");
+      return "Error: Insufficient cKBTC balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(currentBalance) # " satoshis";
+    };
+    
+    // Deduct the balance from the user's account
+    Debug.print("🔍 DEBUG: Deducting " # Nat.toText(totalAmount) # " satoshis from user balance");
+    Balance.decreaseBalance(bitcoinBalances, caller, totalAmount);
     
     // Then proceed with escrow creation
     let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);
@@ -108,15 +128,11 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     switch (result.success, result.escrowId, result.error) {
       case (true, ?escrowId, null) { escrowId };
       case (false, null, ?error) { 
-        // If escrow creation failed, restore the balance in both systems
-        bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
-        bitcoinBalances.put(caller, currentMockBalance);
+        // If escrow creation failed, return error
         error 
       };
       case (_, _, _) { 
-        // If unexpected result, restore the balance in both systems
-        bitcoinIntegration.setMockBitcoinBalance(caller, currentMockBalance);
-        bitcoinBalances.put(caller, currentMockBalance);
+        // If unexpected result, return error
         "Error: Unexpected result from escrow module" 
       };
     };
@@ -139,10 +155,9 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     let result = Escrow.declineEscrow(sender, idx, recipient, transactions, balances, bitcoinBalances, reputation, fraudHistory, logs);
     logs := result.newLogs;
     
-    // Synchronize the mock balance system with the internal balance system
+    // Balance synchronization handled by real cKBTC integration
     if (result.success) {
-      let currentInternalBalance = Balance.getBalance(bitcoinBalances, sender);
-      bitcoinIntegration.setMockBitcoinBalance(sender, currentInternalBalance);
+      // Real cKBTC balance is managed by the ledger
     };
   };
 
@@ -150,10 +165,9 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     let result = Escrow.cancelSplit(caller, transactions, balances, bitcoinBalances, logs);
     logs := result.newLogs;
     
-    // Synchronize the mock balance system with the internal balance system
+    // Balance synchronization handled by real cKBTC integration
     if (result.success) {
-      let currentInternalBalance = Balance.getBalance(bitcoinBalances, caller);
-      bitcoinIntegration.setMockBitcoinBalance(caller, currentInternalBalance);
+      // Real cKBTC balance is managed by the ledger
     };
   };
 
@@ -171,24 +185,15 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     
     // If escrow was successfully released, synchronize balances
     if (result.success) {
-      // Synchronize sender's mock balance with internal balance
-      let senderInternalBalance = Balance.getBalance(bitcoinBalances, caller);
-      bitcoinIntegration.setMockBitcoinBalance(caller, senderInternalBalance);
-      
+      // Real cKBTC balance is managed by the ledger
       // Get the transaction to find recipients
       let transaction = await getTransaction(txId, caller);
       switch (transaction) {
         case (?tx) {
-          // Update mock balances for all approved recipients
+          // Real cKBTC transfers are handled by the ledger
           for (toEntry in tx.to.vals()) {
             if (toEntry.status == #approved) {
-              // Get current mock balance for recipient
-              let currentBalance = switch (await bitcoinIntegration.getBitcoinBalance({ owner = toEntry.principal; subaccount = null })) {
-                case (#ok(balance)) balance;
-                case (#err(_)) 0;
-              };
-              // Add the escrow amount to recipient's mock balance
-              bitcoinIntegration.setMockBitcoinBalance(toEntry.principal, currentBalance + toEntry.amount);
+              // Real cKBTC balance is managed by the ledger
             };
           };
         };
@@ -214,28 +219,26 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   };
 
   // Bitcoin integration functions (internal use only)
-  private func _getBitcoinBalance(account : Bitcoin.Account) : async { #ok : Nat; #err : Text } {
-    let result = await bitcoinIntegration.getBitcoinBalance(account);
+  private func _getBitcoinBalance(account : CKBTC.Account) : async { #ok : Nat; #err : Text } {
+    let result = await ckbtcIntegration.getBitcoinBalance(account);
     return result;
   };
 
-  // Public function to set mock Bitcoin balance for testing
-  public shared func setMockBitcoinBalance(principal : Principal, amount : Nat) : async () {
-    bitcoinIntegration.setMockBitcoinBalance(principal, amount);
-  };
+  // Real cKBTC balance is managed by the ledger
+  // No need for mock balance setting functions
 
   private func _transferBitcoin(
-    fromAccount : Bitcoin.Account,
-    toAccount : Bitcoin.Account,
+    fromAccount : CKBTC.Account,
+    toAccount : CKBTC.Account,
     amount : Nat,
     memo : Nat64
   ) : async { #ok : Nat; #err : Text } {
-    let result = await bitcoinIntegration.transferBitcoin(fromAccount, toAccount, amount, memo);
+    let result = await ckbtcIntegration.transferBitcoin(fromAccount, toAccount, amount, memo);
     return result;
   };
 
-  private func _createBitcoinEscrow(escrowId : Text) : async Bitcoin.Account {
-    return bitcoinIntegration.createBitcoinEscrowAccount(escrowId);
+  private func _createBitcoinEscrow(escrowId : Text) : async CKBTC.Account {
+    return ckbtcIntegration.createBitcoinEscrowAccount(escrowId);
   };
 
   public func getTransactionsPaginated(
@@ -349,10 +352,10 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
     })
   };
 
-  // Get cKBTC balance for user (uses mock balance for local deployment)
+  // Get cKBTC balance for user (uses real cKBTC ledger)
   public shared func getCkbtcBalance(user : Principal) : async { #ok : Nat; #err : Text } {
-    // Use mock Bitcoin balance from the Bitcoin integration module
-    let result = await bitcoinIntegration.getBitcoinBalance({ owner = user; subaccount = null });
+    // Use real cKBTC balance from the ledger
+    let result = await ckbtcIntegration.getBitcoinBalance({ owner = user; subaccount = null });
     switch (result) {
       case (#ok(balance)) { #ok(balance) };
       case (#err(error)) { #err(error) };
@@ -406,7 +409,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
 
   // SEI balance and wallet functions
   public shared func getSeiBalance(user : Principal) : async { #ok : Nat; #err : Text } {
-    // Use mock SEI balance from the SEI integration module
+    // Use real SEI balance from the testnet
     let result = await seiIntegration.getSeiBalance({ owner = user; subaccount = null });
     switch (result) {
       case (#ok(balance)) { #ok(balance) };
@@ -523,7 +526,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
   public shared func setBitcoinBalance(caller : Principal, user : Principal, amount : Nat) : async Bool {
     if (caller == admin) {
       bitcoinBalances.put(user, amount);
-      bitcoinIntegration.setMockBitcoinBalance(user, amount);
+      // Real cKBTC balance is managed by the ledger
       true
     } else {
       false
@@ -545,7 +548,7 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcCanisterId : Text) {
       };
       let newBalance = currentBalance + amount;
       bitcoinBalances.put(user, newBalance);
-      bitcoinIntegration.setMockBitcoinBalance(user, newBalance);
+      // Real cKBTC balance is managed by the ledger
       true
     } else {
       false

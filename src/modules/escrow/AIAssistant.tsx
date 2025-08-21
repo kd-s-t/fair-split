@@ -14,6 +14,7 @@ import z from 'zod';
 import { escrowFormSchema } from '@/validation/escrow';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { handleNavigation, executeNavigation } from '@/lib/messaging/navigationService';
+import { convertCurrencyToBTC } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type FormData = z.infer<typeof escrowFormSchema>;
@@ -61,10 +62,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
         const totalAmount = parseFloat(parsedAction.amount) || 0.03;
         const recipients = parsedAction.recipients || [];
 
-        // Generate title based on recipients or use a default
-        const title = recipients.length > 0
+        // Use custom title if provided, otherwise generate based on recipients
+        const title = parsedAction.title || (recipients.length > 0
           ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
-          : "Payment Split";
+          : "Payment Split");
 
         // Create recipient objects with equal distribution
         const recipientObjects: Recipient[] = recipients.map((recipient, index) => {
@@ -124,9 +125,22 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
   };
 
   const parseDescription = (desc: string): AiGeneratedSetup => {
-    // Extract amount
-    const amountMatch = desc.match(/(\d+\.?\d*)\s*btc/i);
-    const totalAmount = amountMatch ? parseFloat(amountMatch[1]) : 0.03;
+    // Extract amount and check for currency conversion
+    let totalAmount = 0.03;
+    
+    // Check for currency amounts first
+    const currencyMatch = desc.match(/(\$|€|£|¥)(\d+(?:\.\d{1,2})?)/);
+    if (currencyMatch) {
+      const currencySymbol = currencyMatch[1];
+      const currencyAmount = parseFloat(currencyMatch[2]);
+      
+      // Convert currency to BTC using centralized function
+      totalAmount = parseFloat(convertCurrencyToBTC(currencyAmount, currencySymbol));
+    } else {
+      // Extract BTC amount
+      const amountMatch = desc.match(/(\d+\.?\d*)\s*btc/i);
+      totalAmount = amountMatch ? parseFloat(amountMatch[1]) : 0.03;
+    }
 
     // Extract recipients - look for ICP principals or addresses
     const recipients: Recipient[] = [];
@@ -179,10 +193,16 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       });
     }
 
-    // Generate title based on recipients
-    const title = recipients.length > 0
-      ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
-      : "Payment Split";
+    // Extract title if provided, otherwise generate based on recipients
+    let title = "Payment Split";
+    
+    // Look for title pattern: "title <title_text>"
+    const titleMatch = desc.match(/title\s+(\w+)/i);
+    if (titleMatch) {
+      title = titleMatch[1];
+    } else if (recipients.length > 0) {
+      title = `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`;
+    }
 
     return {
       title,

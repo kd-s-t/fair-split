@@ -59,7 +59,7 @@ import {
   setTransactions,
 } from "../../lib/redux/transactionsSlice";
 import { useRouter } from "next/navigation";
-import { Principal } from "@dfinity/principal";
+
 
 import {
   ArrowDownLeft,
@@ -107,8 +107,7 @@ export default function TransactionsPage() {
   const [localTransactions, setLocalTransactions] = useState<NormalizedTransaction[]>([]);
   const router = useRouter();
 
-  const [isApproving, setIsApproving] = useState<string | null>(null);
-  const [isDeclining, setIsDeclining] = useState<string | null>(null);
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -184,11 +183,7 @@ export default function TransactionsPage() {
     }
   }, [localTransactions, principal, markUnreadTransactionsAsRead]);
 
-  function getTxId(tx: NormalizedTransaction) {
-    return `${tx.from}_${tx.to
-      .map((toEntry) => toEntry.principal)
-      .join("-")}_${tx.createdAt}`;
-  }
+
 
   function isPendingApproval(tx: NormalizedTransaction): boolean {
     if (!principal) return false;
@@ -245,82 +240,9 @@ export default function TransactionsPage() {
     );
   };
 
-  async function handleApprove(tx: NormalizedTransaction) {
-    if (!principal) return;
-    setIsApproving(getTxId(tx));
-    try {
-      const actor = await createSplitDappActor();
-      const senderPrincipal = typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
-      // Always compare principal as string
-      const principalStr = typeof principal === "string" ? principal : principal.toText();
-      const recipientEntry = tx.to.find((entry) => String(entry.principal) === principalStr);
-      if (!recipientEntry) {
-        toast.error('Recipient entry not found.');
-        setIsApproving(null);
-        return;
-      }
-      const recipientPrincipal = typeof recipientEntry.principal === "string"
-        ? Principal.fromText(recipientEntry.principal)
-        : recipientEntry.principal;
 
-      await actor.recipientApproveEscrow(senderPrincipal, tx.id, recipientPrincipal);
-      toast.success('Approved successfully!');
-      // Refresh transaction data
-      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      dispatch(setTransactions(convertToNormalizedTransactions(updatedTxs.transactions)));
-    } catch (err) {
-      toast.error((err as Error).message || 'Failed to approve');
-      setIsApproving(null);
-    }
-  }
 
-  async function handleDecline(tx: NormalizedTransaction) {
-    if (!principal) return;
-    setIsDeclining(getTxId(tx));
-    try {
-      const actor = await createSplitDappActor();
-      const senderPrincipal =
-        typeof tx.from === "string" ? Principal.fromText(tx.from) : tx.from;
-      const principalStr =
-        typeof principal === "string" ? principal : principal.toText();
-      const recipientEntry = tx.to.find(
-        (entry) => String(entry.principal) === principalStr
-      );
-      if (!recipientEntry) {
-        toast.error("Recipient entry not found.");
-        setIsDeclining(null);
-        return;
-      }
-      const recipientPrincipal =
-        typeof recipientEntry.principal === "string"
-          ? Principal.fromText(recipientEntry.principal)
-          : recipientEntry.principal;
 
-      // Get the sender's transactions to find the correct index
-      const senderPrincipalStr = typeof tx.from === "string" ? tx.from : (tx.from as { toText: () => string }).toText();
-      const txs = await actor.getTransactionsPaginated(Principal.fromText(senderPrincipalStr), BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      const txIndex = txs.transactions.findIndex((t: unknown) => (t as { id: string }).id === tx.id);
-
-      if (txIndex === -1) {
-        toast.error('Transaction not found.');
-        setIsDeclining(null);
-        return;
-      }
-
-      await actor.recipientDeclineEscrow(
-        senderPrincipal,
-        txIndex,
-        recipientPrincipal
-      );
-      toast.success('Declined successfully!');
-      // Refresh transaction data
-      const updatedTxs = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
-      dispatch(setTransactions(convertToNormalizedTransactions(updatedTxs.transactions)));
-    } catch (err) {
-      toast.error((err as Error).message || 'Failed to decline');
-      setIsDeclining(null);
-    }
-  }
 
   async function handleRowClick(tx: NormalizedTransaction) {
     if (!principal) return;

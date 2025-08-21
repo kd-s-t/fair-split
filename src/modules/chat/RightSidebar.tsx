@@ -7,6 +7,7 @@ import { Message } from './ChatInterface';
 import { saveMessages, loadMessages, scrollToBottomOnOpen } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
+import { convertCurrencyToBTC } from '@/lib/utils';
 
 import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState } from '@/lib/messaging/chatState';
@@ -132,12 +133,27 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           const recipientMatch = content.match(/[a-z0-9-]{63}/g);
           const recipients = recipientMatch || [];
           
-          // Extract amount (look for numbers)
-          const amountMatch = content.match(/(\d+(?:\.\d+)?)/);
-          const amount = amountMatch ? amountMatch[1] : '1';
+          // Extract amount and check for currency
+          let amount = '1';
+          let originalCurrency: string | undefined;
           
-          console.log('Local parser found escrow creation:', { recipients, amount });
-          parsedAction = { type: 'create_escrow', recipients, amount };
+          // Check for currency amounts first
+          const currencyMatch = content.match(/(\$|€|£|¥)(\d+(?:\.\d{1,2})?)/);
+          if (currencyMatch) {
+            const currencySymbol = currencyMatch[1];
+            const currencyAmount = parseFloat(currencyMatch[2]);
+            
+            // Convert currency to BTC using centralized function
+            amount = convertCurrencyToBTC(currencyAmount, currencySymbol);
+            originalCurrency = currencyMatch[0];
+          } else {
+            // Extract regular amount (look for numbers)
+            const amountMatch = content.match(/(\d+(?:\.\d+)?)/);
+            amount = amountMatch ? amountMatch[1] : '1';
+          }
+          
+          console.log('Local parser found escrow creation:', { recipients, amount, originalCurrency });
+          parsedAction = { type: 'create_escrow', recipients, amount, originalCurrency };
         } else if (lowerContent.includes('bitcoin') && lowerContent.includes('address')) {
           parsedAction = { type: 'set_bitcoin_address', address: 'invalid' };
         } else if (lowerContent.includes('balance') || lowerContent.includes('principal')) {

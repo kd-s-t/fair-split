@@ -4,36 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Typography } from '@/components/ui/typography';
 import { useUser } from '@/hooks/useUser';
 import { Coins } from 'lucide-react';
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/auth-context';
-import { useDispatch } from 'react-redux';
-import { setIcpBalance } from '@/lib/redux/userSlice';
+import React from 'react';
 
-import { toast } from 'sonner';
 
 const ICPBalance: React.FC = () => {
   const { icpBalance } = useUser();
-  const { principal } = useAuth();
-  const dispatch = useDispatch();
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const refreshBalance = async () => {
-    if (!principal) return;
-
-    setIsRefreshing(true);
-    try {
-      const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
-      const actor = await createSplitDappActor();
-      const icpBalanceResult = await actor.getBalance(principal) as bigint;
-      dispatch(setIcpBalance(icpBalanceResult.toString()));
-      toast.success('ICP balance updated!');
-    } catch (error) {
-      console.error('Failed to refresh ICP balance:', error);
-      toast.error('Failed to refresh ICP balance');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   return (
     <Card className="text-white">

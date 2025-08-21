@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 // Wallet Modal Component
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
-  const { icpBalance, ckbtcAddress, ckbtcBalance, seiAddress, seiBalance } = useAppSelector((state: RootState) => state.user);
+  const { icpBalance, ckbtcAddress } = useAppSelector((state: RootState) => state.user);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -126,44 +126,6 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
                   </svg>
                 </button>
               </div>
-              {ckbtcBalance && (
-                <div className="mt-2 text-sm text-[#A1A1A1]">
-                  Balance: {ckbtcBalance} BTC
-                </div>
-              )}
-            </div>
-
-            {/* SEI Address */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">SEI Address</label>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <div className="bg-[#2B2B2B] border border-[#424444] rounded-md p-3">
-                    <input
-                      type="text"
-                      value={seiAddress || "No address generated"}
-                      readOnly
-                      className="w-full bg-transparent text-white placeholder-[#A1A1A1] outline-none"
-                      placeholder="Your SEI address"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={() => copyToClipboard(seiAddress || "")}
-                  disabled={!seiAddress}
-                  className="px-3 py-3 border border-[#7A7A7A] rounded-md hover:bg-[#3A3A3A] transition-colors bg-[#2A2A2A] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <rect x="5.33" y="5.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
-                    <rect x="1.33" y="1.33" width="9.33" height="9.33" stroke="white" strokeWidth="1.5"/>
-                  </svg>
-                </button>
-              </div>
-              {seiBalance && (
-                <div className="mt-2 text-sm text-[#A1A1A1]">
-                  Balance: {seiBalance} SEI
-                </div>
-              )}
             </div>
           </div>
         </div>

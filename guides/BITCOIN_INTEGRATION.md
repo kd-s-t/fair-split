@@ -164,7 +164,7 @@ private let rateLimiter = HashMap.HashMap<Principal, Nat>(10, Principal.equal, P
 dfx start --clean
 
 # Deploy canisters
-dfx deploy
+dfx deploy --network local
 
 # Test Bitcoin functions
 dfx canister call split_dapp getBitcoinBalance '(...)'

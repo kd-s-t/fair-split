@@ -2,6 +2,8 @@ export interface EscrowCreateAction {
   type: 'create_escrow';
   amount: string;
   recipients: string[];
+  originalCurrency?: string; // Track original currency for conversion
+  title?: string; // Custom title if provided
 }
 
 export interface ApprovalSuggestionAction {
@@ -29,6 +31,8 @@ export interface NavigationAction {
 
 export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
 
+import { convertCurrencyToBTC, detectCurrencyAmount } from '../utils';
+
 // Bitcoin address validation function
 function isValidBitcoinAddress(address: string): boolean {
   // Basic Bitcoin address validation
@@ -44,6 +48,9 @@ function isValidBitcoinAddress(address: string): boolean {
 export function parseUserMessage(message: string): ParsedAction {
   const lowerMessage = message.toLowerCase();
   
+  // Check for currency amounts first
+  const currencyInfo = detectCurrencyAmount(message);
+  
   // Pattern 1: Create escrow with amount and recipients (flexible format)
   const escrowPatterns = [
     // "create me an escrow 1.5 split equally with this id 6plni-kg3vz-j364n-kq4og-knybs-dlcve-foeoj-3dom6-72644-44fmd-bqe, modgw-in3j2-6e4ze-4gcda-sixdn-4wj5m-wezzo-3v5gy-nfsz5-5skqf-yqe"
@@ -53,14 +60,18 @@ export function parseUserMessage(message: string): ParsedAction {
     /create.*escrow.*amount.*?(\d*\.?\d+)\s*btc.*?id.*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
     
     // "create escrow 0.5 btc for recipients: 12312, dsadsa"
-    /create.*escrow.*?(\d*\.?\d+).*?(?:btc|for).*?(?:recipients?|id).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i
+    /create.*escrow.*?(\d*\.?\d+).*?(?:btc|for).*?(?:recipients?|id).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
+    
+    // "send $5 to user123" or "transfer €10 to alice and bob"
+    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
   ];
   
   for (const pattern of escrowPatterns) {
     const match = message.match(pattern);
     if (match) {
-      const amount = match[1];
+      let amount = match[1];
       const recipientsText = match[2];
+      let originalCurrency: string | undefined;
       
       // Extract recipient IDs (split by commas, spaces, or other delimiters)
       const recipients = recipientsText
@@ -68,10 +79,25 @@ export function parseUserMessage(message: string): ParsedAction {
         .map(id => id.trim())
         .filter(id => id.length > 0);
       
+             // Handle currency conversion if currency was detected
+       if (currencyInfo && currencyInfo.originalText.includes(amount)) {
+         amount = convertCurrencyToBTC(parseFloat(currencyInfo.amount), currencyInfo.currency);
+         originalCurrency = currencyInfo.originalText;
+       }
+      
+      // Extract title if provided
+      let title: string | undefined;
+      const titleMatch = message.match(/title\s+(\w+)/i);
+      if (titleMatch) {
+        title = titleMatch[1];
+      }
+      
       return {
         type: 'create_escrow',
         amount,
-        recipients
+        recipients,
+        originalCurrency,
+        title
       };
     }
   }
@@ -234,14 +260,19 @@ export function generateActionResponse(action: ParsedAction, userData?: {
   ckbtcAddress?: string | null;
 }): string {
   if (!action) {
-    return "I can only help with four specific actions:\n\n1. **Create Escrow**: Try saying:\n   - 'send 2 btc to [recipient-id]'\n   - 'create escrow 1.5 btc for [recipient-ids]'\n   - 'transfer 0.5 btc to [recipient]'\n\n2. **Set Bitcoin Address**: Try saying:\n   - 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n   - 'my bitcoin address is 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'\n   - 'use bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh as my bitcoin address'\n\n3. **Account Queries**: Try saying:\n   - 'what is my principal?'\n   - 'show my ICP balance'\n   - 'what's my Bitcoin address?'\n   - 'tell me my account info'\n\n4. **Approval Suggestions**: Try saying:\n   - 'suggest approvals for my escrows'\n   - 'should I approve or decline?'\n   - 'give me approval recommendations'\n\nPlease rephrase your request using one of these formats.";
+    return "I can only help with four specific actions:\n\n1. **Create Escrow**: Try saying:\n   - 'send 2 btc to [recipient-id]'\n   - 'send $50 to [recipient-id]'\n   - 'create escrow 1.5 btc for [recipient-ids]'\n   - 'transfer €100 to [recipient]'\n\n2. **Set Bitcoin Address**: Try saying:\n   - 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n   - 'my bitcoin address is 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'\n   - 'use bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh as my bitcoin address'\n\n3. **Account Queries**: Try saying:\n   - 'what is my principal?'\n   - 'show my ICP balance'\n   - 'what's my Bitcoin address?'\n   - 'tell me my account info'\n\n4. **Approval Suggestions**: Try saying:\n   - 'suggest approvals for my escrows'\n   - 'should I approve or decline?'\n   - 'give me approval recommendations'\n\nPlease rephrase your request using one of these formats.";
   }
   
   switch (action.type) {
     case 'create_escrow':
       const recipientCount = action.recipients.length;
       const recipientText = recipientCount === 1 ? 'recipient' : 'recipients';
-      return `I'll help you create an escrow for ${action.amount} BTC with ${recipientCount} ${recipientText}. Redirecting you to the escrow creation form...`;
+      
+      if (action.originalCurrency) {
+        return `I'll help you create an escrow for ${action.originalCurrency} (converted to ${action.amount} BTC) with ${recipientCount} ${recipientText}. Redirecting you to the escrow creation form...`;
+      } else {
+        return `I'll help you create an escrow for ${action.amount} BTC with ${recipientCount} ${recipientText}. Redirecting you to the escrow creation form...`;
+      }
     
     case 'set_bitcoin_address':
       if (action.address === 'invalid') {

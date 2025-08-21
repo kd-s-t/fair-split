@@ -1,20 +1,13 @@
 "use client";
 
-import { Copy, Shield } from "lucide-react";
+import { QrCode, ExternalLink, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
+import { Button } from "@/components/ui/button";
 import TransactionStats from "@/components/TransactionStats";
 
 import { CancelledEscrowDetailsProps } from "./types";
-import RecipientsList from "./RecipientsList";
-import TransactionExplorerLinks from "./TransactionExplorerLinks";
-import { useMemo } from "react";
 
 export default function CancelledEscrowDetails({ transaction }: CancelledEscrowDetailsProps) {
-  const depositAddress = useMemo(() => {
-    return ('bitcoinAddress' in transaction ? transaction.bitcoinAddress : undefined) ||
-      ('depositAddress' in transaction ? transaction.depositAddress : undefined) ||
-      "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-  }, [transaction]);
 
   const totalBTC =
     Array.isArray(transaction?.to) && transaction.to.length > 0
@@ -36,63 +29,65 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
 
       <hr className="my-10 text-[#424444] h-[1px]" />
 
-      <RecipientsList 
-        recipients={
-          'to' in transaction && Array.isArray(transaction.to) 
-            ? transaction.to.map(recipient => ({
-                ...recipient,
-                amount: typeof recipient.amount === 'string' ? BigInt(recipient.amount) : recipient.amount,
-                percentage: typeof recipient.percentage === 'string' ? Number(recipient.percentage) : recipient.percentage,
-                status: recipient.status as { [key: string]: null }
-              }))
-            : []
-        } 
-        showTimestamps={false} 
-      />
+      {/* Payment Distribution */}
+      <Typography variant="large" className="mb-4">Payment distribution</Typography>
 
-      <hr className="my-6 text-[#424444] h-[1px]" />
-
-      <Typography variant="large" className="text-[#F64C4C]">Escrow Cancelled</Typography>
-
-      <Typography variant="small" className="text-[#fff] font-semibold">
-        Bitcoin deposit address
-      </Typography>
-      <div className="grid grid-cols-12 gap-3 mt-2">
-        <div className="container-gray col-span-11 break-all">
-          {depositAddress}
-        </div>
-        <div className="container-gray cursor-pointer">
-          <Copy />
-        </div>
+      <div className="space-y-4">
+        {Array.isArray(transaction.to) && transaction.to.map((recipient, index) => {
+          const amount = Number(recipient.amount) / 1e8;
+          const totalAmount = transaction.to.reduce((sum: number, entry) => sum + Number(entry.amount), 0) / 1e8;
+          const percentage = totalAmount > 0 ? Math.round((amount / totalAmount) * 100) : 0;
+          
+          return (
+            <div key={index} className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 bg-[#4F3F27] rounded-full flex items-center justify-center">
+                    <CircleCheckBig size={24} className="text-[#FEB64D]" />
+                  </div>
+                  <div>
+                    <Typography variant="base" className="text-white font-semibold">
+                      Recipient {index + 1}
+                    </Typography>
+                    <Typography variant="small" className="text-[#9F9F9F]">
+                      {String(recipient.principal).slice(0, 20)}...
+                    </Typography>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Typography variant="base" className="text-white font-semibold">
+                    {amount.toFixed(8)} BTC
+                  </Typography>
+                  <Typography variant="small" className="text-[#9F9F9F]">
+                    {percentage}%
+                  </Typography>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="container-primary mt-4">
-        <Typography variant="p" className="text-[#F64C4C] font-semibold">
-          This escrow has been cancelled and refunded
-        </Typography>
-        <Typography variant="p" className="text-white">
-          The sender has been refunded for the cancelled escrow
-        </Typography>
+
+      <div className="flex gap-4 mt-6">
+        <Button 
+          variant="outline" 
+          className="flex-1 flex items-center gap-2"
+          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
+        >
+          <QrCode className="w-4 h-4" />
+          <span>View Explorer</span>
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex-1 flex items-center gap-2"
+          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>View Explorer</span>
+        </Button>
       </div>
 
-      <TransactionExplorerLinks transaction={transaction} depositAddress={depositAddress} />
-
-      <div className="container-gray mt-6">
-        <div className="flex items-start gap-3">
-          <span className="bg-[#4F3F27] p-2 rounded-full">
-            <Shield color="#FEB64D" />
-          </span>
-          <div>
-            <Typography variant="base" className="text-white font-semibold">
-              Fully Trustless
-            </Typography>
-            <Typography className="text-[#9F9F9F] mt-1">
-              Escrow powered by Internet Computer&apos;s native Bitcoin integration.
-              No bridge. No wrap. Fully trustless.
-            </Typography>
-          </div>
-        </div>
-      </div>
     </div>
   );
 } 

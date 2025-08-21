@@ -26,23 +26,36 @@ const CKBTCBalance: React.FC = () => {
           <div className="flex items-center gap-2">
             Bitcoin Balance
             <span className="text-xs bg-orange-600 px-2 py-1 rounded-full">
-              Mock
+              cKBTC
+            </span>
+            <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">
+              Local Testnet
             </span>
           </div>
           <Bitcoin color="#F97415" size={24} />
         </CardTitle>
         <CardDescription className='text-[#BCBCBC]'>
-          Your current Bitcoin balance
+          Your current Bitcoin balance via cKBTC
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-3 mt-4">
-          <Typography variant="h2">
-            {ckbtcBalance ? `${ckbtcBalance} ` : 'Loading...'}
-          </Typography>
-          {ckbtcBalance && (
-            <Typography variant="h2" className='text-[#F97415]'>cKBTC</Typography>
-          )}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <Typography variant="h2">
+              {ckbtcBalance ? `${ckbtcBalance} ` : 'Loading...'}
+            </Typography>
+            {ckbtcBalance && (
+              <Typography variant="h2" className='text-[#F97415]'>cKBTC</Typography>
+            )}
+          </div>
+          <div className="text-sm text-gray-400">
+            Chain-Key Bitcoin Token
+          </div>
+          <div className="text-xs text-gray-500 space-y-1">
+            <div>Network: Local Testnet</div>
+            <div>Integration: cKBTC on Internet Computer</div>
+            <div className="text-yellow-400">⚠️ Local Development - Real cKBTC on mainnet</div>
+          </div>
         </div>
       </CardContent>
 

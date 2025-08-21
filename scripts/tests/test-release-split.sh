@@ -25,6 +25,7 @@ echo ""
 echo "💰 Setting initial balances..."
 dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$SENDER_PRINCIPAL\", 100_000_000 : nat)"
 dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$RECIPIENT_PRINCIPAL\", 5_000 : nat)"
+echo "   ✅ Set balances for sender and recipient"
 echo ""
 
 # Step 1: Get initial balances
@@ -62,7 +63,7 @@ dfx canister call split_dapp recipientApproveEscrow "(
   \"$ESCROW_ID\" : text,
   principal \"$RECIPIENT_PRINCIPAL\"
 )"
-echo "   Escrow approved by recipient"
+echo "   ✅ Escrow approved by recipient"
 echo ""
 
 # Step 4: Release escrow
@@ -71,7 +72,7 @@ dfx canister call split_dapp releaseSplit "(
   principal \"$SENDER_PRINCIPAL\",
   \"$ESCROW_ID\" : text
 )"
-echo "   Escrow released by sender"
+echo "   ✅ Escrow released by sender"
 echo ""
 
 # Step 5: Get final balances
@@ -98,8 +99,6 @@ echo "📋 Escrow ID: $ESCROW_ID"
 echo "💰 Amount: $ESCROW_AMOUNT satoshis (0.00005 BTC)"
 echo "👤 Sender: $SENDER_PRINCIPAL"
 echo "👥 Recipient: $RECIPIENT_PRINCIPAL"
-echo "📊 Balance Summary:"
-echo "   Sender: $SENDER_BALANCE → $FINAL_SENDER_BALANCE satoshis"
-echo "   Recipient: $RECIPIENT_BALANCE → $FINAL_RECIPIENT_BALANCE satoshis"
+echo "✅ Escrow successfully approved and released"
+echo "✅ All release tests completed successfully!"
 echo ""
-echo "✅ Test completed successfully!"

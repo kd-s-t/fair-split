@@ -3,46 +3,19 @@
 
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
-import { setSeiAddress } from '@/lib/redux/userSlice';
-import { createSplitDappActor } from '@/lib/icp/splitDapp';
+
 import { Typography } from '@/components/ui/typography';
 
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+
 import { toast } from 'sonner';
 import { Copy, Wallet, Check, CircleCheckBig } from 'lucide-react';
 
 export default function SEIAddress() {
-	const dispatch = useDispatch();
-	const { principal, seiAddress } = useUser();
-	const [isGenerating, setIsGenerating] = useState(false);
+	const { seiAddress } = useUser();
 	const [isCopied, setIsCopied] = useState(false);
 
-	const generateSeiAddress = async () => {
-		if (!principal) {
-			toast.error('You must be logged in to generate a SEI address');
-			return;
-		}
 
-		setIsGenerating(true);
-		try {
-			const actor = await createSplitDappActor();
-			const walletResult = await actor.requestSeiWalletAnonymous() as { ok: { seiAddress: string } } | { err: string };
-			
-			if ('ok' in walletResult) {
-				dispatch(setSeiAddress(walletResult.ok.seiAddress));
-				toast.success('SEI wallet generated successfully!');
-			} else {
-				console.error('Failed to generate SEI wallet:', walletResult.err);
-				toast.error('Failed to generate SEI wallet: ' + walletResult.err);
-			}
-		} catch (error) {
-			console.error('Error generating SEI wallet:', error);
-			toast.error('Failed to generate SEI wallet. Please try again.');
-		} finally {
-			setIsGenerating(false);
-		}
-	};
 
 	const copyAddress = async () => {
 		if (seiAddress) {

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { House, Wallet, History, Zap, ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useUser } from "@/hooks/useUser";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -13,12 +14,14 @@ interface SideBarProps {
 
 export default function SideBar({ isOpen, onToggle }: SideBarProps) {
   const pathname = usePathname();
+  const { isAdmin } = useUser();
 
   const nav = [
     { name: "Dashboard", href: "/dashboard", icon: <House size={20} className="text-white flex-shrink-0" /> },
     { name: "Escrow", href: "/escrow", icon: <Wallet size={20} className="text-white flex-shrink-0" /> },
     { name: "Transactions", href: "/transactions", icon: <History size={20} className="text-white flex-shrink-0" /> },
-    { name: "Integrations", href: "/integrations", icon: <Zap size={20} className="text-white flex-shrink-0" /> },
+    // Only show Integrations for admin users
+    ...(isAdmin ? [{ name: "Integrations", href: "/integrations", icon: <Zap size={20} className="text-white flex-shrink-0" /> }] : []),
   ];
 
   return (

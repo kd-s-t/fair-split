@@ -58,10 +58,7 @@ echo ""
 
 # Step 2: Cancel escrow (sender cancels)
 echo "🚫 Step 2: Canceling escrow..."
-dfx canister call split_dapp cancelEscrow "(
-  principal \"$SENDER_PRINCIPAL\",
-  \"$ESCROW_ID\" : text
-)"
+dfx canister call split_dapp cancelSplit "(principal \"$SENDER_PRINCIPAL\")"
 echo "   Escrow canceled by sender"
 echo ""
 

@@ -1,4 +1,7 @@
+"use client";
+
 import { Calendar, Home, Inbox, Search, Settings, Zap } from "lucide-react"
+import { useUser } from "@/hooks/useUser";
 
 import {
   Sidebar,
@@ -11,41 +14,48 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Menu items (available to all users)
-const items = [
-  {
-    title: "Home",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Inbox,
-  },
-  {
-    title: "Escrow",
-    url: "/escrow",
-    icon: Calendar,
-  },
-  {
-    title: "Transactions",
-    url: "/transactions",
-    icon: Search,
-  },
-  {
-    title: "Integrations",
-    url: "/integrations",
-    icon: Zap,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-  },
-]
-
 export function AppSidebar() {
+  const { isAdmin } = useUser();
+
+  // Menu items (available to all users)
+  const baseItems = [
+    {
+      title: "Home",
+      url: "/",
+      icon: Home,
+    },
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: Inbox,
+    },
+    {
+      title: "Escrow",
+      url: "/escrow",
+      icon: Calendar,
+    },
+    {
+      title: "Transactions",
+      url: "/transactions",
+      icon: Search,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+    },
+  ];
+
+  // Add Integrations only for admin users
+  const items = [
+    ...baseItems,
+    ...(isAdmin ? [{
+      title: "Integrations",
+      url: "/integrations",
+      icon: Zap,
+    }] : []),
+  ];
+
   return (
     <Sidebar>
       <SidebarContent>

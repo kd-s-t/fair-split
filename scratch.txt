@@ -1,6 +1,6 @@
-dfx start -clean
-
-
+dfx start --clean --background
+dfx deploy split_dapp --network local --yes
+dfx generate split_dapp --network local
 
 dfx identity whoami
 dfx identity get-principal
@@ -29,7 +29,5 @@ dfx canister call split_dapp getCkbtcBalance '(principal "ohtzl-xywgo-f2ka3-aqu2
 dfx canister call split_dapp getCkbtcBalance '(principal "hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe")' --network local
 
 
-dfx deploy split_dapp --network local --yes
-dfx generate split_dapp --network local
 
 dfx canister call split_dapp initiateEscrow '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", vec { record { "principal" = principal "hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe"; amount = 50000; nickname = "Test Recipient"; percentage = 100 } }, "Test Escrow")' --network local

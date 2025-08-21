@@ -20,12 +20,6 @@ export default function TransactionExplorerLinks({ transaction, depositAddress }
           >
             View on Blockstream
           </button>
-          <button
-            onClick={() => window.open(`${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/address/${depositAddress}`, '_blank')}
-            className="text-[#4F3F27] hover:text-[#FEB64D] text-sm underline"
-          >
-            View on Mempool
-          </button>
         </div>
       )}
 
@@ -38,10 +32,6 @@ export default function TransactionExplorerLinks({ transaction, depositAddress }
           {
             label: "View on ICP Dashboard",
             url: `${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`
-          },
-          {
-            label: "View on ICScan",
-            url: `${process.env.NEXT_PUBLIC_ICSCAN_URL || 'https://icscan.io'}/canister/${transaction.id}`
           }
         ]}
       />
@@ -56,10 +46,6 @@ export default function TransactionExplorerLinks({ transaction, depositAddress }
             {
               label: "View on Blockstream",
               url: `${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info'}/tx/${transaction.bitcoinTransactionHash}`
-            },
-            {
-              label: "View on Mempool",
-              url: `${process.env.NEXT_PUBLIC_MEMPOOL_URL || 'https://mempool.space'}/tx/${transaction.bitcoinTransactionHash}`
             }
           ]}
         />

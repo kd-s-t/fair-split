@@ -21,6 +21,9 @@ Senders can lock cKBTC into escrow, define payout rules, and automatically relea
 **Technology Stack:**
 - **Bitcoin (cKBTC → BTC)**: Native Bitcoin integration via ICP for secure escrow
 - **SEI Network**: High-performance blockchain for fast transaction processing
+- **Withdrawal System**: Multi-asset withdrawal support (ICP, cKBTC, SEI)
+- **AI Assistant (Beta)**: Intelligent support for transfers and decision making
+- **Reputation System (Beta)**: Trust-based scoring mechanism for user verification
 - **Testnet Ready**: Atlantic-2 testnet integration for safe development
 
 Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, gaming payments, DeFi integrations, and any scenarios requiring trust-minimized Bitcoin escrow with fast settlement options.
@@ -34,13 +37,13 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 	<img src="https://img.shields.io/badge/Framer Motion-EF008F?style=for-the-badge&logo=framer&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white" /> 
-	<img src="https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=https://raw.githubusercontent.com/sei-protocol/sei-chain/refs/heads/main/assets/openai.png&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/OpenAI-74aa9c?style=for-the-badge&logo=openai&logoColor=white" /> 
 </div>
 <div align="center"> 
   <img src="https://img.shields.io/badge/ICP-000000?style=for-the-badge&logo=internet-computer&logoColor=white" />
   <img src="https://img.shields.io/badge/bitcoin-2F3134?style=for-the-badge&logo=bitcoin&logoColor=white" />
-  <img src="https://img.shields.io/badge/SEI-000000?style=for-the-badge&logo=https://raw.githubusercontent.com/sei-protocol/sei-chain/refs/heads/main/assets/SeiLogo.png&logoColor=white" />
-	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge&logo=https://raw.githubusercontent.com/sei-protocol/sei-chain/refs/heads/main/assets/motoko.png&logoColor=white" /> 
+  <img src="https://img.shields.io/badge/SEI-000000?style=for-the-badge&logo=sei&logoColor=white" />
+	<img src="https://img.shields.io/badge/Motoko-3B00B9?style=for-the-badge" /> 
 </div>
 
 <div align="center"> 

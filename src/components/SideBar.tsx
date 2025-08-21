@@ -15,10 +15,10 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
   const pathname = usePathname();
 
   const nav = [
-    { name: "Dashboard", href: "/dashboard", icon: <House size={20} className="text-white flex-shrink-0" /> },
-    { name: "Escrow", href: "/escrow", icon: <Wallet size={20} className="text-white flex-shrink-0" /> },
-    { name: "Transactions", href: "/transactions", icon: <History size={20} className="text-white flex-shrink-0" /> },
-    { name: "Integrations", href: "/integrations", icon: <Zap size={20} className="text-white flex-shrink-0" /> },
+    { name: "Dashboard", href: "/dashboard", icon: House },
+    { name: "Escrow", href: "/escrow", icon: Wallet },
+    { name: "Transactions", href: "/transactions", icon: History },
+    { name: "Integrations", href: "/integrations", icon: Zap },
   ];
 
   return (
@@ -43,14 +43,14 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
           </motion.div>
         )}
         {isOpen && (
-            <Image
-              src="/safesplit-logo.svg"
-              alt="SplitSafe Logo"
-              width={120}
-              height={40}
-              priority
-              className="object-contain"
-            />
+          <Image
+            src="/safesplit-logo.svg"
+            alt="SplitSafe Logo"
+            width={120}
+            height={40}
+            priority
+            className="object-contain"
+          />
         )}
       </div>
 
@@ -58,6 +58,7 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
       <div className="flex-1 px-4 space-y-2 flex flex-col">
         {nav.map((link) => {
           const isActive = pathname === link.href;
+          const Icon = link.icon as React.ComponentType<{ size?: number; className?: string }>;
           return (
             <Link
               key={link.href}
@@ -69,7 +70,9 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
               style={{ minHeight: '40px' }}
               title={isOpen ? link.name : link.name}
             >
-              <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">{link.icon}</span> {isOpen && link.name}
+              <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                <Icon size={20} className={`${isActive ? 'text-black' : 'text-white'} flex-shrink-0`} />
+              </span> {isOpen && link.name}
             </Link>
           );
         })}

@@ -2,14 +2,9 @@
 
 import { Typography } from "@/components/ui/typography";
 import { ReleasedEscrowDetailsProps } from "./types";
-import { CircleCheckBig, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CircleCheckBig } from "lucide-react";
 
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
-  const totalBTC = Array.isArray(transaction.to) 
-    ? transaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8 
-    : 0;
-  const recipientCount = transaction.to?.length || 0;
   const releasedAt = transaction.releasedAt ? new Date(Number(transaction.releasedAt) / 1000000) : new Date();
   const completedDate = releasedAt;
 
@@ -23,8 +18,6 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
       percentage
     };
   }) : [];
-
-  const transactionHash = transaction.bitcoinTransactionHash ? String(transaction.bitcoinTransactionHash) : "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456";
 
   const handleViewExplorer = () => {
     const blockHash = "00000000000000000001bb418ff8dfff65ea0dab3d9f53923112d2b2f12f4ee7";
@@ -64,8 +57,8 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
           </div>
           <div>
             <Typography variant="small" className="text-[#9F9F9F]">Bitcoin Block</Typography>
-            <Typography 
-              variant="base" 
+            <Typography
+              variant="base"
               className="text-white font-mono cursor-pointer hover:text-[#FEB64D] transition-colors"
               onClick={handleViewExplorer}
             >

@@ -16,7 +16,7 @@ const demoTransaction = {
       percentage: 60
     },
     {
-      principal: "demo-principal-2", 
+      principal: "demo-principal-2",
       amount: BigInt(0.3 * 1e8), // 0.3 BTC
       percentage: 30
     },
@@ -29,10 +29,10 @@ const demoTransaction = {
 };
 
 export default function PresentationEscrowDetails() {
-  const totalBTC = Array.isArray(demoTransaction.to) 
-    ? demoTransaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8 
+  const totalBTC = Array.isArray(demoTransaction.to)
+    ? demoTransaction.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8
     : 0;
-  const recipientCount = demoTransaction.to?.length || 0;
+
   const releasedAt = demoTransaction.releasedAt ? new Date(Number(demoTransaction.releasedAt) / 1000000) : new Date();
   const completedDate = releasedAt;
 
@@ -88,8 +88,8 @@ export default function PresentationEscrowDetails() {
           </div>
           <div>
             <Typography variant="small" className="text-[#9F9F9F]">Bitcoin Block</Typography>
-            <Typography 
-              variant="base" 
+            <Typography
+              variant="base"
               className="text-white font-mono cursor-pointer hover:text-[#FEB64D] transition-colors"
               onClick={handleViewExplorer}
             >
@@ -158,9 +158,9 @@ export default function PresentationEscrowDetails() {
         <Typography variant="small" className="text-[#9F9F9F] mt-2">
           No middleman. No human intervention. Fully automated on-chain execution.
         </Typography>
-        <Button 
+        <Button
           onClick={handleViewExplorer}
-          variant="outline" 
+          variant="outline"
           className="mt-3 flex items-center gap-2"
         >
           <ExternalLink size={16} />

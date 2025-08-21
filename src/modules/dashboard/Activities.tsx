@@ -39,22 +39,22 @@ export default function RecentActivities() {
 
       <Tabs defaultValue="all" className="mt-4">
         <div className="flex items-center justify-between">
-          <TabsList className="bg-[#2B2B2B] border border-[#424444]">
+          <TabsList>
             <TabsTrigger
               value="all"
-              className="text-white font-medium data-[state=active]:bg-[#FEB64D] data-[state=active]:text-black"
+              className="text-muted-foreground font-medium"
             >
               All transactions ({activities.length})
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="text-white font-medium data-[state=active]:bg-[#FEB64D] data-[state=active]:text-black"
+              className="text-muted-foreground font-medium"
             >
               Send ({sentCount})
             </TabsTrigger>
             <TabsTrigger
               value="completed"
-              className="text-white font-medium data-[state=active]:bg-[#FEB64D] data-[state=active]:text-black"
+              className="text-muted-foreground font-medium"
             >
               Received ({receivedCount})
             </TabsTrigger>

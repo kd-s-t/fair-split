@@ -6,16 +6,16 @@ import { cn } from "@/lib/utils"
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
-  >(({ className = '', ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "rounded-lg p-2.5 bg-card text-card-foreground shadow-sm",
-        className
-      )}
-      {...props}
-    />
-  ))
+>(({ className = '', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-[20px] p-2.5 bg-card text-card-foreground shadow-sm bg-[#212121] border border-[#303333]",
+      className
+    )}
+    {...props}
+  />
+))
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
@@ -63,7 +63,7 @@ const CardContent = React.forwardRef<
 >(({ className = '', ...props }, ref) => {
   // Use useEffect to ensure client-side only rendering for problematic content
   const [isClient, setIsClient] = React.useState(false);
-  
+
   React.useEffect(() => {
     setIsClient(true);
   }, []);

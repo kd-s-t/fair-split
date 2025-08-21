@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, CircleX, CircleAlert, Bitcoin, Users, Zap, CircleCheckBig, Settings } from "lucide-react";
+import { Shield, CircleX, CircleAlert, Bitcoin, Users, Zap, CircleCheckBig } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { PendingEscrowDetailsProps } from "./types";
@@ -26,20 +26,20 @@ export default function PendingEscrowDetails({
   // Calculate user's share from the transaction
   const userShare = useMemo(() => {
     if (!transaction.to || !Array.isArray(transaction.to)) return { amount: 0, percentage: 0 };
-    
+
     // Find the current user's entry in the recipients list
-    const userEntry = transaction.to.find(entry => 
-      String(entry.principal) === String(transaction.from) || 
+    const userEntry = transaction.to.find(entry =>
+      String(entry.principal) === String(transaction.from) ||
       entry.principal === transaction.from
     );
-    
+
     if (userEntry) {
       return {
         amount: Number(userEntry.amount) / 1e8,
         percentage: Number(userEntry.percentage)
       };
     }
-    
+
     // If user is not in recipients, show total
     return {
       amount: totalBTC,
@@ -98,7 +98,7 @@ export default function PendingEscrowDetails({
       {/* Approval Required Section */}
       <div>
         <Typography variant="large" className="text-white mb-4">Approval required</Typography>
-        
+
         {/* Warning Banner */}
         <div className="bg-[#48342A] border border-[#BD823D] rounded-[10px] p-4 mb-4">
           <div className="flex items-start gap-3">

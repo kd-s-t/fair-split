@@ -13,13 +13,13 @@ import { toast } from 'sonner';
 
 const ICPBalance: React.FC = () => {
   const { icpBalance } = useUser();
-    const { principal } = useAuth();
+  const { principal } = useAuth();
   const dispatch = useDispatch();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshBalance = async () => {
     if (!principal) return;
-    
+
     setIsRefreshing(true);
     try {
       const { createSplitDappActor } = await import('@/lib/icp/splitDapp');
@@ -36,7 +36,7 @@ const ICPBalance: React.FC = () => {
   };
 
   return (
-    <Card className="bg-[#222222] border-[#303434] text-white">
+    <Card className="text-white">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">

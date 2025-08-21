@@ -31,7 +31,7 @@ export default function SEIBalance() {
 		try {
 			const actor = await createSplitDappActor();
 			const balanceResult = await actor.getSeiBalance(Principal.fromText(principal)) as { ok: number } | { err: string };
-			
+
 			if ('ok' in balanceResult) {
 				// SEI has 6 decimal places (like most Cosmos tokens)
 				const formatted = (Number(balanceResult.ok) / 1e6).toFixed(6);
@@ -60,7 +60,7 @@ export default function SEIBalance() {
 				isTestnet: boolean;
 			};
 			setNetworkInfo(networkResult);
-			
+
 			// Get faucet URL if on testnet
 			if (networkResult.isTestnet) {
 				const faucetResult = await actor.getSeiFaucetUrl() as string | null;
@@ -77,7 +77,7 @@ export default function SEIBalance() {
 	}, [principal, updateSeiBalance]);
 
 	return (
-		<Card className="bg-[#222222] border-[#303434] text-white">
+		<Card className="text-white">
 			<CardHeader className="pb-3">
 				<CardTitle className="text-lg font-semibold flex items-center justify-between">
 					<div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function SEIBalance() {
 					<div className="text-sm text-gray-400">
 						Sei Network Token
 					</div>
-					
+
 					{networkInfo && (
 						<div className="text-xs text-gray-500 space-y-1">
 							<div>Network: {networkInfo.name}</div>
@@ -126,7 +126,7 @@ export default function SEIBalance() {
 
 				</div>
 			</CardContent>
-			
+
 			<div className="px-6 pb-6 pt-4">
 				<Button variant="outline" className='w-full bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]'>
 					<ExternalLink className="w-4 h-4 mr-2" />

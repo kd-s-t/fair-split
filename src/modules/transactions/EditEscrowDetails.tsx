@@ -6,8 +6,6 @@ import TransactionStats from "@/components/TransactionStats";
 import { Button } from "@/components/ui/button";
 
 import { EditEscrowDetailsProps } from "./types";
-import RecipientsList from "./RecipientsList";
-import TransactionExplorerLinks from "./TransactionExplorerLinks";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { toast } from "sonner";

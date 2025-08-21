@@ -3,6 +3,7 @@ export interface EscrowCreateAction {
   amount: string;
   recipients: string[];
   originalCurrency?: string; // Track original currency for conversion
+  title?: string; // Custom title if provided
 }
 
 export interface ApprovalSuggestionAction {
@@ -66,7 +67,8 @@ If the user wants to CREATE an escrow (any mention of sending, transferring, cre
   "action": "create_escrow",
   "amount": "0.000125",
   "recipients": ["id1", "id2", "id3"],
-  "originalCurrency": "$5"
+  "originalCurrency": "$5",
+  "title": "Custom title if provided"
 }
 
 If the user wants to SET their Bitcoin address (any mention of setting, using, or providing a Bitcoin address), respond with JSON:
@@ -108,12 +110,14 @@ EXAMPLES:
 - "send $5 to user123" → {"action": "create_escrow", "amount": "0.000125", "recipients": ["user123"], "originalCurrency": "$5"}
 - "transfer €10 to alice and bob" → {"action": "create_escrow", "amount": "0.00027", "recipients": ["alice", "bob"], "originalCurrency": "€10"}
 - "send 0.5 btc to user456" → {"action": "create_escrow", "amount": "0.5", "recipients": ["user456"]}
+- "send $1 to user123, title nice" → {"action": "create_escrow", "amount": "0.000025", "recipients": ["user123"], "originalCurrency": "$1", "title": "nice"}
 
 IMPORTANT: 
 - Be very flexible and understand natural language in any format
 - Extract ANY amount mentioned (numbers, decimals, fractions, currency symbols)
 - Extract ANY recipient IDs mentioned (ICP principals, usernames, addresses)
 - Extract ANY Bitcoin address mentioned (starts with 1, 3, or bc1)
+- Extract ANY title mentioned after "title" keyword (e.g., "title nice" → "nice")
 - Don't require specific keywords or formats
 - Understand context and intent, not just exact phrases
 - If someone mentions sending money, creating payments, or transferring funds, treat it as escrow creation

@@ -3,6 +3,7 @@ export interface EscrowCreateAction {
   amount: string;
   recipients: string[];
   originalCurrency?: string; // Track original currency for conversion
+  title?: string; // Custom title if provided
 }
 
 export interface ApprovalSuggestionAction {
@@ -84,11 +85,19 @@ export function parseUserMessage(message: string): ParsedAction {
          originalCurrency = currencyInfo.originalText;
        }
       
+      // Extract title if provided
+      let title: string | undefined;
+      const titleMatch = message.match(/title\s+(\w+)/i);
+      if (titleMatch) {
+        title = titleMatch[1];
+      }
+      
       return {
         type: 'create_escrow',
         amount,
         recipients,
-        originalCurrency
+        originalCurrency,
+        title
       };
     }
   }

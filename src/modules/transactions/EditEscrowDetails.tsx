@@ -59,66 +59,6 @@ export default function EditEscrowDetails({
         </div>
       </div>
 
-      {/* Bitcoin Deposit Address */}
-      <div className="mt-6">
-        <Typography variant="small" className="text-[#FAFAFA] font-medium mb-2">
-          Bitcoin deposit address
-        </Typography>
-        <div className="flex items-center gap-4">
-          <div className="flex-1 bg-[#2B2B2B] border border-[#424242] rounded-lg p-3">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 text-[#A1A1A1]">
-                <Mail className="w-4 h-4" />
-              </div>
-              <Typography variant="base" className="text-white font-mono break-all">
-                {depositAddress}
-              </Typography>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              navigator.clipboard.writeText(depositAddress);
-              toast.success("Address copied to clipboard");
-            }}
-            className="w-10 h-10 p-0 border-[#7A7A7A] hover:bg-[#404040]"
-          >
-            <Copy className="w-4 h-4 text-white" />
-          </Button>
-        </div>
-      </div>
-
-      {/* ICP Address */}
-      <div className="mt-4">
-        <Typography variant="small" className="text-[#FAFAFA] font-medium mb-2">
-          ICP address
-        </Typography>
-        <div className="flex items-center gap-4">
-          <div className="flex-1 bg-[#2B2B2B] border border-[#424242] rounded-lg p-3">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 text-[#A1A1A1]">
-                <Mail className="w-4 h-4" />
-              </div>
-              <Typography variant="base" className="text-white font-mono break-all">
-                {depositAddress}
-              </Typography>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              navigator.clipboard.writeText(depositAddress);
-              toast.success("Address copied to clipboard");
-            }}
-            className="w-10 h-10 p-0 border-[#7A7A7A] hover:bg-[#404040]"
-          >
-            <Copy className="w-4 h-4 text-white" />
-          </Button>
-        </div>
-      </div>
-
       {/* Action Buttons */}
       <div className="flex gap-4 mt-6">
         <Button

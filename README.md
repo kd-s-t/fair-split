@@ -116,19 +116,19 @@ npm run dev
 
 ### Run ICP host and deploy canisters
 ```bash
-# Option 1: Use the automated deployment script (recommended)
+######### Option 1: Use the automated deployment script (recommended)
 ./scripts/local-deploy-canisters.sh
 
-# Option 2: Use custom admin principal
+######### Option 2: Use custom admin principal
 ./scripts/local-deploy-canisters.sh your-principal-id-here
 
-# if you want to add more BTC
+# if you want to add more BTC (format: ./script.sh [PRINCIPAL] [AMOUNT_IN_SATOSHIS])
 ./scripts/balance-scripts/set-bitcoin-balance.sh your-principal-id-here 100000000  # Set 1 BTC
 
 # Check balances
 ./scripts/balance-scripts/get-user-bitcoin-balance.sh your-principal-id-here
 
-# Option 3: Manual deployment (if needed)
+######### Option 3: Manual deployment (if needed)
 # Step 1: Start the host first
 pkill -f dfx
 dfx stop
@@ -141,6 +141,41 @@ dfx deploy split_dapp --network local --mode=reinstall
 ```
 
 The application will be available at http://localhost:3000
+
+## 💰 **Initial Balance Setup**
+
+After deployment, the script automatically sets up initial balances for testing:
+
+### ✅ **What Gets Set:**
+- **1 BTC (100,000,000 satoshis)** for the admin principal
+- **1 BTC (100,000,000 satoshis)** for your current user principal
+
+### 🔍 **If You See "0 Balance":**
+If you see "Insufficient cKBTC balance" errors after deployment, it means the balance wasn't set for your specific principal. This can happen if:
+
+1. **You're using a different principal** than expected
+2. **The deployment script failed** to set the balance
+
+### 🛠️ **Quick Fix:**
+```bash
+# Check your current principal
+dfx identity get-principal
+
+# Set 1 BTC balance for your principal (replace with your actual principal)
+dfx canister call split_dapp setBitcoinBalance "(principal \"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe\", principal \"YOUR_PRINCIPAL_HERE\", 100_000_000)"
+
+# Verify the balance
+dfx canister call split_dapp getUserBitcoinBalance "(principal \"YOUR_PRINCIPAL_HERE\")"
+```
+
+### 📊 **Check Balances:**
+```bash
+# Check admin balance
+./scripts/balance-scripts/get-user-bitcoin-balance.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe
+
+# Check your balance (replace with your principal)
+./scripts/balance-scripts/get-user-bitcoin-balance.sh YOUR_PRINCIPAL_HERE
+```
 
 ## 🧪 Testing
 
@@ -167,21 +202,6 @@ After deployment, you can run the following end-to-end integration tests:
 # Run all tests (recommended)
 ./scripts/tests/run-all-tests.sh
 ```
-
-### Test Requirements
-
-Before running tests, ensure:
-- ✅ Canisters are deployed and running
-- ✅ Users have sufficient balances (use balance scripts in `scripts/balance-scripts/`)
-- ✅ dfx is running locally
-
-### Test Types
-
-These are **End-to-End (E2E) Integration Tests** that:
-- Test complete user workflows
-- Use real canister function calls
-- Verify balance changes and transaction states
-- Simulate actual user interactions
 
 ### Database Seeding for Testing
 

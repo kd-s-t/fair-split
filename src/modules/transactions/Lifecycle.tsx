@@ -12,7 +12,7 @@ const defaultSteps: Step[] = [
   { label: 'Released', description: 'Funds sent to Bitcoin mainnet' },
 ];
 
-export function TransactionLifecycle({ currentStep, steps = defaultSteps }: TransactionLifecycleProps) {
+export function TransactionLifecycle({ currentStep, steps = defaultSteps, status }: TransactionLifecycleProps) {
   return (
     <div className="bg-[#212121] border border-[#303434] rounded-[20px] p-5 space-y-6 w-[30%]">
       {/* Banner */}
@@ -26,7 +26,7 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
       <div className="space-y-0">
         {steps.map((step, idx) => {
           const isCompleted = idx <= currentStep;
-
+          const isCancelled = status === 'cancelled' || status === 'declined';
           const isLast = idx === steps.length - 1;
 
           return (
@@ -35,11 +35,11 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
               <div className="flex flex-col items-center w-6">
                 {/* Circle */}
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  isCompleted 
+                  isCompleted && !isCancelled
                     ? 'bg-[#FEB64D] border-[#FEB64D]' 
                     : 'bg-[#0D0D0D] border-[#424444]'
                 }`}>
-                  {isCompleted ? (
+                  {isCompleted && !isCancelled ? (
                     <CircleCheck size={16} className="text-[#0D0D0D]" />
                   ) : (
                     <div className="w-4 h-4 rounded-full border-2 border-[#5F5F5F]"></div>
@@ -49,7 +49,7 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
                 {/* Line */}
                 {!isLast && (
                   <div className={`w-0.5 h-20 mt-0 ${
-                    isCompleted ? 'bg-[#FEB64D]' : 'bg-[#424444]'
+                    isCompleted && !isCancelled ? 'bg-[#FEB64D]' : 'bg-[#424444]'
                   }`}></div>
                 )}
               </div>
@@ -59,7 +59,7 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps }: Tran
                 <Typography 
                   variant="base" 
                   className={`font-semibold ${
-                    isCompleted ? 'text-white' : 'text-[#9F9F9F]'
+                    isCompleted && !isCancelled ? 'text-white' : 'text-[#9F9F9F]'
                   }`}
                 >
                   {step.label}

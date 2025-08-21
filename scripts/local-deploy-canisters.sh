@@ -154,7 +154,9 @@ print_status "Setting 1 BTC balance for current user..."
 # Set 1 BTC (100,000,000 satoshis) for the admin user
 dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$ADMIN_PRINCIPAL\", 100_000_000)" --network local
 
-# Also set 1 BTC for the specific user principal that's commonly used
+# Set 1 BTC (100,000,000 satoshis) for the current user principal
+dfx canister call split_dapp setBitcoinBalance "(principal \"$ADMIN_PRINCIPAL\", principal \"$CURRENT_PRINCIPAL\", 100_000_000)" --network local
+
 print_status "cKBTC integration initialized - balances managed by ledger..."
 
 # Real cKBTC balances are managed by the ledger

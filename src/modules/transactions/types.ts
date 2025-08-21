@@ -6,6 +6,7 @@ export interface Step {
 export interface TransactionLifecycleProps {
   currentStep: number; // 0-based index
   steps?: Step[];
+  status?: string; // Transaction status for inactive state
 }
 
 export interface TransactionDetailsModalProps {

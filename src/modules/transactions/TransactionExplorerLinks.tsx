@@ -23,18 +23,6 @@ export default function TransactionExplorerLinks({ transaction, depositAddress }
         </div>
       )}
 
-      {/* ICP Transaction Hash */}
-      <TransactionHash
-        title="ICP Transaction Hash"
-        hash={transaction.id}
-        description="Internet Computer transaction hash for this escrow"
-        explorerLinks={[
-          {
-            label: "View on ICP Dashboard",
-            url: `${process.env.NEXT_PUBLIC_ICP_DASHBOARD_URL || 'https://dashboard.internetcomputer.org'}/canister/${transaction.id}`
-          }
-        ]}
-      />
 
       {/* Bitcoin Transaction Hash */}
       {transaction.bitcoinTransactionHash && (

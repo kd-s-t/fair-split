@@ -62,10 +62,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
         const totalAmount = parseFloat(parsedAction.amount) || 0.03;
         const recipients = parsedAction.recipients || [];
 
-        // Generate title based on recipients or use a default
-        const title = recipients.length > 0
+        // Use custom title if provided, otherwise generate based on recipients
+        const title = parsedAction.title || (recipients.length > 0
           ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
-          : "Payment Split";
+          : "Payment Split");
 
         // Create recipient objects with equal distribution
         const recipientObjects: Recipient[] = recipients.map((recipient, index) => {
@@ -193,10 +193,16 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       });
     }
 
-    // Generate title based on recipients
-    const title = recipients.length > 0
-      ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
-      : "Payment Split";
+    // Extract title if provided, otherwise generate based on recipients
+    let title = "Payment Split";
+    
+    // Look for title pattern: "title <title_text>"
+    const titleMatch = desc.match(/title\s+(\w+)/i);
+    if (titleMatch) {
+      title = titleMatch[1];
+    } else if (recipients.length > 0) {
+      title = `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`;
+    }
 
     return {
       title,

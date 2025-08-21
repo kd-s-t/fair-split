@@ -91,17 +91,36 @@ persistent actor class SplitDApp(admin : Principal, _ckbtcLedgerId : Text, _ckbt
       func(acc, p) { acc + p.amount }
     );
     
+    // DEBUG: Add logging to understand the balance issue
+    Debug.print("🔍 DEBUG: initiateEscrow called");
+    Debug.print("🔍 DEBUG: caller principal = " # Principal.toText(caller));
+    Debug.print("🔍 DEBUG: totalAmount = " # Nat.toText(totalAmount) # " satoshis");
+    
     // For local development, use local balance storage
     // In production, this would use real cKBTC integration
     let currentBalance = switch (bitcoinBalances.get(caller)) {
-      case (?balance) balance;
-      case null 0;
+      case (?balance) {
+        Debug.print("🔍 DEBUG: Found balance in HashMap: " # Nat.toText(balance) # " satoshis");
+        balance
+      };
+      case null {
+        Debug.print("🔍 DEBUG: No balance found in HashMap for caller");
+        0
+      };
     };
+    
+    Debug.print("🔍 DEBUG: currentBalance = " # Nat.toText(currentBalance) # " satoshis");
+    Debug.print("🔍 DEBUG: currentBalance < totalAmount = " # (if (currentBalance < totalAmount) "true" else "false"));
     
     // Check if user has sufficient balance
     if (currentBalance < totalAmount) {
+      Debug.print("🔍 DEBUG: Balance check failed - returning error");
       return "Error: Insufficient cKBTC balance. Required: " # Nat.toText(totalAmount) # " satoshis, Available: " # Nat.toText(currentBalance) # " satoshis";
     };
+    
+    // Deduct the balance from the user's account
+    Debug.print("🔍 DEBUG: Deducting " # Nat.toText(totalAmount) # " satoshis from user balance");
+    Balance.decreaseBalance(bitcoinBalances, caller, totalAmount);
     
     // Then proceed with escrow creation
     let result = Escrow.initiateEscrow(caller, participants, title, balances, bitcoinBalances, transactions, names, reputation, fraudHistory, transactionHistory, logs, userBitcoinAddresses);

@@ -1,9 +1,8 @@
 'use client'
 
 import { Typography } from "@/components/ui/typography";
-import { Button } from "@/components/ui/button";
 import { ReleasedEscrowDetailsProps } from "./types";
-import { CircleCheckBig, QrCode, ExternalLink } from "lucide-react";
+import { CircleCheckBig } from "lucide-react";
 
 export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDetailsProps) {
   const releasedAt = transaction.releasedAt ? new Date(Number(transaction.releasedAt) / 1000000) : new Date();
@@ -115,7 +114,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
         </Typography>
       </div>
 
-      
+
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { ParsedAction } from '@/lib/messaging/actionParser';
 
 import { useUser } from '@/hooks/useUser';
 import { Input } from '@/components/ui/input';
+import { Typography } from '@/components/ui/typography';
 
 interface RightSidebarProps {
   onToggle: () => void
@@ -93,17 +94,17 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       let parsedAction: ParsedAction = null;
 
       // Check if API key is valid and properly configured
-      const isValidApiKey = apiKey && 
-        apiKey.trim() !== '' && 
+      const isValidApiKey = apiKey &&
+        apiKey.trim() !== '' &&
         apiKey !== 'sk-proj-YOUR_OPENAI_API_KEY_HERE' &&
         apiKey.startsWith('sk-') &&
         apiKey.length > 20;
 
-      console.log('API Key validation:', { 
-        hasApiKey: !!apiKey, 
-        apiKeyLength: apiKey?.length, 
+      console.log('API Key validation:', {
+        hasApiKey: !!apiKey,
+        apiKeyLength: apiKey?.length,
         apiKeyPrefix: apiKey?.substring(0, 3),
-        isValidApiKey 
+        isValidApiKey
       });
 
       // Try AI parser first, then fallback to local parser
@@ -124,25 +125,25 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         console.log('Local parser analyzing:', { content, lowerContent });
 
         // Check for approval suggestions FIRST (before escrow creation)
-        if (lowerContent.includes('approve') || lowerContent.includes('decline') || 
-            lowerContent.includes('decide') || lowerContent.includes('good') ||
-            (lowerContent.includes('escrow') && (lowerContent.includes('approve') || lowerContent.includes('decide')))) {
+        if (lowerContent.includes('approve') || lowerContent.includes('decline') ||
+          lowerContent.includes('decide') || lowerContent.includes('good') ||
+          (lowerContent.includes('escrow') && (lowerContent.includes('approve') || lowerContent.includes('decide')))) {
           parsedAction = { type: 'approval_suggestion' };
         } else if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('make')) {
           // Extract recipient IDs (ICP principal format)
           const recipientMatch = content.match(/[a-z0-9-]{63}/g);
           const recipients = recipientMatch || [];
-          
+
           // Extract amount and check for currency
           let amount = '1';
           let originalCurrency: string | undefined;
-          
+
           // Check for currency amounts first
           const currencyMatch = content.match(/(\$|€|£|¥)(\d+(?:\.\d{1,2})?)/);
           if (currencyMatch) {
             const currencySymbol = currencyMatch[1];
             const currencyAmount = parseFloat(currencyMatch[2]);
-            
+
             // Convert currency to BTC using centralized function
             amount = convertCurrencyToBTC(currencyAmount, currencySymbol);
             originalCurrency = currencyMatch[0];
@@ -151,7 +152,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
             const amountMatch = content.match(/(\d+(?:\.\d+)?)/);
             amount = amountMatch ? amountMatch[1] : '1';
           }
-          
+
           console.log('Local parser found escrow creation:', { recipients, amount, originalCurrency });
           parsedAction = { type: 'create_escrow', recipients, amount, originalCurrency };
         } else if (lowerContent.includes('bitcoin') && lowerContent.includes('address')) {
@@ -246,18 +247,18 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
   return (
     <div className="w-full h-full bg-[#222222] border border-[#FEB64D] rounded-[16px] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-[#303434]">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#303434]">
+        <div className="flex items-center gap-3">
           <BotMessageSquare className="w-5 h-5 text-[#FEB64D]" />
-          <span className="text-white font-semibold">SplitSafe AI</span>
+          <Typography variant='h4' className="text-white">SplitSafe AI</Typography>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggle}
-          className="text-white hover:bg-[#2a2a2a]"
+          className="text-white hover:bg-[#2a2a2a] !p-0"
         >
-          <X size={20} />
+          <X size={18} />
         </Button>
       </div>
 
@@ -276,13 +277,12 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
                     <BotMessageSquare className="w-5 h-5 text-white" />
                   </div>
                 )}
-                
+
                 <div
-                  className={`max-w-[294px] rounded-xl p-4 ${
-                    message.role === 'user'
-                      ? 'bg-[#FEB64D] text-black ml-auto'
-                      : 'bg-[#474747] text-white border border-[#636363]'
-                  }`}
+                  className={`max-w-[294px] rounded-xl p-4 ${message.role === 'user'
+                    ? 'bg-[#FEB64D] text-black ml-auto'
+                    : 'bg-[#474747] text-white border border-[#636363]'
+                    }`}
                 >
                   <div className="whitespace-pre-wrap text-sm leading-relaxed">
                     {message.content}
@@ -296,7 +296,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
                 )}
               </div>
             ))}
-            
+
             {isLoading && (
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FEB64D] to-[#F97415] flex items-center justify-center flex-shrink-0">
@@ -319,7 +319,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
 
         {/* Input Box */}
         <div className="flex-shrink-0 p-4">
-          <form onSubmit={handleSubmit} className="bg-[#333333] border border-[#FEB64D] rounded-xl p-4">
+          <form onSubmit={handleSubmit} className="bg-[#333333] border border-[#FEB64D] rounded-xl p-2">
             <div className="flex items-center justify-between">
               <Input
                 type="text"

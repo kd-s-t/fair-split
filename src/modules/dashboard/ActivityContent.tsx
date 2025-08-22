@@ -1,15 +1,14 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
 import { formatBTC } from "@/lib/utils";
 import { ArrowDownLeft, ArrowUpRight, Bitcoin, Eye, UserRound, UsersRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment } from "react";
 import type { ActivityItem } from "@/modules/transactions/types";
+import TransactionStatusBadge from "@/components/TransactionStatusBadge";
 
 interface ActivityContentProps {
   idx: number;
@@ -27,23 +26,6 @@ const ActivityContent = ({
 
   const router = useRouter();
 
-  const getTransactionStatusBadge = (status: string) => {
-    const variant = (TRANSACTION_STATUS_MAP[status]?.variant ?? "confirmed") as
-      | "secondary"
-      | "success"
-      | "primary"
-      | "error"
-      | "default"
-      | "outline"
-      | "warning";
-
-    return (
-      <Badge variant={variant}>
-        {TRANSACTION_STATUS_MAP[status]?.label || status}
-      </Badge>
-    );
-  };
-
   return (
     <Card key={idx} className="p-5">
       <div className="flex items-center justify-between mb-6">
@@ -55,7 +37,7 @@ const ActivityContent = ({
             >
               {activity.title || 'Untitled Transaction'}
             </Typography>
-            {activity.status && getTransactionStatusBadge(activity.status)}
+            {activity.status && <TransactionStatusBadge status={activity.status} />}
           </div>
 
           <div className="flex items-center gap-2 text-[#9F9F9F] text-sm">

@@ -71,41 +71,41 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   // Calculate weekly escrow data for each category
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  
+
   // Debug: Log the date range and transaction dates
   console.log('🔄 Weekly calculation debug:');
   console.log('  Now:', now.toISOString());
   console.log('  One week ago:', oneWeekAgo.toISOString());
-  
+
   const weeklyTotalEscrows = transactions ? transactions.filter(tx => {
     console.log(`  Transaction ${tx.id}: createdAt = "${tx.createdAt}" (type: ${typeof tx.createdAt})`);
     // Convert from nanoseconds to milliseconds (divide by 1,000,000)
     const txDate = new Date(Number(tx.createdAt) / 1000000);
     console.log(`  Transaction ${tx.id}: converted date = ${txDate}`);
-    
+
     // Check if the date is valid
     if (isNaN(txDate.getTime())) {
       console.log(`  Transaction ${tx.id}: INVALID DATE - skipping`);
       return false;
     }
-    
+
     const isThisWeek = txDate >= oneWeekAgo;
     console.log(`  Transaction ${tx.id}: ${txDate.toISOString()} - This week: ${isThisWeek}`);
     return isThisWeek;
   }).length : 0;
-  
+
   console.log('  Weekly total escrows:', weeklyTotalEscrows);
-  
+
   const weeklyActiveEscrows = transactions ? transactions.filter(tx => {
     const txDate = new Date(Number(tx.createdAt) / 1000000);
     return txDate >= oneWeekAgo && tx.status === 'confirmed';
   }).length : 0;
-  
+
   const weeklyCompletedEscrows = transactions ? transactions.filter(tx => {
     const txDate = new Date(Number(tx.createdAt) / 1000000);
     return txDate >= oneWeekAgo && tx.status === 'released';
   }).length : 0;
-  
+
   const weeklyPendingEscrows = transactions ? transactions.filter(tx => {
     const txDate = new Date(Number(tx.createdAt) / 1000000);
     return txDate >= oneWeekAgo && tx.status === 'pending';
@@ -216,7 +216,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
               ) : showBalance ? (
                 `${displayBalance} ckBTC`
               ) : (
-                                  '•••••••• ckBTC'
+                '•••••••• ckBTC'
               )}
             </Typography>
           </motion.div>
@@ -238,7 +238,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
             )}
           </motion.div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <Button
             variant="outline"
             onClick={() => handleWithdraw(true)}
@@ -275,7 +275,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
           />
         </motion.div>
         <Typography variant="muted" className="font-medium">
-                      Secured by ICP threshold ECDSA • No bridges, no wrapped ckBTC
+          Secured by ICP threshold ECDSA • No bridges, no wrapped ckBTC
         </Typography>
       </div>
 

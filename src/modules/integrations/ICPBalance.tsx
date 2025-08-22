@@ -1,25 +1,24 @@
 "use client"
 
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
 import { useUser } from '@/hooks/useUser';
 import { Coins } from 'lucide-react';
 import React from 'react';
 
-
 const ICPBalance: React.FC = () => {
   const { icpBalance } = useUser();
 
-
   return (
-    <Card className="text-white">
+    <Card className="text-white p-4">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             ICP Balance
-            <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">
+            <Badge className="bg-blue-600 text-white">
               Local
-            </span>
+            </Badge>
           </div>
           <Coins color='#007AFF' />
         </CardTitle>

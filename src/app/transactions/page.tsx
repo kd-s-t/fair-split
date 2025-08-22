@@ -466,7 +466,7 @@ export default function TransactionsPage() {
                     </div>
 
                     <div>
-                      <p className="text-[#BCBCBC] text-sm mb-1">Bitcoin block</p>
+                      <p className="text-[#BCBCBC] text-sm mb-1">Transaction hash</p>
                       <a
                         href={`https://blockstream.info/block/00000000000000000001bb418ff8dfff65ea0dab3d9f53923112d2b2f12f4ee7`}
                         target="_blank"

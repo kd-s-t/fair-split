@@ -87,7 +87,7 @@ export default function PresentationEscrowDetails() {
             </svg>
           </div>
           <div>
-            <Typography variant="small" className="text-[#9F9F9F]">Bitcoin Block</Typography>
+            <Typography variant="small" className="text-[#9F9F9F]">Transaction hash</Typography>
             <Typography
               variant="base"
               className="text-white font-mono cursor-pointer hover:text-[#FEB64D] transition-colors"

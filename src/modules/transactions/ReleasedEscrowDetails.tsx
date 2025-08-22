@@ -57,7 +57,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
             </svg>
           </div>
           <div>
-            <Typography variant="small" className="text-[#9F9F9F]">Bitcoin Block</Typography>
+            <Typography variant="small" className="text-[#9F9F9F]">Transaction hash</Typography>
             <Typography
               variant="base"
               className="text-white font-mono cursor-pointer hover:text-[#FEB64D] transition-colors"
@@ -115,25 +115,7 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
         </Typography>
       </div>
 
-      {/* View Explorer Buttons */}
-      <div className="flex gap-4">
-        <Button 
-          variant="outline" 
-          className="flex-1 flex items-center gap-2"
-          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
-        >
-          <QrCode className="w-4 h-4" />
-          <span>View Explorer</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          className="flex-1 flex items-center gap-2"
-          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
-        >
-          <ExternalLink className="w-4 h-4" />
-          <span>View Explorer</span>
-        </Button>
-      </div>
+      
     </div>
   );
 }

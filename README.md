@@ -100,10 +100,7 @@ SafeSplit Demo - Global Round
 - 🔄 Advanced analytics dashboard
 - 🔄 Own API for third-party integrations and documentation
 
-
 ## Quick Start
-
-### Run Frontend Development Server
 ```bash
 nvm use
 
@@ -242,6 +239,64 @@ The application includes comprehensive withdrawal functionality for both ICP, ck
 - **Testnet Faucet**: Get free SEI tokens for testing
 
 **Note**: These addresses work with real cKBTC and SEI testnet integrations. When deploying to mainnet, real address validation and actual transfer mechanisms will be used.
+
+
+## 🚀 **Live on Internet Computer Mainnet**
+
+### **V1 Canister Deployment**
+Your SafeSplit app is now live on the Internet Computer mainnet!
+
+**Canister IDs:**
+- **split_dapp**: `efzgd-dqaaa-aaaai-q323a-cai` (Main application logic)
+- **frontend**: `ecyax-oiaaa-aaaai-q323q-cai` (Web interface)
+- **ckbtc_ledger**: `el3ll-yaaaa-aaaai-q322a-cai` (Bitcoin ledger)
+- **ckbtc_minter**: `em2n7-vyaaa-aaaai-q322q-cai` (Bitcoin minter)
+
+**Access Your App:**
+- **IC URL**: `https://ecyax-oiaaa-aaaai-q323q-cai.ic0.app`
+- **Custom Domain**: `thesafesplit.com` (coming soon)
+
+### **V1 Features Available:**
+
+| Category | Feature | Status | Description |
+|----------|---------|--------|-------------|
+| **Core Escrow** | Trustless Bitcoin Escrow | ✅ Live | Lock cKBTC into escrow with predefined conditions |
+| | Multi-Recipient Splits | ✅ Live | Distribute funds to multiple recipients with custom percentages |
+| | Conditional Release | ✅ Live | Automatic fund release when all recipients approve |
+| | Cancellation & Refunds | ✅ Live | Sender can cancel escrow and get full refund |
+| | Recipient Actions | ✅ Live | Approve or decline escrow participation |
+| **Bitcoin Integration** | Native cKBTC Support | ✅ Live | Direct Bitcoin integration via ICP's Chain-Key Bitcoin |
+| | BTC Conversion | ✅ Live | Convert cKBTC to native Bitcoin through ICP |
+| | Secure Escrow | ✅ Live | Bitcoin held securely in canister-controlled escrow |
+| | Real-time Balances | ✅ Live | Live cKBTC balance tracking |
+| **User Experience** | Modern UI | ✅ Live | Clean, intuitive interface built with Next.js and Tailwind CSS |
+| | Real-time Updates | ✅ Live | Live transaction status and balance updates |
+| | Transaction History | ✅ Live | Complete audit trail of all escrow activities |
+| | Mobile Responsive | ✅ Live | Works seamlessly on all devices |
+| **Security & Trust** | Canister Logic | ✅ Live | All escrow logic runs on-chain via Internet Computer |
+| | No Intermediaries | ✅ Live | Direct peer-to-peer transactions |
+| | Immutable Rules | ✅ Live | Escrow conditions enforced by smart contract |
+| | Transparent Operations | ✅ Live | All transactions visible on-chain |
+| **Cross-Chain** | SEI Network | ✅ Live | High-performance blockchain for fast transaction processing |
+| | Testnet Ready | ✅ Live | Atlantic-2 testnet integration for safe development |
+| | Multi-Asset Support | ✅ Live | ICP, cKBTC, and SEI token handling |
+| **AI Assistant** | Intelligent Support | ✅ Live | AI-powered assistance for escrow creation |
+| | Natural Language | ✅ Live | Chat-based interface for complex operations |
+| | Decision Making | ✅ Live | AI suggestions for optimal escrow configurations |
+| | Route Optimization | ✅ Live | Smart recommendations for transaction routing |
+| **Advanced Features** | Notification System | ✅ Live | Real-time alerts for escrow status changes |
+| | Reputation System | ✅ Live | Trust-based scoring for user verification |
+| | Access Control | ✅ Live | Role-based permissions and call limiting |
+| | Analytics Dashboard | ✅ Live | Comprehensive transaction and user analytics |
+
+### **Use Cases Supported:**
+- **Freelance Payments**: Secure milestone-based payments
+- **DAO Treasuries**: Multi-signature fund management
+- **Marketplace Transactions**: Escrow for goods and services
+- **Gaming Payments**: Secure in-game asset transfers
+- **DeFi Integrations**: Cross-chain liquidity management
+- **Bounty Systems**: Automated reward distribution
+
 
 ## Authors
 

@@ -31,3 +31,7 @@ dfx canister call split_dapp getCkbtcBalance '(principal "hxmjs-porgp-cfkrg-37ls
 
 
 dfx canister call split_dapp initiateEscrow '(principal "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe", vec { record { "principal" = principal "hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe"; amount = 50000; nickname = "Test Recipient"; percentage = 100 } }, "Test Escrow")' --network local
+
+
+
+ dfx cycles --network ic balance

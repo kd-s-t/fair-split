@@ -9,6 +9,6 @@ environment = "staging"
 
 # Environment URLs (configurable)
 blockstream_url = "https://blockstream.info"
-mempool_url = "https://mempool.space"
+
 icp_dashboard_url = "https://dashboard.internetcomputer.org"
 icscan_url = "https://icscan.io" 

@@ -37,8 +37,8 @@ module "ssm" {
   source = "./modules/ssm"
   
   environment = var.environment
-  # Expose dfx via HTTPS domain through Caddy so WebCrypto works in browser
-  dfx_host    = "https://${var.dfx_domain}"
+  # Using IC mainnet instead of local dfx
+  dfx_host    = "https://icp0.io"
 }
 
 module "ec2" {
@@ -56,7 +56,7 @@ module "ec2" {
   private_key_content  = module.security.private_key_content
   instance_profile_name = module.iam.ec2_instance_profile_name
   enable_dfx           = false
-  dfx_domain           = var.dfx_domain
+  dfx_domain           = "localhost"  # Not used for IC mainnet
 }
 
 module "ecr" {

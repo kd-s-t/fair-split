@@ -16,11 +16,7 @@ variable "blockstream_url" {
   default     = "https://blockstream.info"
 }
 
-variable "mempool_url" {
-  description = "Mempool URL for Bitcoin transactions"
-  type        = string
-  default     = "https://mempool.space"
-}
+
 
 variable "icp_dashboard_url" {
   description = "ICP Dashboard URL"

@@ -10,11 +10,11 @@ variable "environment" {
   default     = "staging"
 }
 
-# Domain used to terminate TLS and proxy to the local dfx replica via Caddy
+# Domain variable (not used for IC mainnet deployment)
 variable "dfx_domain" {
-  description = "Public domain that will serve HTTPS and reverse-proxy to dfx (e.g., thesplitsafe.com)"
+  description = "Domain variable (kept for compatibility, not used for IC mainnet)"
   type        = string
-  default     = "thesplitsafe.com"
+  default     = "localhost"
 }
 
 # Environment URLs
@@ -24,11 +24,7 @@ variable "blockstream_url" {
   default     = "https://blockstream.info"
 }
 
-variable "mempool_url" {
-  description = "Mempool API URL"
-  type        = string
-  default     = "https://mempool.space"
-}
+
 
 variable "icp_dashboard_url" {
   description = "ICP Dashboard URL"

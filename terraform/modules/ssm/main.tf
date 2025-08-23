@@ -42,7 +42,7 @@ resource "aws_ssm_parameter" "next_public_development_domain" {
 resource "aws_ssm_parameter" "next_public_canister_id" {
   name  = "${local.parameter_prefix}/NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP"
   type  = "String"
-  value = "uxrrr-q7777-77774-qaaaq-cai"
+  value = "efzgd-dqaaa-aaaai-q323a-cai"
   tags = {
     Environment = var.environment
     Project     = "SplitSafe"
@@ -52,7 +52,7 @@ resource "aws_ssm_parameter" "next_public_canister_id" {
 resource "aws_ssm_parameter" "next_public_dfx_host" {
   name  = "${local.parameter_prefix}/NEXT_PUBLIC_DFX_HOST"
   type  = "String"
-  value = coalesce(var.dfx_host, "")
+  value = "https://icp0.io"
   tags = {
     Environment = var.environment
     Project     = "SplitSafe"
@@ -73,15 +73,7 @@ resource "aws_ssm_parameter" "next_public_blockstream_url" {
   }
 }
 
-resource "aws_ssm_parameter" "next_public_mempool_url" {
-  name  = "${local.parameter_prefix}/NEXT_PUBLIC_MEMPOOL_URL"
-  type  = "String"
-  value = "https://mempool.space"
-  tags = {
-    Environment = var.environment
-    Project     = "SplitSafe"
-  }
-}
+
 
 # =============================================================================
 # ICP DASHBOARD AND EXPLORER SERVICES

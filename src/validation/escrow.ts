@@ -22,7 +22,7 @@ const recipientSchema = z.object({
     principal: z.string()
       .min(1, "ICP Principal ID is required")
       .refine(isValidICPPrincipal, "Please enter a valid ICP Principal ID"),
-    percentage: z.coerce.number().min(0, "Percentage must be at least 0").max(100, "Percentage cannot exceed 100")
+    percentage: z.number().min(0, "Percentage must be at least 0").max(100, "Percentage cannot exceed 100")
   });
 
 

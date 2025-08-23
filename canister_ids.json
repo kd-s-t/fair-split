@@ -1,0 +1,14 @@
+{
+  "ckbtc_ledger": {
+    "ic": "el3ll-yaaaa-aaaai-q322a-cai"
+  },
+  "ckbtc_minter": {
+    "ic": "em2n7-vyaaa-aaaai-q322q-cai"
+  },
+  "frontend": {
+    "ic": "ecyax-oiaaa-aaaai-q323q-cai"
+  },
+  "split_dapp": {
+    "ic": "efzgd-dqaaa-aaaai-q323a-cai"
+  }
+}

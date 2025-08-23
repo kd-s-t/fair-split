@@ -28,6 +28,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setTitle, setSubtitle, setTransactionStatus } from "@/lib/redux/store";
+import { setTransactions } from "@/lib/redux/transactionsSlice";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | "approve" | "decline" | "cancel" | null>(null);
@@ -294,6 +295,40 @@ export default function TransactionDetailsPage() {
           })) : []
         };
         setTransaction(serializedUpdated);
+        
+        // Also update Redux store to refresh notification badge
+        const allTransactions = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
+        const normalizedTxs = allTransactions.transactions.map((tx: unknown) => {
+          const txObj = tx as Record<string, unknown>;
+          return {
+            id: txObj.id as string,
+            status: txObj.status as string,
+            title: txObj.title as string,
+            from: typeof txObj.from === "string" ? txObj.from : (txObj.from as { toText: () => string }).toText(),
+            createdAt: typeof txObj.createdAt === "bigint" ? txObj.createdAt.toString() : String(txObj.createdAt),
+            confirmedAt: Array.isArray(txObj.confirmedAt) && txObj.confirmedAt.length > 0 ? txObj.confirmedAt[0].toString() : undefined,
+            cancelledAt: Array.isArray(txObj.cancelledAt) && txObj.cancelledAt.length > 0 ? txObj.cancelledAt[0].toString() : undefined,
+            refundedAt: Array.isArray(txObj.refundedAt) && txObj.refundedAt.length > 0 ? txObj.refundedAt[0].toString() : undefined,
+            releasedAt: Array.isArray(txObj.releasedAt) && txObj.releasedAt.length > 0 ? txObj.releasedAt[0].toString() : undefined,
+            readAt: Array.isArray(txObj.readAt) && txObj.readAt.length > 0 ? txObj.readAt[0].toString() : undefined,
+            bitcoinTransactionHash: Array.isArray(txObj.bitcoinTransactionHash) && txObj.bitcoinTransactionHash.length > 0 ? txObj.bitcoinTransactionHash[0] : txObj.bitcoinTransactionHash,
+            bitcoinAddress: Array.isArray(txObj.bitcoinAddress) && txObj.bitcoinAddress.length > 0 ? txObj.bitcoinAddress[0] : txObj.bitcoinAddress,
+            to: (txObj.to as unknown[]).map((toEntry: unknown) => {
+              const entry = toEntry as Record<string, unknown>;
+              return {
+                principal: typeof entry.principal === "string" ? entry.principal : (entry.principal as { toText: () => string }).toText(),
+                amount: typeof entry.amount === "bigint" ? entry.amount.toString() : String(entry.amount),
+                percentage: typeof entry.percentage === "bigint" ? entry.percentage.toString() : String(entry.percentage),
+                status: entry.status,
+                name: entry.name as string,
+                approvedAt: Array.isArray(entry.approvedAt) && entry.approvedAt.length > 0 ? entry.approvedAt[0].toString() : undefined,
+                declinedAt: Array.isArray(entry.declinedAt) && entry.declinedAt.length > 0 ? entry.declinedAt[0].toString() : undefined,
+                readAt: Array.isArray(entry.readAt) && entry.readAt.length > 0 ? entry.readAt[0].toString() : undefined,
+              };
+            }),
+          };
+        });
+        dispatch(setTransactions(normalizedTxs));
       }
     } catch (err) {
       console.error("Approve error:", err);
@@ -429,6 +464,30 @@ export default function TransactionDetailsPage() {
           {statusKey === TRANSACTION_STATUS.PENDING && (
             (() => {
               const isSender = principal && String(transaction.from) === String(principal);
+              
+              // Check if current user has already approved or declined
+              const currentUserEntry = transaction.to?.find((entry) => 
+                String(entry.principal) === String(principal)
+              );
+              const hasUserActioned = currentUserEntry && (
+                currentUserEntry.approvedAt || 
+                currentUserEntry.declinedAt || 
+                (currentUserEntry.status && Object.keys(currentUserEntry.status)[0] !== "pending")
+              );
+              
+              // Debug logging
+              console.log('🔍 User Detection Debug:', {
+                currentPrincipal: typeof principal === "string" ? principal : principal?.toText(),
+                currentUserEntry,
+                hasUserActioned,
+                allRecipients: transaction.to?.map(r => ({
+                  principal: r.principal,
+                  approvedAt: r.approvedAt,
+                  declinedAt: r.declinedAt,
+                  status: r.status
+                }))
+              });
+              
               const transactionData = {
                 id: transaction.id,
                 status: "pending" as const,
@@ -468,9 +527,10 @@ export default function TransactionDetailsPage() {
               ) : (
                 <PendingEscrowDetails
                   transaction={transactionData}
+                  currentUserPrincipal={typeof principal === "string" ? principal : principal?.toText()}
                   onCancel={undefined}
-                  onApprove={handleApprove}
-                  onDecline={handleDecline}
+                  onApprove={hasUserActioned ? undefined : handleApprove}
+                  onDecline={hasUserActioned ? undefined : handleDecline}
                   isLoading={isLoading}
                 />
               );

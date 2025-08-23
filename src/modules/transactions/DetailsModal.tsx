@@ -45,7 +45,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
             transaction.status === 'declined' ? 'bg-red-600 text-white' :
             'bg-gray-600 text-white'
           }`}>
-            {transaction.status?.toUpperCase()}
+            {transaction.status === 'confirmed' ? 'ACTIVE' : transaction.status?.toUpperCase()}
           </span>
         </div>
 
@@ -67,14 +67,14 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
                   <div className="mt-1">
                     <span className="text-xs text-gray-400">Status: </span>
                     <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                      toEntry.status?.approved ? 'bg-green-600 text-white' :
-                      toEntry.status?.declined ? 'bg-red-600 text-white' :
-                      toEntry.status?.pending ? 'bg-yellow-600 text-white' :
+                      toEntry.status && typeof toEntry.status === 'object' && 'approved' in toEntry.status ? 'bg-green-600 text-white' :
+                      toEntry.status && typeof toEntry.status === 'object' && 'declined' in toEntry.status ? 'bg-red-600 text-white' :
+                      toEntry.status && typeof toEntry.status === 'object' && 'pending' in toEntry.status ? 'bg-yellow-600 text-white' :
                       'bg-gray-600 text-white'
                     }`}>
-                      {toEntry.status?.approved ? 'APPROVED' :
-                       toEntry.status?.declined ? 'DECLINED' :
-                       toEntry.status?.pending ? 'PENDING' :
+                      {toEntry.status && typeof toEntry.status === 'object' && 'approved' in toEntry.status ? 'APPROVED' :
+                       toEntry.status && typeof toEntry.status === 'object' && 'declined' in toEntry.status ? 'DECLINED' :
+                       toEntry.status && typeof toEntry.status === 'object' && 'pending' in toEntry.status ? 'PENDING' :
                        'UNKNOWN'}
                     </span>
                   </div>

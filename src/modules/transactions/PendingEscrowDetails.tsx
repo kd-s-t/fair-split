@@ -9,6 +9,7 @@ import { useMemo } from "react";
 
 export default function PendingEscrowDetails({
   transaction,
+  currentUserPrincipal,
   onCancel,
   onApprove,
   onDecline,
@@ -27,10 +28,9 @@ export default function PendingEscrowDetails({
     if (!transaction.to || !Array.isArray(transaction.to)) return { amount: 0, percentage: 0 };
 
     // Find the current user's entry in the recipients list
-    const userEntry = transaction.to.find(entry =>
-      String(entry.principal) === String(transaction.from) ||
-      entry.principal === transaction.from
-    );
+    const userEntry = currentUserPrincipal ? transaction.to.find(entry =>
+      String(entry.principal) === String(currentUserPrincipal)
+    ) : null;
 
     if (userEntry) {
       return {
@@ -44,7 +44,20 @@ export default function PendingEscrowDetails({
       amount: totalBTC,
       percentage: 100
     };
-  }, [transaction.to, transaction.from, totalBTC]);
+  }, [transaction.to, currentUserPrincipal, totalBTC]);
+
+  // Check if current user has already approved or declined
+  const currentUserEntry = currentUserPrincipal ? transaction.to?.find(entry => 
+    String(entry.principal) === String(currentUserPrincipal)
+  ) : null;
+  const hasUserApproved = currentUserEntry && (
+    currentUserEntry.approvedAt || 
+    (currentUserEntry.status && Object.keys(currentUserEntry.status)[0] === "approved")
+  );
+  const hasUserDeclined = currentUserEntry && (
+    currentUserEntry.declinedAt || 
+    (currentUserEntry.status && Object.keys(currentUserEntry.status)[0] === "declined")
+  );
 
 
   return (
@@ -96,8 +109,14 @@ export default function PendingEscrowDetails({
             </div>
             <div className="text-center">
               <Typography variant="small" className="text-[#9F9F9F]">Status</Typography>
-              <Typography variant="base" className="text-[#FEB64D] font-semibold mt-2">
-                Pending approval
+              <Typography variant="base" className={`font-semibold mt-2 ${
+                hasUserApproved ? 'text-green-500' : 
+                hasUserDeclined ? 'text-red-500' : 
+                'text-[#FEB64D]'
+              }`}>
+                {hasUserApproved ? 'Approved' : 
+                 hasUserDeclined ? 'Declined' : 
+                 'Pending approval'}
               </Typography>
             </div>
           </div>
@@ -106,20 +125,42 @@ export default function PendingEscrowDetails({
         {/* Divider */}
         <hr className="border-[#424444] h-[1px]" />
 
-        {/* Approval Required Section */}
+        {/* Approval Section */}
         <div>
-          <Typography variant="large" className="text-white mb-4">Approval required</Typography>
+          <Typography variant="large" className="text-white mb-4">
+            {hasUserApproved ? 'Approval Status' : 
+             hasUserDeclined ? 'Decline Status' : 
+             'Approval required'}
+          </Typography>
 
-          {/* Warning Banner */}
-          <div className="bg-[#48342A] border border-[#BD823D] rounded-[10px] p-4 mb-4">
+          {/* Status Banner */}
+          <div className={`rounded-[10px] p-4 mb-4 ${
+            hasUserApproved ? 'bg-green-900/20 border border-green-500' :
+            hasUserDeclined ? 'bg-red-900/20 border border-red-500' :
+            'bg-[#48342A] border border-[#BD823D]'
+          }`}>
             <div className="flex items-start gap-3">
-              <CircleAlert size={20} className="text-[#FEB64D] mt-0.5" />
+              {hasUserApproved ? (
+                <CircleCheckBig size={20} className="text-green-500 mt-0.5" />
+              ) : hasUserDeclined ? (
+                <CircleX size={20} className="text-red-500 mt-0.5" />
+              ) : (
+                <CircleAlert size={20} className="text-[#FEB64D] mt-0.5" />
+              )}
               <div className="space-y-2">
-                <Typography variant="base" className="text-[#FEB64D] font-semibold">
-                  Review the escrow details and choose your action
+                <Typography variant="base" className={`font-semibold ${
+                  hasUserApproved ? 'text-green-500' :
+                  hasUserDeclined ? 'text-red-500' :
+                  'text-[#FEB64D]'
+                }`}>
+                  {hasUserApproved ? 'You have approved this escrow' :
+                   hasUserDeclined ? 'You have declined this escrow' :
+                   'Review the escrow details and choose your action'}
                 </Typography>
                 <Typography variant="small" className="text-white">
-                  Once approved, the escrow will be activated and funds will be distributed according to the split
+                  {hasUserApproved ? 'Waiting for other recipients to approve before the escrow can be activated' :
+                   hasUserDeclined ? 'This escrow has been declined and will not proceed' :
+                   'Once approved, the escrow will be activated and funds will be distributed according to the split'}
                 </Typography>
               </div>
             </div>
@@ -160,13 +201,15 @@ export default function PendingEscrowDetails({
             </div>
           )}
 
-          {/* Warning Text */}
-          <div className="flex items-center gap-3 mt-3">
-            <CircleAlert size={20} className="text-[#FEB64D]" />
-            <Typography variant="small" className="text-white">
-              This action cannot be undone.
-            </Typography>
-          </div>
+          {/* Warning Text - Only show when action is still needed */}
+          {!hasUserApproved && !hasUserDeclined && (
+            <div className="flex items-center gap-3 mt-3">
+              <CircleAlert size={20} className="text-[#FEB64D]" />
+              <Typography variant="small" className="text-white">
+                This action cannot be undone.
+              </Typography>
+            </div>
+          )}
         </div>
 
         {/* Trustless Banner */}

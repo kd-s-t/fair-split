@@ -113,6 +113,7 @@ export interface ActivityItem {
 // Component prop types
 export interface PendingEscrowDetailsProps {
   transaction: EscrowTransaction;
+  currentUserPrincipal?: string;
   onCancel?: () => void;
   onApprove?: () => void;
   onDecline?: () => void;

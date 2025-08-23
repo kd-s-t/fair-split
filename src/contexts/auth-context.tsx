@@ -72,9 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Fetch Transactions
       try {
-        console.log('🔄 Fetching transactions...')
-        const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(10)) as { transactions: unknown[] }
-        console.log('🔄 Transactions result count:', result.transactions.length)
+        const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(100)) as { transactions: unknown[] }
         
         const normalizeTx = (tx: unknown) => {
           const serializeTimestamp = (value: unknown) => {
@@ -129,14 +127,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           };
         };
         const normalizedTxs = (result.transactions as unknown[]).map(normalizeTx) as NormalizedTransaction[];
-        console.log('🔄 Setting transactions count:', normalizedTxs.length)
         dispatch(setTransactions(normalizedTxs))
       } catch (error) {
-        console.error('🔄 Error fetching transactions:', error)
+        console.error('Failed to fetch transactions:', error)
         dispatch(setTransactions([]))
       }
     } catch (error) {
-      console.error('🔄 Error in fetchUserData:', error)
+      console.error('Error in fetchUserData:', error)
     }
   }, [dispatch])
 

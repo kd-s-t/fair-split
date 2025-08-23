@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { BotMessageSquare, X, Send } from 'lucide-react';
+import { BotMessageSquare, X, Send, Trash2 } from 'lucide-react';
 import { Message } from './ChatInterface';
 import { saveMessages, loadMessages, scrollToBottomOnOpen } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { ParsedAction } from '@/lib/messaging/actionParser';
 
 import { useUser } from '@/hooks/useUser';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Typography } from '@/components/ui/typography';
 
 interface RightSidebarProps {
@@ -113,7 +113,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           parsedAction = await parseUserMessageWithAI(content, apiKey);
         } catch (aiError) {
           console.warn('AI parser failed, falling back to local parser:', aiError);
-          // Continue to fallback logic
+          // Don't show error message to user, just continue to local parser
         }
       } else {
         console.info('OpenAI API key not configured or invalid, using local parser only');
@@ -130,9 +130,19 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           (lowerContent.includes('escrow') && (lowerContent.includes('approve') || lowerContent.includes('decide')))) {
           parsedAction = { type: 'approval_suggestion' };
         } else if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('make')) {
-          // Extract recipient IDs (ICP principal format)
-          const recipientMatch = content.match(/[a-z0-9-]{63}/g);
-          const recipients = recipientMatch || [];
+          // Extract recipient IDs (ICP principal format) - handle multi-line content
+          const lines = content.split('\n');
+          const allRecipients: string[] = [];
+          
+          lines.forEach(line => {
+            const recipientMatch = line.match(/[a-z0-9-]{63}/g);
+            if (recipientMatch) {
+              allRecipients.push(...recipientMatch);
+            }
+          });
+          
+          const recipients = allRecipients;
+          console.log('Local parser - extracted recipients:', recipients);
 
           // Extract amount and check for currency
           let amount = '1';
@@ -163,6 +173,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       }
 
       if (parsedAction) {
+        console.log('Parsed action:', parsedAction);
         const response = generateActionResponse(parsedAction, {
           principal,
           icpBalance,
@@ -181,8 +192,10 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
 
         // Handle navigation after a delay
         setTimeout(() => {
+          console.log('Handling navigation for action:', parsedAction.type);
           if (parsedAction.type === 'create_escrow') {
             const navigation = handleEscrowCreation(parsedAction);
+            console.log('Escrow navigation:', navigation);
             executeNavigation(navigation);
           } else if (parsedAction.type === 'approval_suggestion') {
             const navigation = handleApprovalSuggestion(parsedAction);
@@ -237,11 +250,21 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+
+  const handleClearHistory = () => {
+    const welcomeMessage: Message = {
+      id: 'welcome',
+      content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
+      role: 'assistant',
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
   };
 
   return (
@@ -252,14 +275,27 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           <BotMessageSquare className="w-5 h-5 text-[#FEB64D]" />
           <Typography variant='h4' className="text-white">SplitSafe AI</Typography>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          className="text-white hover:bg-[#2a2a2a] !p-0"
-        >
-          <X size={18} />
-        </Button>
+        <div className="flex items-center gap-2">
+          {messages.length > 1 && (
+            <Button
+              onClick={handleClearHistory}
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-[#2a2a2a] !p-0"
+              title="Clear chat history"
+            >
+              <Trash2 size={16} />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="text-white hover:bg-[#2a2a2a] !p-0"
+          >
+            <X size={18} />
+          </Button>
+        </div>
       </div>
 
       {/* Body */}
@@ -279,21 +315,17 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
                 )}
 
                 <div
-                  className={`max-w-[294px] rounded-xl p-4 ${message.role === 'user'
+                  className={`max-w-[250px] rounded-xl p-4 overflow-hidden ${message.role === 'user'
                     ? 'bg-[#FEB64D] text-black ml-auto'
                     : 'bg-[#474747] text-white border border-[#636363]'
                     }`}
                 >
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed break-all overflow-hidden" style={{ wordBreak: 'break-all', overflowWrap: 'break-word', wordSpacing: '0' }}>
                     {message.content}
                   </div>
                 </div>
 
-                {message.role === 'user' && (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4A2BE1] to-[#7B5AFF] flex items-center justify-center flex-shrink-0">
-                    <div className="w-5 h-5 text-white font-bold">U</div>
-                  </div>
-                )}
+
               </div>
             ))}
 
@@ -321,17 +353,16 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         <div className="flex-shrink-0 p-4">
           <form onSubmit={handleSubmit} className="bg-[#333333] border border-[#FEB64D] rounded-xl p-2">
             <div className="flex items-center justify-between">
-              <Input
-                type="text"
+              <Textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Talk with SplitSafe AI"
-                className="bg-transparent border-0 text-white placeholder-[#FFFFFF66] focus:outline-none focus:ring-0 flex-1"
+                className="bg-transparent border-0 text-white placeholder-[#FFFFFF66] focus:outline-none focus:ring-0 flex-1 resize-none min-h-[40px] max-h-[120px]"
                 disabled={isLoading}
+                rows={1}
               />
               <div className="flex items-center space-x-2">
-                <span className="text-white">|</span>
                 <Button
                   type="submit"
                   variant="ghost"

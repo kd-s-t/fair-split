@@ -29,7 +29,7 @@ const Form = ({ form }: FormProps) => {
   });
 
   const watchedRecipients = watch("recipients");
-  const totalAllocation = watchedRecipients?.reduce((sum, recipient) => sum + (recipient.percentage || 0), 0) || 0;
+  const totalAllocation = watchedRecipients?.reduce((sum, recipient) => sum + (Number(recipient.percentage) || 0), 0) || 0;
 
   const generateTitle = () => {
     const titles = [
@@ -291,17 +291,15 @@ const Form = ({ form }: FormProps) => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[#A1A1A1] text-sm">Percentage</label>
-                      <div className="relative">
-                        <Input
-                          {...register(`recipients.${index}.percentage`)}
-                          type="number"
-                          min="0"
-                          max="100"
-                          placeholder="0"
-                          className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1] pr-8"
-                        />
-                        <ChevronsUpDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
-                      </div>
+                      <Input
+                        {...register(`recipients.${index}.percentage`)}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        placeholder="0"
+                        className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+                      />
                       {errors.recipients?.[index]?.percentage && (
                         <div className="text-red-400 text-sm">
                           {errors.recipients[index]?.percentage?.message}

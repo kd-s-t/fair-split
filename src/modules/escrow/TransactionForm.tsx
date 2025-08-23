@@ -101,11 +101,15 @@ const TransactionForm = () => {
           
           // Populate recipients if provided
           if (data.recipients && Array.isArray(data.recipients) && data.recipients.length > 0) {
+            const recipientCount = data.recipients.length;
+            const basePercentage = Math.floor(100 / recipientCount);
+            const remainder = 100 - (basePercentage * recipientCount);
+            
             const formRecipients = data.recipients.map((recipient: string, index: number) => ({
               id: `recipient-${index + 1}`,
               name: "",
               principal: recipient,
-              percentage: data.recipients.length === 1 ? 100 : Math.floor(100 / data.recipients.length)
+              percentage: basePercentage + (index < remainder ? 1 : 0) // Distribute remainder to first few recipients
             }));
             
             setValue("recipients", formRecipients);

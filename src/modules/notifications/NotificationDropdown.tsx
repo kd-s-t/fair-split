@@ -49,9 +49,10 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       String(entry.principal) === String(principalId)
     );
 
-    // Count as unread if user is a recipient and hasn't read it
-    return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
+    return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null");
   }).length;
+  
+
   const [bellRing, setBellRing] = useState(false);
 
   // Ring bell every 5 seconds when there are unread notifications
@@ -82,9 +83,20 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
     try {
       const actor = await createSplitDappActor();
       await actor.markTransactionsAsRead(Principal.fromText(principalId));
-      if (process.env.NODE_ENV === 'development') {
-      console.log('Marked all transactions as read');
-    }
+      
+      // Update Redux state to remove badge immediately
+      const updatedTransactions = transactions.map(tx => ({
+        ...tx,
+        to: tx.to.map(recipient => 
+          recipient.principal === principalId 
+            ? { ...recipient, readAt: new Date().toISOString() }
+            : recipient
+        )
+      }));
+      
+      dispatch({ type: 'transactions/setTransactions', payload: updatedTransactions });
+      
+
     } catch (error) {
       console.error('Failed to mark transactions as read:', error);
     }
@@ -117,12 +129,16 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
             <AnimatePresence>
               {unreadCount > 0 && (
                 <motion.div
-                  className="absolute top-[21px] right-[6px] w-2 h-2 bg-[#EA2D2D] rounded-full"
+                  className="absolute top-[21px] right-[6px] min-w-[18px] h-[18px] bg-[#EA2D2D] rounded-full flex items-center justify-center px-1"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ duration: 0.3, type: "spring", stiffness: 500 }}
-                />
+                >
+                  <span className="text-white text-xs font-bold">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                </motion.div>
               )}
             </AnimatePresence>
           </motion.button>

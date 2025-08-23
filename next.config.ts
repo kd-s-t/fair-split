@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         hostname: 'api.dicebear.com',
         pathname: '/7.x/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'source.boringavatars.com',
+      },
     ],
   },
   // Increase timeout for static generation

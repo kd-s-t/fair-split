@@ -29,14 +29,11 @@ export default function LogoutButton() {
   return (
     <DropdownMenuItem 
       onClick={handleLogout}
-      className="px-2 py-1.5 cursor-pointer hover:bg-[#2A2A2A] rounded"
+      className="px-2 py-1.5 cursor-pointer hover:bg-[#2F2F2F] focus:bg-[#2F2F2F] data-[highlighted]:bg-[#2F2F2F] rounded"
     >
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-3">
-          <LogOut size={16} className="text-[#FEB64D]" />
-          <span className="text-sm text-white">Log out</span>
-        </div>
-        <span className="text-xs text-gray-400">⇧⌘Q</span>
+      <div className="flex items-center gap-3">
+        <LogOut size={16} className="text-[#FEB64D]" />
+        <span className="text-sm text-white">Log out</span>
       </div>
     </DropdownMenuItem>
   );

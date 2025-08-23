@@ -156,11 +156,23 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
           <button className="flex items-center space-x-3 focus:outline-none cursor-pointer hover:opacity-80 transition-opacity min-w-0">
             <div className="relative w-12 h-12 overflow-hidden rounded-full flex-shrink-0 bg-[#D9D9D9]">
               <Image
-                src={getAvatarUrl()}
+                src={getAvatarUrl(principalId)}
                 alt={'User avatar'}
                 fill
                 sizes="48px"
                 className="object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div class="w-full h-full flex items-center justify-center bg-[#FEB64D] text-[#0D0D0D] font-semibold text-lg">
+                        ${displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                    `;
+                  }
+                }}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -171,9 +183,8 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 bg-[#212121] border border-[#303333] text-white rounded-xl shadow-lg">
+        <DropdownMenuContent className="w-56 bg-[#212121] border border-[#303333] text-white rounded-xl shadow-lg -translate-x-7">
           
-          {/* My Account Section */}
           <DropdownMenuLabel className="px-2 py-1.5">
             <div className="text-sm font-medium text-white">
               My Account
@@ -182,42 +193,32 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
 
           <DropdownMenuSeparator className="bg-[#424444] mx-1" />
 
-          {/* Edit Profile */}
           <DropdownMenuItem 
             onClick={() => setShowSettings(true)}
-            className="px-2 py-1.5 cursor-pointer hover:bg-[#2A2A2A] rounded"
+            className="px-2 py-1.5 cursor-pointer hover:bg-[#2F2F2F] focus:bg-[#2F2F2F] data-[highlighted]:bg-[#2F2F2F] rounded"
           >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-3">
-                <User size={16} className="text-[#FEB64D]" />
-                <span className="text-sm text-white">Edit profile</span>
-              </div>
-              <span className="text-xs text-gray-400">⇧⌘P</span>
+            <div className="flex items-center gap-3">
+              <User size={16} className="text-[#FEB64D]" />
+              <span className="text-sm text-white">Edit profile</span>
             </div>
           </DropdownMenuItem>
 
-          {/* Wallet */}
           <DropdownMenuItem 
             onClick={() => setShowWallet(true)}
-            className="px-2 py-1.5 cursor-pointer hover:bg-[#2A2A2A] rounded"
+            className="px-2 py-1.5 cursor-pointer hover:bg-[#2F2F2F] focus:bg-[#2F2F2F] data-[highlighted]:bg-[#2F2F2F] rounded"
           >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-3">
-                <Wallet size={16} className="text-[#FEB64D]" />
-                <span className="text-sm text-white">Wallet</span>
-              </div>
-              <span className="text-xs text-gray-400">⌘W</span>
+            <div className="flex items-center gap-3">
+              <Wallet size={16} className="text-[#FEB64D]" />
+              <span className="text-sm text-white">Wallet</span>
             </div>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className="bg-[#424444] mx-1" />
 
-          {/* Logout */}
           <LogoutButton />
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Edit Profile Modal */}
       <EditNameModal
         open={showSettings}
         principalId={principalId}
@@ -225,7 +226,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
         onNameSaved={() => setShowSettings(false)}
       />
 
-      {/* Wallet Modal */}
       <WalletModal
         isOpen={showWallet}
         onClose={() => setShowWallet(false)}

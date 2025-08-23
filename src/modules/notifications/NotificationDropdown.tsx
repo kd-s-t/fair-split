@@ -11,6 +11,7 @@ import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
 import TransactionDetailsModal from '@/modules/transactions/DetailsModal';
 import type { NormalizedTransaction, EscrowTransaction } from '@/modules/transactions/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateTransactionMessage } from '@/lib/utils';
 
 const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransaction => ({
   id: tx.id,
@@ -167,12 +168,12 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                       onClick={() => handleRowClick(tx)}
                     >
                       <div className="flex flex-col w-full">
-                        <span className="text-xs font-mono truncate">From: {tx.from}</span>
-                        <span className="text-xs font-mono truncate">To: {tx.to.map((toEntry) => String(toEntry.principal)).join(', ')}</span>
-                        <span className="text-xs font-semibold text-yellow-600">
-                          {tx.to.reduce((sum: number, toEntry) => sum + Number(toEntry.amount), 0) / 1e8} BTC
+                        <span className="text-sm font-medium text-white">
+                          {generateTransactionMessage(tx, principalId, false)}
                         </span>
-                        <span className="text-xs text-muted-foreground">{new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
+                        </span>
                       </div>
                     </DropdownMenuItem>
                   </motion.div>

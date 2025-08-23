@@ -4,8 +4,9 @@ export function cn(...inputs: string[]) {
 export function truncatePrincipal(principalId: string) {
   return principalId.slice(0, 5) + '...' + principalId.slice(-4);
 }
-export function getAvatarUrl() {
-  return `https://github.com/shadcn.png`;
+export function getAvatarUrl(seed?: string) {
+  const avatarSeed = seed || 'default';
+  return `https://source.boringavatars.com/beam/120/${avatarSeed}?colors=6366f1,8b5cf6,a855f7,c084fc,d8b4fe`;
 }
 
 export const truncateAddress = (addr: string) => {
@@ -98,3 +99,52 @@ export const generateRandomHash = (): string => {
   }
   return hash;
 };
+
+interface TransactionRecipient {
+  principal: string;
+  amount: string | number;
+}
+
+interface Transaction {
+  from: string;
+  to: TransactionRecipient[];
+  createdAt?: string | number;
+}
+
+export function generateTransactionMessage(
+  transaction: Transaction,
+  currentUserId: string,
+  includeDate: boolean = true
+): string {
+  const isSender = String(transaction.from) === String(currentUserId);
+  const isRecipient = transaction.to?.some((recipient: TransactionRecipient) => 
+    String(recipient.principal) === String(currentUserId)
+  );
+
+  const totalAmount = transaction.to?.reduce((sum: number, recipient: TransactionRecipient) => 
+    sum + (recipient.amount ? Number(recipient.amount) : 0), 0
+  ) || 0;
+
+  const btcAmount = totalAmount / 1e8;
+  const btcPrice = 50000;
+  const usdAmount = btcAmount * btcPrice;
+
+  let message = '';
+
+  if (isSender) {
+    message = `You sent ${btcAmount.toFixed(6)} BTC ($${usdAmount.toFixed(2)})`;
+  } else if (isRecipient) {
+    message = `You received ${btcAmount.toFixed(6)} BTC ($${usdAmount.toFixed(2)})`;
+  } else {
+    message = `Transaction: ${btcAmount.toFixed(6)} BTC ($${usdAmount.toFixed(2)})`;
+  }
+
+  if (includeDate && transaction.createdAt) {
+    const date = new Date(Number(transaction.createdAt) / 1_000_000);
+    const dateStr = date.toLocaleDateString();
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    message += ` on ${dateStr} at ${timeStr}`;
+  }
+
+  return message;
+}

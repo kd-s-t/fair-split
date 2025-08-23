@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
 import { TransactionDetailsModalProps, ToEntry } from './types';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ExternalLink } from 'lucide-react';
 
 export default function TransactionDetailsModal({ transaction, onClose }: TransactionDetailsModalProps) {
+  const router = useRouter();
+  
   if (!transaction) return null;
   return (
     <motion.div
@@ -11,7 +16,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-[#212121] border border-[#303333] p-6 rounded-xl shadow-xl w-full max-w-md relative"
+        className="bg-[#212121] border border-[#303333] p-6 rounded-xl shadow-xl w-[30%] relative"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
@@ -25,18 +30,55 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
           ×
         </button>
         <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
+        
+        <div className="mb-3">
+          <span className="font-mono text-[10px]">{transaction.id}</span>
+        </div>
+        
+        <div className="mb-4 p-3 bg-[#2A2A2A] rounded-lg">
+          <span className="font-semibold text-white">Status: </span>
+          <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+            transaction.status === 'released' ? 'bg-green-600 text-white' :
+            transaction.status === 'pending' ? 'bg-yellow-600 text-white' :
+            transaction.status === 'confirmed' ? 'bg-blue-600 text-white' :
+            transaction.status === 'cancelled' ? 'bg-red-600 text-white' :
+            transaction.status === 'declined' ? 'bg-red-600 text-white' :
+            'bg-gray-600 text-white'
+          }`}>
+            {transaction.status?.toUpperCase()}
+          </span>
+        </div>
+
         <div className="mb-2">
           <span className="font-semibold">From:</span>
           <span className="ml-2 font-mono text-xs">{String(transaction.from)}</span>
         </div>
+        
         <div className="mb-2">
           <span className="font-semibold">Recipients:</span>
-          <ul className="ml-4 mt-1">
+          <ul className="ml-4 mt-2 space-y-2">
             {transaction.to.map((toEntry: ToEntry, idx: number) => (
-              <li key={idx} className="mb-1">
-                <span className="font-mono text-xs">{String(toEntry.principal)}</span>
-                {toEntry.name && <span className="ml-2 text-sm text-gray-500">({toEntry.name})</span>}
-                <span className="ml-2 text-yellow-600 font-semibold">{Number(toEntry.amount) / 1e8} BTC</span>
+              <li key={idx} className="flex items-center">
+                <span className="text-yellow-600 mr-2">•</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs">{String(toEntry.principal)}</span>
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-xs text-gray-400">Status: </span>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                      toEntry.status?.approved ? 'bg-green-600 text-white' :
+                      toEntry.status?.declined ? 'bg-red-600 text-white' :
+                      toEntry.status?.pending ? 'bg-yellow-600 text-white' :
+                      'bg-gray-600 text-white'
+                    }`}>
+                      {toEntry.status?.approved ? 'APPROVED' :
+                       toEntry.status?.declined ? 'DECLINED' :
+                       toEntry.status?.pending ? 'PENDING' :
+                       'UNKNOWN'}
+                    </span>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -45,13 +87,30 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
           <span className="font-semibold">Released At:</span>
           <span className="ml-2 text-xs">
             {transaction.releasedAt
-              ? new Date(Number(transaction.releasedAt) * 1000).toLocaleString()
+              ? new Date(Number(transaction.releasedAt) / 1_000_000).toLocaleString()
               : 'N/A'}
           </span>
         </div>
         <div className="mb-2">
           <span className="font-semibold">Date:</span>
-          <span className="ml-2 text-xs">{new Date(Number(transaction.createdAt) * 1000).toLocaleString()}</span>
+          <span className="ml-2 text-xs">
+            {transaction.createdAt
+              ? new Date(Number(transaction.createdAt) / 1_000_000).toLocaleString()
+              : 'N/A'}
+          </span>
+        </div>
+        
+        <div className="mt-6 flex justify-center">
+          <Button
+            onClick={() => {
+              router.push(`/transactions/${transaction.id}`);
+              onClose();
+            }}
+            className="bg-[#FEB64D] text-[#0D0D0D] hover:bg-[#FEB64D]/90 px-4 py-2 rounded-lg font-medium"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            View Full Details
+          </Button>
         </div>
       </motion.div>
     </motion.div>

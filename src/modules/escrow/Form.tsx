@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { Bitcoin, Trash2, Sparkles, Upload, Info, Plus, ChevronsUpDown } from "lucide-react";
+import { Bitcoin, Trash2, Sparkles, Upload, Info, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";

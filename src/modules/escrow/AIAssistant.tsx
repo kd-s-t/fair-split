@@ -40,7 +40,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
   const [description, setDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [setup, setSetup] = useState<AiGeneratedSetup | null>(null);
-
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
   const generateSplit = async () => {
     if (!description.trim()) {
@@ -98,14 +98,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
         setSetup(generatedSetup);
 
-
-
         toast.success("AI generated setup ready!");
       } else if (parsedAction && parsedAction.type === 'navigate') {
         // Handle navigation requests
         const navigation = handleNavigation(parsedAction);
         executeNavigation(navigation);
-
 
       } else {
         // Fallback to local parsing if AI doesn't work
@@ -216,8 +213,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       form.setValue("title", setup.title);
       form.setValue("btcAmount", setup.totalAmount.toString());
 
-      console.log("setup", setup);
-
       // Set recipients
       const formRecipients = setup.recipients.map((recipient, index) => ({
         id: `recipient-${index + 1}`,
@@ -230,12 +225,19 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
       setSetup(null);
       setDescription("");
+      setIsAccordionOpen(false);
       toast.success("Setup applied to form!");
     }
   };
 
   return (
-    <Accordion type="single" collapsible defaultValue="" className="mb-6 rounded-[20px] overflow-hidden">
+    <Accordion
+      type="single"
+      collapsible
+      value={isAccordionOpen ? "ai-assistant" : ""}
+      onValueChange={(value) => setIsAccordionOpen(value === "ai-assistant")}
+      className="mb-6 rounded-[20px] overflow-hidden"
+    >
       <AccordionItem value="ai-assistant" className="bg-[#1A1A1A] data-[state=open]:border data-[state=open]:border-[#FEB64D] rounded-[20px] transition-all duration-300 ease-in-out">
         <AccordionTrigger className="px-5 py-4 hover:no-underline !hover:no-underline cursor-pointer transition-all duration-200 hover:bg-[#2A2A2A]/50">
           <div className="flex items-center gap-2">

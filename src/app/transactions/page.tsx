@@ -68,7 +68,6 @@ import {
   Wallet,
   Eye,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { setTitle, setSubtitle } from '../../lib/redux/store';
@@ -89,8 +88,8 @@ function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
   }
 }
 
-import { TRANSACTION_STATUS_MAP } from "@/lib/constants";
 import { useTransactions } from "@/hooks/useTransactions";
+import TransactionStatusBadge from "@/components/TransactionStatusBadge";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -223,27 +222,6 @@ export default function TransactionsPage() {
     return isSentByUser(tx) ? "sent" : "received";
   }
 
-  const getTransactionStatusBadge = (status: string) => {
-    const variant = (TRANSACTION_STATUS_MAP[status]?.variant ?? "default") as
-      | "secondary"
-      | "success"
-      | "primary"
-      | "error"
-      | "default"
-      | "outline"
-      | "warning";
-
-    return (
-      <Badge variant={variant}>
-        {TRANSACTION_STATUS_MAP[status]?.label || status}
-      </Badge>
-    );
-  };
-
-
-
-
-
   async function handleRowClick(tx: NormalizedTransaction) {
     if (!principal) return;
     const actor = await createSplitDappActor();
@@ -362,7 +340,7 @@ export default function TransactionsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-xl font-semibold text-white truncate">{tx.title}</h3>
-                        {getTransactionStatusBadge(tx.status)}
+                        <TransactionStatusBadge status={tx.status} />
                       </div>
 
                       <div className="flex items-center space-x-4 text-sm text-[#BCBCBC]">

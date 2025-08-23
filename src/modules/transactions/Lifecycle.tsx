@@ -34,38 +34,35 @@ export function TransactionLifecycle({ currentStep, steps = defaultSteps, status
               {/* Timeline Column */}
               <div className="flex flex-col items-center w-6">
                 {/* Circle */}
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  isCompleted && !isCancelled
-                    ? 'bg-[#FEB64D] border-[#FEB64D]' 
-                    : 'bg-[#0D0D0D] border-[#424444]'
-                }`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isCompleted && !isCancelled
+                  ? 'bg-[#FEB64D] border-[#FEB64D]'
+                  : 'bg-[#0D0D0D] border-[#424444]'
+                  }`}>
                   {isCompleted && !isCancelled ? (
                     <CircleCheck size={16} className="text-[#0D0D0D]" />
                   ) : (
                     <div className="w-4 h-4 rounded-full border-2 border-[#5F5F5F]"></div>
                   )}
                 </div>
-                
+
                 {/* Line */}
                 {!isLast && (
-                  <div className={`w-0.5 h-20 mt-0 ${
-                    isCompleted && !isCancelled ? 'bg-[#FEB64D]' : 'bg-[#424444]'
-                  }`}></div>
+                  <div className={`w-0.5 h-20 mt-0 ${isCompleted && !isCancelled ? 'bg-[#FEB64D]' : 'bg-[#424444]'
+                    }`}></div>
                 )}
               </div>
 
               {/* Content */}
               <div className="flex-1 pb-6">
-                <Typography 
-                  variant="base" 
-                  className={`font-semibold ${
-                    isCompleted && !isCancelled ? 'text-white' : 'text-[#9F9F9F]'
-                  }`}
+                <Typography
+                  variant="base"
+                  className={`font-semibold ${isCompleted && !isCancelled ? 'text-white' : 'text-[#9F9F9F]'
+                    }`}
                 >
                   {step.label}
                 </Typography>
-                <Typography 
-                  variant="small" 
+                <Typography
+                  variant="small"
                   className="text-[#9F9F9F] mt-2"
                 >
                   {step.description}

@@ -1,6 +1,5 @@
 "use client";
 
-
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useAuth } from "@/contexts/auth-context";
@@ -28,7 +27,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-import { setTitle, setSubtitle } from "@/lib/redux/store";
+import { setTitle, setSubtitle, setTransactionStatus } from "@/lib/redux/store";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | "approve" | "decline" | "cancel" | null>(null);
@@ -97,22 +96,27 @@ export default function TransactionDetailsPage() {
   useEffect(() => {
     if (transaction) {
       dispatch(setTitle(transaction.title || 'Transaction Details'));
-      
+
       // Set subtitle based on status
       const statusKey = transaction.status || "unknown";
       let subtitle = '';
       if (statusKey === TRANSACTION_STATUS.PENDING) {
-        subtitle = 'Waiting for Bitcoin deposit to activate';
+        dispatch(setTransactionStatus(TRANSACTION_STATUS.PENDING));
+        subtitle = 'Review and approve or decline this escrow';
       } else if (statusKey === TRANSACTION_STATUS.CONFIRMED) {
+        dispatch(setTransactionStatus(TRANSACTION_STATUS.CONFIRMED));
         subtitle = 'Waiting for sender to release or refund';
       } else if (statusKey === TRANSACTION_STATUS.RELEASED) {
+        dispatch(setTransactionStatus(TRANSACTION_STATUS.RELEASED));
         subtitle = 'Escrow completed successfully';
       } else if (statusKey === TRANSACTION_STATUS.REFUND) {
+        dispatch(setTransactionStatus(TRANSACTION_STATUS.REFUND));
         subtitle = 'Escrow has been refunded';
       } else if (statusKey === TRANSACTION_STATUS.CANCELLED || statusKey === TRANSACTION_STATUS.DECLINED) {
+        dispatch(setTransactionStatus(TRANSACTION_STATUS.CANCELLED));
         subtitle = 'Escrow has been cancelled';
       }
-      
+
       dispatch(setSubtitle(subtitle));
     }
   }, [transaction, dispatch]);
@@ -250,26 +254,26 @@ export default function TransactionDetailsPage() {
 
   const handleApprove = async () => {
     if (!transaction || !principal) return;
-    
+
     setIsLoading("approve");
     try {
       const actor = await createSplitDappActor();
       const senderPrincipal = typeof transaction.from === "string" ? Principal.fromText(transaction.from) : transaction.from;
       const principalStr = typeof principal === "string" ? principal : principal.toText();
       const recipientEntry = transaction.to.find((entry) => String(entry.principal) === principalStr);
-      
+
       if (!recipientEntry) {
         toast.error('Recipient entry not found.');
         return;
       }
-      
+
       const recipientPrincipal = typeof recipientEntry.principal === "string"
         ? Principal.fromText(recipientEntry.principal)
         : recipientEntry.principal;
 
       await actor.recipientApproveEscrow(senderPrincipal, transaction.id, recipientPrincipal);
       toast.success("Escrow approved!");
-      
+
       // Fetch updated transaction and update state
       const updated = await actor.getTransaction(transaction.id, principal);
       if (Array.isArray(updated) && updated.length > 0) {
@@ -301,19 +305,19 @@ export default function TransactionDetailsPage() {
 
   const handleDecline = async () => {
     if (!transaction || !principal) return;
-    
+
     setIsLoading("decline");
     try {
       const actor = await createSplitDappActor();
       const senderPrincipal = typeof transaction.from === "string" ? Principal.fromText(transaction.from) : transaction.from;
       const principalStr = typeof principal === "string" ? principal : principal.toText();
       const recipientEntry = transaction.to.find((entry) => String(entry.principal) === principalStr);
-      
+
       if (!recipientEntry) {
         toast.error('Recipient entry not found.');
         return;
       }
-      
+
       const recipientPrincipal = typeof recipientEntry.principal === "string"
         ? Principal.fromText(recipientEntry.principal)
         : recipientEntry.principal;
@@ -330,7 +334,7 @@ export default function TransactionDetailsPage() {
 
       await actor.recipientDeclineEscrow(senderPrincipal, txIndex, recipientPrincipal);
       toast.success("Escrow declined!");
-      
+
       // Fetch updated transaction and update state
       const updated = await actor.getTransaction(transaction.id, principal);
       if (Array.isArray(updated) && updated.length > 0) {
@@ -373,7 +377,7 @@ export default function TransactionDetailsPage() {
   let currentStep = 0;
   if (statusKey === TRANSACTION_STATUS.RELEASED) currentStep = 3;
   else if (statusKey === TRANSACTION_STATUS.CONFIRMED) currentStep = 2;
-  else if (statusKey === TRANSACTION_STATUS.PENDING) currentStep = 1;
+  else if (statusKey === TRANSACTION_STATUS.PENDING) currentStep = 0;
   else if (statusKey === TRANSACTION_STATUS.CANCELLED) currentStep = 0;
   else if (statusKey === TRANSACTION_STATUS.REFUND) currentStep = 0;
 
@@ -387,11 +391,11 @@ export default function TransactionDetailsPage() {
         <Button variant="ghost" onClick={() => router.push('/dashboard')} className="self-start hover:-translate-x-1 transition-all duration-200 group">
           <ChevronLeft className="group-hover:-translate-x-1 transition-transform duration-200" /> Back to dashboard
         </Button>
-        {statusKey !== TRANSACTION_STATUS.RELEASED && 
-         statusKey !== TRANSACTION_STATUS.CANCELLED && 
-         statusKey !== TRANSACTION_STATUS.DECLINED && (
-          <TimeRemaining createdAt={transaction.createdAt} />
-        )}
+        {statusKey !== TRANSACTION_STATUS.RELEASED &&
+          statusKey !== TRANSACTION_STATUS.CANCELLED &&
+          statusKey !== TRANSACTION_STATUS.DECLINED && (
+            <TimeRemaining createdAt={transaction.createdAt} />
+          )}
       </div>
 
       <AnimatePresence>
@@ -433,15 +437,15 @@ export default function TransactionDetailsPage() {
                 createdAt: typeof transaction.createdAt === "string" ? transaction.createdAt : String(transaction.createdAt),
                 to: Array.isArray(transaction.to)
                   ? transaction.to.map((toEntry: ApiToEntry) => ({
-                      principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as PrincipalLike)?.toText?.() || String(toEntry.principal),
-                      amount: BigInt(String(toEntry.amount)),
-                      percentage: Number(String(toEntry.percentage)),
-                      status: toEntry.status as { [key: string]: null },
-                      name: toEntry.name,
-                      approvedAt: toEntry.approvedAt ? String(toEntry.approvedAt) : undefined,
-                      declinedAt: toEntry.declinedAt ? String(toEntry.declinedAt) : undefined,
-                      readAt: toEntry.readAt ? String(toEntry.readAt) : undefined,
-                    }))
+                    principal: typeof toEntry.principal === "string" ? toEntry.principal : (toEntry.principal as PrincipalLike)?.toText?.() || String(toEntry.principal),
+                    amount: BigInt(String(toEntry.amount)),
+                    percentage: Number(String(toEntry.percentage)),
+                    status: toEntry.status as { [key: string]: null },
+                    name: toEntry.name,
+                    approvedAt: toEntry.approvedAt ? String(toEntry.approvedAt) : undefined,
+                    declinedAt: toEntry.declinedAt ? String(toEntry.declinedAt) : undefined,
+                    readAt: toEntry.readAt ? String(toEntry.readAt) : undefined,
+                  }))
                   : [],
                 releasedAt: Array.isArray(transaction.releasedAt)
                   ? (transaction.releasedAt.length > 0 ? String(transaction.releasedAt[0]) : undefined)

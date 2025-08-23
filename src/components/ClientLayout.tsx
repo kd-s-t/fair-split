@@ -17,12 +17,10 @@ import { useEffect } from 'react'
 
 function ClientLayoutContent({ children }: { children: ReactNode }) {
 
-  const { principal, name } = useUser()
+  const { principal } = useUser()
   const dispatch = useDispatch()
   const { ckbtcAddress, seiAddress } = useSelector((state: RootState) => state.user)
 
-  const title = useSelector((state: RootState) => state.layout.title)
-  const subtitle = useSelector((state: RootState) => state.layout.subtitle)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true)
 
@@ -32,7 +30,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
       const generateAddresses = async () => {
         try {
           const actor = await createSplitDappActor();
-          
+
           // Generate cKBTC address if not exists
           if (!ckbtcAddress) {
             try {
@@ -44,7 +42,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
               console.error('Failed to generate cKBTC address:', error);
             }
           }
-          
+
           // Generate SEI address if not exists
           if (!seiAddress) {
             try {
@@ -60,7 +58,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
           console.error('Failed to generate addresses:', error);
         }
       };
-      
+
       generateAddresses();
     }
   }, [principal, ckbtcAddress, seiAddress, dispatch]);
@@ -82,14 +80,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="flex-shrink-0" data-section="header">
-          <Header
-            title={title}
-            subtitle={subtitle}
-            user={{
-              principalId: principal ?? '',
-              name: name || undefined,
-            }}
-          />
+          <Header />
         </div>
 
         {/* Main Content + AI Assistant Container */}

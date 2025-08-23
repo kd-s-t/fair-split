@@ -143,7 +143,7 @@ export default function Withdraw({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <Card className='!border-0 !p-0 !bg-[#313030] shadow-[0_0_32px_rgba(0,0,0,0.04)] !w-[680px]'>
+        <Card className='!border-0 !p-0 !bg-[#313030] shadow-[0_0_32px_rgba(0,0,0,0.04)] !w-[640px]'>
           <CardHeader className="p-6">
             <CardTitle className="flex flex-col items-start">
               <div className="flex justify-between items-start w-full">

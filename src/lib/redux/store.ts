@@ -9,6 +9,7 @@ const initialLayoutState = {
   activePage: 'dashboard',
   title: '',
   subtitle: '',
+  transactionStatus: '',
 };
 
 const layoutSlice = createSlice({
@@ -24,10 +25,13 @@ const layoutSlice = createSlice({
     setSubtitle(state, action) {
       state.subtitle = action.payload;
     },
+    setTransactionStatus(state, action) {
+      state.transactionStatus = action.payload;
+    },
   },
 });
 
-export const { setActivePage, setTitle, setSubtitle } = layoutSlice.actions;
+export const { setActivePage, setTitle, setSubtitle, setTransactionStatus } = layoutSlice.actions;
 export const layoutReducer = layoutSlice.reducer;
 
 export const store = configureStore({

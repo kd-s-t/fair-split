@@ -4,7 +4,6 @@ import { Bitcoin, UsersRound, Zap, CircleCheckBig, CircleAlert, Shield, ChevronR
 import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 
-
 interface EscrowOverviewProps {
   totalBTC: number;
   recipientCount: number;

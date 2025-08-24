@@ -1,14 +1,9 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+export function cn(...inputs: string[]) {
+  return inputs.filter(Boolean).join(' ')
 }
-
 export function truncatePrincipal(principalId: string) {
   return principalId.slice(0, 5) + '...' + principalId.slice(-4);
 }
-
 export function getAvatarUrl(seed?: string) {
   const avatarSeed = seed || 'default';
   
@@ -38,73 +33,8 @@ export function getAvatarUrl(seed?: string) {
   return dataUrl;
 }
 
-// Real-time Bitcoin price fetching
-let cachedBtcPrice: number | null = null;
-let lastFetchTime: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-export async function getBitcoinPrice(): Promise<number> {
-  const now = Date.now();
-  
-  // Return cached price if still valid
-  if (cachedBtcPrice && (now - lastFetchTime) < CACHE_DURATION) {
-    return cachedBtcPrice;
-  }
-
-  try {
-    // Try CoinGecko API first (free, no API key required)
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-    const data = await response.json();
-    
-    if (data.bitcoin && data.bitcoin.usd) {
-      cachedBtcPrice = data.bitcoin.usd;
-      lastFetchTime = now;
-      return cachedBtcPrice;
-    }
-  } catch (error) {
-    console.warn('CoinGecko API failed, trying fallback:', error);
-  }
-
-  try {
-    // Fallback to CoinCap API
-    const response = await fetch('https://api.coincap.io/v2/assets/bitcoin');
-    const data = await response.json();
-    
-    if (data.data && data.data.priceUsd) {
-      cachedBtcPrice = parseFloat(data.data.priceUsd);
-      lastFetchTime = now;
-      return cachedBtcPrice;
-    }
-  } catch (error) {
-    console.warn('CoinCap API failed:', error);
-  }
-
-  // Return cached price or fallback to current market rate
-  if (cachedBtcPrice !== null) {
-    return cachedBtcPrice;
-  }
-  return 114764.80; // Current approximate rate as fallback
-}
-
-// Convert BTC to USD using real-time rates
-export async function btcToUsd(btcAmount: number): Promise<number> {
-  const btcPrice = await getBitcoinPrice();
-  return btcAmount * btcPrice;
-}
-
-// Convert USD to BTC using real-time rates
-export async function usdToBtc(usdAmount: number): Promise<number> {
-  const btcPrice = await getBitcoinPrice();
-  return usdAmount / btcPrice;
-}
-
-// Convert ckBTC to USD (ckBTC is 1:1 with BTC)
-export async function ckBtcToUsd(ckbtcAmount: number): Promise<number> {
-  return await btcToUsd(ckbtcAmount);
-}
-
-export const truncateAddress = (addr: string): string => {
-  if (!addr || addr.length < 12) return addr;
+export const truncateAddress = (addr: string) => {
+  if (addr.length <= 12) return addr;
   return addr.slice(0, 7) + '...' + addr.slice(-5);
 }
 
@@ -119,29 +49,25 @@ export const formatBTC = (satoshis: number | string): string => {
 };
 
 /**
- * Converts fiat currency amounts to BTC using real-time rates
+ * Converts fiat currency amounts to BTC using approximate rates
  * @param amount - Amount in fiat currency
  * @param currency - Currency code or symbol
- * @returns Promise<BTC amount as string with 8 decimal places>
+ * @returns BTC amount as string with 8 decimal places
  */
-export const convertCurrencyToBTC = async (amount: number, currency: string): Promise<string> => {
-  // For USD, use real-time rate
-  if (currency === '$' || currency === 'USD') {
-    const btcAmount = await usdToBtc(amount);
-    return btcAmount.toFixed(8);
-  }
-
-  // For other currencies, use approximate rates (these could also be made real-time)
+export const convertCurrencyToBTC = (amount: number, currency: string): string => {
+  // Approximate conversion rates (these should be updated with real-time rates in production)
   const conversionRates: { [key: string]: number } = {
-    '€': 0.0000087, // €1 EUR ≈ 0.0000087 BTC (1 BTC ≈ €114,764)
-    '£': 0.0000074, // £1 GBP ≈ 0.0000074 BTC (1 BTC ≈ £135,000)
-    '¥': 0.000000078, // ¥1 JPY ≈ 0.000000078 BTC (1 BTC ≈ ¥12,800,000)
-    'EUR': 0.0000087,
-    'GBP': 0.0000074,
-    'JPY': 0.000000078,
-    'CAD': 0.0000067, // Canadian Dollar
-    'AUD': 0.0000061, // Australian Dollar
-    'CHF': 0.0000095, // Swiss Franc
+    '$': 0.000025, // $1 USD ≈ 0.000025 BTC (1 BTC ≈ $40,000)
+    '€': 0.000027, // €1 EUR ≈ 0.000027 BTC (1 BTC ≈ €37,000)
+    '£': 0.000032, // £1 GBP ≈ 0.000032 BTC (1 BTC ≈ £31,000)
+    '¥': 0.00000017, // ¥1 JPY ≈ 0.00000017 BTC (1 BTC ≈ ¥6,000,000)
+    'USD': 0.000025,
+    'EUR': 0.000027,
+    'GBP': 0.000032,
+    'JPY': 0.00000017,
+    'CAD': 0.000018, // Canadian Dollar
+    'AUD': 0.000016, // Australian Dollar
+    'CHF': 0.000028, // Swiss Franc
   };
 
   const rate = conversionRates[currency] || conversionRates['$']; // Default to USD
@@ -200,20 +126,20 @@ export const generateRandomHash = (): string => {
 
 interface TransactionRecipient {
   principal: string;
-  amount?: number;
+  amount: string | number;
 }
 
 interface Transaction {
   from: string;
-  to?: TransactionRecipient[];
+  to: TransactionRecipient[];
   createdAt?: string | number;
 }
 
-export async function generateTransactionMessage(
+export function generateTransactionMessage(
   transaction: Transaction,
   currentUserId: string,
   includeDate: boolean = true
-): Promise<string> {
+): string {
   const isSender = String(transaction.from) === String(currentUserId);
   const isRecipient = transaction.to?.some((recipient: TransactionRecipient) => 
     String(recipient.principal) === String(currentUserId)
@@ -224,7 +150,8 @@ export async function generateTransactionMessage(
   ) || 0;
 
   const btcAmount = totalAmount / 1e8;
-  const usdAmount = await btcToUsd(btcAmount);
+  const btcPrice = 50000;
+  const usdAmount = btcAmount * btcPrice;
 
   let message = '';
 

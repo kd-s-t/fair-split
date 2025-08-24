@@ -252,7 +252,6 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
             
             // Check if the converted amount exceeds the user's balance
             let finalAmount = convertedAmount;
-            let wasAdjusted = false;
             if (ckbtcBalance) {
               const userBalance = parseFloat(ckbtcBalance);
               const requestedAmount = parseFloat(convertedAmount);
@@ -266,7 +265,6 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
               if (requestedAmount > userBalance) {
                 console.log('DEBUG: Requested amount (', requestedAmount, ') exceeds user balance (', userBalance, '). Adjusting amount.');
                 finalAmount = userBalance.toFixed(8);
-                wasAdjusted = true;
                 console.log('DEBUG: Final amount adjusted to:', finalAmount);
               } else {
                 console.log('DEBUG: Requested amount (', requestedAmount, ') is within user balance (', userBalance, '). No adjustment needed.');
@@ -302,7 +300,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         icpBalance,
         ckbtcAddress,
         ckbtcBalance
-      }, wasAdjusted);
+      });
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

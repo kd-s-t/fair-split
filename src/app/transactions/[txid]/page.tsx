@@ -140,7 +140,7 @@ export default function TransactionDetailsPage() {
       }
     };
     fetchTransaction();
-  }, [txid, principal, router]);
+  }, [txid, principal, router, dispatch]);
 
   // Set title and subtitle when transaction loads
   useEffect(() => {

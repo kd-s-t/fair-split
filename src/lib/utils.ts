@@ -6,7 +6,31 @@ export function truncatePrincipal(principalId: string) {
 }
 export function getAvatarUrl(seed?: string) {
   const avatarSeed = seed || 'default';
-  return `https://source.boringavatars.com/beam/120/${avatarSeed}?colors=6366f1,8b5cf6,a855f7,c084fc,d8b4fe`;
+  
+  // Generate a deterministic color based on the seed
+  const colors = ['6366f1', '8b5cf6', 'a855f7', 'c084fc', 'd8b4fe'];
+  const hash = avatarSeed.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  const colorIndex = Math.abs(hash) % colors.length;
+  const color = colors[colorIndex];
+  
+  // Generate a simple SVG avatar locally
+  const svg = `
+    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="120" fill="#${color}" opacity="0.1"/>
+      <circle cx="60" cy="40" r="20" fill="#${color}"/>
+      <path d="M20 100 Q60 80 100 100" stroke="#${color}" stroke-width="3" fill="none"/>
+      <text x="60" y="110" text-anchor="middle" font-family="Arial" font-size="8" fill="#${color}">
+        ${avatarSeed.slice(0, 3).toUpperCase()}
+      </text>
+    </svg>
+  `;
+  
+  // Convert SVG to data URL
+  const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+  return dataUrl;
 }
 
 export const truncateAddress = (addr: string) => {

@@ -286,37 +286,86 @@ jobs:
             # Start all services with docker-compose
             echo "🚀 Starting all services with docker-compose..."
             COMPOSE_COMPATIBILITY=1 docker compose -f docker/development/docker-compose.deploy.yml up -d
-            
-            # Ensure Caddy is installed and configured to proxy HTTPS
-            echo "🔐 Ensuring Caddy (TLS reverse proxy) is installed and configured..."
-            DOMAIN="${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
-            APP_DOMAIN="app.$DOMAIN"
-            if ! command -v caddy >/dev/null 2>&1; then
-              echo "📦 Installing Caddy..."
-              sudo apt-get update -qq
-              sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg lsb-release
-              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-              echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-              sudo apt-get update -qq
-              sudo apt-get install -y caddy
-            fi
-            echo "🌐 Writing Caddyfile for $DOMAIN and $APP_DOMAIN..."
-            sudo mkdir -p /etc/caddy
-            sudo tee /etc/caddy/Caddyfile >/dev/null <<CADDY
-            ${DOMAIN} {
-              encode zstd gzip
-              reverse_proxy 127.0.0.1:4943
-            }
-            ${APP_DOMAIN} {
-              encode zstd gzip
-              reverse_proxy 127.0.0.1:3000
-            }
-            CADDY
-            sudo caddy validate --config /etc/caddy/Caddyfile || { echo "❌ Invalid Caddyfile"; exit 1; }
-            sudo systemctl enable --now caddy
-            sudo systemctl reload caddy || true
 
-            # Note: Dockerized dfx is deprecated; we run host dfx via systemd now.
+            # Setup Nginx reverse proxy for HTTPS
+            echo "🔐 Setting up Nginx reverse proxy..."
+            DOMAIN="${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
+            
+            # Install Nginx if not present
+            if ! command -v nginx >/dev/null 2>&1; then
+              echo "📦 Installing Nginx..."
+              sudo apt-get update -qq
+              sudo apt-get install -y nginx certbot python3-certbot-nginx
+            fi
+            
+            # Create Nginx configuration
+            echo "🌐 Creating Nginx configuration for $DOMAIN..."
+            sudo tee /etc/nginx/sites-available/splitsafe >/dev/null <<NGINX
+            server {
+                listen 80;
+                server_name $DOMAIN;
+                return 301 https://\$server_name\$request_uri;
+            }
+            
+            server {
+                listen 443 ssl http2;
+                server_name $DOMAIN;
+                
+                # SSL configuration will be managed by Certbot
+                ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+                
+                # Security headers
+                add_header X-Frame-Options "SAMEORIGIN" always;
+                add_header X-XSS-Protection "1; mode=block" always;
+                add_header X-Content-Type-Options "nosniff" always;
+                add_header Referrer-Policy "no-referrer-when-downgrade" always;
+                add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+                
+                # Proxy to Next.js app
+                location / {
+                    proxy_pass http://127.0.0.1:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            NGINX
+            
+            # Enable the site
+            sudo ln -sf /etc/nginx/sites-available/splitsafe /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+            
+            # Test Nginx configuration
+            sudo nginx -t || { echo "❌ Invalid Nginx configuration"; exit 1; }
+            
+            # Setup SSL certificate with Let's Encrypt
+            echo "🔒 Setting up SSL certificate..."
+            if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+              echo "📜 Obtaining SSL certificate from Let's Encrypt..."
+              sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN || {
+                echo "⚠️ SSL certificate setup failed, continuing without HTTPS..."
+                # Create a self-signed certificate for testing
+                sudo mkdir -p /etc/ssl/private
+                sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                  -keyout /etc/ssl/private/nginx-selfsigned.key \
+                  -out /etc/ssl/certs/nginx-selfsigned.crt \
+                  -subj "/C=US/ST=State/L=City/O=Organization/CN=$DOMAIN"
+                
+                # Update Nginx config to use self-signed cert
+                sudo sed -i 's|ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;|ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;|g' /etc/nginx/sites-available/splitsafe
+                sudo sed -i 's|ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;|ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;|g' /etc/nginx/sites-available/splitsafe
+              }
+            fi
+            
+            # Start/restart Nginx
+            sudo systemctl enable nginx
+            sudo systemctl restart nginx
 
             # Wait for services to be healthy
             echo "⏳ Waiting for services to be healthy..."
@@ -328,22 +377,26 @@ jobs:
             echo "🔍 Recent logs:"
             docker logs --tail 200 frontend-development || true
 
-            # Quick external checks
-            echo "🔎 Probing HTTPS endpoints via Caddy..."
+            # Quick health checks
+            echo "🔎 Probing endpoints..."
+            curl -I http://localhost:3000 | sed -n '1,6p' || true
             curl -I https://$DOMAIN | sed -n '1,6p' || true
-            curl -I https://$APP_DOMAIN | sed -n '1,6p' || true
             
             echo "✅ Deployment completed successfully!"
-            echo "🌐 Frontend should be accessible at http://${{ secrets.EC2_HOST }}:3000"
-            echo "🌐 DFX (via HTTPS reverse proxy) should be at https://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
+            echo "🌐 Frontend should be accessible at:"
+            echo "   - HTTP: http://$DOMAIN (redirects to HTTPS)"
+            echo "   - HTTPS: https://$DOMAIN"
+            echo "   - Direct: http://${{ secrets.EC2_HOST }}:3000"
             
           EOF
       - name: Notify deployment success
         if: success()
         run: |
           echo "✅ Deployment to EC2 completed successfully!"
-          echo "🌐 Frontend URL: http://${{ secrets.EC2_HOST }}:3000"
-          echo "🌐 DFX URL: https://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
+          echo "🌐 Frontend URLs:"
+          echo "   - HTTPS: https://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }}"
+          echo "   - HTTP: http://${{ secrets.DFX_DOMAIN || 'thesplitsafe.com' }} (redirects to HTTPS)"
+          echo "   - Direct: http://${{ secrets.EC2_HOST }}:3000"
           echo "🐳 Image: ${{ steps.login-ecr.outputs.registry }}/splitsafe-development:${{ github.sha }}"
 
       - name: Notify deployment failure

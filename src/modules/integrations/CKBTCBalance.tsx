@@ -62,7 +62,7 @@ const CKBTCBalance: React.FC = () => {
       <div className="px-6 pb-6 pt-4">
         <Button variant="outline" className='w-full bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]'>
           <ExternalLink className="w-4 h-4 mr-2" />
-          <span>View on explorer</span>
+          <Typography variant='small'>View on explorer</Typography>
         </Button>
       </div>
     </Card>

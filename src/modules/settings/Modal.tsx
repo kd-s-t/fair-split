@@ -12,6 +12,7 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { useAuth } from "@/contexts/auth-context";
 
 import { SettingsModalProps } from './types';
+import { Label } from "@/components/ui/label";
 
 export default function EditNameModal({
   open,
@@ -53,12 +54,12 @@ export default function EditNameModal({
       if (!principal) throw new Error("No principal found");
       if (!authClient) throw new Error("No auth client found");
       const actor = await createSplitDappActor();
-      
+
       // Save both name and username
       await actor.setNickname(Principal.fromText(principal), nameInput);
       const username = nameInput.toLowerCase().replace(/\s+/g, '');
       await actor.setUsername(Principal.fromText(principal), username);
-      
+
       toast.success("Profile updated successfully!");
       dispatch(setUserName(nameInput));
       onClose();
@@ -68,9 +69,8 @@ export default function EditNameModal({
     }
   };
 
-
-
   if (!open) return null;
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -94,7 +94,7 @@ export default function EditNameModal({
               className="text-white hover:text-gray-300 transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -108,7 +108,7 @@ export default function EditNameModal({
           <div className="space-y-4">
             {/* Name Input */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Name</label>
+              <Label className="block text-white">Name</Label>
               <div className="bg-[#353535] border border-[#505050] rounded-md p-3">
                 <input
                   type="text"
@@ -122,7 +122,7 @@ export default function EditNameModal({
 
             {/* Username Input */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Username</label>
+              <Label className="block">Username</Label>
               <div className="bg-[#353535] border border-[#505050] rounded-md p-3">
                 <input
                   type="text"

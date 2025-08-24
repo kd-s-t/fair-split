@@ -11,6 +11,7 @@ import { Bitcoin, Save, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setTitle, setSubtitle } from '@/lib/redux/store';
+import { Label } from '@/components/ui/label';
 
 export default function SettingsPage() {
   const { principal } = useAuth();
@@ -120,9 +121,9 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-200">
+              <Label className="text-gray-200">
                 Bitcoin Address
-              </label>
+              </Label>
               <div className="flex gap-2">
                 <Input
                   placeholder="Enter your Bitcoin address (e.g., bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh)"
@@ -204,9 +205,9 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-200">
+              <Label className="text-gray-200">
                 ICP Principal ID
-              </label>
+              </Label>
               <div className="flex items-center gap-2">
                 <Input
                   value={principal ? principal.toText() : ''}

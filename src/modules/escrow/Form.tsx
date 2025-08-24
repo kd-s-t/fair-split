@@ -11,6 +11,7 @@ import { useFieldArray, UseFormReturn } from "react-hook-form";
 import z from "zod";
 import { escrowFormSchema } from "@/validation/escrow";
 import { useUser } from "@/hooks/useUser";
+import { Label } from "@/components/ui/label";
 
 
 type FormData = z.infer<typeof escrowFormSchema>;
@@ -158,7 +159,7 @@ const Form = ({ form }: FormProps) => {
           {/* Title Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-[#A1A1A1]">Title</label>
+              <Label className="text-[#A1A1A1]">Title</Label>
               <div className="flex gap-2">
                 <Button
                   variant="ghost"
@@ -190,17 +191,17 @@ const Form = ({ form }: FormProps) => {
             <Input
               {...register("title")}
               placeholder="e.g., Freelance project payment"
-              className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+              className={`text-white ${errors.title ? '!border-[#FF5050]' : ''}`}
             />
             {errors.title && (
-              <div className="text-red-400 text-sm">{errors.title.message}</div>
+              <Typography variant="small" className="text-[#FF5050]">{errors.title.message}</Typography>
             )}
           </div>
 
           {/* BTC Amount Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-[#A1A1A1]">BTC amount</label>
+              <Label className="text-[#A1A1A1]">BTC amount</Label>
               <span className="text-white text-sm">
                 {ckbtcBalance ? `${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC` : "0.00000000 BTC"}
               </span>
@@ -210,10 +211,10 @@ const Form = ({ form }: FormProps) => {
               type="number"
               step="0.00000001"
               placeholder="0.00000000"
-              className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+              className={`text-white ${errors.btcAmount ? '!border-[#FF5050]' : ''}`}
             />
             {errors.btcAmount && (
-              <div className="text-red-400 text-sm">{errors.btcAmount.message}</div>
+              <Typography variant="small" className="text-[#FF5050]">{errors.btcAmount.message}</Typography>
             )}
           </div>
         </CardContent>
@@ -277,20 +278,18 @@ const Form = ({ form }: FormProps) => {
 
                   <div className="grid grid-cols-4 gap-4">
                     <div className="col-span-3 space-y-2">
-                      <label className="text-[#A1A1A1] text-sm">ICP address</label>
+                      <Label className="text-[#A1A1A1]">ICP address</Label>
                       <Input
                         {...register(`recipients.${index}.principal`)}
                         placeholder="ICP Principal ID"
-                        className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+                        className={`text-white ${errors.recipients?.[index]?.principal ? '!border-[#FF5050]' : ''}`}
                       />
                       {errors.recipients?.[index]?.principal && (
-                        <div className="text-red-400 text-sm">
-                          {errors.recipients[index]?.principal?.message}
-                        </div>
+                        <Typography variant="small" className="text-[#FF5050]">{errors.recipients[index]?.principal?.message}</Typography>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[#A1A1A1] text-sm">Percentage</label>
+                      <Label className="text-[#A1A1A1]">Percentage</Label>
                       <Input
                         {...register(`recipients.${index}.percentage`)}
                         type="number"
@@ -298,12 +297,10 @@ const Form = ({ form }: FormProps) => {
                         max="100"
                         step="1"
                         placeholder="0"
-                        className="bg-[#3D3D3D] border-[#5A5E5E] text-white placeholder:text-[#A1A1A1]"
+                        className={`text-white ${errors.recipients?.[index]?.percentage ? '!border-[#FF5050]' : ''}`}
                       />
                       {errors.recipients?.[index]?.percentage && (
-                        <div className="text-red-400 text-sm">
-                          {errors.recipients[index]?.percentage?.message}
-                        </div>
+                        <Typography variant="small" className="text-[#FF5050]">{errors.recipients[index]?.percentage?.message}</Typography>
                       )}
                     </div>
                   </div>
@@ -317,20 +314,16 @@ const Form = ({ form }: FormProps) => {
             <Typography variant="muted" className="text-[#9F9F9F]">Total allocation:</Typography>
             <Typography
               variant="small"
-              className={`font-medium ${totalAllocation === 100 ? 'text-[#FEB64D]' : 'text-red-400'}`}
+              className={`font-medium ${totalAllocation === 100 ? 'text-[#FEB64D]' : 'text-[#FF5050]'}`}
             >
               {totalAllocation}%
             </Typography>
           </div>
           {totalAllocation !== 100 && totalAllocation > 0 && (
-            <div className="text-red-400 text-sm">
-              Total allocation must equal 100%
-            </div>
+            <Typography variant="small" className="text-[#FF5050]">Total allocation must equal 100%</Typography>
           )}
           {errors.recipients && (
-            <div className="text-red-400 text-sm">
-              {errors.recipients.message}
-            </div>
+            <Typography variant="small" className="text-[#FF5050]">{errors.recipients.message}</Typography>
           )}
         </CardContent>
       </Card>

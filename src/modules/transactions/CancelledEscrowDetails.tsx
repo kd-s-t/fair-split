@@ -37,7 +37,7 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
           const amount = Number(recipient.amount) / 1e8;
           const totalAmount = transaction.to.reduce((sum: number, entry) => sum + Number(entry.amount), 0) / 1e8;
           const percentage = totalAmount > 0 ? Math.round((amount / totalAmount) * 100) : 0;
-          
+
           return (
             <div key={index} className="bg-[#2B2B2B] border border-[#424444] rounded-[10px] p-4">
               <div className="flex items-center justify-between">
@@ -70,21 +70,21 @@ export default function CancelledEscrowDetails({ transaction }: CancelledEscrowD
 
 
       <div className="flex gap-4 mt-6">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="flex-1 flex items-center gap-2"
           onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
         >
           <QrCode className="w-4 h-4" />
-          <span>View Explorer</span>
+          <Typography variant="small">Show QR code</Typography>
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="flex-1 flex items-center gap-2"
           onClick={() => window.open(`${process.env.NEXT_PUBLIC_BLOCKSTREAM_URL}/block/00000000000000000000dc0024df0a2931ba3d495d37256809f6520178476e8c`, '_blank')}
         >
           <ExternalLink className="w-4 h-4" />
-          <span>View Explorer</span>
+          <Typography variant="small">View on explorer</Typography>
         </Button>
       </div>
 

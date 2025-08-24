@@ -124,13 +124,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
   const parseDescription = (desc: string): AiGeneratedSetup => {
     // Extract amount and check for currency conversion
     let totalAmount = 0.03;
-    
+
     // Check for currency amounts first
     const currencyMatch = desc.match(/(\$|€|£|¥)(\d+(?:\.\d{1,2})?)/);
     if (currencyMatch) {
       const currencySymbol = currencyMatch[1];
       const currencyAmount = parseFloat(currencyMatch[2]);
-      
+
       // Convert currency to BTC using centralized function
       totalAmount = parseFloat(convertCurrencyToBTC(currencyAmount, currencySymbol));
     } else {
@@ -192,7 +192,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
     // Extract title if provided, otherwise generate based on recipients
     let title = "Payment Split";
-    
+
     // Look for title pattern: "title <title_text>"
     const titleMatch = desc.match(/title\s+(\w+)/i);
     if (titleMatch) {
@@ -288,22 +288,21 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-[#A1A1AA] mb-2">Title</Label>
+                    <Label className="text-[#A1A1AA]">Title</Label>
                     <Input
                       value={setup.title}
                       onChange={(e) => setSetup({ ...setup, title: e.target.value })}
-                      className="bg-[#2A2A2A] border-[#3A3A3A]"
                     />
                   </div>
                   <div>
-                    <Label className="text-[#A1A1AA] mb-2">Total amount</Label>
+                    <Label className="text-[#A1A1AA]">Total amount</Label>
                     <div className="flex items-center gap-2 text-[#FAFAFA]">
                       <Bitcoin color='#F97415' />
                       <Typography variant="base" className="font-semibold">{setup.totalAmount} BTC</Typography>
                     </div>
                   </div>
                   <div>
-                    <Label className="text-[#A1A1AA] mb-2">Recipients</Label>
+                    <Label className="text-[#A1A1AA]">Recipients</Label>
                     <div className="border border-[#626262] rounded-lg overflow-hidden">
                       {setup.recipients.map((recipient, index) => (
                         <div

@@ -9,6 +9,7 @@ import { Principal } from '@dfinity/principal';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { ExternalLink } from 'lucide-react';
+import { Typography } from '@/components/ui/typography';
 
 export default function SEIBalance() {
 	const dispatch = useDispatch();
@@ -130,7 +131,7 @@ export default function SEIBalance() {
 			<div className="px-6 pb-6 pt-4">
 				<Button variant="outline" className='w-full bg-[#1a1a1a] border-[#404040] text-white hover:bg-[#2a2a2a]'>
 					<ExternalLink className="w-4 h-4 mr-2" />
-					<span>View on explorer</span>
+					<Typography variant='small'>View on explorer</Typography>
 				</Button>
 			</div>
 		</Card>

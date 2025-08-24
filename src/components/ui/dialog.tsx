@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface DialogProps {
@@ -18,7 +18,8 @@ export function Dialog({
   children,
   className = '',
 }: DialogProps) {
-  React.useEffect(() => {
+
+  useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onOpenChange(false);
     }
@@ -29,6 +30,20 @@ export function Dialog({
     }
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, onOpenChange]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
 
   if (!open) return null;
 

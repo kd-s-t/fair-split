@@ -16,7 +16,7 @@ export default function Header() {
   const transactionStatus = useSelector((state: RootState) => state.layout.transactionStatus)
 
   return (
-    <header className="h-[55px] pl-[16px] pr-[16px] mt-[16px] flex items-center justify-between text-foreground min-w-0 overflow-hidden">
+    <header className="h-[55px] pl-[16px] pr-[16px] mt-[28px] flex items-center justify-between text-foreground min-w-0 overflow-hidden">
       {/* Title Bar */}
       <div className="flex flex-col space-y-2">
         <div className="flex items-center gap-4">

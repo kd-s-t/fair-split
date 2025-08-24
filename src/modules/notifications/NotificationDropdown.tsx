@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/redux/store';
 import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
-import type { NormalizedTransaction, EscrowTransaction } from '@/modules/transactions/types';
+import type { NormalizedTransaction } from '@/modules/transactions/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateTransactionMessageSync } from '@/lib/utils';
 

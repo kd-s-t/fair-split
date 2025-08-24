@@ -5,7 +5,7 @@ import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { NormalizedTransaction } from "@/modules/transactions/types";
 import { motion } from "framer-motion";
 import { RotateCw, Search } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Helper function to convert API response to NormalizedTransaction[]
 const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTransaction[] => {

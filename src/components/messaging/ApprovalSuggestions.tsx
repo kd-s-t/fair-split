@@ -40,13 +40,13 @@ export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) 
     
     if (shouldShow) {
       sessionStorage.removeItem('splitsafe_show_approval_suggestions');
-      const suggestions = generateSuggestions();
+      generateSuggestions();
       // You can handle the suggestions here as needed
     }
     
     // Listen for refresh events from chat
     const handleRefresh = () => {
-      const suggestions = generateSuggestions();
+      generateSuggestions();
       // You can handle the suggestions here as needed
     };
     

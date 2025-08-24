@@ -31,7 +31,7 @@ export interface NavigationAction {
 
 export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
 
-import { convertCurrencyToBTC, detectCurrencyAmount } from '../utils';
+import { detectCurrencyAmount } from '../utils';
 
 // Bitcoin address validation function
 function isValidBitcoinAddress(address: string): boolean {

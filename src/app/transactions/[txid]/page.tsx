@@ -105,7 +105,7 @@ export default function TransactionDetailsPage() {
               readAt: serializedTransaction.readAt ? String(serializedTransaction.readAt) : undefined,
               bitcoinTransactionHash: serializedTransaction.bitcoinTransactionHash ? String(serializedTransaction.bitcoinTransactionHash) : undefined,
               bitcoinAddress: serializedTransaction.bitcoinAddress ? String(serializedTransaction.bitcoinAddress) : undefined,
-              to: serializedTransaction.to.map((recipient: any) =>
+              to: serializedTransaction.to.map((recipient: ApiToEntry) =>
                 String(recipient.principal) === String(principal)
                   ? {
                       principal: String(recipient.principal),

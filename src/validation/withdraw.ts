@@ -127,13 +127,13 @@ export const createWithdrawSchema = (selectedCurrency: 'ICP' | 'BTC') => {
       .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
         message: "Amount must be a positive number"
       }),
-    address: z.string()
-      .min(1, "Address is required")
-      .refine((val) => validateAddressType(val, selectedCurrency), {
-        message: selectedCurrency === 'ICP' 
-          ? "Please enter a valid ICP Principal ID (not a Bitcoin address)" 
-          : "Please enter a valid Bitcoin address (not an ICP Principal ID)"
-      }),
+      address: z.string()
+    .min(1, "Address is required")
+    .refine((address) => validateAddressType(address, selectedCurrency), {
+      message: selectedCurrency === 'ICP'
+        ? "Please enter a valid ICP Principal ID (not a Bitcoin address)"
+        : "Please enter a valid Bitcoin address (not an ICP Principal ID)"
+    }),
     isAcceptedTerms: z.boolean()
       .refine((val) => val === true, {
         message: "You must accept the terms and conditions"

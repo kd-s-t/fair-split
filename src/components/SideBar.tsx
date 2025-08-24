@@ -28,10 +28,10 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
   return (
     <div className={`w-full h-screen bg-[#1C1D1D]/80 border border-[#2A2B2B] shadow-lg flex flex-col relative rounded-[12px] transition-all duration-300`}>
       {/* Logo Section */}
-      <div className="px-3 py-4 flex items-center justify-center gap-2">
+      <div className="px-3 py-4 flex gap-2">
         {!isOpen && (
           <motion.div
-            className="flex items-center gap-1"
+            className="flex gap-1"
             initial={{ rotateY: -180, opacity: 0 }}
             animate={{ rotateY: 0, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}

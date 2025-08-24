@@ -84,7 +84,7 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
         </div>
 
         {/* Main Content + AI Assistant Container */}
-        <div className="flex-1 overflow-hidden ml-[16px] mt-[16px] mr-[16px] mb-[16px]" data-section="main-content">
+        <div className="flex-1 overflow-hidden ml-[16px] mt-[24px] mr-[16px] mb-[16px]" data-section="main-content">
           <div className="flex h-full">
             {/* Main Content - flex-1 when AI closed, flex-[8] when AI open */}
             <div className={`transition-all duration-300 ${isRightSidebarOpen ? 'flex-[8]' : 'flex-1'}`} data-section="content">

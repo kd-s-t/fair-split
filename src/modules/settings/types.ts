@@ -1,7 +1,6 @@
 export interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
-  principalId: string;
   onNameSaved?: () => void;
 }
 

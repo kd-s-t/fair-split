@@ -253,7 +253,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
           <div className="flex items-center gap-2">
             <Bot color='#FEB64D' className="h-5 w-5 transition-transform duration-200 hover:scale-110" />
             <Typography variant="h4" className="text-[#FAFAFA] no-underline hover:no-underline">
-              AI Assistant
+              AI assistant
             </Typography>
             <Badge
               variant="outline"
@@ -280,7 +280,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
                 variant="outline"
                 onClick={generateSplit}
                 disabled={isGenerating}
-                className="w-full transition-all duration-200 hover:scale-[1.02] hover:shadow-lg mt-4"
+                className="w-full mt-4"
               >
                 <Sparkles size={16} />
                 {isGenerating ? "Generating..." : "Generate split"}

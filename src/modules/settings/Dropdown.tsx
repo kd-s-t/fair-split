@@ -7,8 +7,8 @@ import { ChevronDown, User, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import LogoutButton from './Button';
-import EditNameModal from './Modal';
 import WalletModal from './WalletModal';
+import EditProfileModal from './EditProfileModal';
 
 export default function ProfileDropdown({ principalId }: { principalId: string }) {
   const [showSettings, setShowSettings] = useState(false);
@@ -121,9 +121,8 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditNameModal
+      <EditProfileModal
         open={showSettings}
-        principalId={principalId}
         onClose={handleSettingsClose}
         onNameSaved={handleSettingsClose}
       />

@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from "framer-motion";
 import { StatCardProps } from './types';
 import Withdraw from "./Withdraw";
-
+import WithdrawalConfirmation from "./WithdrawalConfirmation";
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon, additionalInfo }) => (
   <Card className="bg-[#222222] border-[#303434] text-white p-5 rounded-[20px] min-h-[132px]">
@@ -307,6 +307,11 @@ export default function DashboardStats({ transactions }: { transactions: Normali
       </div>
 
       <Withdraw
+        open={isWithdrawOpen}
+        onClose={() => handleWithdraw(false)}
+      />
+
+      <WithdrawalConfirmation
         open={isWithdrawOpen}
         onClose={() => handleWithdraw(false)}
       />

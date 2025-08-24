@@ -9,7 +9,7 @@ import type { RootState } from '@/lib/redux/store';
 import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
 import type { NormalizedTransaction } from '@/modules/transactions/types';
 import { motion, AnimatePresence } from 'framer-motion';
-// import { generateTransactionMessageSync } from '@/lib/utils';
+import { generateTransactionMessageSync } from '@/lib/utils';
 
 
 
@@ -144,7 +144,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                           const isUnread = recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null" || recipientEntry.readAt === "");
                           return isUnread ? 'font-bold text-white' : 'font-medium text-white';
                         })()}`}>
-                          {/* {generateTransactionMessageSync(tx, principalId, false)} */}
+                          {generateTransactionMessageSync(tx, principalId, false)}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}

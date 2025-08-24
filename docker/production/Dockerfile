@@ -8,13 +8,17 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+# Disable husky and other dev tools for production install
+RUN npm ci --only=production --ignore-scripts
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Install all dependencies for build (including dev dependencies)
+RUN npm ci --ignore-scripts
 
 # Build the application
 RUN npm run build

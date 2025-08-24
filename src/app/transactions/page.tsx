@@ -56,7 +56,6 @@ const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTra
 
 import { useRouter } from "next/navigation";
 import {
-  markAllAsRead,
   markTransactionAsRead,
   setTransactions,
 } from "../../lib/redux/transactionsSlice";
@@ -151,32 +150,7 @@ export default function TransactionsPage() {
     return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
   }
 
-  // Function to mark unread transactions as read for the current recipient
-  const markUnreadTransactionsAsRead = useCallback(async () => {
-    if (!principal) return;
 
-    // Find transactions where current user is a recipient and hasn't read them
-    const unreadTransactionIds = localTransactions
-      .filter(tx => {
-        // Check if user is a recipient in this transaction
-        const recipientEntry = tx.to.find((entry) =>
-          String(entry.principal) === String(principal)
-        );
-
-        // Return true if user is a recipient and hasn't read the transaction
-        return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0);
-      })
-      .map(tx => tx.id);
-
-    if (unreadTransactionIds.length > 0) {
-      try {
-        const actor = await createSplitDappActor();
-        await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
-      } catch (error) {
-        console.error('Failed to mark transactions as read:', error);
-      }
-    }
-  }, [localTransactions, principal]);
 
 
 

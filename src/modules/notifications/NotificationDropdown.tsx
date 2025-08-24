@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { createSplitDappActor } from '@/lib/icp/splitDapp';
-import { Principal } from '@dfinity/principal';
+
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/redux/store';
 import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
@@ -12,26 +11,7 @@ import type { NormalizedTransaction, EscrowTransaction } from '@/modules/transac
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateTransactionMessageSync } from '@/lib/utils';
 
-const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransaction => ({
-  id: tx.id,
-  from: tx.from,
-  to: tx.to.map(entry => ({
-    principal: entry.principal,
-    amount: BigInt(entry.amount),
-    percentage: Number(entry.percentage),
-    status: entry.status as { [key: string]: null },
-    name: entry.name,
-    approvedAt: entry.approvedAt,
-    declinedAt: entry.declinedAt,
-    readAt: entry.readAt,
-  })),
-  status: tx.status as "pending" | "confirmed" | "released" | "cancelled" | "refund" | "declined",
-  createdAt: tx.createdAt,
-  title: tx.title,
-  releasedAt: tx.releasedAt,
-  bitcoinAddress: tx.bitcoinAddress,
-  bitcoinTransactionHash: tx.bitcoinTransactionHash,
-});
+
 
 function getTxId(tx: NormalizedTransaction) {
   return `${tx.from}_${tx.to.map((toEntry) => toEntry.principal).join('-')}_${tx.createdAt}`;

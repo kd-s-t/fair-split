@@ -223,7 +223,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       const words = desc.split(/[,\s]+/).filter(word => word.trim());
       
       // Find the last sequence of words that aren't ICP principals
-      let titleWords = [];
+                 const titleWords = [];
       for (let i = words.length - 1; i >= 0; i--) {
         const word = words[i];
         // Check if the word is not an ICP principal (doesn't contain hyphens and is short)

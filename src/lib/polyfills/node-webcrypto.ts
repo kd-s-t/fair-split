@@ -4,6 +4,6 @@
 import { webcrypto } from "node:crypto";
 
 // In Node, attach webcrypto as the global Web Crypto
-if (!(globalThis as any).crypto) {
-  (globalThis as any).crypto = webcrypto as unknown as Crypto;
+if (!(globalThis as unknown as { crypto?: Crypto }).crypto) {
+  (globalThis as unknown as { crypto: Crypto }).crypto = webcrypto as unknown as Crypto;
 }

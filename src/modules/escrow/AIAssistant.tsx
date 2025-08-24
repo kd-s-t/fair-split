@@ -178,15 +178,26 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       });
     }
 
-    // Handle equal distribution if we have recipients but no percentages
+    // Handle equal distribution only if we have recipients but no percentages were specified
     if (recipients.length > 0) {
-      const equalPercentage = Math.floor(100 / recipients.length);
-      const remainder = 100 - (equalPercentage * recipients.length);
+      // Check if any recipient has a percentage > 0 (meaning percentages were parsed)
+      const hasPercentages = recipients.some(r => r.percentage > 0);
+      
+      if (!hasPercentages) {
+        // Only apply equal distribution if no percentages were found
+        const equalPercentage = Math.floor(100 / recipients.length);
+        const remainder = 100 - (equalPercentage * recipients.length);
 
-      recipients.forEach((recipient, index) => {
-        recipient.percentage = equalPercentage + (index === 0 ? remainder : 0);
-        recipient.amount = (recipient.percentage / 100) * totalAmount;
-      });
+        recipients.forEach((recipient, index) => {
+          recipient.percentage = equalPercentage + (index === 0 ? remainder : 0);
+          recipient.amount = (recipient.percentage / 100) * totalAmount;
+        });
+      } else {
+        // Update amounts based on the parsed percentages
+        recipients.forEach((recipient) => {
+          recipient.amount = (recipient.percentage / 100) * totalAmount;
+        });
+      }
     }
 
     // Extract title if provided, otherwise generate based on recipients

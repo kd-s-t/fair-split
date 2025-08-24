@@ -261,7 +261,7 @@ const Form = ({ form }: FormProps) => {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <Typography variant="base" className="text-white font-medium">
-                      Recipient {index + 1}
+                      {field.name || `Recipient ${index + 1}`}
                     </Typography>
                     {fields.length > 1 && (
                       <Button

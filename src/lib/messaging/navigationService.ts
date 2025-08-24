@@ -72,12 +72,20 @@ export function handleNavigation(action: ParsedNavigationAction): NavigationActi
 
 export function executeNavigation(navigation: NavigationAction): void {
   if (navigation.data) {
-    sessionStorage.setItem('splitsafe_chat_data', JSON.stringify(navigation.data));
+    // Handle approval suggestions specifically
+    if (navigation.data.show_approval_suggestions) {
+      sessionStorage.setItem('splitsafe_show_approval_suggestions', 'true');
+    } else {
+      sessionStorage.setItem('splitsafe_chat_data', JSON.stringify(navigation.data));
+    }
   }
   
-  if (router) {
-    router.push(navigation.path);
-  } else {
-    window.location.href = navigation.path;
+  // Only navigate if it's a redirect action
+  if (navigation.type === 'redirect') {
+    if (router) {
+      router.push(navigation.path);
+    } else {
+      window.location.href = navigation.path;
+    }
   }
 } 

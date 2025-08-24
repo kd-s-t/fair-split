@@ -137,11 +137,20 @@ export function parseUserMessage(message: string): ParsedAction {
   }
   
   // Pattern 2: Approval suggestions for received escrows
-  const approvalPattern = /(suggest|approve|decline|recommend).*(escrow|transaction)/i;
-  if (approvalPattern.test(lowerMessage)) {
-    return {
-      type: 'approval_suggestion'
-    };
+  const approvalPatterns = [
+    /(suggest|approve|decline|recommend).*(escrow|transaction)/i,
+    /(suggest|approve|decline|recommend).*(approval|approvals)/i,
+    /(approval|approvals).*(suggestion|recommendation)/i,
+    /(should|can|would).*(approve|decline)/i,
+    /(help|assist).*(approve|decline|decision)/i
+  ];
+  
+  for (const pattern of approvalPatterns) {
+    if (pattern.test(lowerMessage)) {
+      return {
+        type: 'approval_suggestion'
+      };
+    }
   }
   
   // Pattern 3: Set Bitcoin address

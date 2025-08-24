@@ -75,23 +75,48 @@ import { toast } from "sonner";
 import { setSubtitle, setTitle } from '../../lib/redux/store';
 
 // Helper function to get AI suggestion for a transaction
-function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
-  if (tx.status !== 'pending') return null;
-
-  const percentages = tx.to.map(r => Number(r.percentage));
-  const isEquallySplit = percentages.every(p => p === percentages[0]);
-
-  if (isEquallySplit) {
-    return "AI suggests: Approve - Equal split detected";
-  } else {
-    return "AI suggests: Review - Uneven split detected";
+function getTransactionSuggestion(tx: NormalizedTransaction, principal: string | null): string | null {
+  if (tx.status !== 'pending') {
+    return null;
   }
+
+  // Find the current user's share in this transaction
+  const userShare = tx.to.find(r => String(r.principal) === String(principal));
+  
+  // If user is not a recipient, provide general suggestion
+  if (!userShare) {
+    const totalRecipients = tx.to.length;
+    const totalAmount = tx.to.reduce((sum, r) => sum + Number(r.amount), 0) / 1e8;
+    return `AI suggests: Review - ${totalRecipients} recipient${totalRecipients > 1 ? 's' : ''} for ${totalAmount.toFixed(8)} BTC`;
+  }
+
+  const userPercentage = Number(userShare.percentage);
+  const totalRecipients = tx.to.length;
+
+  // If user is getting a high percentage, suggest approve
+  if (userPercentage >= 50) {
+    return `AI suggests: Approve - You're getting ${userPercentage}% (great deal!)`;
+  }
+  
+  // If user is getting a low percentage but it's a fair split among many people
+  if (userPercentage >= (100 / totalRecipients) * 0.8) {
+    return `AI suggests: Approve - Fair split among ${totalRecipients} recipients`;
+  }
+  
+  // If user is getting a very low percentage, suggest review
+  if (userPercentage < 20) {
+    return `AI suggests: Review - You're only getting ${userPercentage}%`;
+  }
+  
+  // Default case
+  return `AI suggests: Review - You're getting ${userPercentage}%`;
 }
 
 import TransactionStatusBadge from "@/components/TransactionStatusBadge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTransactions } from "@/hooks/useTransactions";
+import { populateTransactionSuggestions } from "@/lib/messaging/formPopulation";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -101,6 +126,9 @@ export default function TransactionsPage() {
   useEffect(() => {
     dispatch(setTitle('Transaction history'));
     dispatch(setSubtitle('View all your escrow transactions'));
+    
+    // Check for chat-triggered suggestions
+    populateTransactionSuggestions();
   }, [dispatch]);
 
   const [isLoading] = useState(false);
@@ -117,6 +145,13 @@ export default function TransactionsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const refreshIconRef = useRef<HTMLButtonElement>(null);
 
+  // Temporary debug button to force show suggestions
+  const forceShowSuggestions = () => {
+    console.log('DEBUG: Force showing suggestions');
+    setShowSuggestions(true);
+    console.log('DEBUG: showSuggestions set to true');
+  };
+
   useEffect(() => {
     if (transactions && transactions.length > 0) {
       const sorted = [...transactions].sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
@@ -127,20 +162,47 @@ export default function TransactionsPage() {
   // Listen for AI suggestion triggers
   useEffect(() => {
     const shouldShow = sessionStorage.getItem('splitsafe_show_approval_suggestions');
+    
     if (shouldShow) {
-      sessionStorage.removeItem('splitsafe_show_approval_suggestions');
+      console.log('✅ AI approval suggestions triggered');
       setShowSuggestions(true);
+      // Keep the flag for longer to ensure it's read
+      setTimeout(() => {
+        sessionStorage.removeItem('splitsafe_show_approval_suggestions');
+        sessionStorage.removeItem('splitsafe_approval_timestamp');
+      }, 3000);
     }
 
     const handleRefresh = () => {
+      console.log('✅ Manual approval suggestions triggered');
+      setShowSuggestions(true);
+    };
+
+    const handleForceShow = () => {
+      console.log('✅ Force show suggestions triggered');
       setShowSuggestions(true);
     };
 
     window.addEventListener('refresh-approval-suggestions', handleRefresh);
+    window.addEventListener('force-show-suggestions', handleForceShow);
+    
+    // Add interval check for the flag
+    const interval = setInterval(() => {
+      const flag = sessionStorage.getItem('splitsafe_show_approval_suggestions');
+      if (flag && !showSuggestions) {
+        console.log('✅ Interval detected approval suggestions flag');
+        setShowSuggestions(true);
+        sessionStorage.removeItem('splitsafe_show_approval_suggestions');
+        sessionStorage.removeItem('splitsafe_approval_timestamp');
+      }
+    }, 500);
+    
     return () => {
       window.removeEventListener('refresh-approval-suggestions', handleRefresh);
+      window.removeEventListener('force-show-suggestions', handleForceShow);
+      clearInterval(interval);
     };
-  }, []);
+  }, []); // Remove showSuggestions from dependencies to prevent infinite loop
 
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));
@@ -292,6 +354,10 @@ export default function TransactionsPage() {
             <RotateCw size={14} className={`${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+          
+
+          
+
         </div>
 
         {/* Transaction Count */}
@@ -443,14 +509,17 @@ export default function TransactionsPage() {
                   </div>
 
                   {/* AI Suggestion */}
-                  {showSuggestions && getTransactionSuggestion(tx) && (
+                  {showSuggestions && getTransactionSuggestion(tx, principal?.toString() || null) && (
                     <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg text-sm text-blue-300">
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                        {getTransactionSuggestion(tx)}
+                        <div className="mr-2">
+                          {getTransactionSuggestion(tx, principal?.toString() || null)}
+                        </div>
                       </div>
                     </div>
                   )}
+
 
 
                 </motion.div>

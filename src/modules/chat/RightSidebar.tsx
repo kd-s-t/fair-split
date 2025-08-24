@@ -287,7 +287,9 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         // Check for approval suggestions with more patterns
         if (lowerContent.includes('approve') || lowerContent.includes('decline') || 
             lowerContent.includes('suggestion') || lowerContent.includes('recommend') ||
-            lowerContent.includes('should i') || lowerContent.includes('what should')) {
+            lowerContent.includes('should i') || lowerContent.includes('what should') ||
+            lowerContent.includes('suggest approvals') || lowerContent.includes('approval recommendations')) {
+          console.log('DEBUG: Fallback parser detected approval suggestion');
           parsedAction = { type: 'approval_suggestion' };
         }
       }
@@ -319,6 +321,12 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
             navigation = handleBitcoinAddressSet(parsedAction);
             break;
           case 'approval_suggestion':
+            // Set the flag to show approval suggestions
+            console.log('DEBUG: Setting approval suggestions flag');
+            sessionStorage.setItem('splitsafe_show_approval_suggestions', 'true');
+            console.log('DEBUG: Flag set, current value:', sessionStorage.getItem('splitsafe_show_approval_suggestions'));
+            // Also set a timestamp to make it more persistent
+            sessionStorage.setItem('splitsafe_approval_timestamp', Date.now().toString());
             navigation = handleApprovalSuggestion(parsedAction);
             break;
           case 'navigate':
@@ -327,8 +335,27 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         }
         
         if (navigation) {
+          // If this is an approval suggestion, trigger immediately
+          if (parsedAction.type === 'approval_suggestion') {
+            console.log('DEBUG: Immediately triggering approval suggestions');
+            window.dispatchEvent(new CustomEvent('refresh-approval-suggestions'));
+          }
+          
           setTimeout(() => {
             executeNavigation(navigation);
+            // If this is an approval suggestion, also trigger the suggestions to show
+            if (parsedAction.type === 'approval_suggestion') {
+              // Dispatch a custom event to trigger suggestions
+              window.dispatchEvent(new CustomEvent('refresh-approval-suggestions'));
+              // Also set a flag that will persist after navigation
+              sessionStorage.setItem('splitsafe_show_approval_suggestions', 'true');
+              console.log('DEBUG: Set flag for after navigation');
+              
+              // Force show suggestions after navigation
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('force-show-suggestions'));
+              }, 2000);
+            }
           }, 1500);
         }
       }

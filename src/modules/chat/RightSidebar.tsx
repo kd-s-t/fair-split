@@ -114,7 +114,6 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
       let parsedAction: ParsedAction = null;
-      let wasAdjusted = false;
 
       // Check if API key is valid and properly configured
       const isValidApiKey = apiKey &&
@@ -139,7 +138,6 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
             if (requestedAmount > userBalance) {
               console.log('DEBUG: AI parser adjusting amount from', requestedAmount, 'to', userBalance);
               parsedAction.amount = userBalance.toFixed(8);
-              wasAdjusted = true;
             }
           }
         } catch (aiError) {

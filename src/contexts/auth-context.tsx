@@ -28,18 +28,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = useCallback(async (principalObj: Principal) => {
     try {
-      console.log('🔄 Fetching user data for principal:', principalObj.toText())
       const actor = await createSplitDappActor()
       
       // Fetch cKBTC Balance
       try {
-        console.log('🔄 Fetching cKBTC balance...')
         const ckbtcBalanceResult = await actor.getUserBitcoinBalance(principalObj) as number
-        console.log('🔄 cKBTC balance result:', ckbtcBalanceResult)
         
         if (typeof ckbtcBalanceResult === 'bigint' || typeof ckbtcBalanceResult === 'number') {
           const formattedCkbtc = (Number(ckbtcBalanceResult) / 1e8).toFixed(8)
-          console.log('🔄 Setting cKBTC balance to:', formattedCkbtc)
           dispatch(setCkbtcBalance(formattedCkbtc))
         } else {
           console.error('🔄 Failed to get cKBTC balance:', ckbtcBalanceResult)
@@ -52,15 +48,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Fetch User Name
       try {
-        console.log('🔄 Fetching user name...')
         const nameResult = await actor.getNickname(principalObj)
-        console.log('🔄 Name result:', nameResult)
         
         if (Array.isArray(nameResult) && nameResult.length > 0) {
-          console.log('🔄 Setting name to:', nameResult[0])
           dispatch(setUserName(nameResult[0]))
         } else {
-          console.log('🔄 No name found, setting to null')
           dispatch(setUserName(null))
         }
       } catch (error) {
@@ -140,14 +132,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const updatePrincipal = useCallback(async (client?: AuthClient) => {
     const authClientToUse = client || authClient
     if (!authClientToUse) {
-      console.log('🔐 No auth client available for updatePrincipal')
       return
     }
     
     const isAuthenticated = await authClientToUse.isAuthenticated()
     
     if (!isAuthenticated) {
-      console.log('🔐 Not authenticated, clearing user if needed')
       // Only logout if we actually had a principal before
       if (principal) {
         await authClientToUse.logout()
@@ -162,7 +152,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const principalText = principalObj.toText()
     // Only update if the principal has changed
     if (!principal || principal.toText() !== principalText) {
-      console.log('🔐 Principal changed, updating and fetching user data')
       setPrincipal(principalObj)
       dispatch(setUser({ principal: principalText, name: null }))
       // Fetch user data immediately after setting principal

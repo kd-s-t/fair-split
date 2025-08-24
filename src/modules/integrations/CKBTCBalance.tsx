@@ -3,21 +3,17 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Typography } from '@/components/ui/typography';
-import { useAuth } from '@/contexts/auth-context';
+
 import { useUser } from '@/hooks/useUser';
 import { Bitcoin, ExternalLink } from 'lucide-react';
 
 
 const CKBTCBalance: React.FC = () => {
 
-  const { principal } = useAuth();
+
   const { ckbtcBalance } = useUser()
 
-  // Debug logging
-  console.log('🔍 CKBTCBalance component - principal:', principal?.toText());
-  console.log('🔍 CKBTCBalance component - ckbtcBalance from Redux:', ckbtcBalance);
-  console.log('🔍 CKBTCBalance component - ckbtcBalance type:', typeof ckbtcBalance);
-  console.log('🔍 CKBTCBalance component - ckbtcBalance value:', ckbtcBalance);
+
 
   return (
     <Card>

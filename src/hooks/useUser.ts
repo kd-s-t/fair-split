@@ -10,13 +10,13 @@ export const useUser = () => {
   const principal = useAppSelector((state) => state.user.principal);
   const name = useAppSelector((state) => state.user.name)
 
-  // Admin principal from the canister
-  const ADMIN_PRINCIPAL = "ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe";
+  // Admin principal from environment variable
+  const ADMIN_PRINCIPAL = process.env.NEXT_PUBLIC_ADMIN_PRINCIPAL;
 
   const isAdmin = useCallback(() => {
-    if (!principal) return false;
+    if (!principal || !ADMIN_PRINCIPAL) return false;
     return principal === ADMIN_PRINCIPAL;
-  }, [principal]);
+  }, [principal, ADMIN_PRINCIPAL]);
 
    return {
     name,

@@ -81,7 +81,7 @@ export default function TransactionDetailsPage() {
           })) : []
         };
 
-        console.log("transaction", serializedTransaction);
+
         setTransaction(serializedTransaction);
         setIsAuthorized(true);
         setIsTxLoading(false);
@@ -201,23 +201,17 @@ export default function TransactionDetailsPage() {
   };
 
   const handleRefund = async () => {
-    console.log("handleRefund called");
     setIsLoading("refund");
     try {
-      console.log("Creating actor");
       const actor = await createSplitDappActor();
-      console.log("Calling refundSplit with principal:", transaction?.from);
       await actor.refundSplit(Principal.fromText(
         typeof transaction?.from === "string"
           ? transaction.from
           : (transaction?.from as Principal | undefined)?.toText?.() || ""
       ));
-      console.log("refundSplit successful");
       toast.success("Escrow refunded!");
       // Refresh the transaction data
-      console.log("Refreshing transaction data");
       const updated = await actor.getTransaction(String(txid), principal);
-      console.log("Updated transaction:", updated);
       if (Array.isArray(updated) && updated.length > 0) {
         // Serialize BigInt values to strings for Redux compatibility
         const serializedUpdated = {
@@ -236,14 +230,12 @@ export default function TransactionDetailsPage() {
             readAt: toEntry.readAt ? toEntry.readAt.toString() : undefined,
           })) : []
         };
-        console.log("Setting updated transaction:", serializedUpdated);
         setTransaction(serializedUpdated);
       }
     } catch (err) {
       console.error("Refund error:", err);
       toast.error("Failed to refund escrow");
     } finally {
-      console.log("Clearing loading state");
       setIsLoading(null);
     }
   };
@@ -475,18 +467,7 @@ export default function TransactionDetailsPage() {
                 (currentUserEntry.status && Object.keys(currentUserEntry.status)[0] !== "pending")
               );
               
-              // Debug logging
-              console.log('🔍 User Detection Debug:', {
-                currentPrincipal: typeof principal === "string" ? principal : principal?.toText(),
-                currentUserEntry,
-                hasUserActioned,
-                allRecipients: transaction.to?.map(r => ({
-                  principal: r.principal,
-                  approvedAt: r.approvedAt,
-                  declinedAt: r.declinedAt,
-                  status: r.status
-                }))
-              });
+
               
               const transactionData = {
                 id: transaction.id,

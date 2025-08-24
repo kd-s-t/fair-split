@@ -70,16 +70,13 @@ export function handleNavigation(action: ParsedNavigationAction): NavigationActi
 }
 
 export function executeNavigation(navigation: NavigationAction): void {
-  // Store data in sessionStorage for form population
   if (navigation.data) {
     sessionStorage.setItem('splitsafe_chat_data', JSON.stringify(navigation.data));
   }
   
-  // Navigate to the specified path
   if (router) {
     router.push(navigation.path);
   } else {
-    // Fallback to window.location.href
     window.location.href = navigation.path;
   }
 } 

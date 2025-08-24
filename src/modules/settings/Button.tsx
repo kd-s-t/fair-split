@@ -6,12 +6,19 @@ import { clearUser } from '@/lib/redux/userSlice';
 import { setTransactions } from '@/lib/redux/transactionsSlice';
 import { setTitle, setSubtitle, setActivePage } from '@/lib/redux/store';
 import { LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function LogoutButton() {
   const dispatch = useDispatch();
+  const { authClient } = useAuth();
 
   const handleLogout = async () => {
     try {
+      // Logout from Internet Identity
+      if (authClient) {
+        await authClient.logout();
+      }
+      
       // Clear user data
       dispatch(clearUser());
       dispatch(setTransactions([]));
@@ -19,8 +26,8 @@ export default function LogoutButton() {
       dispatch(setSubtitle(''));
       dispatch(setActivePage('dashboard'));
       
-      // Additional logout logic can be added here
-      console.log('User logged out successfully');
+      // Force page reload to clear all state
+      window.location.reload();
     } catch (error) {
       console.error('Logout failed:', error);
     }

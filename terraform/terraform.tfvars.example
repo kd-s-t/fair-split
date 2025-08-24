@@ -4,8 +4,8 @@ instance_type = "t2.micro"
 public_key_path = "/path/to/your/public/key.pub"
 private_key_path = "/path/to/your/private/key"
 repo_url = "https://github.com/your-username/your-repo.git"
-canister_id = "placeholder" # Add your canister ID after deploying to testnet
-environment = "staging"
+canister_id = "efzgd-dqaaa-aaaai-q323a-cai" # Production canister ID
+environment = "production"
 
 # Environment URLs (configurable)
 blockstream_url = "https://blockstream.info"

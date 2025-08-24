@@ -22,7 +22,6 @@ export default function ReleasedEscrowDetails({ transaction }: ReleasedEscrowDet
   const handleViewExplorer = () => {
     const blockHash = "00000000000000000001bb418ff8dfff65ea0dab3d9f53923112d2b2f12f4ee7";
     const url = `https://blockstream.info/block/${blockHash}`;
-    console.log('Opening Blockstream URL:', url);
     window.open(url, '_blank');
   };
 

@@ -1,0 +1,24 @@
+name: safesplit-production
+
+networks:
+  safesplit-network:
+    driver: bridge
+
+services:
+  frontend:
+    container_name: frontend-production
+    build:
+      context: ../..
+      dockerfile: docker/production/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../../.env.production
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_DFX_HOST=https://icp0.io
+      - NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP=efzgd-dqaaa-aaaai-q323a-cai
+      - NEXT_PUBLIC_CANISTER_ID_SPLIT_DAPP_MAINNET=efzgd-dqaaa-aaaai-q323a-cai
+    restart: unless-stopped
+    networks:
+      - safesplit-network

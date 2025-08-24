@@ -11,13 +11,10 @@ export default function AuthOverlay() {
   const [show, setShow] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('🔐 AuthOverlay: principal state changed:', principal);
     if (!principal) {
-      console.log('🔐 AuthOverlay: No principal, showing overlay in 300ms');
       const timer = setTimeout(() => setShow(true), 300);
       return () => clearTimeout(timer);
     } else {
-      console.log('🔐 AuthOverlay: Has principal, hiding overlay');
       setShow(false);
     }
   }, [principal]);

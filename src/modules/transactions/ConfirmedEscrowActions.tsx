@@ -38,7 +38,8 @@ export default function ConfirmedEscrowActions({ onRelease, onRefund, isLoading,
       recipients={recipients}
       onRelease={handleRelease}
       onRefund={handleRefund}
-      isLoading={isLoading === "release" || isLoading === "refund"}
+      isReleaseLoading={isLoading === "release"}
+      isRefundLoading={isLoading === "refund"}
     />
   );
 }

@@ -168,7 +168,6 @@ export default function TransactionsPage() {
       try {
         const actor = await createSplitDappActor();
         await actor.recipientMarkAsReadBatch(unreadTransactionIds, principal);
-        console.log(`Marked ${unreadTransactionIds.length} transactions as read`, unreadTransactionIds);
       } catch (error) {
         console.error('Failed to mark transactions as read:', error);
       }

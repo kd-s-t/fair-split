@@ -53,7 +53,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
     try {
       // Use the existing AI parser to understand the user's description
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-      console.log('🔍 AIAssistant Debug: API Key from env:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
 
       const parsedAction = await parseUserMessageWithAI(description, apiKey);
 

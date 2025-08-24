@@ -15,7 +15,6 @@ export async function getTransactionDetails(transactionId: string, callerPrincip
     }
     
     const transaction = result[0];
-    console.log('Transaction details:', transaction);
     
     return transaction;
   } catch (error) {

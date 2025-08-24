@@ -145,15 +145,11 @@ export function useEscrowActions(editTxId?: string) {
       const actor = await createSplitDappActor();
       const principalObj = Principal.fromText(principalText);
       const address = await actor.getBitcoinAddress(principalObj);
-      console.log(`Raw address from canister for ${principalText}:`, address);
       
       // Return empty string for ICP recipients (no Bitcoin address set)
       if (!address || typeof address !== 'string' || address.trim() === '') {
-        console.log(`No address found for ${principalText}, returning empty string for ICP recipient`);
         return "";
       }
-      
-      console.log(`Found address for ${principalText}:`, address);
       return address;
     } catch (error) {
       console.error('Failed to get Bitcoin address for principal:', principalText, error);
@@ -174,17 +170,11 @@ export function useEscrowActions(editTxId?: string) {
         const actor = await createSplitDappActor();
         const callerPrincipal = principal; // principal is already a Principal object
 
-        console.log('🔄 Escrow creation: Checking balance for principal:', callerPrincipal.toText());
-        
         if (data.tokenType === 'btc') {
           const ckbtcBalanceResult = await actor.getUserBitcoinBalance(callerPrincipal) as number;
-          console.log('🔄 Escrow creation: cKBTC Balance result:', ckbtcBalanceResult);
           
           const ckbtcBalance = BigInt(ckbtcBalanceResult);
           const requiredAmount = BigInt(Math.round(Number(data.btcAmount) * 1e8));
-          
-          console.log('🔄 Escrow creation: Available cKBTC balance:', ckbtcBalance.toString(), 'satoshis');
-          console.log('🔄 Escrow creation: Required amount:', requiredAmount.toString(), 'satoshis');
 
           if (ckbtcBalance < requiredAmount) {
             console.error('🔄 Escrow creation: Insufficient cKBTC balance');
@@ -195,7 +185,6 @@ export function useEscrowActions(editTxId?: string) {
           }
         } else if (data.tokenType === 'sei') {
           const seiBalanceResult = await actor.getSeiBalance(callerPrincipal) as { ok: number } | { err: string };
-          console.log('🔄 Escrow creation: SEI Balance result:', seiBalanceResult);
           
           if ('err' in seiBalanceResult) {
             console.error('🔄 Escrow creation: SEI Balance check failed:', seiBalanceResult.err);
@@ -205,9 +194,6 @@ export function useEscrowActions(editTxId?: string) {
           
           const seiBalance = BigInt(seiBalanceResult.ok);
           const requiredAmount = BigInt(Math.round(Number(data.seiAmount || '0') * 1e6));
-          
-          console.log('🔄 Escrow creation: Available SEI balance:', seiBalance.toString(), 'usei');
-          console.log('🔄 Escrow creation: Required amount:', requiredAmount.toString(), 'usei');
 
           if (seiBalance < requiredAmount) {
             console.error('🔄 Escrow creation: Insufficient SEI balance');
@@ -236,24 +222,11 @@ export function useEscrowActions(editTxId?: string) {
           })
         );
 
-        console.log('🔄 Escrow creation: Calling initiateEscrow with:', {
-          callerPrincipal: callerPrincipal.toText(),
-          participants: participants.map(p => ({
-            principal: p.principal.toText(),
-            amount: p.amount.toString(),
-            nickname: p.nickname,
-            percentage: p.percentage.toString()
-          })),
-          title: data.title || ""
-        });
-        
         const txId = await actor.initiateEscrow(
           callerPrincipal,
           participants,
           data.title || ""
         );
-        
-        console.log('🔄 Escrow creation: initiateEscrow result:', txId);
 
         if (typeof txId === "string" && txId.startsWith("Error:")) {
           toast.error(txId);
@@ -265,7 +238,6 @@ export function useEscrowActions(editTxId?: string) {
         await updateBalance();
         
         // Redirect to transaction management page
-        console.log('🔄 Redirecting to transaction page:', `/transactions/${txId}`);
         // Add a small delay to ensure state updates are complete
         setTimeout(() => {
           router.push(`/transactions/${encodeURIComponent(String(txId))}`);

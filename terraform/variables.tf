@@ -5,9 +5,9 @@ variable "public_key_path" {}
 variable "private_key_path" {}
 variable "repo_url" {}
 variable "environment" {
-  description = "Environment (staging, production)"
+  description = "Environment (production)"
   type        = string
-  default     = "staging"
+  default     = "production"
 }
 
 # Domain variable (not used for IC mainnet deployment)

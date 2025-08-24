@@ -63,7 +63,10 @@ export function parseUserMessage(message: string): ParsedAction {
     /create.*escrow.*?(\d*\.?\d+).*?(?:btc|for).*?(?:recipients?|id).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
     
     // "send $5 to user123" or "transfer €10 to alice and bob"
-    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
+    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:this\s+people?)?:?\s*([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
+    
+    // "send $1 to this people: id1, id2, id3" (more flexible format)
+    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:this\s+people?|these\s+people?|recipients?):\s*([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
   ];
   
   for (const pattern of escrowPatterns) {
@@ -75,9 +78,11 @@ export function parseUserMessage(message: string): ParsedAction {
       
       // Extract recipient IDs (split by commas, spaces, or other delimiters)
       const recipients = recipientsText
-        .split(/[,,\s]+/)
+        .split(/[,\s]+/)
         .map(id => id.trim())
         .filter(id => id.length > 0);
+      
+
       
              // Handle currency conversion if currency was detected
        if (currencyInfo && currencyInfo.originalText.includes(amount)) {

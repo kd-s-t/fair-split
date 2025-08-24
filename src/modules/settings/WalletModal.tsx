@@ -26,8 +26,16 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
     }
   };
 
+  const handleClose = () => {
+    try {
+      onClose();
+    } catch (error) {
+      console.error('Error closing wallet modal:', error);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="!bg-[#212121] border border-[#303333] !w-[540px] !max-w-[90vw] max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Wallet</DialogTitle>
@@ -100,7 +108,7 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
         </div>
         <DialogFooter className="sm:justify-start">
           <DialogClose asChild>
-            <Button type="button" variant="default">
+            <Button type="button" variant="default" onClick={handleClose}>
               Done
             </Button>
           </DialogClose>

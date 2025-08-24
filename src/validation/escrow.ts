@@ -6,13 +6,6 @@ const isValidICPPrincipal = (principal: string): boolean => {
   // Temporarily simplify validation to debug the issue
   const isValid = principal.trim().length > 0;
   
-  // Debug logging
-  console.log('ICP Principal validation:', {
-    principal,
-    trimmedLength: principal.trim().length,
-    isValid
-  });
-  
   return isValid;
 };
 

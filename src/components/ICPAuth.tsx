@@ -33,11 +33,9 @@ export default function Home() {
         ? 'http://localhost:3000'  // Your local frontend URL
         : 'https://staging.thesplitsafe.com',  // Staging environment URL
       onSuccess: async () => {
-        console.log('🔐 Login successful, updating principal...');
         // Wait a bit for the authentication to be established
         setTimeout(async () => {
           await updatePrincipal();
-          console.log('🔐 Principal updated after login');
         }, 1000);
       },
     });

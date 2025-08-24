@@ -30,11 +30,23 @@ export default function RootLayout({
               // Suppress hydration warnings caused by browser extensions
               const originalError = console.error;
               console.error = (...args) => {
-                if (args[0]?.includes?.('Hydration failed') || args[0]?.includes?.('Warning: Text content did not match')) {
+                if (args[0]?.includes?.('Hydration failed') || 
+                    args[0]?.includes?.('Warning: Text content did not match') ||
+                    args[0]?.includes?.('message channel closed') ||
+                    args[0]?.includes?.('asynchronous response')) {
                   return;
                 }
                 originalError.apply(console, args);
               };
+
+              // Suppress unhandled promise rejections for message channel errors
+              window.addEventListener('unhandledrejection', (event) => {
+                if (event.reason?.message?.includes?.('message channel closed') ||
+                    event.reason?.message?.includes?.('asynchronous response')) {
+                  event.preventDefault();
+                  return;
+                }
+              });
             `,
           }}
         />

@@ -15,6 +15,42 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
   const [showWallet, setShowWallet] = useState(false);
   const { name } = useUser()
 
+  const handleSettingsClick = () => {
+    try {
+      console.log('Opening settings modal');
+      setShowSettings(true);
+    } catch (error) {
+      console.error('Error opening settings:', error);
+    }
+  };
+
+  const handleWalletClick = () => {
+    try {
+      console.log('Opening wallet modal');
+      setShowWallet(true);
+    } catch (error) {
+      console.error('Error opening wallet:', error);
+    }
+  };
+
+  const handleSettingsClose = () => {
+    try {
+      console.log('Closing settings modal');
+      setShowSettings(false);
+    } catch (error) {
+      console.error('Error closing settings:', error);
+    }
+  };
+
+  const handleWalletClose = () => {
+    try {
+      console.log('Closing wallet modal');
+      setShowWallet(false);
+    } catch (error) {
+      console.error('Error closing wallet:', error);
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -60,7 +96,7 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
           <DropdownMenuSeparator className="bg-[#424444] mx-1" />
 
           <DropdownMenuItem
-            onClick={() => setShowSettings(true)}
+            onClick={handleSettingsClick}
             className="px-2 py-1.5 cursor-pointer hover:bg-[#2F2F2F] focus:bg-[#2F2F2F] data-[highlighted]:bg-[#2F2F2F] rounded"
           >
             <div className="flex items-center gap-3">
@@ -70,7 +106,7 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            onClick={() => setShowWallet(true)}
+            onClick={handleWalletClick}
             className="px-2 py-1.5 cursor-pointer hover:bg-[#2F2F2F] focus:bg-[#2F2F2F] data-[highlighted]:bg-[#2F2F2F] rounded"
           >
             <div className="flex items-center gap-3">
@@ -88,13 +124,13 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
       <EditNameModal
         open={showSettings}
         principalId={principalId}
-        onClose={() => setShowSettings(false)}
-        onNameSaved={() => setShowSettings(false)}
+        onClose={handleSettingsClose}
+        onNameSaved={handleSettingsClose}
       />
 
       <WalletModal
         isOpen={showWallet}
-        onClose={() => setShowWallet(false)}
+        onClose={handleWalletClose}
         principalId={principalId}
       />
     </>

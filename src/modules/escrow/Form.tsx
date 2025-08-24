@@ -75,7 +75,7 @@ const Form = ({ form }: FormProps) => {
           return;
         }
 
-        console.log("JSON data:", jsonData); // Debug log
+
 
         // Set the title if provided
         if (jsonData.title) {

@@ -46,9 +46,6 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   const ckbtcBalance = useAppSelector((state: RootState) => state.user.ckbtcBalance);
   // const _icpBalance = useAppSelector((state: RootState) => state.user.icpBalance);
 
-  // Debug logging
-  console.log('🔄 DashboardStats: ckbtcBalance from Redux:', ckbtcBalance, 'Type:', typeof ckbtcBalance);
-
   const isLoading =
     ckbtcBalance === null || ckbtcBalance === undefined || ckbtcBalance === "";
 
@@ -57,10 +54,6 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   const [displayBalance, setDisplayBalance] = useState("0.00000000");
   const [displayUsd, setDisplayUsd] = useState("$0.00");
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-
-  console.log('🔄 DashboardStats: isLoading:', isLoading);
-  console.log('🔄 DashboardStats: showBalance:', showBalance);
-  console.log('🔄 DashboardStats: displayBalance:', displayBalance);
 
   // Calculate transaction counts
   const totalEscrows = transactions ? transactions.length : 0;
@@ -72,29 +65,18 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  // Debug: Log the date range and transaction dates
-  console.log('🔄 Weekly calculation debug:');
-  console.log('  Now:', now.toISOString());
-  console.log('  One week ago:', oneWeekAgo.toISOString());
-
   const weeklyTotalEscrows = transactions ? transactions.filter(tx => {
-    console.log(`  Transaction ${tx.id}: createdAt = "${tx.createdAt}" (type: ${typeof tx.createdAt})`);
     // Convert from nanoseconds to milliseconds (divide by 1,000,000)
     const txDate = new Date(Number(tx.createdAt) / 1000000);
-    console.log(`  Transaction ${tx.id}: converted date = ${txDate}`);
 
     // Check if the date is valid
     if (isNaN(txDate.getTime())) {
-      console.log(`  Transaction ${tx.id}: INVALID DATE - skipping`);
       return false;
     }
 
     const isThisWeek = txDate >= oneWeekAgo;
-    console.log(`  Transaction ${tx.id}: ${txDate.toISOString()} - This week: ${isThisWeek}`);
     return isThisWeek;
   }).length : 0;
-
-  console.log('  Weekly total escrows:', weeklyTotalEscrows);
 
   const weeklyActiveEscrows = transactions ? transactions.filter(tx => {
     const txDate = new Date(Number(tx.createdAt) / 1000000);

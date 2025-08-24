@@ -44,7 +44,6 @@ export default function Integrations() {
 				// Get ICP balance and store in Redux
 				try {
 					const icpBalanceResult = await actor.getBalance(principal) as bigint;
-					console.log('ICP Balance:', icpBalanceResult.toString());
 					dispatch(setIcpBalance(icpBalanceResult.toString()));
 				} catch (error) {
 					console.error('Failed to get ICP balance:', error);
@@ -54,10 +53,7 @@ export default function Integrations() {
 				// Get cKBTC balance for the specific user
 				try {
 					const balanceResult = await actor.getUserBitcoinBalance(principal) as number;
-					console.log('🔍 DEBUG: Raw balance from canister:', balanceResult);
-					console.log('🔍 DEBUG: Balance in satoshis:', balanceResult);
 					const formattedBalance = (Number(balanceResult) / 1e8).toFixed(8);
-					console.log('🔍 DEBUG: Balance in BTC:', formattedBalance);
 					dispatch(setCkbtcBalance(formattedBalance));
 				} catch (error) {
 					console.error('Failed to get cKBTC balance:', error);

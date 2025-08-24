@@ -92,7 +92,6 @@ const TransactionForm = () => {
         const chatData = sessionStorage.getItem('splitsafe_chat_data');
         if (chatData) {
           const data = JSON.parse(chatData);
-          console.log('Loading chat data:', data);
           
           // Populate amount if provided
           if (data.amount) {
@@ -127,7 +126,6 @@ const TransactionForm = () => {
   }, [setValue]);
 
   const onSubmit = async (data: FormData) => {
-    console.log("Form submitted:", data);
     const formDataWithTokenType = {
       ...data,
       tokenType: 'btc' as const

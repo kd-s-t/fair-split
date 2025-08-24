@@ -8,14 +8,15 @@ interface EscrowOverviewProps {
   totalBTC: number;
   recipientCount: number;
   status: string;
-  recipients?: Array<{
+  recipients: Array<{
     id: string;
     amount: number;
     principal: string;
   }>;
-  onRelease?: () => void;
-  onRefund?: () => void;
-  isLoading?: boolean;
+  onRelease: () => void;
+  onRefund: () => void;
+  isReleaseLoading?: boolean;
+  isRefundLoading?: boolean;
 }
 
 export default function EscrowOverview({
@@ -25,7 +26,8 @@ export default function EscrowOverview({
   recipients = [],
   onRelease,
   onRefund,
-  isLoading = false
+  isReleaseLoading = false,
+  isRefundLoading = false
 }: EscrowOverviewProps) {
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -157,29 +159,29 @@ export default function EscrowOverview({
           <div className="grid grid-cols-2 gap-4">
             <Button
               onClick={onRelease}
-              disabled={isLoading}
+              disabled={isReleaseLoading || isRefundLoading}
               className="bg-[#FEB64D] text-black hover:bg-[#FEB64D]/90 font-semibold h-10"
             >
-              {isLoading ? (
+              {isReleaseLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
               ) : (
                 <CircleCheckBig className="w-4 h-4 mr-2" />
               )}
-              {isLoading ? "Releasing..." : "Release Payment"}
-              {!isLoading && <ChevronRight className="w-4 h-4 ml-2" />}
+              {isReleaseLoading ? "Releasing..." : "Release Payment"}
+              {!isReleaseLoading && <ChevronRight className="w-4 h-4 ml-2" />}
             </Button>
             <Button
               variant="outline"
               onClick={onRefund}
-              disabled={isLoading}
+              disabled={isRefundLoading || isReleaseLoading}
               className="border-[#7A7A7A] text-white hover:bg-[#404040] h-10"
             >
-              {isLoading ? (
+              {isRefundLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
               ) : (
                 <CircleAlert className="w-4 h-4 mr-2" />
               )}
-              {isLoading ? "Refunding..." : "Refund"}
+              {isRefundLoading ? "Refunding..." : "Refund"}
             </Button>
           </div>
 

@@ -2,14 +2,14 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { BotMessageSquare, X, Send, Trash2 } from 'lucide-react';
+import { BotMessageSquare, X, Send } from 'lucide-react';
 import { Message } from './ChatInterface';
 import { saveMessages, loadMessages, scrollToBottomOnOpen } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { convertCurrencyToBTC } from '@/lib/utils';
 
-import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
+import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, handleNavigation, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
 import { ParsedAction } from '@/lib/messaging/actionParser';
@@ -28,56 +28,78 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {
-    const globalState = getGlobalChatState();
-    if (globalState.messages.length > 0) {
-      return globalState.messages;
+    try {
+      const globalState = getGlobalChatState();
+      if (globalState.messages.length > 0) {
+        return globalState.messages;
+      }
+      const savedMessages = loadMessages();
+      return savedMessages;
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      return [];
     }
-    const savedMessages = loadMessages();
-    return savedMessages;
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
-  // Set router for navigation service
   useEffect(() => {
-    setRouter(router);
+    try {
+      setRouter(router);
+    } catch (error) {
+      console.error('Error setting router:', error);
+    }
   }, [router]);
 
   // Load messages from localStorage on component mount
   useEffect(() => {
-    const globalState = getGlobalChatState();
-    if (globalState.messages.length === 0) {
-      const savedMessages = loadMessages();
-      if (savedMessages.length === 0) {
-        const welcomeMessage: Message = {
-          id: 'welcome',
-          content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-        setMessages([welcomeMessage]);
-      } else {
-        setMessages(savedMessages);
+    try {
+      const globalState = getGlobalChatState();
+      if (globalState.messages.length === 0) {
+        const savedMessages = loadMessages();
+        if (savedMessages.length === 0) {
+          const welcomeMessage: Message = {
+            id: 'welcome',
+            content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
+            role: 'assistant',
+            timestamp: new Date(),
+          };
+          setMessages([welcomeMessage]);
+        } else {
+          setMessages(savedMessages);
+        }
       }
+    } catch (error) {
+      console.error('Error loading initial messages:', error);
     }
   }, []);
 
   // Save messages to localStorage and update global state whenever messages change
   useEffect(() => {
-    saveMessages(messages);
-    const globalState = getGlobalChatState();
-    globalState.messages = messages;
+    try {
+      saveMessages(messages);
+      const globalState = getGlobalChatState();
+      globalState.messages = messages;
+    } catch (error) {
+      console.error('Error saving messages:', error);
+    }
   }, [messages]);
 
   // Auto-scroll to bottom when chat opens or messages change
   useEffect(() => {
-    if (chatContainerRef.current) {
-      scrollToBottomOnOpen(chatContainerRef);
+    try {
+      if (chatContainerRef.current) {
+        scrollToBottomOnOpen(chatContainerRef);
+      }
+    } catch (error) {
+      console.error('Error scrolling to bottom:', error);
     }
   }, [messages]);
 
   const handleSendMessage = useCallback(async (content: string) => {
+    if (!content.trim()) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -100,13 +122,6 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         apiKey.startsWith('sk-') &&
         apiKey.length > 20;
 
-      console.log('API Key validation:', {
-        hasApiKey: !!apiKey,
-        apiKeyLength: apiKey?.length,
-        apiKeyPrefix: apiKey?.substring(0, 3),
-        isValidApiKey
-      });
-
       // Try AI parser first, then fallback to local parser
       if (isValidApiKey) {
         try {
@@ -122,260 +137,167 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       if (!parsedAction) {
         // Fallback to local parsing logic
         const lowerContent = content.toLowerCase();
-        console.log('Local parser analyzing:', { content, lowerContent });
-
-        // Check for approval suggestions FIRST (before escrow creation)
-        if (lowerContent.includes('approve') || lowerContent.includes('decline') ||
-          lowerContent.includes('decide') || lowerContent.includes('good') ||
-          (lowerContent.includes('escrow') && (lowerContent.includes('approve') || lowerContent.includes('decide')))) {
-          parsedAction = { type: 'approval_suggestion' };
-        } else if (lowerContent.includes('send') || lowerContent.includes('create') || lowerContent.includes('make')) {
-          // Extract recipient IDs (ICP principal format) - handle multi-line content
-          const lines = content.split('\n');
-          const allRecipients: string[] = [];
+        
+        // Check for escrow creation
+        if (lowerContent.includes('send') || lowerContent.includes('transfer') || lowerContent.includes('create')) {
+          const amountMatch = content.match(/(\d+(?:\.\d+)?)\s*(?:btc|bitcoin|usd|\$|€|£|¥)/i);
+          const recipientMatch = content.match(/(?:to|for)\s+([a-zA-Z0-9_-]+)/i);
           
-          lines.forEach(line => {
-            const recipientMatch = line.match(/[a-z0-9-]{63}/g);
-            if (recipientMatch) {
-              allRecipients.push(...recipientMatch);
-            }
-          });
-          
-          const recipients = allRecipients;
-          console.log('Local parser - extracted recipients:', recipients);
-
-          // Extract amount and check for currency
-          let amount = '1';
-          let originalCurrency: string | undefined;
-
-          // Check for currency amounts first
-          const currencyMatch = content.match(/(\$|€|£|¥)(\d+(?:\.\d{1,2})?)/);
-          if (currencyMatch) {
-            const currencySymbol = currencyMatch[1];
-            const currencyAmount = parseFloat(currencyMatch[2]);
-
-            // Convert currency to BTC using centralized function
-            amount = convertCurrencyToBTC(currencyAmount, currencySymbol);
-            originalCurrency = currencyMatch[0];
-          } else {
-            // Extract regular amount (look for numbers)
-            const amountMatch = content.match(/(\d+(?:\.\d+)?)/);
-            amount = amountMatch ? amountMatch[1] : '1';
+          if (amountMatch && recipientMatch) {
+            const amount = amountMatch[1];
+            const recipient = recipientMatch[1];
+            parsedAction = {
+              type: 'create_escrow',
+              amount: convertCurrencyToBTC(parseFloat(amount), content),
+              recipients: [recipient],
+              originalCurrency: amountMatch[0]
+            };
           }
-
-          console.log('Local parser found escrow creation:', { recipients, amount, originalCurrency });
-          parsedAction = { type: 'create_escrow', recipients, amount, originalCurrency };
-        } else if (lowerContent.includes('bitcoin') && lowerContent.includes('address')) {
-          parsedAction = { type: 'set_bitcoin_address', address: 'invalid' };
-        } else if (lowerContent.includes('balance') || lowerContent.includes('principal')) {
-          parsedAction = { type: 'query', query: 'all' };
+        }
+        
+        // Check for approval suggestions
+        if (lowerContent.includes('approve') || lowerContent.includes('decline') || lowerContent.includes('suggestion')) {
+          parsedAction = { type: 'approval_suggestion' };
         }
       }
 
-      if (parsedAction) {
-        console.log('Parsed action:', parsedAction);
-        const response = generateActionResponse(parsedAction, {
-          principal,
-          icpBalance,
-          ckbtcBalance,
-          ckbtcAddress,
-        });
-
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: response,
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-
-        setMessages(prev => [...prev, assistantMessage]);
-
-        // Handle navigation after a delay
-        setTimeout(() => {
-          console.log('Handling navigation for action:', parsedAction.type);
-          if (parsedAction.type === 'create_escrow') {
-            const navigation = handleEscrowCreation(parsedAction);
-            console.log('Escrow navigation:', navigation);
-            executeNavigation(navigation);
-          } else if (parsedAction.type === 'approval_suggestion') {
-            const navigation = handleApprovalSuggestion(parsedAction);
-            if (navigation.type === 'populate_form') {
-              sessionStorage.setItem('splitsafe_show_approval_suggestions', 'true');
-              window.dispatchEvent(new CustomEvent('refresh-approval-suggestions'));
-            } else {
-              executeNavigation(navigation);
-            }
-          } else if (parsedAction.type === 'set_bitcoin_address') {
-            const navigation = handleBitcoinAddressSet(parsedAction);
-            executeNavigation(navigation);
-          }
-        }, 1000);
-
-        return;
-      }
+      // Generate response based on parsed action
+      const response = await generateActionResponse(parsedAction, {
+        principal,
+        icpBalance,
+        ckbtcAddress,
+        ckbtcBalance
+      });
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I can help you with two main things:\n\n1. Create Escrows\n   Try: 'send 2 btc to [recipient-id]'\n\n2. Get Approval Advice\n   Try: 'should I approve or decline?'\n\nJust tell me what you need!",
+        content: response,
         role: 'assistant',
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
 
+      if (parsedAction) {
+        let navigation;
+        switch (parsedAction.type) {
+          case 'create_escrow':
+            navigation = handleEscrowCreation(parsedAction);
+            break;
+          case 'set_bitcoin_address':
+            navigation = handleBitcoinAddressSet(parsedAction);
+            break;
+          case 'approval_suggestion':
+            navigation = handleApprovalSuggestion(parsedAction);
+            break;
+          case 'navigate':
+            navigation = handleNavigation(parsedAction);
+            break;
+        }
+        
+        if (navigation) {
+          setTimeout(() => {
+            executeNavigation(navigation);
+          }, 1500);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing message:', error);
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: error instanceof Error && error.message.includes('API key')
-          ? "I'm sorry, but the AI assistant is not configured. Please contact support to enable this feature."
-          : "I'm sorry, but I encountered an error while processing your message. Please try again.",
+        content: "I'm sorry, I encountered an error processing your request. Please try again.",
         role: 'assistant',
         timestamp: new Date(),
       };
-
+      
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  }, [principal, icpBalance, ckbtcBalance, ckbtcAddress]);
-
-
+  }, [principal, icpBalance, ckbtcAddress, ckbtcBalance]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() && !isLoading) {
-      handleSendMessage(inputValue.trim());
+      handleSendMessage(inputValue);
       setInputValue('');
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
 
-  const handleClearHistory = () => {
-    const welcomeMessage: Message = {
-      id: 'welcome',
-      content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
-      role: 'assistant',
-      timestamp: new Date(),
-    };
-    setMessages([welcomeMessage]);
-  };
 
   return (
-    <div className="w-full h-full bg-[#222222] border border-[#FEB64D] rounded-[16px] flex flex-col">
+    <div className="fixed right-0 top-0 h-full w-80 bg-[#212121] border-l border-[#303333] flex flex-col z-50">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#303434]">
-        <div className="flex items-center gap-3">
-          <BotMessageSquare className="w-5 h-5 text-[#FEB64D]" />
-          <Typography variant='h4' className="text-white">SplitSafe AI</Typography>
-        </div>
-        <div className="flex items-center gap-2">
-          {messages.length > 1 && (
-            <Button
-              onClick={handleClearHistory}
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-[#2a2a2a] !p-0"
-              title="Clear chat history"
-            >
-              <Trash2 size={16} />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="text-white hover:bg-[#2a2a2a] !p-0"
-          >
-            <X size={18} />
-          </Button>
-        </div>
+      <div className="flex items-center justify-between p-4 border-b border-[#303333]">
+        <Typography variant="h4" className="text-white">Chat Assistant</Typography>
+        <Button
+          onClick={onToggle}
+          variant="ghost"
+          size="sm"
+          className="text-white hover:bg-[#2F2F2F]"
+        >
+          <X size={20} />
+        </Button>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Chat Messages */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 min-h-0">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {message.role === 'assistant' && (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FEB64D] to-[#F97415] flex items-center justify-center flex-shrink-0">
-                    <BotMessageSquare className="w-5 h-5 text-white" />
-                  </div>
-                )}
-
-                <div
-                  className={`max-w-[250px] rounded-xl p-4 overflow-hidden ${message.role === 'user'
-                    ? 'bg-[#FEB64D] text-black ml-auto'
-                    : 'bg-[#474747] text-white border border-[#636363]'
-                    }`}
-                >
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed break-all overflow-hidden" style={{ wordBreak: 'break-all', overflowWrap: 'break-word', wordSpacing: '0' }}>
-                    {message.content}
-                  </div>
-                </div>
-
-
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FEB64D] to-[#F97415] flex items-center justify-center flex-shrink-0">
-                  <BotMessageSquare className="w-5 h-5 text-white" />
-                </div>
-                <div className="bg-[#474747] text-white rounded-xl p-4 border border-[#636363]">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                    <span className="text-sm">Thinking...</span>
-                  </div>
-                </div>
+      {/* Messages */}
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {message.role !== 'user' && (
+              <div className="rounded-full bg-[#FEB64D] self-start p-1">
+                <BotMessageSquare size={16} className="text-black" />
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Input Box */}
-        <div className="flex-shrink-0 p-4">
-          <form onSubmit={handleSubmit} className="bg-[#333333] border border-[#FEB64D] rounded-xl p-2">
-            <div className="flex items-center justify-between">
-              <Textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Talk with SplitSafe AI"
-                className="bg-transparent border-0 text-white placeholder-[#FFFFFF66] focus:outline-none focus:ring-0 flex-1 resize-none min-h-[40px] max-h-[120px]"
-                disabled={isLoading}
-                rows={1}
-              />
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="sm"
-                  disabled={!inputValue.trim() || isLoading}
-                  className="text-[#FEB64D] hover:bg-transparent p-0"
-                >
-                  <Send size={20} />
-                </Button>
+            <div
+              className={`rounded-lg p-3 max-w-[70%] overflow-hidden ${
+                message.role === 'user'
+                  ? 'bg-[#FEB64D] text-black'
+                  : 'bg-[#2a2a2a] text-white'
+              }`}
+            >
+              <div className="whitespace-pre-wrap text-sm break-all overflow-hidden">
+                {message.content}
               </div>
             </div>
-          </form>
-        </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-[#2a2a2a] text-white rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span className="text-sm">Thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-[#303333]">
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Textarea
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 bg-[#2B2B2B] border-[#424444] text-white placeholder-[#A1A1A1] resize-none"
+            rows={2}
+            disabled={isLoading}
+          />
+          <Button
+            type="submit"
+            disabled={!inputValue.trim() || isLoading}
+            className="bg-[#FEB64D] text-black hover:bg-[#FEB64D]/90 disabled:opacity-50"
+          >
+            <Send size={16} />
+          </Button>
+        </form>
       </div>
     </div>
   );

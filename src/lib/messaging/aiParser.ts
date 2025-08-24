@@ -33,7 +33,6 @@ export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | Bitco
 
 export async function parseUserMessageWithAI(message: string, apiKey?: string): Promise<ParsedAction> {
   try {
-    console.log('🔍 AI Parser Debug: API Key received:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
     
     if (!apiKey || apiKey.trim() === '' || apiKey === 'sk-proj-YOUR_OPENAI_API_KEY_HERE') {
       console.warn('OpenAI API key is missing or invalid');
@@ -151,10 +150,8 @@ IMPORTANT:
     // Try to parse JSON response
     try {
       const parsed = JSON.parse(content);
-      console.log('AI Parser Response:', parsed);
       
       if (parsed.action === 'create_escrow') {
-        console.log('Creating escrow with:', { amount: parsed.amount, recipients: parsed.recipients, originalCurrency: parsed.originalCurrency });
         return {
           type: 'create_escrow',
           amount: parsed.amount,
@@ -162,7 +159,6 @@ IMPORTANT:
           originalCurrency: parsed.originalCurrency
         };
       } else if (parsed.action === 'set_bitcoin_address') {
-        console.log('Setting Bitcoin address:', parsed.address);
         return {
           type: 'set_bitcoin_address',
           address: parsed.address

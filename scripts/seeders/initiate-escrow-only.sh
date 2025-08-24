@@ -9,10 +9,17 @@ if ! dfx ping > /dev/null 2>&1; then
     exit 1
 fi
 
+# Check if sender principal is provided as argument
+if [ -z "$1" ]; then
+    echo "❌ Usage: $0 <SENDER_PRINCIPAL>"
+    echo "   Example: $0 up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe"
+    exit 1
+fi
+
 # Test principals
-SENDER_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+SENDER_PRINCIPAL="$1"
 RECIPIENT_PRINCIPAL="hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe"
-ADMIN_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+ADMIN_PRINCIPAL="up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe"
 ESCROW_AMOUNT=3000  # 0.00003 BTC in satoshis
 
 echo "📋 Test Configuration:"

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import type { NormalizedTransaction } from "@/modules/transactions/types";
 import { motion } from "framer-motion";
-import { Search, RotateCw } from "lucide-react";
+import { RotateCw, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Helper function to convert API response to NormalizedTransaction[]
 const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTransaction[] => {
@@ -54,25 +54,25 @@ const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTra
   return Array.from(uniqueTxs.values());
 };
 
+import { useRouter } from "next/navigation";
 import {
   markAllAsRead,
   setTransactions,
 } from "../../lib/redux/transactionsSlice";
-import { useRouter } from "next/navigation";
 
 
+import { ApprovalSuggestions } from "@/components/messaging/ApprovalSuggestions";
+import { Button } from "@/components/ui/button";
 import {
   ArrowDownLeft,
   ArrowUpRight,
   Bitcoin,
-  Wallet,
   Eye,
+  Wallet,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { setTitle, setSubtitle } from '../../lib/redux/store';
 import { useDispatch } from "react-redux";
-import { ApprovalSuggestions } from "@/components/messaging/ApprovalSuggestions";
+import { toast } from "sonner";
+import { setSubtitle, setTitle } from '../../lib/redux/store';
 
 // Helper function to get AI suggestion for a transaction
 function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
@@ -88,8 +88,10 @@ function getTransactionSuggestion(tx: NormalizedTransaction): string | null {
   }
 }
 
-import { useTransactions } from "@/hooks/useTransactions";
 import TransactionStatusBadge from "@/components/TransactionStatusBadge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTransactions } from "@/hooks/useTransactions";
 
 export default function TransactionsPage() {
   const { principal } = useAuth();
@@ -107,9 +109,10 @@ export default function TransactionsPage() {
   const router = useRouter();
 
 
-
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [transactionsFilter, setTransactionsFilter] = useState('all');
+
   const [refreshing, setRefreshing] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const refreshIconRef = useRef<HTMLButtonElement>(null);
@@ -180,7 +183,6 @@ export default function TransactionsPage() {
       markUnreadTransactionsAsRead();
     }
   }, [localTransactions, principal, markUnreadTransactionsAsRead]);
-
 
 
   function isPendingApproval(tx: NormalizedTransaction): boolean {
@@ -264,47 +266,61 @@ export default function TransactionsPage() {
         <div className="flex items-center space-x-4">
           {/* Search Bar */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[#BCBCBC]" />
-            <input
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#BCBCBC]" />
+            <Input
               type="text"
               placeholder="Search transactions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white placeholder-[#BCBCBC] focus:outline-none focus:border-[#FEB64D]"
+              className="pl-10 !bg-transparent !rounded-[10px] !border-[#303434]"
             />
           </div>
 
-          {/* Category Filter */}
-          <select className="px-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D] min-w-[156px]">
-            <option value="all">All categories</option>
-            {availableCategories.includes('sent') && <option value="sent">Sent</option>}
-            {availableCategories.includes('received') && <option value="received">Received</option>}
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 bg-[#222222] border border-[#303434] rounded-lg text-white focus:outline-none focus:border-[#FEB64D] min-w-[139px]"
+          <Select
+            value={transactionsFilter}
+            onValueChange={(value) => setTransactionsFilter(value)}
           >
-            <option value="all">All status</option>
-            {availableStatuses.includes('pending') && <option value="pending">Pending</option>}
-            {availableStatuses.includes('confirmed') && <option value="confirmed">Active</option>}
-            {availableStatuses.includes('released') && <option value="released">Released</option>}
-            {availableStatuses.includes('cancelled') && <option value="cancelled">Cancelled</option>}
-            {availableStatuses.includes('declined') && <option value="declined">Declined</option>}
-          </select>
+            <SelectTrigger className="px-4 py-5 border-[#303434] !rounded-[10px] min-w-[156px]">
+              <SelectValue placeholder="All transactions" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#212121] border-[#303333]">
+              <SelectGroup>
+                <SelectItem value="all" className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]">All transactions</SelectItem>
+                {availableCategories.map((cat, index) => <SelectItem key={index} className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]" value={cat}>
+                  {cat}
+                </SelectItem>)}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value)}
+          >
+            <SelectTrigger className="px-4 py-5 !rounded-[10px] border-[#303434] min-w-[156px]">
+              <SelectValue placeholder="All status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup className="bg-[#212121] border-[#303333]">
+                <SelectItem value="all" className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]">All status</SelectItem>
+                {availableStatuses.map((status, index) => <SelectItem key={index} className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]" value={status}>
+                  {status}
+                </SelectItem>)}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
 
           {/* Refresh Button */}
-          <button
+          <Button
             ref={refreshIconRef}
             onClick={fetchTransactions}
-            className="px-3 py-2.5 border border-[#7A7A7A] rounded-lg text-white hover:bg-[#2a2a2a] transition-colors flex items-center space-x-2"
+            variant='outline'
+            className="!bg-transparent !rounded-[10px]"
             disabled={refreshing}
           >
-            <RotateCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
+            <RotateCw size={14} className={`${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
         {/* Transaction Count */}

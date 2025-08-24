@@ -4,6 +4,17 @@ echo "🌱 Running All Seeder Scripts"
 echo "=============================="
 echo ""
 
+# Check if sender principal is provided as argument
+if [ -z "$1" ]; then
+    echo "❌ Usage: $0 <SENDER_PRINCIPAL>"
+    echo "   Example: $0 up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe"
+    exit 1
+fi
+
+SENDER_PRINCIPAL="$1"
+echo "👤 Using sender principal: $SENDER_PRINCIPAL"
+echo ""
+
 # Check if dfx is running
 if ! dfx ping > /dev/null 2>&1; then
     echo "❌ DFX is not running. Please start dfx first: dfx start --background"
@@ -19,22 +30,22 @@ echo ""
 # Run each seeder script
 echo "1️⃣ Running: Initiate Escrow Only"
 echo "--------------------------------"
-./scripts/seeders/initiate-escrow-only.sh
+./scripts/seeders/initiate-escrow-only.sh "$SENDER_PRINCIPAL"
 echo ""
 
 echo "2️⃣ Running: Initiate + Approve"
 echo "-------------------------------"
-./scripts/seeders/initiate-and-approve.sh
+./scripts/seeders/initiate-and-approve.sh "$SENDER_PRINCIPAL"
 echo ""
 
 echo "3️⃣ Running: Initiate + Decline"
 echo "-------------------------------"
-./scripts/seeders/initiate-and-decline.sh
+./scripts/seeders/initiate-and-decline.sh "$SENDER_PRINCIPAL"
 echo ""
 
 echo "4️⃣ Running: Initiate + Cancel"
 echo "------------------------------"
-./scripts/seeders/initiate-and-cancel.sh
+./scripts/seeders/initiate-and-cancel.sh "$SENDER_PRINCIPAL"
 echo ""
 
 echo "✅ All seeder scripts completed!"

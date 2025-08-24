@@ -6,6 +6,7 @@ import Image from "next/image";
 import { House, Wallet, History, Zap, ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUser } from "@/hooks/useUser";
+import { Typography } from "./ui/typography";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
           <Image
             src="/safesplit-logo.svg"
             alt="SplitSafe Logo"
-            width={120}
+            width={160}
             height={40}
             priority
             className="object-contain"
@@ -66,16 +67,17 @@ export default function SideBar({ isOpen, onToggle }: SideBarProps) {
             <Link
               key={link.href}
               href={link.href}
-              className={`rounded-lg py-2 text-sm transition-colors flex items-center gap-4 h-10 ${isActive
+              className={`rounded-lg py-2 text-sm transition-colors flex items-center gap-2 h-10 ${isActive
                 ? "bg-[#FEB64D] !text-[#0D0D0D] font-semibold px-4"
-                : "hover:bg-[#FEB64D]/20 text-white px-3"
+                : "hover:bg-[#2d2e2e] text-white px-3"
                 }`}
               style={{ minHeight: '40px' }}
-              title={isOpen ? link.name : link.name}
+              title={link.name}
             >
               <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                 <Icon size={20} className={`${isActive ? 'text-black' : 'text-white'} flex-shrink-0`} />
-              </span> {isOpen && link.name}
+              </span>
+              <Typography variant="small">{link.name}</Typography>
             </Link>
           );
         })}

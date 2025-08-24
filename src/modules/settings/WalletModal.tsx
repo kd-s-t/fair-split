@@ -1,16 +1,13 @@
-import { useUser } from "@/hooks/useUser";
-import { toast } from "sonner";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog-new"
+  DialogTitle
+} from "@/components/ui/dialog-new";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/useUser";
+import { toast } from "sonner";
 
 // Wallet Modal Component
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
@@ -27,7 +24,7 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
       console.error('Invalid text provided to copyToClipboard');
       return;
     }
-    
+
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Copied to clipboard!');
@@ -36,8 +33,6 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
       toast.error('Failed to copy to clipboard');
     }
   };
-
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -111,13 +106,6 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
             </div>
           </div>
         </div>
-        <DialogFooter className="sm:justify-start">
-          <DialogClose asChild>
-            <Button type="button" variant="default">
-              Done
-            </Button>
-          </DialogClose>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

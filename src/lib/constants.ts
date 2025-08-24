@@ -9,7 +9,7 @@ export const TRANSACTION_STATUS_MAP: Record<string, { label: string; variant: st
     active: { label: "Active", variant: "secondary" },
     completed: { label: "Completed", variant: "success" },
     withdraw_pending: { label: "Withdrawal Pending", variant: "primary" },
-    withdraw_complete: { label: "Withdrawal Complete", variant: "success" },
+    withdraw_complete: { label: "Completed", variant: "success" },
 };
 
 // Transaction Status Constants

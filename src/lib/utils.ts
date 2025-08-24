@@ -226,3 +226,40 @@ export async function generateTransactionMessage(
 
   return message;
 }
+
+export function generateTransactionMessageSync(
+  transaction: Transaction,
+  currentUserId: string,
+  includeDate: boolean = true
+): string {
+  const isSender = String(transaction.from) === String(currentUserId);
+  const isRecipient = transaction.to?.some((recipient: TransactionRecipient) => 
+    String(recipient.principal) === String(currentUserId)
+  );
+
+  const totalAmount = transaction.to?.reduce((sum: number, recipient: TransactionRecipient) => 
+    sum + (recipient.amount ? Number(recipient.amount) : 0), 0
+  ) || 0;
+
+  const btcAmount = totalAmount / 1e8;
+  const usdAmount = btcAmount * 114764.80; // Fallback rate for sync version
+
+  let message = '';
+
+  if (isSender) {
+    message = `You sent ${btcAmount.toFixed(6)} BTC ($${usdAmount.toFixed(2)})`;
+  } else if (isRecipient) {
+    message = `You received ${btcAmount.toFixed(6)} BTC ($${usdAmount.toFixed(2)})`;
+  } else {
+    message = `Transaction: ${btcAmount.toFixed(6)} BTC ($${usdAmount.toFixed(2)})`;
+  }
+
+  if (includeDate && transaction.createdAt) {
+    const date = new Date(Number(transaction.createdAt) / 1_000_000);
+    const dateStr = date.toLocaleDateString();
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    message += ` on ${dateStr} at ${timeStr}`;
+  }
+
+  return message;
+}

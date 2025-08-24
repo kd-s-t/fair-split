@@ -93,15 +93,17 @@ const ActivityContent = ({
 
             {category === "sent" && (
               <Fragment>
-                {activity.status === "released" || activity.status === "completed" ? (
+                {activity.status === "released" || activity.status === "completed" || activity.status === "withdraw_complete" ? (
                   // Completed sent transaction - simplified layout
                   <Fragment>
-                    <div className="flex items-center gap-3">
-                      <UsersRound size={20} className="text-white" />
-                      <span className="text-white font-medium">Recipients ({activity.to?.length || 0})</span>
-                    </div>
+                    {activity.status !== "withdraw_complete" && (
+                      <div className="flex items-center gap-3">
+                        <UsersRound size={20} className="text-white" />
+                        <span className="text-white font-medium">Recipients ({activity.to?.length || 0})</span>
+                      </div>
+                    )}
                     <div className="container-error flex justify-between items-center">
-                      <span className="text-white">Total escrow:</span>
+                      <span className="text-white">{activity.status === "withdraw_complete" ? "Total withdrawn:" : "Total escrow:"}</span>
                       <div className="flex items-center gap-2">
                         <Bitcoin size={20} className="text-[#F9A214]" />
                         <span className="text-white font-medium">

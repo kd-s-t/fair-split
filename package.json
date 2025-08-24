@@ -3,13 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:fast": "NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack --port 3000 --hostname 0.0.0.0",
-    "dev:max": "NODE_OPTIONS='--max-old-space-size=8192' next dev --turbopack --port 3000 --hostname 0.0.0.0",
-    "build": "next build --turbopack",
-    "build:fast": "NODE_OPTIONS='--max-old-space-size=4096' next build --turbopack",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack --port 3000 --hostname 0.0.0.0",
+    "dev:fast": "NODE_OPTIONS='--max-old-space-size=8192' next dev --turbopack --port 3000 --hostname 0.0.0.0",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --turbopack",
     "start": "next start",
-    "start:fast": "NODE_OPTIONS='--max-old-space-size=4096' next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
@@ -20,7 +17,7 @@
     "test:watch": "jest --watch",
     "clean": "rm -rf .next out dist",
     "clean:all": "rm -rf .next out dist node_modules/.cache",
-    "dev:reset": "rm -rf .next && npm run dev:fast"
+    "dev:reset": "rm -rf .next && npm run dev"
   },
   "dependencies": {
     "@dfinity/agent": "^3.0.0",

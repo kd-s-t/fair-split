@@ -26,7 +26,8 @@ const nextConfig: NextConfig = {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        crypto: false,
+        // Use crypto-browserify for client-side crypto support
+        crypto: require.resolve('crypto-browserify'),
         stream: false,
         buffer: false,
       };

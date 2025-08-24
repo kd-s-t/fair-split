@@ -9,12 +9,8 @@ import { store } from '../lib/redux/store'
 import ClientLayout from '@/components/ClientLayout'
 import DocumentTitle from '@/components/DocumentTitle'
 
-// Add crypto polyfill for Internet Computer
-if (typeof window !== 'undefined' && !window.crypto) {
-  import('crypto').then(({ webcrypto }) => {
-    (window as unknown as { crypto: typeof webcrypto }).crypto = webcrypto
-  })
-}
+// Import crypto polyfills for Internet Identity
+import '../lib/polyfills'
 
 export default function RootLayout({
   children,

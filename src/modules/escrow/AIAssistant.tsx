@@ -105,14 +105,14 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
       } else {
         // Fallback to local parsing if AI doesn't work
-        const parsed = parseDescription(description);
+        const parsed = await parseDescription(description);
         setSetup(parsed);
         toast.success("Setup generated using local parser");
       }
     } catch (error) {
       console.error('Error generating split:', error);
       // Fallback to local parsing
-      const parsed = parseDescription(description);
+      const parsed = await parseDescription(description);
       setSetup(parsed);
       toast.success("Setup generated using local parser");
     } finally {
@@ -120,7 +120,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
     }
   };
 
-  const parseDescription = (desc: string): AiGeneratedSetup => {
+  const parseDescription = async (desc: string): Promise<AiGeneratedSetup> => {
     // Extract amount and check for currency conversion
     let totalAmount = 0.03;
 
@@ -131,7 +131,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       const currencyAmount = parseFloat(currencyMatch[2]);
 
       // Convert currency to BTC using centralized function
-      totalAmount = parseFloat(convertCurrencyToBTC(currencyAmount, currencySymbol));
+      totalAmount = parseFloat(await convertCurrencyToBTC(currencyAmount, currencySymbol));
     } else {
       // Extract BTC amount
       const amountMatch = desc.match(/(\d+\.?\d*)\s*btc/i);
@@ -158,9 +158,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       });
     }
 
-    // Pattern 2: Look for percentage patterns (fallback)
+    // Pattern 2: Look for percentage patterns
     const recipientMatches = desc.match(/(\d+)%\s*to\s+(\w+)/g);
-    if (recipientMatches && recipients.length === 0) {
+    if (recipientMatches) {
       recipientMatches.forEach(match => {
         const percentageMatch = match.match(/(\d+)%\s*to\s+(\w+)/);
         if (percentageMatch) {

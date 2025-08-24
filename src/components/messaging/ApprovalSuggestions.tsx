@@ -42,14 +42,12 @@ export function ApprovalSuggestions({ transactions }: ApprovalSuggestionsProps) 
       sessionStorage.removeItem('splitsafe_show_approval_suggestions');
       const suggestions = generateSuggestions();
       // You can handle the suggestions here as needed
-      console.log('Generated suggestions:', suggestions);
     }
     
     // Listen for refresh events from chat
     const handleRefresh = () => {
       const suggestions = generateSuggestions();
       // You can handle the suggestions here as needed
-      console.log('Generated suggestions:', suggestions);
     };
     
     window.addEventListener('refresh-approval-suggestions', handleRefresh);

@@ -26,7 +26,7 @@ export default function RootLayout({
               // Suppress hydration warnings caused by browser extensions
               const originalError = console.error;
               console.error = (...args) => {
-                if (args[0]?.includes?.('Hydration failed') || 
+                if (args[0]?.includes?.('Hydration failed') ||
                     args[0]?.includes?.('Warning: Text content did not match') ||
                     args[0]?.includes?.('message channel closed') ||
                     args[0]?.includes?.('asynchronous response')) {

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { BotMessageSquare, X, Send } from 'lucide-react';
+import { BotMessageSquare, X, Send, Trash2 } from 'lucide-react';
 import { Message } from './ChatInterface';
 import { saveMessages, loadMessages, scrollToBottomOnOpen } from '@/lib/messaging/storage';
 import { generateActionResponse } from '@/lib/messaging/actionParser';
@@ -225,6 +225,16 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
     }
   };
 
+  const handleClearHistory = () => {
+    const welcomeMessage: Message = {
+      id: 'welcome',
+      content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
+      role: 'assistant',
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
+  };
+
 
 
   return (
@@ -232,14 +242,25 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-[#303333]">
         <Typography variant="h4" className="text-white">Chat Assistant</Typography>
-        <Button
-          onClick={onToggle}
-          variant="ghost"
-          size="sm"
-          className="text-white hover:bg-[#2F2F2F]"
-        >
-          <X size={20} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleClearHistory}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-[#2F2F2F]"
+            title="Clear chat history"
+          >
+            <Trash2 size={16} />
+          </Button>
+          <Button
+            onClick={onToggle}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-[#2F2F2F]"
+          >
+            <X size={20} />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -281,7 +302,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
 
       {/* Input */}
       <div className="p-4 border-t border-[#303333]">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
           <Textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -293,7 +314,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           <Button
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="bg-[#FEB64D] text-black hover:bg-[#FEB64D]/90 disabled:opacity-50"
+            className="bg-[#FEB64D] text-black hover:bg-[#FEB64D]/90 disabled:opacity-50 flex-shrink-0"
           >
             <Send size={16} />
           </Button>

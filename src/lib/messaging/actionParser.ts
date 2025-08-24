@@ -63,7 +63,7 @@ export function parseUserMessage(message: string): ParsedAction {
     /create.*escrow.*?(\d*\.?\d+).*?(?:btc|for).*?(?:recipients?|id).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
     
     // "send $5 to user123" or "transfer €10 to alice and bob"
-    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:this\s+people?)?:?\s*([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
+    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
     
     // "send $1 to this people: id1, id2, id3" (more flexible format)
     /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:this\s+people?|these\s+people?|recipients?):\s*([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
@@ -86,7 +86,33 @@ export function parseUserMessage(message: string): ParsedAction {
       
              // Handle currency conversion if currency was detected
        if (currencyInfo && currencyInfo.originalText.includes(amount)) {
-         amount = convertCurrencyToBTC(parseFloat(currencyInfo.amount), currencyInfo.currency);
+         // For local parser, use approximate conversion rates
+         const currencyAmount = parseFloat(currencyInfo.amount);
+         let btcAmount = 0.03; // Default fallback
+         
+         // Use approximate rates for local parsing
+         switch (currencyInfo.currency) {
+           case '$':
+           case 'USD':
+             btcAmount = currencyAmount * 0.000025; // $1 ≈ 0.000025 BTC
+             break;
+           case '€':
+           case 'EUR':
+             btcAmount = currencyAmount * 0.000027; // €1 ≈ 0.000027 BTC
+             break;
+           case '£':
+           case 'GBP':
+             btcAmount = currencyAmount * 0.000032; // £1 ≈ 0.000032 BTC
+             break;
+           case '¥':
+           case 'JPY':
+             btcAmount = currencyAmount * 0.00000017; // ¥1 ≈ 0.00000017 BTC
+             break;
+           default:
+             btcAmount = currencyAmount * 0.000025; // Default to USD rate
+         }
+         
+         amount = btcAmount.toFixed(8);
          originalCurrency = currencyInfo.originalText;
        }
       

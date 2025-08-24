@@ -29,11 +29,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserData = useCallback(async (principalObj: Principal) => {
     try {
       const actor = await createSplitDappActor()
-      
+
       // Fetch cKBTC Balance
       try {
         const ckbtcBalanceResult = await actor.getUserBitcoinBalance(principalObj) as number
-        
+
         if (typeof ckbtcBalanceResult === 'bigint' || typeof ckbtcBalanceResult === 'number') {
           const formattedCkbtc = (Number(ckbtcBalanceResult) / 1e8).toFixed(8)
           dispatch(setCkbtcBalance(formattedCkbtc))
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Fetch User Name
       try {
         const nameResult = await actor.getNickname(principalObj)
-        
+
         if (Array.isArray(nameResult) && nameResult.length > 0) {
           dispatch(setUserName(nameResult[0]))
         } else {
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Fetch Transactions
       try {
         const result = await actor.getTransactionsPaginated(principalObj, BigInt(0), BigInt(100)) as { transactions: unknown[] }
-        
+
         const normalizeTx = (tx: unknown) => {
           const serializeTimestamp = (value: unknown) => {
             if (!value) return undefined;
@@ -134,9 +134,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!authClientToUse) {
       return
     }
-    
+
     const isAuthenticated = await authClientToUse.isAuthenticated()
-    
+
     if (!isAuthenticated) {
       // Only logout if we actually had a principal before
       if (principal) {
@@ -161,10 +161,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Use Internet Identity for both development and production
-    const config = { 
+    const config = {
       idleOptions: { disableIdle: true }
     };
-    
+
     AuthClient.create(config).then(async (client) => {
       setAuthClient(client)
       await updatePrincipal(client)
@@ -181,7 +181,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check auth state every 60 seconds (reduced frequency to prevent excessive calls)
     const interval = setInterval(checkAuth, 60000)
-    
+
     return () => clearInterval(interval)
   }, [authClient, updatePrincipal])
 

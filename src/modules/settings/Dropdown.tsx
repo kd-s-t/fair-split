@@ -17,7 +17,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
 
   const handleSettingsClick = () => {
     try {
-      console.log('Opening settings modal');
       setShowSettings(true);
     } catch (error) {
       console.error('Error opening settings:', error);
@@ -26,7 +25,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
 
   const handleWalletClick = () => {
     try {
-      console.log('Opening wallet modal');
       setShowWallet(true);
     } catch (error) {
       console.error('Error opening wallet:', error);
@@ -35,7 +33,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
 
   const handleSettingsClose = () => {
     try {
-      console.log('Closing settings modal');
       setShowSettings(false);
     } catch (error) {
       console.error('Error closing settings:', error);
@@ -44,7 +41,6 @@ export default function ProfileDropdown({ principalId }: { principalId: string }
 
   const handleWalletClose = () => {
     try {
-      console.log('Closing wallet modal');
       setShowWallet(false);
     } catch (error) {
       console.error('Error closing wallet:', error);

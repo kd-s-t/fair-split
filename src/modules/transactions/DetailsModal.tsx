@@ -10,7 +10,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
   if (!transaction) return null;
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-20"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -29,14 +29,8 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
         >
           ×
         </button>
-        <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
-        
-        <div className="mb-3">
-          <span className="font-mono text-[10px]">{transaction.id}</span>
-        </div>
-        
-        <div className="mb-4 p-3 bg-[#2A2A2A] rounded-lg">
-          <span className="font-semibold text-white">Status: </span>
+        <h2 className="text-xl font-semibold mb-4">
+          <span className="ml-2 text-white">{transaction.title}</span>
           <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
             transaction.status === 'released' ? 'bg-green-600 text-white' :
             transaction.status === 'pending' ? 'bg-yellow-600 text-white' :
@@ -47,7 +41,7 @@ export default function TransactionDetailsModal({ transaction, onClose }: Transa
           }`}>
             {transaction.status === 'confirmed' ? 'ACTIVE' : transaction.status?.toUpperCase()}
           </span>
-        </div>
+        </h2>
 
         <div className="mb-2">
           <span className="font-semibold">From:</span>

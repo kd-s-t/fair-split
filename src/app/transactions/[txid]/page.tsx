@@ -28,7 +28,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setTitle, setSubtitle, setTransactionStatus } from "@/lib/redux/store";
-import { setTransactions } from "@/lib/redux/transactionsSlice";
+import { setTransactions, markTransactionAsRead } from "@/lib/redux/transactionsSlice";
 
 export default function TransactionDetailsPage() {
   const [isLoading, setIsLoading] = useState<"release" | "refund" | "approve" | "decline" | "cancel" | null>(null);
@@ -85,6 +85,55 @@ export default function TransactionDetailsPage() {
         setTransaction(serializedTransaction);
         setIsAuthorized(true);
         setIsTxLoading(false);
+
+        // Mark transaction as read when viewing it
+        try {
+          await actor.recipientMarkAsReadBatch([txid as string], principal);
+
+          // Update Redux store to reflect the transaction is now read
+          if (serializedTransaction) {
+            const updatedTransaction = {
+              id: String(serializedTransaction.id),
+              status: String(serializedTransaction.status),
+              title: String(serializedTransaction.title || ''),
+              from: String(serializedTransaction.from), // Convert Principal to string
+              createdAt: String(serializedTransaction.createdAt),
+              confirmedAt: serializedTransaction.confirmedAt ? String(serializedTransaction.confirmedAt) : undefined,
+              cancelledAt: serializedTransaction.cancelledAt ? String(serializedTransaction.cancelledAt) : undefined,
+              refundedAt: serializedTransaction.refundedAt ? String(serializedTransaction.refundedAt) : undefined,
+              releasedAt: serializedTransaction.releasedAt ? String(serializedTransaction.releasedAt) : undefined,
+              readAt: serializedTransaction.readAt ? String(serializedTransaction.readAt) : undefined,
+              bitcoinTransactionHash: serializedTransaction.bitcoinTransactionHash ? String(serializedTransaction.bitcoinTransactionHash) : undefined,
+              bitcoinAddress: serializedTransaction.bitcoinAddress ? String(serializedTransaction.bitcoinAddress) : undefined,
+              to: serializedTransaction.to.map((recipient: any) =>
+                String(recipient.principal) === String(principal)
+                  ? {
+                      principal: String(recipient.principal),
+                      amount: String(recipient.amount),
+                      percentage: String(recipient.percentage),
+                      status: recipient.status,
+                      name: String(recipient.name || ''),
+                      approvedAt: recipient.approvedAt ? String(recipient.approvedAt) : undefined,
+                      declinedAt: recipient.declinedAt ? String(recipient.declinedAt) : undefined,
+                      readAt: new Date().toISOString()
+                    }
+                  : {
+                      principal: String(recipient.principal),
+                      amount: String(recipient.amount),
+                      percentage: String(recipient.percentage),
+                      status: recipient.status,
+                      name: String(recipient.name || ''),
+                      approvedAt: recipient.approvedAt ? String(recipient.approvedAt) : undefined,
+                      declinedAt: recipient.declinedAt ? String(recipient.declinedAt) : undefined,
+                      readAt: recipient.readAt ? String(recipient.readAt) : undefined
+                    }
+              )
+            };
+            dispatch(markTransactionAsRead(updatedTransaction));
+          }
+        } catch (error) {
+          console.error('Failed to mark transaction as read:', error);
+        }
       } catch (err) {
         console.error("err", err);
         toast.error("Transaction not found");
@@ -287,7 +336,7 @@ export default function TransactionDetailsPage() {
           })) : []
         };
         setTransaction(serializedUpdated);
-        
+
         // Also update Redux store to refresh notification badge
         const allTransactions = await actor.getTransactionsPaginated(principal, BigInt(0), BigInt(100)) as { transactions: unknown[] };
         const normalizedTxs = allTransactions.transactions.map((tx: unknown) => {
@@ -456,19 +505,19 @@ export default function TransactionDetailsPage() {
           {statusKey === TRANSACTION_STATUS.PENDING && (
             (() => {
               const isSender = principal && String(transaction.from) === String(principal);
-              
+
               // Check if current user has already approved or declined
-              const currentUserEntry = transaction.to?.find((entry) => 
+              const currentUserEntry = transaction.to?.find((entry) =>
                 String(entry.principal) === String(principal)
               );
               const hasUserActioned = currentUserEntry && (
-                currentUserEntry.approvedAt || 
-                currentUserEntry.declinedAt || 
+                currentUserEntry.approvedAt ||
+                currentUserEntry.declinedAt ||
                 (currentUserEntry.status && Object.keys(currentUserEntry.status)[0] !== "pending")
               );
-              
 
-              
+
+
               const transactionData = {
                 id: transaction.id,
                 status: "pending" as const,

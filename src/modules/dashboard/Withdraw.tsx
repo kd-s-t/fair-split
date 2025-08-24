@@ -9,15 +9,15 @@ import { Typography } from '@/components/ui/typography';
 import { useAuth } from '@/contexts/auth-context';
 import { useUser } from '@/hooks/useUser';
 import { createSplitDappActor } from '@/lib/icp/splitDapp';
-import { withdrawFormSchema } from '@/validation/withdraw';
+import { withdrawFormSchema, createWithdrawSchema } from '@/validation/withdraw';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, ArrowUpRight, Bitcoin, Coins, Info, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import z from 'zod';
 import WithdrawalConfirmation from './WithdrawalConfirmation';
 
-type FormData = z.infer<typeof withdrawFormSchema>;
+type FormData = z.infer<ReturnType<typeof createWithdrawSchema>>;
 
 export default function Withdraw({
   open,
@@ -41,7 +41,7 @@ export default function Withdraw({
     reset,
     setValue
   } = useForm<FormData>({
-    resolver: zodResolver(withdrawFormSchema),
+    resolver: zodResolver(createWithdrawSchema(selectedCurrency)),
     defaultValues: {
       amount: "",
       address: "",
@@ -50,12 +50,17 @@ export default function Withdraw({
     mode: "onChange"
   });
 
+  // Update form validation when currency changes
+  useEffect(() => {
+    reset();
+    setError(null);
+  }, [selectedCurrency, reset]);
+
   const { isAcceptedTerms } = watch();
 
   // Reset form when currency changes
   const handleCurrencyChange = (currency: 'BTC' | 'ICP') => {
     setSelectedCurrency(currency);
-    reset();
     setError(null);
   };
 

@@ -60,6 +60,7 @@ IMPORTANT CURRENCY CONVERSION RULES:
   * ¥1 JPY ≈ 0.00000017 BTC (1 BTC ≈ ¥6,000,000)
 - Always convert fiat amounts to BTC before creating escrows
 - Include the original currency in your response for reference
+- Note: These are approximate rates. The actual conversion will be done using real-time rates in the application.
 
 If the user wants to CREATE an escrow (any mention of sending, transferring, creating, or making payments), respond with JSON:
 {
@@ -110,13 +111,15 @@ EXAMPLES:
 - "transfer €10 to alice and bob" → {"action": "create_escrow", "amount": "0.00027", "recipients": ["alice", "bob"], "originalCurrency": "€10"}
 - "send 0.5 btc to user456" → {"action": "create_escrow", "amount": "0.5", "recipients": ["user456"]}
 - "send $1 to user123, title nice" → {"action": "create_escrow", "amount": "0.000025", "recipients": ["user123"], "originalCurrency": "$1", "title": "nice"}
+- "send $1 to user123, random title" → {"action": "create_escrow", "amount": "0.000025", "recipients": ["user123"], "originalCurrency": "$1", "title": "random title"}
+- "send $5 to user123, my custom title" → {"action": "create_escrow", "amount": "0.000125", "recipients": ["user123"], "originalCurrency": "$5", "title": "my custom title"}
 
 IMPORTANT: 
 - Be very flexible and understand natural language in any format
 - Extract ANY amount mentioned (numbers, decimals, fractions, currency symbols)
 - Extract ANY recipient IDs mentioned (ICP principals, usernames, addresses)
 - Extract ANY Bitcoin address mentioned (starts with 1, 3, or bc1)
-- Extract ANY title mentioned after "title" keyword (e.g., "title nice" → "nice")
+- Extract ANY title mentioned after "title" keyword or at the end of the message (e.g., "title nice" → "nice", "send $1 to user123, random title" → "random title", "send $5 to user123, my custom title" → "my custom title")
 - Don't require specific keywords or formats
 - Understand context and intent, not just exact phrases
 - If someone mentions sending money, creating payments, or transferring funds, treat it as escrow creation
@@ -156,7 +159,8 @@ IMPORTANT:
           type: 'create_escrow',
           amount: parsed.amount,
           recipients: parsed.recipients || [],
-          originalCurrency: parsed.originalCurrency
+          originalCurrency: parsed.originalCurrency,
+          title: parsed.title
         };
       } else if (parsed.action === 'set_bitcoin_address') {
         return {

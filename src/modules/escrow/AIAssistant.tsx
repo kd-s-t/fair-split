@@ -58,8 +58,19 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
 
       if (parsedAction && parsedAction.type === 'create_escrow') {
         // Extract information from the AI parsed action
-        const totalAmount = parseFloat(parsedAction.amount) || 0.03;
+        let totalAmount = parseFloat(parsedAction.amount) || 0.03;
         const recipients = parsedAction.recipients || [];
+
+        // If we have original currency, use real-time conversion instead of AI's static conversion
+        if (parsedAction.originalCurrency) {
+          const currencyMatch = parsedAction.originalCurrency.match(/(\$|€|£|¥)(\d+(?:\.\d{1,2})?)/);
+          if (currencyMatch) {
+            const currencySymbol = currencyMatch[1];
+            const currencyAmount = parseFloat(currencyMatch[2]);
+            // Use real-time conversion
+            totalAmount = parseFloat(await convertCurrencyToBTC(currencyAmount, currencySymbol));
+          }
+        }
 
         // Use custom title if provided, otherwise generate based on recipients
         const title = parsedAction.title || (recipients.length > 0
@@ -203,12 +214,31 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
     // Extract title if provided, otherwise generate based on recipients
     let title = "Payment Split";
 
-    // Look for title pattern: "title <title_text>"
+    // Look for title pattern: "title <title_text>" or words at the end that aren't ICP principals
     const titleMatch = desc.match(/title\s+(\w+)/i);
     if (titleMatch) {
       title = titleMatch[1];
-    } else if (recipients.length > 0) {
-      title = `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`;
+    } else {
+      // Look for words at the end that aren't ICP principals or numbers
+      const words = desc.split(/[,\s]+/).filter(word => word.trim());
+      
+      // Find the last sequence of words that aren't ICP principals
+      let titleWords = [];
+      for (let i = words.length - 1; i >= 0; i--) {
+        const word = words[i];
+        // Check if the word is not an ICP principal (doesn't contain hyphens and is short)
+        if (word && !word.includes('-') && word.length < 20 && !/^\d+$/.test(word)) {
+          titleWords.unshift(word);
+        } else {
+          break; // Stop when we hit an ICP principal or number
+        }
+      }
+      
+      if (titleWords.length > 0) {
+        title = titleWords.join(' ');
+      } else if (recipients.length > 0) {
+        title = `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`;
+      }
     }
 
     return {

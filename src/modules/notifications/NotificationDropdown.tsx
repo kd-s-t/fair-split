@@ -8,10 +8,9 @@ import { Principal } from '@dfinity/principal';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/lib/redux/store';
 import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
-import TransactionDetailsModal from '@/modules/transactions/DetailsModal';
 import type { NormalizedTransaction, EscrowTransaction } from '@/modules/transactions/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateTransactionMessage } from '@/lib/utils';
+import { generateTransactionMessageSync } from '@/lib/utils';
 
 const convertToEscrowTransaction = (tx: NormalizedTransaction): EscrowTransaction => ({
   id: tx.id,
@@ -41,7 +40,6 @@ function getTxId(tx: NormalizedTransaction) {
 export default function TransactionNotificationDropdown({ principalId }: { principalId: string }) {
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const dispatch = useDispatch();
-  const [selectedTx, setSelectedTx] = useState<NormalizedTransaction | null>(null);
 
   const unreadCount = transactions.filter(tx => {
     // Check if current user is a recipient in this transaction
@@ -49,7 +47,9 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       String(entry.principal) === String(principalId)
     );
 
-    return recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null");
+    const isUnread = recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null" || recipientEntry.readAt === "");
+
+    return isUnread;
   }).length;
   
 
@@ -72,35 +72,15 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
       String(entry.principal) === String(principalId)
     );
 
-    if (recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0)) {
+    if (recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null" || recipientEntry.readAt === "")) {
       dispatch(markTransactionAsRead(tx));
     }
 
-    setSelectedTx(tx);
+    // Redirect to single transaction page instead of opening modal
+    window.location.href = `/transactions/${tx.id}`;
   };
 
-  const handleBellClick = async () => {
-    try {
-      const actor = await createSplitDappActor();
-      await actor.markTransactionsAsRead(Principal.fromText(principalId));
-      
-      // Update Redux state to remove badge immediately
-      const updatedTransactions = transactions.map(tx => ({
-        ...tx,
-        to: tx.to.map(recipient => 
-          recipient.principal === principalId 
-            ? { ...recipient, readAt: new Date().toISOString() }
-            : recipient
-        )
-      }));
-      
-      dispatch({ type: 'transactions/setTransactions', payload: updatedTransactions });
-      
 
-    } catch (error) {
-      console.error('Failed to mark transactions as read:', error);
-    }
-  };
 
   return (
     <>
@@ -111,7 +91,6 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
             className="relative text-white hover:text-white transition cursor-pointer w-full h-full flex items-center justify-center"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={handleBellClick}
             animate={bellRing ? {
               rotate: [0, -15, 15, -15, 15, 0],
               scale: [1, 1.2, 1]
@@ -129,7 +108,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
             <AnimatePresence>
               {unreadCount > 0 && (
                 <motion.div
-                  className="absolute top-[21px] right-[6px] min-w-[18px] h-[18px] bg-[#EA2D2D] rounded-full flex items-center justify-center px-1"
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#EA2D2D] rounded-full flex items-center justify-center px-1"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
@@ -175,17 +154,17 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                     transition={{ duration: 0.3, delay: idx * 0.05 }}
                   >
                     <DropdownMenuItem
-                      className={(() => {
-                        const recipientEntry = tx.to.find((entry) =>
-                          String(entry.principal) === String(principalId)
-                        );
-                        return recipientEntry && (recipientEntry.readAt === null || Array.isArray(recipientEntry.readAt) && recipientEntry.readAt.length === 0) ? 'bg-yellow-100 text-black' : '';
-                      })()}
                       onClick={() => handleRowClick(tx)}
                     >
                       <div className="flex flex-col w-full">
-                        <span className="text-sm font-medium text-white">
-                          {generateTransactionMessage(tx, principalId, false)}
+                        <span className={`text-sm ${(() => {
+                          const recipientEntry = tx.to.find((entry) =>
+                            String(entry.principal) === String(principalId)
+                          );
+                          const isUnread = recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null" || recipientEntry.readAt === "");
+                          return isUnread ? 'font-bold text-white' : 'font-medium text-white';
+                        })()}`}>
+                          {generateTransactionMessageSync(tx, principalId, false)}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}
@@ -198,14 +177,6 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      {selectedTx && (
-        <TransactionDetailsModal
-          transaction={convertToEscrowTransaction(selectedTx)}
-          onClose={() => {
-            setSelectedTx(null);
-          }}
-        />
-      )}
     </>
   );
 } 

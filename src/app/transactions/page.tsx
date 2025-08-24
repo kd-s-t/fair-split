@@ -57,6 +57,7 @@ const convertToNormalizedTransactions = (transactions: unknown[]): NormalizedTra
 import { useRouter } from "next/navigation";
 import {
   markAllAsRead,
+  markTransactionAsRead,
   setTransactions,
 } from "../../lib/redux/transactionsSlice";
 
@@ -177,12 +178,7 @@ export default function TransactionsPage() {
     }
   }, [localTransactions, principal]);
 
-  // Mark unread transactions as read when transactions are loaded
-  useEffect(() => {
-    if (localTransactions.length > 0 && principal) {
-      markUnreadTransactionsAsRead();
-    }
-  }, [localTransactions, principal, markUnreadTransactionsAsRead]);
+
 
 
   function isPendingApproval(tx: NormalizedTransaction): boolean {
@@ -225,9 +221,8 @@ export default function TransactionsPage() {
 
   async function handleRowClick(tx: NormalizedTransaction) {
     if (!principal) return;
-    const actor = await createSplitDappActor();
-    await actor.markTransactionsAsRead(principal);
-    dispatch(markAllAsRead());
+    // Only mark this specific transaction as read, not all transactions
+    dispatch(markTransactionAsRead(tx));
     router.push(`/transactions/${tx.id}`);
   }
 

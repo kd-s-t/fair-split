@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: 'standalone', // Commented out for dfx compatibility
+  output: 'standalone', // Required for Docker production builds
   
   // Suppress hydration warnings in development
   reactStrictMode: false,

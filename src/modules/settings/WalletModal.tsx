@@ -16,7 +16,18 @@ import { Button } from "@/components/ui/button";
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
   const { icpBalance, ckbtcAddress } = useUser();
 
+  // Defensive check for required props
+  if (!onClose || typeof onClose !== 'function') {
+    console.error('WalletModal: onClose prop is missing or invalid');
+    return null;
+  }
+
   const copyToClipboard = async (text: string) => {
+    if (!text || typeof text !== 'string') {
+      console.error('Invalid text provided to copyToClipboard');
+      return;
+    }
+    
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Copied to clipboard!');
@@ -26,16 +37,10 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
     }
   };
 
-  const handleClose = () => {
-    try {
-      onClose();
-    } catch (error) {
-      console.error('Error closing wallet modal:', error);
-    }
-  };
+
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="!bg-[#212121] border border-[#303333] !w-[540px] !max-w-[90vw] max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Wallet</DialogTitle>
@@ -108,7 +113,7 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
         </div>
         <DialogFooter className="sm:justify-start">
           <DialogClose asChild>
-            <Button type="button" variant="default" onClick={handleClose}>
+            <Button type="button" variant="default">
               Done
             </Button>
           </DialogClose>

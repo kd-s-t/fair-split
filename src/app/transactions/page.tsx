@@ -267,7 +267,7 @@ export default function TransactionsPage() {
               placeholder="Search transactions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 !bg-transparent !rounded-[10px] !border-[#303434]"
+              className="flex-1 pl-10 !bg-transparent !rounded-[10px] !border-[#303434]"
             />
           </div>
 
@@ -275,7 +275,7 @@ export default function TransactionsPage() {
             value={transactionsFilter}
             onValueChange={(value) => setTransactionsFilter(value)}
           >
-            <SelectTrigger className="px-4 py-5 border-[#303434] !rounded-[10px] min-w-[156px]">
+            <SelectTrigger className="px-4 py-5 border-[#303434] !rounded-[10px] max-w-[156px]">
               <SelectValue placeholder="All transactions" />
             </SelectTrigger>
             <SelectContent className="bg-[#212121] border-[#303333]">
@@ -292,7 +292,7 @@ export default function TransactionsPage() {
             value={statusFilter}
             onValueChange={(value) => setStatusFilter(value)}
           >
-            <SelectTrigger className="px-4 py-5 !rounded-[10px] border-[#303434] min-w-[156px]">
+            <SelectTrigger className="px-4 py-5 !rounded-[10px] border-[#303434] max-w-[156px]">
               <SelectValue placeholder="All status" />
             </SelectTrigger>
             <SelectContent>

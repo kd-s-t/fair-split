@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import transactionsReducer from './transactionsSlice';
 import userReducer from './userSlice';
 import escrowReducer from './escrowSlice';
+import withdrawReducer from './withdrawSlice';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -10,6 +11,7 @@ const initialLayoutState = {
   title: '',
   subtitle: '',
   transactionStatus: '',
+  isWithdrawConfirmed: false,
 };
 
 const layoutSlice = createSlice({
@@ -28,6 +30,9 @@ const layoutSlice = createSlice({
     setTransactionStatus(state, action) {
       state.transactionStatus = action.payload;
     },
+    setWithdrawConfirmed(state, action) {
+      state.isWithdrawConfirmed = action.payload;
+    },
   },
 });
 
@@ -39,6 +44,7 @@ export const store = configureStore({
     transactions: transactionsReducer,
     user: userReducer,
     escrow: escrowReducer,
+    withdraw: withdrawReducer,
     layout: layoutReducer,
   },
 });

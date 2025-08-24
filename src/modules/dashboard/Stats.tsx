@@ -42,14 +42,14 @@ async function ckbtcToUsd(ckbtc: number) {
     // Use real-time CoinGecko API
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
     const data = await response.json();
-    
+
     if (data.bitcoin && data.bitcoin.usd) {
       return ckbtc * data.bitcoin.usd;
     }
   } catch (error) {
     console.warn('CoinGecko API failed:', error);
   }
-  
+
   // Fallback to current market rate
   return ckbtc * 114764.80;
 }
@@ -277,8 +277,6 @@ export default function DashboardStats({ transactions }: { transactions: Normali
         </Typography>
       </div>
 
-
-
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         <StatCard
           label="Total escrows"
@@ -311,10 +309,7 @@ export default function DashboardStats({ transactions }: { transactions: Normali
         onClose={() => handleWithdraw(false)}
       />
 
-      <WithdrawalConfirmation
-        open={isWithdrawOpen}
-        onClose={() => handleWithdraw(false)}
-      />
+      <WithdrawalConfirmation />
 
     </React.Fragment>
   );

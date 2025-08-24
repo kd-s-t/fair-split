@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @tailwind base;
@@ -27,9 +28,6 @@
 .container-blue {
   @apply p-3 rounded-[10px] border bg-[#007AFF]/30 border-[#007AFF];
 }
-
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --background: #0D0D0D;

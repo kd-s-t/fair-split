@@ -114,6 +114,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
       let parsedAction: ParsedAction = null;
+      let wasAdjusted = false;
 
       // Check if API key is valid and properly configured
       const isValidApiKey = apiKey &&
@@ -126,6 +127,21 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       if (isValidApiKey) {
         try {
           parsedAction = await parseUserMessageWithAI(content, apiKey);
+          console.log('DEBUG: AI parser result:', parsedAction);
+          
+          // Apply balance adjustment to AI parser result if needed
+          if (parsedAction && parsedAction.type === 'create_escrow' && ckbtcBalance) {
+            const userBalance = parseFloat(ckbtcBalance);
+            const requestedAmount = parseFloat(parsedAction.amount);
+            
+            console.log('DEBUG: AI parser balance check - userBalance:', userBalance, 'requestedAmount:', requestedAmount);
+            
+            if (requestedAmount > userBalance) {
+              console.log('DEBUG: AI parser adjusting amount from', requestedAmount, 'to', userBalance);
+              parsedAction.amount = userBalance.toFixed(8);
+              wasAdjusted = true;
+            }
+          }
         } catch (aiError) {
           console.warn('AI parser failed, falling back to local parser:', aiError);
           // Don't show error message to user, just continue to local parser
@@ -135,28 +151,147 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
       }
 
       if (!parsedAction) {
-        // Fallback to local parsing logic
+        // Enhanced fallback to local parsing logic - more intelligent like ChatGPT
         const lowerContent = content.toLowerCase();
         
-        // Check for escrow creation
-        if (lowerContent.includes('send') || lowerContent.includes('transfer') || lowerContent.includes('create')) {
-          const amountMatch = content.match(/(\d+(?:\.\d+)?)\s*(?:btc|bitcoin|usd|\$|€|£|¥)/i);
-          const recipientMatch = content.match(/(?:to|for)\s+([a-zA-Z0-9_-]+)/i);
+        // Check for escrow creation with more flexible patterns
+        if (lowerContent.includes('send') || lowerContent.includes('transfer') || lowerContent.includes('create') || 
+            lowerContent.includes('pay') || lowerContent.includes('split') || lowerContent.includes('give')) {
           
-          if (amountMatch && recipientMatch) {
-            const amount = amountMatch[1];
-            const recipient = recipientMatch[1];
+          // Enhanced amount matching - handle more currency formats
+          const amountMatch = content.match(/(?:(\d+(?:\.\d+)?)\s*(?:btc|bitcoin|usd|\$|€|£|¥)|(?:btc|bitcoin|usd|\$|€|£|¥)\s*(\d+(?:\.\d+)?))/i);
+          
+          // Enhanced recipient matching to handle multiple IDs with spaces and commas
+          let recipients: string[] = [];
+          let title: string | undefined;
+          
+          // Try multiple patterns for recipients
+          const patterns = [
+            // "to these people" followed by IDs (but not including "with" or "title" keywords)
+            /(?:to\s+these\s+people?)\s*([a-zA-Z0-9\-\s,]+?)(?:\s+with\s+|\s+title\s+|\s+for\s+|\s*$)/i,
+            // "to" followed by IDs (but not including "with" or "title" keywords)
+            /(?:to|for)\s+([a-zA-Z0-9\-\s,]+?)(?:\s+with\s+|\s+title\s+|\s*$)/i,
+            // "between" followed by IDs
+            /(?:between|among)\s+([a-zA-Z0-9\-\s,]+)/i,
+            // "split between" followed by IDs
+            /(?:split\s+between)\s+([a-zA-Z0-9\-\s,]+)/i
+          ];
+          
+          for (const pattern of patterns) {
+            const match = content.match(pattern);
+            if (match) {
+              // Split by comma and clean up each ID, preserving spaces within IDs
+              recipients = match[1]
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+              break;
+            }
+          }
+          
+          // Try to extract title from "with" keyword first (more specific)
+          const withTitleMatch = content.match(/with\s+([a-zA-Z0-9\s]+)(?:\s*$)/i);
+          if (withTitleMatch) {
+            const extractedTitle = withTitleMatch[1].trim();
+            // If the user asked for a random title, generate one
+            if (extractedTitle.toLowerCase() === 'random title') {
+              const titles = [
+                "Freelance Project Payment",
+                "Design Project Milestone", 
+                "Consulting Services Escrow",
+                "Content Creation Payment",
+                "Software Development Phase 1",
+                "Marketing Campaign Deposit",
+                "Project Management Fee",
+                "Technical Support Payment",
+                "Creative Services Escrow",
+                "Business Consulting Fee"
+              ];
+              title = titles[Math.floor(Math.random() * titles.length)];
+            } else {
+              title = extractedTitle;
+            }
+          } else {
+            // Fallback to "for" or "title" keywords
+            const titleMatch = content.match(/(?:for|title)\s+([a-zA-Z0-9\s]+)(?:\s|$)/i);
+            if (titleMatch) {
+              const extractedTitle = titleMatch[1].trim();
+              if (extractedTitle.toLowerCase() === 'random title') {
+                const titles = [
+                  "Freelance Project Payment",
+                  "Design Project Milestone", 
+                  "Consulting Services Escrow",
+                  "Content Creation Payment",
+                  "Software Development Phase 1",
+                  "Marketing Campaign Deposit",
+                  "Project Management Fee",
+                  "Technical Support Payment",
+                  "Creative Services Escrow",
+                  "Business Consulting Fee"
+                ];
+                title = titles[Math.floor(Math.random() * titles.length)];
+              } else {
+                title = extractedTitle;
+              }
+            }
+          }
+          
+          if (amountMatch && recipients.length > 0) {
+            // Handle both number-first and currency-first formats
+            const amount = amountMatch[1] || amountMatch[2];
+            
+            // Extract currency symbol from the full match
+            const fullMatch = amountMatch[0];
+            let currency = '$'; // Default to USD
+            if (fullMatch.includes('€')) currency = '€';
+            else if (fullMatch.includes('£')) currency = '£';
+            else if (fullMatch.includes('¥')) currency = '¥';
+            else if (fullMatch.includes('btc') || fullMatch.includes('bitcoin')) currency = 'BTC';
+            
+            const convertedAmount = await convertCurrencyToBTC(parseFloat(amount), currency);
+            
+            // Check if the converted amount exceeds the user's balance
+            let finalAmount = convertedAmount;
+            let wasAdjusted = false;
+            if (ckbtcBalance) {
+              const userBalance = parseFloat(ckbtcBalance);
+              const requestedAmount = parseFloat(convertedAmount);
+              
+              console.log('DEBUG: Balance check initiated.');
+              console.log('DEBUG: ckbtcBalance (raw):', ckbtcBalance);
+              console.log('DEBUG: userBalance (parsed):', userBalance);
+              console.log('DEBUG: convertedAmount (from chat):', convertedAmount);
+              console.log('DEBUG: requestedAmount (parsed):', requestedAmount);
+
+              if (requestedAmount > userBalance) {
+                console.log('DEBUG: Requested amount (', requestedAmount, ') exceeds user balance (', userBalance, '). Adjusting amount.');
+                finalAmount = userBalance.toFixed(8);
+                wasAdjusted = true;
+                console.log('DEBUG: Final amount adjusted to:', finalAmount);
+              } else {
+                console.log('DEBUG: Requested amount (', requestedAmount, ') is within user balance (', userBalance, '). No adjustment needed.');
+              }
+            } else {
+              console.log('DEBUG: ckbtcBalance is not available, skipping balance check.');
+            }
+            
             parsedAction = {
               type: 'create_escrow',
-              amount: convertCurrencyToBTC(parseFloat(amount), content),
-              recipients: [recipient],
-              originalCurrency: amountMatch[0]
+              amount: finalAmount,
+              recipients: recipients,
+              originalCurrency: amountMatch[0],
+              title: title
             };
+            console.log('DEBUG: Fallback parser created action:', parsedAction);
+          } else {
+            console.log('Fallback parser could not parse:', { amountMatch, recipients, content });
           }
         }
         
-        // Check for approval suggestions
-        if (lowerContent.includes('approve') || lowerContent.includes('decline') || lowerContent.includes('suggestion')) {
+        // Check for approval suggestions with more patterns
+        if (lowerContent.includes('approve') || lowerContent.includes('decline') || 
+            lowerContent.includes('suggestion') || lowerContent.includes('recommend') ||
+            lowerContent.includes('should i') || lowerContent.includes('what should')) {
           parsedAction = { type: 'approval_suggestion' };
         }
       }
@@ -167,7 +302,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         icpBalance,
         ckbtcAddress,
         ckbtcBalance
-      });
+      }, wasAdjusted);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

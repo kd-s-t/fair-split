@@ -203,7 +203,7 @@ const Form = ({ form }: FormProps) => {
             <div className="flex items-center justify-between">
               <Label className="text-[#A1A1A1]">BTC amount</Label>
               <span className="text-white text-sm">
-                {ckbtcBalance ? `${(Number(ckbtcBalance) / 1e8).toFixed(8)} BTC` : "0.00000000 BTC"}
+                {ckbtcBalance ? `${ckbtcBalance} BTC` : "0.00000000 BTC"}
               </span>
             </div>
             <Input

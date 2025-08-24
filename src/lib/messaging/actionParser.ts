@@ -66,7 +66,10 @@ export function parseUserMessage(message: string): ParsedAction {
     /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
     
     // "send $1 to this people: id1, id2, id3" (more flexible format)
-    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:this\s+people?|these\s+people?|recipients?):\s*([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
+    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:this\s+people?|these\s+people?|recipients?):?\s*([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
+    
+    // "send $5 to these people id1, id2, id3" (without colon)
+    /(?:send|transfer|create|make).*?(\$?\d*\.?\d+).*?(?:to|for).*?(?:these\s+people?)\s+([a-zA-Z0-9\-]+(?:\s*,\s*[a-zA-Z0-9\-]+)*)/i,
   ];
   
   for (const pattern of escrowPatterns) {
@@ -289,7 +292,7 @@ export function generateActionResponse(action: ParsedAction, userData?: {
   icpBalance?: string | null;
   ckbtcBalance?: string | null;
   ckbtcAddress?: string | null;
-}): string {
+}, adjustedAmount?: boolean): string {
   if (!action) {
     return "I can only help with four specific actions:\n\n1. **Create Escrow**: Try saying:\n   - 'send 2 btc to [recipient-id]'\n   - 'send $50 to [recipient-id]'\n   - 'create escrow 1.5 btc for [recipient-ids]'\n   - 'transfer €100 to [recipient]'\n\n2. **Set Bitcoin Address**: Try saying:\n   - 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n   - 'my bitcoin address is 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'\n   - 'use bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh as my bitcoin address'\n\n3. **Account Queries**: Try saying:\n   - 'what is my principal?'\n   - 'show my ICP balance'\n   - 'what's my Bitcoin address?'\n   - 'tell me my account info'\n\n4. **Approval Suggestions**: Try saying:\n   - 'suggest approvals for my escrows'\n   - 'should I approve or decline?'\n   - 'give me approval recommendations'\n\nPlease rephrase your request using one of these formats.";
   }
@@ -300,7 +303,13 @@ export function generateActionResponse(action: ParsedAction, userData?: {
       const recipientText = recipientCount === 1 ? 'recipient' : 'recipients';
       
       if (action.originalCurrency) {
-        return `I'll help you create an escrow for ${action.originalCurrency} (converted to ${action.amount} BTC) with ${recipientCount} ${recipientText}. Redirecting you to the escrow creation form...`;
+        if (adjustedAmount && userData?.ckbtcBalance) {
+          const titleText = action.title ? ` titled "${action.title}"` : '';
+          return `I'll help you create an escrow for ${action.amount} BTC (adjusted from ${action.originalCurrency} due to your available balance of ${userData.ckbtcBalance} BTC) with ${recipientCount} ${recipientText}${titleText}. Redirecting you to the escrow creation form...`;
+        } else {
+          const titleText = action.title ? ` titled "${action.title}"` : '';
+          return `I'll help you create an escrow for ${action.originalCurrency} (converted to ${action.amount} BTC) with ${recipientCount} ${recipientText}${titleText}. Redirecting you to the escrow creation form...`;
+        }
       } else {
         return `I'll help you create an escrow for ${action.amount} BTC with ${recipientCount} ${recipientText}. Redirecting you to the escrow creation form...`;
       }

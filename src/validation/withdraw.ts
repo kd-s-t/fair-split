@@ -131,8 +131,8 @@ export const createWithdrawSchema = (selectedCurrency: 'ICP' | 'BTC') => {
     .min(1, "Address is required")
     .refine((address) => validateAddressType(address, selectedCurrency), {
       message: selectedCurrency === 'ICP'
-        ? "Please enter a valid ICP Principal ID (not a Bitcoin address)"
-        : "Please enter a valid Bitcoin address (not an ICP Principal ID)"
+        ? "Please enter a valid ICP Principal ID"
+        : "Please enter a valid Bitcoin address"
     }),
     isAcceptedTerms: z.boolean()
       .refine((val) => val === true, {

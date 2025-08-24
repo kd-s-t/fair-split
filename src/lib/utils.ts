@@ -106,10 +106,23 @@ export const formatBTC = (satoshis: number | string): string => {
  * @returns Promise<BTC amount as string with 8 decimal places>
  */
 export const convertCurrencyToBTC = async (amount: number, currency: string): Promise<string> => {
+  // If already in BTC, return as is
+  if (currency === 'BTC' || currency === 'btc' || currency === 'bitcoin') {
+    return amount.toFixed(8);
+  }
+
   // For USD, use real-time rate
   if (currency === '$' || currency === 'USD') {
-    const btcAmount = await usdToBtc(amount);
-    return btcAmount.toFixed(8);
+    try {
+      const btcAmount = await usdToBtc(amount);
+      return btcAmount.toFixed(8);
+    } catch (error) {
+      console.error('USD conversion failed:', error);
+      // Fallback to approximate rate
+      const fallbackRate = 0.000025; // $1 ≈ 0.000025 BTC
+      const btcAmount = amount * fallbackRate;
+      return btcAmount.toFixed(8);
+    }
   }
 
   // For other currencies, use approximate rates (these could also be made real-time)

@@ -92,9 +92,17 @@ const TransactionForm = () => {
         const chatData = sessionStorage.getItem('splitsafe_chat_data');
         if (chatData) {
           const data = JSON.parse(chatData);
+          console.log('DEBUG: TransactionForm received chat data:', data);
+          
+          // Populate title if provided
+          if (data.title) {
+            console.log('DEBUG: Setting title to:', data.title);
+            setValue("title", data.title);
+          }
           
           // Populate amount if provided
           if (data.amount) {
+            console.log('DEBUG: Setting btcAmount to:', data.amount);
             setValue("btcAmount", data.amount);
           }
           

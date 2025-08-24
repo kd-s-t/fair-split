@@ -20,7 +20,8 @@ export function handleEscrowCreation(action: EscrowCreateAction): NavigationActi
     path: '/escrow',
     data: {
       amount: action.amount,
-      recipients: action.recipients
+      recipients: action.recipients,
+      title: action.title
     }
   };
 }

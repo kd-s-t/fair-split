@@ -204,7 +204,9 @@ export default function TransactionsPage() {
     const matchesSearch = tx.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tx.id?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || tx.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesTransaction = transactionsFilter === 'all' || getTransactionCategory(tx) === transactionsFilter;
+
+    return matchesSearch && matchesStatus && matchesTransaction;
   });
 
   const currentTransactions = filteredTransactions;
@@ -254,9 +256,9 @@ export default function TransactionsPage() {
             </SelectTrigger>
             <SelectContent className="bg-[#212121] border-[#303333]">
               <SelectGroup>
-                <SelectItem value="all" className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]">All transactions</SelectItem>
+                <SelectItem value="all" className="px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]">All transactions</SelectItem>
                 {availableCategories.map((cat, index) => <SelectItem key={index} className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]" value={cat}>
-                  {cat}
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </SelectItem>)}
               </SelectGroup>
             </SelectContent>
@@ -266,14 +268,14 @@ export default function TransactionsPage() {
             value={statusFilter}
             onValueChange={(value) => setStatusFilter(value)}
           >
-            <SelectTrigger className="px-4 py-5 !rounded-[10px] border-[#303434] max-w-[156px]">
+            <SelectTrigger className="px-4 py-5 !rounded-[10px] border-[#303434] max-w-[156px] focus:outline-none">
               <SelectValue placeholder="All status" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup className="bg-[#212121] border-[#303333]">
-                <SelectItem value="all" className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]">All status</SelectItem>
-                {availableStatuses.map((status, index) => <SelectItem key={index} className="capitalize px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]" value={status}>
-                  {status}
+                <SelectItem value="all" className="px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]">All status</SelectItem>
+                {availableStatuses.map((status, index) => <SelectItem key={index} className="px-2 py-1.5 cursor-pointer hover:bg-[#3C3C3C] focus:bg-[#3C3C3C] data-[highlighted]:bg-[#3C3C3C] rounded-[10px]" value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
                 </SelectItem>)}
               </SelectGroup>
             </SelectContent>

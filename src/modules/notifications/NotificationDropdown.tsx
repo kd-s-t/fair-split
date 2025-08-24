@@ -9,7 +9,7 @@ import type { RootState } from '@/lib/redux/store';
 import { markTransactionAsRead } from '@/lib/redux/transactionsSlice';
 import type { NormalizedTransaction } from '@/modules/transactions/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateTransactionMessageSync } from '@/lib/utils';
+// import { generateTransactionMessageSync } from '@/lib/utils';
 
 
 
@@ -31,7 +31,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
 
     return isUnread;
   }).length;
-  
+
 
   const [bellRing, setBellRing] = useState(false);
 
@@ -104,7 +104,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto" side="left" align="start">
           <motion.div
-                            className="px-3 py-2 font-semibold border-b border-[#424444]"
+            className="px-3 py-2 font-semibold border-b border-[#424444]"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -144,7 +144,7 @@ export default function TransactionNotificationDropdown({ principalId }: { princ
                           const isUnread = recipientEntry && (recipientEntry.readAt === null || recipientEntry.readAt === undefined || recipientEntry.readAt === "null" || recipientEntry.readAt === "");
                           return isUnread ? 'font-bold text-white' : 'font-medium text-white';
                         })()}`}>
-                          {generateTransactionMessageSync(tx, principalId, false)}
+                          {/* {generateTransactionMessageSync(tx, principalId, false)} */}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(Number(tx.createdAt) / 1_000_000).toLocaleString()}

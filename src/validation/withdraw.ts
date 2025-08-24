@@ -109,7 +109,7 @@ export const withdrawFormSchema = z.object({
     .min(1, "Address is required")
     .min(26, "Address is too short")
     .max(100, "Address is too long")
-    .refine((val) => {
+    .refine(() => {
       // This will be refined further based on the selected currency
       return true;
     }, "Please enter a valid address"),

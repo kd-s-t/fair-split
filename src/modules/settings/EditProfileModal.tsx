@@ -50,14 +50,26 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
       dispatch(setUserName(nameInput));
       onClose();
       if (onNameSaved) onNameSaved();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error("Failed to update profile");
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleClose = () => {
+    if (!isSaving) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="!bg-[#212121] border border-[#303333] !w-[456px] !max-w-[90vw] max-h-[90vh] overflow-hidden">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent 
+        className="!bg-[#212121] border border-[#303333] !w-[456px] !max-w-[90vw] max-h-[90vh] overflow-hidden"
+        showCloseButton={true}
+      >
         <DialogHeader>
           <DialogTitle>Edit profile</DialogTitle>
           <DialogDescription className="text-[#A1A1AA]">

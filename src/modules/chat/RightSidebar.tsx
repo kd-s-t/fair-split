@@ -299,6 +299,33 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           console.log('DEBUG: Fallback parser detected help decide escrows');
           parsedAction = { type: 'help_decide_escrows' };
         }
+        
+        // Check for query patterns
+        if (lowerContent.includes('principal') || lowerContent.includes('id') || lowerContent.includes('identity')) {
+          console.log('DEBUG: Fallback parser detected principal query');
+          parsedAction = { type: 'query', query: 'principal' };
+        } else if (lowerContent.includes('icp') && lowerContent.includes('balance')) {
+          console.log('DEBUG: Fallback parser detected ICP balance query');
+          parsedAction = { type: 'query', query: 'icp_balance' };
+        } else if ((lowerContent.includes('btc') || lowerContent.includes('bitcoin')) && lowerContent.includes('balance')) {
+          console.log('DEBUG: Fallback parser detected BTC balance query');
+          parsedAction = { type: 'query', query: 'btc_balance' };
+        } else if ((lowerContent.includes('btc') || lowerContent.includes('bitcoin')) && lowerContent.includes('address')) {
+          console.log('DEBUG: Fallback parser detected BTC address query');
+          parsedAction = { type: 'query', query: 'btc_address' };
+        } else if (lowerContent.includes('sei') && lowerContent.includes('address')) {
+          console.log('DEBUG: Fallback parser detected SEI address query');
+          parsedAction = { type: 'query', query: 'sei_address' };
+        } else if (lowerContent.includes('sei') && lowerContent.includes('balance')) {
+          console.log('DEBUG: Fallback parser detected SEI balance query');
+          parsedAction = { type: 'query', query: 'sei_balance' };
+        } else if (lowerContent.includes('nickname')) {
+          console.log('DEBUG: Fallback parser detected nickname query');
+          parsedAction = { type: 'query', query: 'nickname' };
+        } else if (lowerContent.includes('account') || lowerContent.includes('info') || lowerContent.includes('information')) {
+          console.log('DEBUG: Fallback parser detected general account query');
+          parsedAction = { type: 'query', query: 'all' };
+        }
       }
 
       // Generate response based on parsed action
@@ -349,6 +376,10 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           case 'navigate':
             navigation = handleNavigation(parsedAction);
             break;
+          case 'query':
+            // Query actions don't need navigation, they just return information
+            // The response is already generated and displayed above
+            break;
         }
         
         if (navigation) {
@@ -390,7 +421,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [principal, icpBalance, ckbtcAddress, ckbtcBalance]);
+  }, [principal, icpBalance, ckbtcAddress, ckbtcBalance, seiAddress, seiBalance, name]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

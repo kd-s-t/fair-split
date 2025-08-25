@@ -239,7 +239,7 @@ IMPORTANT:
           destination: parsed.destination
         };
       }
-    } catch (parseError) {
+    } catch {
       console.warn('Failed to parse AI response as JSON. Falling back to local parser.');
       console.debug('Raw AI response:', content);
     }

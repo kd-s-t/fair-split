@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { AuthClient } from '@dfinity/auth-client'
 import { Principal } from '@dfinity/principal'
 import { useDispatch } from 'react-redux'
-import { clearUser, setUser, setCkbtcBalance, setUserName } from '../lib/redux/userSlice'
+import { clearUser, setUser, setCkbtcBalance, setUserName, setIcpBalance, setSeiBalance, setCkbtcAddress, setSeiAddress } from '../lib/redux/userSlice'
 import { setTransactions } from '../lib/redux/transactionsSlice'
 import { createSplitDappActor } from '@/lib/icp/splitDapp'
 import type { NormalizedTransaction } from '@/modules/transactions/types'
@@ -29,6 +29,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserData = useCallback(async (principalObj: Principal) => {
     try {
       const actor = await createSplitDappActor()
+
+      // Fetch ICP Balance
+      try {
+        const icpBalanceResult = await actor.getBalance(principalObj) as bigint
+        const formattedIcp = (Number(icpBalanceResult) / 1e8).toFixed(8)
+        dispatch(setIcpBalance(formattedIcp))
+      } catch (error) {
+        console.error('🔄 Error fetching ICP balance:', error)
+        dispatch(setIcpBalance(null))
+      }
 
       // Fetch cKBTC Balance
       try {
@@ -58,6 +68,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         console.error('🔄 Error fetching user name:', error)
         dispatch(setUserName(null))
+      }
+
+      // Fetch SEI Balance
+      try {
+        const seiBalanceResult = await actor.getSeiBalance(principalObj) as { ok: number } | { err: string }
+        if ('ok' in seiBalanceResult) {
+          const formattedSei = (Number(seiBalanceResult.ok) / 1e6).toFixed(6)
+          dispatch(setSeiBalance(formattedSei))
+        } else {
+          console.error('🔄 Failed to get SEI balance:', seiBalanceResult.err)
+          dispatch(setSeiBalance(null))
+        }
+      } catch (error) {
+        console.error('🔄 Error fetching SEI balance:', error)
+        dispatch(setSeiBalance(null))
+      }
+
+      // Fetch Bitcoin Address
+      try {
+        const btcAddressResult = await actor.getOrRequestCkbtcWallet() as { ok: { btcAddress: string } } | { err: string }
+        if ('ok' in btcAddressResult) {
+          dispatch(setCkbtcAddress(btcAddressResult.ok.btcAddress))
+        } else {
+          console.error('🔄 Failed to get Bitcoin address:', btcAddressResult.err)
+          dispatch(setCkbtcAddress(null))
+        }
+      } catch (error) {
+        console.error('🔄 Error fetching Bitcoin address:', error)
+        dispatch(setCkbtcAddress(null))
+      }
+
+      // Fetch SEI Address
+      try {
+        const seiAddressResult = await actor.getOrRequestSeiWallet() as { ok: { seiAddress: string } } | { err: string }
+        if ('ok' in seiAddressResult) {
+          dispatch(setSeiAddress(seiAddressResult.ok.seiAddress))
+        } else {
+          console.error('🔄 Failed to get SEI address:', seiAddressResult.err)
+          dispatch(setSeiAddress(null))
+        }
+      } catch (error) {
+        console.error('🔄 Error fetching SEI address:', error)
+        dispatch(setSeiAddress(null))
       }
 
 

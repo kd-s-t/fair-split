@@ -145,12 +145,7 @@ export default function TransactionsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const refreshIconRef = useRef<HTMLButtonElement>(null);
 
-  // Temporary debug button to force show suggestions
-  const forceShowSuggestions = () => {
-    console.log('DEBUG: Force showing suggestions');
-    setShowSuggestions(true);
-    console.log('DEBUG: showSuggestions set to true');
-  };
+
 
   useEffect(() => {
     if (transactions && transactions.length > 0) {
@@ -202,7 +197,7 @@ export default function TransactionsPage() {
       window.removeEventListener('force-show-suggestions', handleForceShow);
       clearInterval(interval);
     };
-  }, []); // Remove showSuggestions from dependencies to prevent infinite loop
+  }, [showSuggestions]); // Add showSuggestions to dependencies
 
   const availableCategories = Array.from(new Set(localTransactions.map(tx => getTransactionCategory(tx))));
   const availableStatuses = Array.from(new Set(localTransactions.map(tx => tx.status)));

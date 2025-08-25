@@ -6,7 +6,6 @@ export default function DocumentTitle() {
   useEffect(() => {
     // Set the document title based on environment
     const isDevelopment = process.env.NODE_ENV === 'development'
-    const isProduction = process.env.NODE_ENV === 'production'
     
     if (isDevelopment) {
       document.title = 'SafeSplit - Development'

@@ -8,7 +8,7 @@ import { Principal } from "@dfinity/principal";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+
 
 type Recipient = {
   principal: string;
@@ -26,7 +26,6 @@ type FormData = {
 export function useEscrowActions(editTxId?: string) {
   const { principal, authClient } = useAuth();
   const dispatch = useDispatch();
-  const router = useRouter();
 
   const updateBalance = useCallback(async () => {
     if (principal && authClient) {
@@ -246,7 +245,7 @@ export function useEscrowActions(editTxId?: string) {
       }
     },
 
-    [principal, dispatch, fetchAndStoreTransactions, updateBalance, router]
+    [principal, dispatch, fetchAndStoreTransactions, updateBalance]
   );
 
   const updateEscrow = useCallback(

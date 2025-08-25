@@ -1,6 +1,6 @@
 "use client";
 
-import { Bitcoin, UsersRound, Zap, CircleCheckBig, CircleAlert, Shield, ChevronRight } from "lucide-react";
+import { Bitcoin, UsersRound, Zap, CircleCheckBig, CircleAlert, Shield } from "lucide-react";
 import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 

@@ -195,14 +195,10 @@ Your SafeSplit app is now live on the Internet Computer mainnet!
 - **ckbtc_ledger**: `el3ll-yaaaa-aaaai-q322a-cai` (Bitcoin ledger)
 - **ckbtc_minter**: `em2n7-vyaaa-aaaai-q322q-cai` (Bitcoin minter)
 
-**Access Your App:**
+**Access our App:**
 - **🌐 Live Website**: **[https://thesplitsafe.com/](https://thesplitsafe.com/)** (SSL-secured production site)
-- **IC URL**: `https://ecyax-oiaaa-aaaai-q323q-cai.ic0.app`
-- **Custom Domain**: `thesplitsafe.com` (live with SSL certificates)
-
-**⚠️ Important Note:** The live site requires Bitcoin (cKBTC) balance to perform escrow transactions. Without Bitcoin balance, you'll be able to explore the interface and view features, but won't be able to create or participate in escrow transactions. To test full functionality, you'll need to obtain testnet cKBTC or use the development environment with test balances.
-
-**💡 Need BTC for testing?** Email [kendantinio@gmail.com](mailto:kendantinio@gmail.com) with your Principal ID and we'll send you test BTC!
+- **⚠️ Important Note:** The live site requires Bitcoin (cKBTC) balance to perform escrow transactions. Without Bitcoin balance, you'll be able to explore the interface and view features, but won't be able to create or participate in escrow transactions. To test full functionality, you'll need to obtain testnet cKBTC or use the development environment with test balances.
+- **💡 Need BTC for testing?** Email [kendantinio@gmail.com](mailto:kendantinio@gmail.com) with your Principal ID and we'll send you test BTC!
 
 ### **v1 Features Available:**
 

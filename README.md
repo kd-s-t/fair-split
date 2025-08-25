@@ -28,19 +28,6 @@ Senders can lock cKBTC into escrow, define payout rules, and automatically relea
 
 Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, gaming payments, DeFi integrations, and any scenarios requiring trust-minimized Bitcoin escrow with fast settlement options.
 
-## 🌐 **Live Website**
-
-**🚀 [SplitSafe is now live!](https://thesplitsafe.com/)**
-
-Visit our production website at **[https://thesplitsafe.com/](https://thesplitsafe.com/)** to experience the full SplitSafe platform with SSL-secured connections and production-ready features.
-
-**⚠️ Important Note:** The live site requires Bitcoin (cKBTC) balance to perform escrow transactions. Without Bitcoin balance, you'll be able to explore the interface and view features, but won't be able to create or participate in escrow transactions. To test full functionality, you'll need to obtain testnet cKBTC or use the development environment with test balances.
-
-**Email your request**:
-   - **Email**: [kendantinio@gmail.com](mailto:kendantinio@gmail.com)
-   - **Subject**: "BTC Testing Request - SplitSafe"
-   - **Include**: Your Principal ID and how much BTC you'd like for testing
-
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=redux&logoColor=white" /> 
@@ -211,6 +198,10 @@ Your SafeSplit app is now live on the Internet Computer mainnet!
 - **🌐 Live Website**: **[https://thesplitsafe.com/](https://thesplitsafe.com/)** (SSL-secured production site)
 - **IC URL**: `https://ecyax-oiaaa-aaaai-q323q-cai.ic0.app`
 - **Custom Domain**: `thesplitsafe.com` (live with SSL certificates)
+
+**⚠️ Important Note:** The live site requires Bitcoin (cKBTC) balance to perform escrow transactions. Without Bitcoin balance, you'll be able to explore the interface and view features, but won't be able to create or participate in escrow transactions. To test full functionality, you'll need to obtain testnet cKBTC or use the development environment with test balances.
+
+**💡 Need BTC for testing?** Email [kendantinio@gmail.com](mailto:kendantinio@gmail.com) with your Principal ID and we'll send you test BTC!
 
 ### **v1 Features Available:**
 

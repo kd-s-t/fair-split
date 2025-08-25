@@ -163,18 +163,24 @@ To populate the canister with test escrow transactions for development and testi
 
 ```bash
 # Run all seeder scripts to create sample escrows
-./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL>
+./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL> ic
 
 # Or run individual seeders:
-./scripts/seeders/initiate-escrow-only.sh <YOUR_BROWSER_PRINCIPAL> 
-./scripts/seeders/initiate-and-approve.sh <YOUR_BROWSER_PRINCIPAL> 
-./scripts/seeders/initiate-and-decline.sh <YOUR_BROWSER_PRINCIPAL> 
-./scripts/seeders/initiate-and-cancel.sh <YOUR_BROWSER_PRINCIPAL>  
+./scripts/seeders/initiate-escrow-only.sh <YOUR_BROWSER_PRINCIPAL> ic
+./scripts/seeders/initiate-and-approve.sh <YOUR_BROWSER_PRINCIPAL> ic
+./scripts/seeders/initiate-and-decline.sh <YOUR_BROWSER_PRINCIPAL> ic
+./scripts/seeders/initiate-and-cancel.sh <YOUR_BROWSER_PRINCIPAL> ic
 
 # Example usage:
-./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL> 
+# For local development:
+./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL> local
+
+# For Internet Computer mainnet:
+./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL> ic 
 ```
-**Note:** Seeders automatically set up balances and create realistic test scenarios for each escrow lifecycle state.
+**Note:** 
+- `NETWORK` parameter can be `local` (default) for local development or `ic` for Internet Computer mainnet
+- Seeders automatically set up balances and create realistic test scenarios for each escrow lifecycle state
 
 
 ## 🚀 **Live on Internet Computer Mainnet**

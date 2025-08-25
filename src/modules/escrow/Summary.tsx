@@ -7,8 +7,8 @@ import { Send, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from 'framer-motion';
 import { UseFormReturn } from "react-hook-form";
-import { escrowFormSchema } from "@/validation/escrow";
 import { z } from "zod";
+import { escrowFormSchema } from "@/validation/escrow";
 
 type FormData = z.infer<typeof escrowFormSchema>;
 

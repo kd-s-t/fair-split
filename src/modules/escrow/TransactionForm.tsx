@@ -32,7 +32,7 @@ const TransactionForm = () => {
   const { newTxId } = useSelector((state: RootState) => state.escrow);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(escrowFormSchema),
+    resolver: zodResolver(escrowFormSchema) as any,
     defaultValues: {
       title: "",
       btcAmount: "",
@@ -41,9 +41,10 @@ const TransactionForm = () => {
           id: "recipient-1",
           name: "",
           principal: "",
-          percentage: 100
+          percentage: 100 as number
         }
-      ]
+      ],
+      useSeiAcceleration: true
     }
   });
 

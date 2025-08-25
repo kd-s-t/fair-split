@@ -10,7 +10,7 @@ import { Sparkles, Bitcoin, Bot } from "lucide-react";
 import { Typography } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
 import { UseFormReturn } from "react-hook-form";
-import z from 'zod';
+import { z } from "zod";
 import { escrowFormSchema } from '@/validation/escrow';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { handleNavigation, executeNavigation } from '@/lib/messaging/navigationService';

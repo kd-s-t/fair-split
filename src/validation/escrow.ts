@@ -1,6 +1,19 @@
 
 import { z } from "zod";
 
+// Define the form data type explicitly
+export interface EscrowFormData {
+  title: string;
+  btcAmount: string;
+  recipients: Array<{
+    id: string;
+    name: string;
+    principal: string;
+    percentage: number;
+  }>;
+  useSeiAcceleration: boolean;
+}
+
 // Enhanced ICP Principal validation function
 const isValidICPPrincipal = (principal: string): boolean => {
   const trimmed = principal.trim();

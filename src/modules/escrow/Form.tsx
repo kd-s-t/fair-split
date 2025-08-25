@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
-import z from "zod";
+import { z } from "zod";
 import { escrowFormSchema } from "@/validation/escrow";
 import { useUser } from "@/hooks/useUser";
 import { Label } from "@/components/ui/label";
-
 
 type FormData = z.infer<typeof escrowFormSchema>;
 

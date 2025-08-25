@@ -76,7 +76,7 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 ### National Round Demo  
 Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistant:  
 [![SafeSplit Demo - National Round](https://img.shields.io/badge/Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1KpHyDtBPuyweP59vSKcmehHkay5sF7H8/view?usp=sharing)
-[![SafeSplit Pitch Deck](https://img.shields.io/badge/View_Pitch_Deck-DC143C?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](https://drive.google.com/file/d/1rrU30W1JcJ9IHwhoTZM2t2oBYrrM0y3L/view?usp=sharing)
+[![SafeSplit Pitch Deck](https://img.shields.io/badge/View_Pitch_Deck-DC143C?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](https://drive.google.com/file/d/1rrU30W1JcJ9IHwhoTZM2t2oBYrrM0y3L/view?usp=sharing)  
 **Features demonstrated:**
 - ✅ SEI Layer 1 Network integration for fast transaction processing
 - ✅ Real-time balance management

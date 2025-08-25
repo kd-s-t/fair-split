@@ -18,13 +18,13 @@ A decentralized, trustless escrow and split payment system using Internet Comput
 
 Senders can lock cKBTC into escrow, define payout rules, and automatically release funds once the specified conditions are met. Recipients receive tokens in predefined split proportions, which can be converted to native Bitcoin through ICP's Bitcoin integration or processed via SEI Network for faster settlements, all managed by canister logic on the Internet Computer.
 
-**Technology Stack:**
+**Features:**
+- **ICP**: Mainnet
 - **Bitcoin (cKBTC → BTC)**: Native Bitcoin integration via ICP for secure escrow
-- **SEI Network**: High-performance blockchain for fast transaction processing
+- **SEI Network**: High-performance blockchain for fast transaction processing. Atlantic-2 testnet integration for safe development
 - **Withdrawal System**: Multi-asset withdrawal support (ICP, cKBTC, SEI)
 - **AI Assistant (Beta)**: Intelligent support for transfers and decision making
 - **Reputation System (Beta)**: Trust-based scoring mechanism for user verification
-- **Testnet Ready**: Atlantic-2 testnet integration for safe development
 
 Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-based bounties, marketplace transactions, gaming payments, DeFi integrations, and any scenarios requiring trust-minimized Bitcoin escrow with fast settlement options.
 
@@ -101,7 +101,6 @@ Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistan
 - 🔄 Advanced analytics dashboard
 - 🔄 Own API for third-party integrations and documentation
 - 🔄 and so much more...
-
 
 ---
 
@@ -182,6 +181,8 @@ To populate the canister with test escrow transactions for development and testi
 - `NETWORK` parameter can be `local` (default) for local development or `ic` for Internet Computer mainnet
 - Seeders automatically set up balances and create realistic test scenarios for each escrow lifecycle state
 
+---
+
 
 ## 🚀 **Live on Internet Computer Mainnet**
 
@@ -223,14 +224,7 @@ Your SafeSplit app is now live on the Internet Computer mainnet!
 | | Decision Making | ✅ Live | AI suggestions for optimal escrow configurations |
 | | Route Optimization | ✅ Live | Smart recommendations for transaction routing |
 
-### **Use Cases Supported:**
-- **Freelance Payments**: Secure milestone-based payments
-- **DAO Treasuries**: Multi-signature fund management
-- **Marketplace Transactions**: Escrow for goods and services
-- **Gaming Payments**: Secure in-game asset transfers
-- **DeFi Integrations**: Cross-chain liquidity management
-- **Bounty Systems**: Automated reward distribution
-
+---
 
 ## Authors
 

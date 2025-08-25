@@ -5,6 +5,7 @@ interface WithdrawState {
   amount: string | null;
   destination: string | null;
   status: string | null;
+  transactionHash: string | null;
 }
 
 const initialState: WithdrawState = {
@@ -12,6 +13,7 @@ const initialState: WithdrawState = {
   amount: null,
   destination: null,
   status: null,
+  transactionHash: null,
 };
 
 const withdrawSlice = createSlice({
@@ -23,6 +25,7 @@ const withdrawSlice = createSlice({
       state.amount = action.payload.amount;
       state.destination = action.payload.destination;
       state.status = action.payload.status;
+      state.transactionHash = action.payload.transactionHash;
     },
     setWithdrawConfirmClose(state, action: PayloadAction<boolean>) {
       state.isConfirmed = action.payload;

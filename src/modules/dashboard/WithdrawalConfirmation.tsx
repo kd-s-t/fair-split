@@ -3,15 +3,31 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Typography } from '@/components/ui/typography';
 import { RootState } from '@/lib/redux/store';
 import { setWithdrawConfirmClose } from '@/lib/redux/withdrawSlice';
-import { CircleCheckBig } from 'lucide-react';
+import { CircleCheckBig, ExternalLink } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
+
 export default function WithdrawalConfirmation() {
   const dispatch = useDispatch();
 
-  const { isConfirmed, amount, destination, status } = useSelector((state: RootState) => state.withdraw);
+  const { isConfirmed, amount, destination, status, transactionHash } = useSelector((state: RootState) => state.withdraw);
+
+  // Debug logging
+  console.log('WithdrawalConfirmation render:', { isConfirmed, amount, destination, status, transactionHash });
 
   const handleCloseConfirmation = () => {
     dispatch(setWithdrawConfirmClose(false))
+  }
+
+  const handleTransactionHashClick = () => {
+    // Use Blockstream URL for Bitcoin transactions
+    const blockstreamUrl = process.env.NEXT_PUBLIC_BLOCKSTREAM_URL || 'https://blockstream.info';
+    const explorerUrl = `${blockstreamUrl}/tx/${transactionHash}`;
+    window.open(explorerUrl, '_blank');
+  }
+
+  const formatTransactionHash = (hash: string | null) => {
+    if (!hash) return "Pending...";
+    return `${hash.substring(0, 8)}...${hash.substring(hash.length - 8)}`;
   }
 
   return (
@@ -19,7 +35,7 @@ export default function WithdrawalConfirmation() {
       <DialogContent className="!bg-[#313030] !max-w-[528px] border border-[#303333] max-h-[90vh] overflow-hidden !rounded-3xl">
         <DialogHeader>
           <DialogTitle className='flex gap-3'>
-            <CircleCheckBig color='#00C287' size={14} />
+            <CircleCheckBig color='#00C287' size={20} />
             Withdrawal confirmed
           </DialogTitle>
           <DialogDescription className='text-[#BCBCBC]'>
@@ -30,19 +46,29 @@ export default function WithdrawalConfirmation() {
         <div className="space-y-4 bg-[#282828] rounded-xl p-4">
           <div className='flex justify-between'>
             <Typography variant="small" className="text-[#9F9F9F]">Amount:</Typography>
-            <Typography variant="small">{amount}</Typography>
+            <Typography variant="small" className="text-white">{amount}</Typography>
           </div>
           <div className='flex justify-between'>
             <Typography variant="small" className="text-[#9F9F9F]">Destination:</Typography>
-            <Typography variant="small">{destination}</Typography>
+            <Typography variant="small" className="text-white">{destination}</Typography>
           </div>
-          <div className='flex justify-between'>
+          <div className='flex justify-between items-center'>
             <Typography variant="small" className="text-[#9F9F9F]">Transaction hash:</Typography>
-            <Typography variant="small">1a2b3c4d5e6f....4567890</Typography>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTransactionHashClick}
+              className="text-[#FEB64D] hover:text-[#FEB64D]/80 hover:bg-[#FEB64D]/10 p-1 h-auto"
+            >
+              <Typography variant="small" className="text-[#FEB64D] font-mono">
+                {formatTransactionHash(transactionHash)}
+              </Typography>
+              <ExternalLink size={12} className="ml-1" />
+            </Button>
           </div>
           <div className='flex justify-between'>
             <Typography variant="small" className="text-[#9F9F9F]">Status:</Typography>
-            <Typography className="capitalize" variant="small">{status}</Typography>
+            <Typography className="capitalize text-[#00C287]" variant="small">{status}</Typography>
           </div>
         </div>
 

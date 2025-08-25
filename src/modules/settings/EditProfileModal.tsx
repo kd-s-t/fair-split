@@ -4,11 +4,13 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogClose
 } from "@/components/ui/dialog-new";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-context";
 import { useUser } from "@/hooks/useUser";
+import { useModalCleanup } from "@/hooks/useModalCleanup";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SettingsModalProps } from "./types";
@@ -26,6 +28,9 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
   const [nameInput, setNameInput] = useState(name || "");
   const [isSaving, setIsSaving] = useState(false);
   const dispatch = useDispatch();
+
+  // Use the custom hook for modal cleanup
+  useModalCleanup(open);
 
   // Update input field when modal opens or name changes
   useEffect(() => {
@@ -59,6 +64,12 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
   };
 
   const handleClose = () => {
+    if (!isSaving) {
+      onClose();
+    }
+  };
+
+  const handleCancel = () => {
     if (!isSaving) {
       onClose();
     }
@@ -136,6 +147,14 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
               {isSaving ? "Saving..." : "Save changes"}
             </Button>
           </div>
+          <Button 
+            variant="ghost" 
+            className="border border-[#7A7A7A] cursor-pointer"
+            onClick={handleCancel}
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog >

@@ -3,15 +3,21 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogClose
 } from "@/components/ui/dialog-new";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/useUser";
+import { useModalCleanup } from "@/hooks/useModalCleanup";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 // Wallet Modal Component
 const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClose: () => void; principalId: string }) => {
   const { icpBalance, ckbtcAddress } = useUser();
+
+  // Use the custom hook for modal cleanup
+  useModalCleanup(isOpen);
 
   // Defensive check for required props
   if (!onClose || typeof onClose !== 'function') {
@@ -78,7 +84,7 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
             )}
           </div>
 
-          {/* ckBTC Address */}
+          {/* cKBTC Address */}
           <div>
             <Label className="block text-white">cKBTC Address</Label>
             <div className="flex gap-4">
@@ -105,6 +111,18 @@ const WalletModal = ({ isOpen, onClose, principalId }: { isOpen: boolean; onClos
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Footer with close button */}
+        <div className="flex justify-end mt-6">
+          <DialogClose asChild>
+            <Button 
+              variant="ghost" 
+              className="border border-[#7A7A7A] cursor-pointer"
+            >
+              Close
+            </Button>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>

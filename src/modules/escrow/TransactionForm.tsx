@@ -17,6 +17,7 @@ import { escrowFormSchema } from "@/validation/escrow";
 import { useEscrowActions } from "@/hooks/useEscrowActions";
 import Form from "./Form";
 import AIAssistant from "./AIAssistant";
+import { Resolver } from "react-hook-form";
 
 type FormData = z.infer<typeof escrowFormSchema>;
 
@@ -32,7 +33,7 @@ const TransactionForm = () => {
   const { newTxId } = useSelector((state: RootState) => state.escrow);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(escrowFormSchema) as any,
+    resolver: zodResolver(escrowFormSchema) as Resolver<FormData>,
     defaultValues: {
       title: "",
       btcAmount: "",

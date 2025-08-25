@@ -18,8 +18,7 @@ import { setUserName } from "@/lib/redux/userSlice";
 import { Principal } from "@dfinity/principal";
 import { createSplitDappActor } from "@/lib/icp/splitDapp";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@radix-ui/react-dropdown-menu";
-
+import { Separator } from "@/components/ui/separator";
 // Wallet Modal Component
 const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) => {
   const { name, principal } = useUser();
@@ -72,7 +71,7 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent 
+      <DialogContent
         className="!bg-[#212121] border border-[#303333] !w-[456px] !max-w-[90vw] max-h-[90vh] overflow-hidden"
         showCloseButton={true}
       >

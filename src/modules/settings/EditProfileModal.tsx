@@ -4,8 +4,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogClose
+  DialogTitle
 } from "@/components/ui/dialog-new";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-context";

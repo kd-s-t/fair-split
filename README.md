@@ -62,7 +62,6 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 
 ### Qualification Round Demo
 Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow functionality:
-
 [![SafeSplit Demo - Qualification Round](https://img.shields.io/badge/Watch_Demo-6255F1?style=for-the-badge&logo=loom&logoColor=white)](https://www.loom.com/share/6048358153c04dae899d0b2902f2fd9e?sid=d9b720fa-452b-4e3c-903b-1cf0f0856a20)
 
 **Features demonstrated:**
@@ -75,8 +74,8 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 - ✅ Modern, intuitive user interface
 
 ### National Round Demo  
-SafeSplit Demo - National Round  
-[![SafeSplit Demo - National Round](https://img.shields.io/badge/Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1KpHyDtBPuyweP59vSKcmehHkay5sF7H8/view?usp=drive_link)
+Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistant:
+[![SafeSplit Demo - National Round](https://img.shields.io/badge/Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1KpHyDtBPuyweP59vSKcmehHkay5sF7H8/view?usp=sharing)
 
 **Coming in National Round:**
 - ✅ SEI Layer 1 Network integration for fast transaction processing
@@ -88,18 +87,19 @@ SafeSplit Demo - National Round
 - ✅ Sender can edit escrow amount, title and recipients
 - ✅ Reputation system with fraud detection
 - ✅ Call limiting and access control
+- ✅ Escrow auto cancel within 24 hours if no action taken
 
 ### Regional Round Demo  
-SafeSplit Demo - Regional Round  
 **Coming in Regional Round:**
 - 🔄 Withdrawal support (SEI)
 - 🔄 AI Assistant for withdrawal
+- 🔄 More, soon
 
 ### Global Round Demo  
-SafeSplit Demo - Global Round  
 **Coming in Global Round:**
 - 🔄 Advanced analytics dashboard
 - 🔄 Own API for third-party integrations and documentation
+- 🔄 More, soon
 
 ## Quick Start
 ```bash
@@ -115,7 +115,7 @@ npm install
 npm run dev
 ```
 
-### Run ICP host and deploy canisters
+### Run ICP host and deploy canisters LOCALLY, skip this and use .env.production mainnet IC
 ```bash
 ######### Option 1: Use the automated deployment script (recommended)
 ./scripts/local-deploy-canisters.sh
@@ -210,20 +210,17 @@ To populate the database with test data for development and testing:
 
 ```bash
 # Run all seeder scripts to create sample escrows
-./scripts/seeders/run-all-seeders.sh
+./scripts/seeders/run-all-seeders.sh <SENDER_PRINCIPAL>
 
 # Or run individual seeders:
-./scripts/seeders/initiate-escrow-only.sh      # Creates pending escrow
-./scripts/seeders/initiate-and-approve.sh      # Creates approved escrow
-./scripts/seeders/initiate-and-decline.sh      # Creates declined escrow
-./scripts/seeders/initiate-and-cancel.sh       # Creates canceled escrow
-```
+./scripts/seeders/initiate-escrow-only.sh <SENDER_PRINCIPAL>      # Creates pending escrow
+./scripts/seeders/initiate-and-approve.sh <SENDER_PRINCIPAL>      # Creates approved escrow
+./scripts/seeders/initiate-and-decline.sh <SENDER_PRINCIPAL>      # Creates declined escrow
+./scripts/seeders/initiate-and-cancel.sh <SENDER_PRINCIPAL>       # Creates canceled escrow
 
-**Seeder Scripts Create:**
-- ✅ Pending escrows (waiting for approval)
-- ✅ Approved escrows (ready for release)
-- ✅ Declined escrows (funds returned)
-- ✅ Canceled escrows (funds returned)
+# Example usage:
+./scripts/seeders/run-all-seeders.sh up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe
+```
 
 **Note:** Seeders automatically set up balances and create realistic test scenarios for each escrow lifecycle state.
 

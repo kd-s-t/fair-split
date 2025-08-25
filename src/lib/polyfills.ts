@@ -7,21 +7,21 @@ if (typeof window !== 'undefined') {
     if (!window.crypto) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto-browserify');
-      (window as unknown as { crypto: typeof crypto }).crypto = crypto;
+      (window as any).crypto = crypto;
     }
     
     // Ensure SubtleCrypto is available
     if (!window.crypto.subtle) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { subtle } = require('crypto-browserify');
-      (window.crypto as unknown as { subtle: typeof subtle }).subtle = subtle;
+      (window.crypto as any).subtle = subtle;
     }
     
     // Also ensure getRandomValues is available
     if (!window.crypto.getRandomValues) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { randomBytes } = require('crypto-browserify');
-      (window.crypto as unknown as { getRandomValues: (array: Uint8Array) => Uint8Array }).getRandomValues = (array: Uint8Array) => {
+      (window.crypto as any).getRandomValues = (array: Uint8Array) => {
         const bytes = randomBytes(array.length);
         array.set(bytes);
         return array;
@@ -55,7 +55,7 @@ if (typeof window !== 'undefined') {
         }
       };
       
-      (window.crypto as { subtle: typeof subtleCrypto }).subtle = subtleCrypto;
+      (window.crypto as any).subtle = subtleCrypto;
     }
   } catch (error) {
     console.error('Failed to initialize crypto polyfill:', error);

@@ -61,7 +61,7 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 ## 🎥 Demo Videos
 
 ### Qualification Round Demo
-Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow functionality:
+Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow functionality:  
 [![SafeSplit Demo - Qualification Round](https://img.shields.io/badge/Watch_Demo-6255F1?style=for-the-badge&logo=loom&logoColor=white)](https://www.loom.com/share/6048358153c04dae899d0b2902f2fd9e?sid=d9b720fa-452b-4e3c-903b-1cf0f0856a20)
 
 **Features demonstrated:**
@@ -74,7 +74,7 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 - ✅ Modern, intuitive user interface
 
 ### National Round Demo  
-Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistant:
+Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistant:  
 [![SafeSplit Demo - National Round](https://img.shields.io/badge/Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1KpHyDtBPuyweP59vSKcmehHkay5sF7H8/view?usp=sharing)
 
 **Features demonstrated:**

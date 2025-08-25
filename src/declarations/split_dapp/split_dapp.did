@@ -145,6 +145,7 @@ type SplitDApp =
              seiAddress: text;
            };
      });
+
    resetUserReputation: (user: principal, caller: principal) -> ();
    setBitcoinAddress: (caller: principal, address: text) -> (bool);
    setBitcoinBalance: (caller: principal, user: principal, amount: nat) ->

@@ -10,8 +10,6 @@ export default function DocumentTitle() {
     
     if (isDevelopment) {
       document.title = 'SafeSplit - Development'
-    } else if (isProduction) {
-      document.title = 'SafeSplit - Production'
     } else {
       document.title = 'SafeSplit'
     }

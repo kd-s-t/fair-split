@@ -91,9 +91,9 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
               <div className="h-full min-w-0 overflow-y-auto">{children}</div>
             </div>
 
-            {/* AI Assistant - slides in from right */}
+            {/* AI Assistant - slides in from right (only when authenticated) */}
             <AnimatePresence>
-              {isRightSidebarOpen && (
+              {isRightSidebarOpen && principal && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: 320, opacity: 1 }}
@@ -110,8 +110,8 @@ function ClientLayoutContent({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Chat Button - fixed position */}
-      {!isRightSidebarOpen && (
+      {/* Chat Button - fixed position (only when authenticated) */}
+      {!isRightSidebarOpen && principal && (
         <button
           onClick={toggleRightSidebar}
           className="fixed right-4 bottom-10 z-50 bg-[#FEB64D] rounded-full py-3 px-3 shadow-lg hover:shadow-xl hover:bg-[#FEA52D] hover:scale-105 transition-all duration-200 cursor-pointer"

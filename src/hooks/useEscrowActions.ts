@@ -237,11 +237,8 @@ export function useEscrowActions(editTxId?: string) {
         await fetchAndStoreTransactions();
         await updateBalance();
         
-        // Redirect to transaction management page
-        // Add a small delay to ensure state updates are complete
-        setTimeout(() => {
-          router.push(`/transactions/${encodeURIComponent(String(txId))}`);
-        }, 100);
+        // Return success instead of redirecting - let the component handle the modal
+        return { success: true, txId: String(txId) };
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         toast.error(`Error creating escrow: ${errorMessage}`);

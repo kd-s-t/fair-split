@@ -6,6 +6,7 @@ import { Typography } from "@/components/ui/typography";
 import { useAppSelector } from "@/lib/redux/store";
 import type { RootState } from "@/lib/redux/store";
 import { BanknoteArrowDown, CircleCheck, Clock8, Eye, EyeOff, Plus, Shield, Zap } from "lucide-react";
+
 import React, { useState, useEffect } from "react";
 import type { NormalizedTransaction } from '@/modules/transactions/types'
 import { useRouter } from 'next/navigation'
@@ -120,6 +121,8 @@ export default function DashboardStats({ transactions }: { transactions: Normali
   const handleWithdraw = (isOpen: boolean) => {
     setIsWithdrawOpen(isOpen)
   }
+
+
 
   const handleToggleBalance = () => {
     setShowBalance((prev) => !prev);

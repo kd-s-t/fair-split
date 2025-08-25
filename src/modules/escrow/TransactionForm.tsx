@@ -143,7 +143,10 @@ const TransactionForm = () => {
     if (editTxId) {
       await updateEscrow(formDataWithTokenType);
     } else {
-      await createEscrow(formDataWithTokenType);
+      const result = await createEscrow(formDataWithTokenType);
+      if (result && result.success) {
+        setShowDialog(true);
+      }
     }
   };
 

@@ -68,11 +68,7 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
     }
   };
 
-  const handleCancel = () => {
-    if (!isSaving) {
-      onClose();
-    }
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -119,40 +115,35 @@ const EditProfileModal = ({ open, onClose, onNameSaved }: SettingsModalProps) =>
             </div>
           </div>
         </div>
-        <DialogFooter className="flex flex-row-reverse justify-between">
-          <div className="flex-1 flex justify-start">
-            <Button type="submit" onClick={handleSaveName} disabled={isSaving}>
-              {isSaving ? (
-                <svg
-                  className="animate-spin h-4 w-4"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"
-                  />
-                </svg>
-              ) : null}
-              {isSaving ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
+        <DialogFooter className="flex justify-center">
           <Button 
-            variant="ghost" 
-            className="border border-[#7A7A7A] cursor-pointer"
-            onClick={handleCancel}
+            type="submit" 
+            onClick={handleSaveName} 
             disabled={isSaving}
+            className="w-full"
           >
-            Cancel
+            {isSaving ? (
+              <svg
+                className="animate-spin h-4 w-4"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
+              </svg>
+            ) : null}
+            {isSaving ? "Saving..." : "Save changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

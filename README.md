@@ -36,6 +36,10 @@ Visit our production website at **[https://thesplitsafe.com/](https://thesplitsa
 
 **⚠️ Important Note:** The live site requires Bitcoin (cKBTC) balance to perform escrow transactions. Without Bitcoin balance, you'll be able to explore the interface and view features, but won't be able to create or participate in escrow transactions. To test full functionality, you'll need to obtain testnet cKBTC or use the development environment with test balances.
 
+**Email your request**:
+   - **Email**: [kendantinio@gmail.com](mailto:kendantinio@gmail.com)
+   - **Subject**: "BTC Testing Request - SplitSafe"
+   - **Include**: Your Principal ID and how much BTC you'd like for testing
 
 <div align="center"> 
 	<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" /> 

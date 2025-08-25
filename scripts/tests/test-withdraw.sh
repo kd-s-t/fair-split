@@ -9,13 +9,20 @@ if ! dfx ping > /dev/null 2>&1; then
     exit 1
 fi
 
+# Get admin principal from canister
+get_admin_principal() {
+    local admin_result=$(dfx canister call split_dapp getAdmin)
+    local admin_principal=$(echo "$admin_result" | grep -o '"[^"]*"' | head -1 | sed 's/"//g')
+    echo "$admin_principal"
+}
+
 # Test user principal (using default dfx identity)
 USER_PRINCIPAL=$(dfx identity get-principal)
-ADMIN_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+ADMIN_PRINCIPAL=$(get_admin_principal)
 
 echo "📋 Test Configuration:"
 echo "   User: $USER_PRINCIPAL"
-echo "   Admin: $ADMIN_PRINCIPAL"
+echo "   Admin: $ADMIN_PRINCIPAL (from canister)"
 echo ""
 
 # Set up initial balances for testing
@@ -63,6 +70,7 @@ echo ""
 # Summary
 echo "🎉 Withdraw E2E Test Summary:"
 echo "👤 User: $USER_PRINCIPAL"
+echo "👑 Admin: $ADMIN_PRINCIPAL"
 echo "💰 ckBTC Withdrawal: $CKBTC_WITHDRAW_AMOUNT satoshis (0.1 BTC) → $BTC_RECIPIENT_ADDRESS"
 echo "✅ All withdrawal tests completed successfully!"
 echo ""

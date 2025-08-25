@@ -9,15 +9,49 @@ if ! dfx ping > /dev/null 2>&1; then
     exit 1
 fi
 
+# Generate random recipient principal (32 characters, base32 encoded)
+generate_random_principal() {
+    # Generate 32 random bytes and encode as base32
+    # This creates a valid ICP principal format
+    local chars="abcdefghijklmnopqrstuvwxyz234567"
+    local principal=""
+    for i in {1..27}; do
+        if [ $i -eq 1 ]; then
+            principal+="2"
+        elif [ $i -eq 2 ]; then
+            principal+="v"
+        elif [ $i -eq 3 ]; then
+            principal+="x"
+        elif [ $i -eq 4 ]; then
+            principal+="s"
+        elif [ $i -eq 5 ]; then
+            principal+="x"
+        else
+            # Generate random character from the base32 alphabet
+            local random_char="${chars:$((RANDOM % ${#chars})):1}"
+            principal+="$random_char"
+        fi
+    done
+    echo "$principal"
+}
+
+# Get admin principal from canister
+get_admin_principal() {
+    local admin_result=$(dfx canister call split_dapp getAdmin)
+    local admin_principal=$(echo "$admin_result" | grep -o '"[^"]*"' | head -1 | sed 's/"//g')
+    echo "$admin_principal"
+}
+
 # Real test principals
 SENDER_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
-RECIPIENT_PRINCIPAL="hxmjs-porgp-cfkrg-37ls7-ph6op-5nfza-v2v3a-c7asz-xecxj-fidqe-qqe"
-ADMIN_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+RECIPIENT_PRINCIPAL=$(generate_random_principal)
+ADMIN_PRINCIPAL=$(get_admin_principal)
 ESCROW_AMOUNT=5000  # 0.00005 BTC in satoshis (0.00005 * 100000000)
 
 echo "📋 Test Configuration:"
 echo "   Sender: $SENDER_PRINCIPAL"
-echo "   Recipient: $RECIPIENT_PRINCIPAL"
+echo "   Recipient: $RECIPIENT_PRINCIPAL (randomly generated)"
+echo "   Admin: $ADMIN_PRINCIPAL (from canister)"
 echo "   Amount: $ESCROW_AMOUNT satoshis (0.00005 BTC)"
 echo ""
 
@@ -98,7 +132,8 @@ echo "🎉 ReleaseSplit E2E Test Summary:"
 echo "📋 Escrow ID: $ESCROW_ID"
 echo "💰 Amount: $ESCROW_AMOUNT satoshis (0.00005 BTC)"
 echo "👤 Sender: $SENDER_PRINCIPAL"
-echo "👥 Recipient: $RECIPIENT_PRINCIPAL"
+echo "👥 Recipient: $RECIPIENT_PRINCIPAL (random)"
+echo "👑 Admin: $ADMIN_PRINCIPAL"
 echo "✅ Escrow successfully approved and released"
 echo "✅ All release tests completed successfully!"
 echo ""

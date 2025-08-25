@@ -93,13 +93,17 @@ Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistan
 **Coming in Regional Round:**
 - 🔄 Withdrawal support (SEI)
 - 🔄 AI Assistant for withdrawal
-- 🔄 More, soon
+- 🔄 Sei and ckBTC fee will show up in summary
+- 🔄 and so much more...
 
 ### Global Round Demo  
 **Coming in Global Round:**
 - 🔄 Advanced analytics dashboard
 - 🔄 Own API for third-party integrations and documentation
-- 🔄 More, soon
+- 🔄 and so much more...
+
+
+---
 
 ## Quick Start
 ```bash
@@ -114,137 +118,68 @@ npm install
 # Start development server
 npm run dev
 ```
+The application will be available at http://localhost:3000  
 
-### Run ICP host and deploy canisters LOCALLY, skip this and use .env.production mainnet IC
+### Set BTC balance testnet 
 ```bash
-######### Option 1: Use the automated deployment script (recommended)
-./scripts/local-deploy-canisters.sh
-
-######### Option 2: Use custom admin principal
-./scripts/local-deploy-canisters.sh your-principal-id-here
-
-# if you want to add more BTC (format: ./script.sh [PRINCIPAL] [AMOUNT_IN_SATOSHIS])
-./scripts/balance-scripts/set-bitcoin-balance.sh your-principal-id-here 100000000  # Set 1 BTC
-
-# Check balances
-./scripts/balance-scripts/get-user-bitcoin-balance.sh your-principal-id-here
-
-######### Option 3: Manual deployment (if needed)
-# Step 1: Start the host first
-pkill -f dfx
-dfx stop
-rm -rf .dfx/local
-dfx start --clean --background
-sleep 10 && dfx ping local
-
-# Step 2: Then deploy canisters to the running host
-dfx deploy split_dapp --network local --mode=reinstall
+./scripts/balance-scripts/set-bitcoin-balance.sh <YOUR_BROWSER_PRINCIPAL> 100000000 ic  # Add 1 BTC
+./scripts/balance-scripts/get-user-bitcoin-balance.sh <YOUR_BROWSER_PRINCIPAL> ic
 ```
 
-The application will be available at http://localhost:3000
-
-## 💰 **Initial Balance Setup**
-
-After deployment, the script automatically sets up initial balances for testing:
-
-### ✅ **What Gets Set:**
-- **1 BTC (100,000,000 satoshis)** for the admin principal
-- **1 BTC (100,000,000 satoshis)** for your current user principal
-
-### 🔍 **If You See "0 Balance":**
-If you see "Insufficient cKBTC balance" errors after deployment, it means the balance wasn't set for your specific principal. This can happen if:
-
-1. **You're using a different principal** than expected
-2. **The deployment script failed** to set the balance
-
-### 🛠️ **Quick Fix:**
+### Direct set balance of btc
 ```bash
 # Check your current principal
 dfx identity get-principal
 
-# Set 1 BTC balance for your principal (replace with your actual principal)
-dfx canister call split_dapp setBitcoinBalance "(principal \"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe\", principal \"YOUR_PRINCIPAL_HERE\", 100_000_000)"
+# Add 1 BTC balance for your principal
+# First principal: Admin principal (replace with your admin principal)
+# Second principal: Your browser principal (replace with your actual browser principal)
+dfx canister --network ic call split_dapp addBitcoinBalance "(principal \"YOUR_ADMIN_PRINCIPAL\", principal \"YOUR_BROWSER_PRINCIPAL\", 100_000_000)"
 
-# Verify the balance
-dfx canister call split_dapp getUserBitcoinBalance "(principal \"YOUR_PRINCIPAL_HERE\")"
-```
-
-### 📊 **Check Balances:**
-```bash
-# Check admin balance
-./scripts/balance-scripts/get-user-bitcoin-balance.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe
-
-# Check your balance (replace with your principal)
-./scripts/balance-scripts/get-user-bitcoin-balance.sh YOUR_PRINCIPAL_HERE
+# Verify the balance (using your browser principal)
+dfx canister --network ic call split_dapp getUserBitcoinBalance "(principal \"YOUR_BROWSER_PRINCIPAL\")"
 ```
 
 ## 🧪 Testing
 
-### Available E2E Integration Tests
-
+### E2E Integration Tests
 After deployment, you can run the following end-to-end integration tests:
 
 ```bash
 # Test withdrawal functionality (ICP and ckBTC)
-./scripts/tests/test-withdraw.sh
+./scripts/tests/test-withdraw.sh <YOUR_BROWSER_PRINCIPAL> local  # LOCAL NETWORK
+./scripts/tests/test-withdraw.sh <YOUR_BROWSER_PRINCIPAL> ic     # IC NETWORK
 
-# Test escrow decline functionality
-./scripts/tests/test-decline-split.sh
+./scripts/tests/test-decline-split.sh <YOUR_BROWSER_PRINCIPAL> ic  
+./scripts/tests/test-cancel-split.sh <YOUR_BROWSER_PRINCIPAL> ic  
+./scripts/tests/test-release-split.sh <YOUR_BROWSER_PRINCIPAL> ic  
+./scripts/tests/test-sei-testnet.sh <YOUR_BROWSER_PRINCIPAL> ic  
 
-# Test escrow cancellation functionality
-./scripts/tests/test-cancel-split.sh
-
-# Test escrow release functionality
-./scripts/tests/test-release-split.sh
-
-# Test SEI integration
-./scripts/tests/test-sei-testnet.sh
-
-# Run all tests (recommended)
-./scripts/tests/run-all-tests.sh
+./scripts/tests/run-all-tests.sh <YOUR_BROWSER_PRINCIPAL> ic
 ```
 
-### Database Seeding for Testing
-
-To populate the database with test data for development and testing:
+### Test Data Seeding
+To populate the canister with test escrow transactions for development and testing:
 
 ```bash
 # Run all seeder scripts to create sample escrows
-./scripts/seeders/run-all-seeders.sh <SENDER_PRINCIPAL>
+./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL>
 
 # Or run individual seeders:
-./scripts/seeders/initiate-escrow-only.sh <SENDER_PRINCIPAL>      # Creates pending escrow
-./scripts/seeders/initiate-and-approve.sh <SENDER_PRINCIPAL>      # Creates approved escrow
-./scripts/seeders/initiate-and-decline.sh <SENDER_PRINCIPAL>      # Creates declined escrow
-./scripts/seeders/initiate-and-cancel.sh <SENDER_PRINCIPAL>       # Creates canceled escrow
+./scripts/seeders/initiate-escrow-only.sh <YOUR_BROWSER_PRINCIPAL> 
+./scripts/seeders/initiate-and-approve.sh <YOUR_BROWSER_PRINCIPAL> 
+./scripts/seeders/initiate-and-decline.sh <YOUR_BROWSER_PRINCIPAL> 
+./scripts/seeders/initiate-and-cancel.sh <YOUR_BROWSER_PRINCIPAL>  
 
 # Example usage:
-./scripts/seeders/run-all-seeders.sh up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe
+./scripts/seeders/run-all-seeders.sh <YOUR_BROWSER_PRINCIPAL> 
 ```
-
 **Note:** Seeders automatically set up balances and create realistic test scenarios for each escrow lifecycle state.
-
-
-### Withdrawal Testing
-The application includes comprehensive withdrawal functionality for both ICP, ckBTC, and SEI. You can test withdrawals using the following sample addresses:
-
-#### Valid Bitcoin Addresses for Testing:
-- `bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh` ✅ (Tested and working)
-- `bc1q9d4ywgf0zq3k2nqx8f9l6u8v7m5n4p3q2r1s0t9u8v7w6x5y4z3a2b1c0d`
-- `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa` (Legacy format)
-- `3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy` (P2SH format)
-
-#### SEI Testnet Testing:
-- **Test SEI Balance**: 5,000,000 usei (5 SEI) available for testing
-- **SEI Address Format**: `sei1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`
-- **Testnet Faucet**: Get free SEI tokens for testing
-
-**Note**: These addresses work with real cKBTC and SEI testnet integrations. When deploying to mainnet, real address validation and actual transfer mechanisms will be used.
 
 
 ## 🚀 **Live on Internet Computer Mainnet**
 
-### **V1 Canister Deployment**
+### **v1 Canister Deployment**
 Your SafeSplit app is now live on the Internet Computer mainnet!
 
 **Canister IDs:**
@@ -257,7 +192,7 @@ Your SafeSplit app is now live on the Internet Computer mainnet!
 - **IC URL**: `https://ecyax-oiaaa-aaaai-q323q-cai.ic0.app`
 - **Custom Domain**: `thesafesplit.com` (coming soon)
 
-### **V1 Features Available:**
+### **v1 Features Available:**
 
 | Category | Feature | Status | Description |
 |----------|---------|--------|-------------|
@@ -266,29 +201,16 @@ Your SafeSplit app is now live on the Internet Computer mainnet!
 | | Conditional Release | ✅ Live | Automatic fund release when all recipients approve |
 | | Cancellation & Refunds | ✅ Live | Sender can cancel escrow and get full refund |
 | | Recipient Actions | ✅ Live | Approve or decline escrow participation |
-| **Bitcoin Integration** | Native cKBTC Support | ✅ Live | Direct Bitcoin integration via ICP's Chain-Key Bitcoin |
+| **ckBitcoin Integration** | Native cKBTC Support | ✅ Live | Direct Bitcoin integration via ICP's Chain-Key Bitcoin |
 | | BTC Conversion | ✅ Live | Convert cKBTC to native Bitcoin through ICP |
 | | Secure Escrow | ✅ Live | Bitcoin held securely in canister-controlled escrow |
 | | Real-time Balances | ✅ Live | Live cKBTC balance tracking |
-| **User Experience** | Modern UI | ✅ Live | Clean, intuitive interface built with Next.js and Tailwind CSS |
-| | Real-time Updates | ✅ Live | Live transaction status and balance updates |
-| | Transaction History | ✅ Live | Complete audit trail of all escrow activities |
-| | Mobile Responsive | ✅ Live | Works seamlessly on all devices |
-| **Security & Trust** | Canister Logic | ✅ Live | All escrow logic runs on-chain via Internet Computer |
-| | No Intermediaries | ✅ Live | Direct peer-to-peer transactions |
-| | Immutable Rules | ✅ Live | Escrow conditions enforced by smart contract |
-| | Transparent Operations | ✅ Live | All transactions visible on-chain |
-| **Cross-Chain** | SEI Network | ✅ Live | High-performance blockchain for fast transaction processing |
+| **SEI** | SEI Network | ✅ Live | High-performance blockchain for fast transaction processing |
 | | Testnet Ready | ✅ Live | Atlantic-2 testnet integration for safe development |
-| | Multi-Asset Support | ✅ Live | ICP, cKBTC, and SEI token handling |
 | **AI Assistant** | Intelligent Support | ✅ Live | AI-powered assistance for escrow creation |
 | | Natural Language | ✅ Live | Chat-based interface for complex operations |
 | | Decision Making | ✅ Live | AI suggestions for optimal escrow configurations |
 | | Route Optimization | ✅ Live | Smart recommendations for transaction routing |
-| **Advanced Features** | Notification System | ✅ Live | Real-time alerts for escrow status changes |
-| | Reputation System | ✅ Live | Trust-based scoring for user verification |
-| | Access Control | ✅ Live | Role-based permissions and call limiting |
-| | Analytics Dashboard | ✅ Live | Comprehensive transaction and user analytics |
 
 ### **Use Cases Supported:**
 - **Freelance Payments**: Secure milestone-based payments

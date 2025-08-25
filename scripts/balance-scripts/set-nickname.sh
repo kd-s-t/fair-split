@@ -5,7 +5,16 @@
 # If no principal provided, uses the default one
 # Network can be 'local' or 'ic' (default: local)
 
-PRINCIPAL=${1:-"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"}
+PRINCIPAL=${1:-""}
+
+# Validate principal
+if [[ -z "$PRINCIPAL" ]]; then
+    echo "❌ Error: Principal is required"
+    echo ""
+    echo "📖 Usage: ./scripts/set-nickname.sh [PRINCIPAL] [NICKNAME] [NETWORK]"
+    echo "   Example: ./scripts/set-nickname.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe mynickname ic"
+    exit 1
+fi
 NICKNAME=${2:-"admin"}
 NETWORK=${3:-"local"}
 

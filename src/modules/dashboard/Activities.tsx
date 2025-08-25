@@ -88,7 +88,7 @@ export default function RecentActivities() {
                 activity={activity}
                 category={category}
                 txUrl={txUrl}
-                principal={principal}
+                principal={principal || undefined}
               />
             );
           })}
@@ -110,7 +110,7 @@ export default function RecentActivities() {
                   activity={activity}
                   category={category}
                   txUrl={txUrl}
-                  principal={principal}
+                  principal={principal || undefined}
                 />
               );
             })}
@@ -134,7 +134,7 @@ export default function RecentActivities() {
                   activity={activity}
                   category={category}
                   txUrl={txUrl}
-                  principal={principal}
+                  principal={principal || undefined}
                 />
               );
             })}

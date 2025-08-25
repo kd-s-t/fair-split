@@ -2,11 +2,20 @@
 
 # Get ICP balance for a user
 # Usage: ./scripts/get-icp-balance.sh [PRINCIPAL] [NETWORK]
-# If no principal provided, uses the default one
+# Principal: The principal to check balance for (required)
 # Network can be 'local' or 'ic' (default: local)
 
-PRINCIPAL=${1:-"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"}
+PRINCIPAL=${1:-""}
 NETWORK=${2:-"local"}
+
+# Validate principal
+if [[ -z "$PRINCIPAL" ]]; then
+    echo "❌ Error: Principal is required"
+    echo ""
+    echo "📖 Usage: ./scripts/get-icp-balance.sh [PRINCIPAL] [NETWORK]"
+    echo "   Example: ./scripts/get-icp-balance.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe ic"
+    exit 1
+fi
 
 # Validate network parameter
 if [[ "$NETWORK" != "local" && "$NETWORK" != "ic" ]]; then

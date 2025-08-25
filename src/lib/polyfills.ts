@@ -7,6 +7,7 @@ if (typeof window !== 'undefined') {
     if (!window.crypto) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto-browserify');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).crypto = crypto;
     }
     
@@ -14,6 +15,7 @@ if (typeof window !== 'undefined') {
     if (!window.crypto.subtle) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { subtle } = require('crypto-browserify');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.crypto as any).subtle = subtle;
     }
     
@@ -21,6 +23,7 @@ if (typeof window !== 'undefined') {
     if (!window.crypto.getRandomValues) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { randomBytes } = require('crypto-browserify');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.crypto as any).getRandomValues = (array: Uint8Array) => {
         const bytes = randomBytes(array.length);
         array.set(bytes);
@@ -55,6 +58,7 @@ if (typeof window !== 'undefined') {
         }
       };
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.crypto as any).subtle = subtleCrypto;
     }
   } catch (error) {

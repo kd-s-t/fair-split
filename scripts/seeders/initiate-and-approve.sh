@@ -1,19 +1,32 @@
 #!/bin/bash
 
-echo "🧪 Starting InitiateAndApprove Seeder..."
-echo ""
+# Usage: ./scripts/seeders/initiate-and-approve.sh [SENDER_PRINCIPAL] [NETWORK]
+# Sender principal: The principal to create escrow with (required)
+# Network can be 'local' or 'ic' (default: local)
 
-# Check if dfx is running
-if ! dfx ping > /dev/null 2>&1; then
-    echo "❌ DFX is not running. Please start dfx first: dfx start --background"
+SENDER_PRINCIPAL=${1:-""}
+NETWORK=${2:-"local"}
+
+# Validate sender principal
+if [[ -z "$SENDER_PRINCIPAL" ]]; then
+    echo "❌ Error: Sender principal is required"
+    echo ""
+    echo "📖 Usage: ./scripts/seeders/initiate-and-approve.sh [SENDER_PRINCIPAL] [NETWORK]"
+    echo "   Example: ./scripts/seeders/initiate-and-approve.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe ic"
     exit 1
 fi
 
-# Check if sender principal is provided as argument
-if [ -z "$1" ]; then
-    echo "❌ Usage: $0 <SENDER_PRINCIPAL>"
-    echo "   Example: $0 up3zk-t2nfl-ujojs-rvg3p-hpisk-7c666-3ns4x-i6knn-h5cg4-npfb4-gqe"
-    exit 1
+echo "🧪 Starting InitiateAndApprove Seeder..."
+echo "🌐 Network: $NETWORK"
+echo "👤 Sender Principal: $SENDER_PRINCIPAL"
+echo ""
+
+# Check if dfx is running (only for local network)
+if [[ "$NETWORK" == "local" ]]; then
+    if ! dfx ping > /dev/null 2>&1; then
+        echo "❌ DFX is not running. Please start dfx first: dfx start --background"
+        exit 1
+    fi
 fi
 
 # Generate random recipient principal (32 characters, base32 encoded)

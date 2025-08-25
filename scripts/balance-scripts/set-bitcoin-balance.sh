@@ -1,12 +1,21 @@
 #!/bin/bash
 
-# Set Bitcoin balance for a user
+# Add Bitcoin balance for a user
 # Usage: ./scripts/set-bitcoin-balance.sh [PRINCIPAL] [AMOUNT] [NETWORK]
 # If no principal provided, uses the default one
 # Amount should be in satoshis (e.g., 100000000 for 1 BTC)
 # Network can be 'local' or 'ic' (default: local)
 
-PRINCIPAL=${1:-"ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"}
+PRINCIPAL=${1:-""}
+
+# Validate principal
+if [[ -z "$PRINCIPAL" ]]; then
+    echo "❌ Error: Principal is required"
+    echo ""
+    echo "📖 Usage: ./scripts/set-bitcoin-balance.sh [PRINCIPAL] [AMOUNT] [NETWORK]"
+    echo "   Example: ./scripts/set-bitcoin-balance.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe 100000000 ic"
+    exit 1
+fi
 AMOUNT=${2:-"100000000"}
 NETWORK=${3:-"local"}
 
@@ -23,7 +32,7 @@ if [[ "$NETWORK" != "local" && "$NETWORK" != "ic" ]]; then
     exit 1
 fi
 
-echo "💰 Setting Bitcoin balance for principal: $PRINCIPAL"
+echo "💰 Adding Bitcoin balance for principal: $PRINCIPAL"
 echo "💰 Amount: $AMOUNT satoshis ($(echo "scale=8; $AMOUNT/100000000" | bc) BTC)"
 echo "🌐 Network: $NETWORK"
-dfx canister call split_dapp setBitcoinBalance "(principal \"$(dfx identity get-principal)\", principal \"$PRINCIPAL\", $AMOUNT)" --network $NETWORK
+dfx canister call split_dapp addBitcoinBalance "(principal \"$(dfx identity get-principal)\", principal \"$PRINCIPAL\", $AMOUNT)" --network $NETWORK

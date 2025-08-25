@@ -1,12 +1,32 @@
 #!/bin/bash
 
+# Usage: ./scripts/tests/test-decline-split.sh [BROWSER_PRINCIPAL] [NETWORK]
+# Browser principal: The principal to test with
+# Network can be 'local' or 'ic' (default: local)
+
+BROWSER_PRINCIPAL=${1:-""}
+NETWORK=${2:-"local"}
+
+# Validate browser principal
+if [[ -z "$BROWSER_PRINCIPAL" ]]; then
+    echo "❌ Error: Browser principal is required"
+    echo ""
+    echo "📖 Usage: ./scripts/tests/test-decline-split.sh [BROWSER_PRINCIPAL] [NETWORK]"
+    echo "   Example: ./scripts/tests/test-decline-split.sh ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe ic"
+    exit 1
+fi
+
 echo "🧪 Starting DeclineSplit E2E Test..."
+echo "🌐 Network: $NETWORK"
+echo "👤 Browser Principal: $BROWSER_PRINCIPAL"
 echo ""
 
-# Check if dfx is running
-if ! dfx ping > /dev/null 2>&1; then
-    echo "❌ DFX is not running. Please start dfx first: dfx start --background"
-    exit 1
+# Check if dfx is running (only for local network)
+if [[ "$NETWORK" == "local" ]]; then
+    if ! dfx ping > /dev/null 2>&1; then
+        echo "❌ DFX is not running. Please start dfx first: dfx start --background"
+        exit 1
+    fi
 fi
 
 # Generate random recipient principal (32 characters, base32 encoded)
@@ -42,8 +62,8 @@ get_admin_principal() {
     echo "$admin_principal"
 }
 
-# Real test principals
-SENDER_PRINCIPAL="ohtzl-xywgo-f2ka3-aqu2f-6yzqx-ocaum-olq5r-7aaz2-ojzeh-drkxg-hqe"
+# Test principals
+SENDER_PRINCIPAL="$BROWSER_PRINCIPAL"
 RECIPIENT_PRINCIPAL=$(generate_random_principal)
 ADMIN_PRINCIPAL=$(get_admin_principal)
 ESCROW_AMOUNT=4000  # 0.00004 BTC in satoshis (0.00004 * 100000000)

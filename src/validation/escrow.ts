@@ -144,5 +144,6 @@ export const escrowFormSchema = z.object({
       .refine((recipients) => {
         const totalPercentage = recipients.reduce((sum, recipient) => sum + recipient.percentage, 0);
         return Math.abs(totalPercentage - 100) < 0.01; // Allow for small floating point errors
-      }, "Total percentage must equal 100%")
+      }, "Total percentage must equal 100%"),
+    useSeiAcceleration: z.boolean().default(true)
   });

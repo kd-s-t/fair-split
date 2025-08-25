@@ -53,8 +53,13 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
     try {
       // Use the existing AI parser to understand the user's description
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+      
+      console.log('DEBUG: AI Assistant - API Key available:', !!apiKey);
+      console.log('DEBUG: AI Assistant - Description:', description);
 
       const parsedAction = await parseUserMessageWithAI(description, apiKey);
+      
+      console.log('DEBUG: AI Assistant - Parsed action:', parsedAction);
 
       if (parsedAction && parsedAction.type === 'create_escrow') {
         // Extract information from the AI parsed action
@@ -77,10 +82,20 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
           ? `${recipients.length} Recipient${recipients.length > 1 ? 's' : ''} Payment`
           : "Payment Split");
 
-        // Create recipient objects with equal distribution
+        // Create recipient objects with percentage-based or equal distribution
         const recipientObjects: Recipient[] = recipients.map((recipient, index) => {
-          const percentage = Math.floor(100 / recipients.length);
-          const amount = (percentage / 100) * totalAmount;
+          let percentage: number;
+          let amount: number;
+
+          if (parsedAction.percentages && parsedAction.percentages[index] !== undefined) {
+            // Use provided percentages
+            percentage = parsedAction.percentages[index];
+            amount = (percentage / 100) * totalAmount;
+          } else {
+            // Fallback to equal distribution
+            percentage = Math.floor(100 / recipients.length);
+            amount = (percentage / 100) * totalAmount;
+          }
 
           return {
             name: `Recipient ${index + 1}`,
@@ -90,8 +105,16 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
           };
         });
 
-        // Handle remainder for equal distribution
-        if (recipientObjects.length > 0) {
+        // Handle remainder for percentage-based distribution
+        if (recipientObjects.length > 0 && parsedAction.percentages) {
+          const totalAssigned = recipientObjects.reduce((sum, r) => sum + r.percentage, 0);
+          const remainder = 100 - totalAssigned;
+          if (remainder > 0) {
+            recipientObjects[0].percentage += remainder;
+            recipientObjects[0].amount = (recipientObjects[0].percentage / 100) * totalAmount;
+          }
+        } else if (recipientObjects.length > 0) {
+          // Handle remainder for equal distribution
           const totalAssigned = recipientObjects.reduce((sum, r) => sum + r.percentage, 0);
           const remainder = 100 - totalAssigned;
           if (remainder > 0) {
@@ -169,24 +192,106 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       });
     }
 
-    // Pattern 2: Look for percentage patterns
-    const recipientMatches = desc.match(/(\d+)%\s*to\s+(\w+)/g);
-    if (recipientMatches) {
-      recipientMatches.forEach(match => {
-        const percentageMatch = match.match(/(\d+)%\s*to\s+(\w+)/);
-        if (percentageMatch) {
-          const percentage = parseInt(percentageMatch[1]);
-          const name = percentageMatch[2];
-          const amount = (percentage / 100) * totalAmount;
+    // Pattern 2: Look for percentage patterns - multiple formats
+    // Format: "send 1.245 btc to kenan 60% and don 40%"
+    
+    // First, try the most specific pattern for "to kenan 60% and don 40%"
+    const specificPattern = /to\s+(\w+)\s+(\d+)%\s+and\s+(\w+)\s+(\d+)%/gi;
+    const specificMatches = desc.matchAll(specificPattern);
+    
+    console.log('DEBUG: Local parser - Testing specific pattern:', specificPattern);
+    
+    for (const match of specificMatches) {
+      console.log('DEBUG: Local parser - Specific pattern match:', match);
+      if (match[1] && match[2] && match[3] && match[4]) {
+        const name1 = match[1];  // kenan
+        const percentage1 = parseInt(match[2]);  // 60
+        const name2 = match[3];  // don
+        const percentage2 = parseInt(match[4]);  // 40
+        
+        console.log('DEBUG: Local parser - Found specific pattern:', { name1, percentage1, name2, percentage2 });
+        
+        // Clear any existing recipients and add these two
+        recipients.length = 0;
+        
+        recipients.push({
+          name: name1,
+          percentage: percentage1,
+          amount: (percentage1 / 100) * totalAmount,
+          address: ""
+        });
+        
+        recipients.push({
+          name: name2,
+          percentage: percentage2,
+          amount: (percentage2 / 100) * totalAmount,
+          address: ""
+        });
+        
+        // Found the specific pattern, skip other patterns
+        break;
+      }
+    }
+    
+    // If no specific pattern was found, try other patterns
+    if (recipients.length === 0) {
+      const percentagePatterns = [
+        /(\d+)%\s*(?:to\s+)?(\w+)(?:\s+and\s+(\d+)%\s*(?:to\s+)?(\w+))?/gi,  // "60% to kenan and 40% to don"
+        /(\d+)%\s*and\s+(\w+)\s+(\d+)%/gi,  // "60% and don 40%"
+        /(\d+)%\s*to\s+(\w+)/gi  // "60% to kenan"
+      ];
 
-          recipients.push({
-            name,
-            percentage,
-            amount,
-            address: ""
-          });
+      for (const pattern of percentagePatterns) {
+        const matches = desc.matchAll(pattern);
+        
+        for (const match of matches) {
+          if (match[1] && match[2]) {
+            const percentage1 = parseInt(match[1]);
+            const name1 = match[2];
+            
+            // Skip if name is "and" (conjunction, not a recipient)
+            if (name1.toLowerCase() === 'and') continue;
+            
+            // Check if this recipient already exists
+            const existingIndex = recipients.findIndex(r => r.name.toLowerCase() === name1.toLowerCase());
+            if (existingIndex === -1) {
+              recipients.push({
+                name: name1,
+                percentage: percentage1,
+                amount: (percentage1 / 100) * totalAmount,
+                address: ""
+              });
+            } else {
+              // Update existing recipient
+              recipients[existingIndex].percentage = percentage1;
+              recipients[existingIndex].amount = (percentage1 / 100) * totalAmount;
+            }
+          }
+          
+          // Handle second recipient if present (for patterns like "60% to kenan and 40% to don")
+          if (match[3] && match[4]) {
+            const percentage2 = parseInt(match[3]);
+            const name2 = match[4];
+            
+            // Skip if name is "and" (conjunction, not a recipient)
+            if (name2.toLowerCase() === 'and') continue;
+            
+            const existingIndex = recipients.findIndex(r => r.name.toLowerCase() === name2.toLowerCase());
+            if (existingIndex === -1) {
+              recipients.push({
+                name: name2,
+                percentage: percentage2,
+                amount: (percentage2 / 100) * totalAmount,
+                address: ""
+              });
+            } else {
+              // Update existing recipient
+              recipients[existingIndex].percentage = percentage2;
+              recipients[existingIndex].amount = (percentage2 / 100) * totalAmount;
+            }
+          }
         }
-      });
+      }
     }
 
     // Handle equal distribution only if we have recipients but no percentages were specified
@@ -241,6 +346,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ form }) => {
       }
     }
 
+    console.log('DEBUG: Local parser - Final recipients:', recipients);
+    
     return {
       title,
       totalAmount,

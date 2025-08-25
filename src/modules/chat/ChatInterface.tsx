@@ -87,9 +87,9 @@ export function ChatInterface({ messages, onSendMessage, onClearChat, isLoading 
               </div>
             )}
             <div
-              className={`rounded-lg p-3 max-w-[70%] overflow-hidden ${message.role === 'user'
-                ? 'bg-[#FEB64D] text-black'
-                : 'bg-[#2a2a2a] text-white'
+              className={`rounded-lg p-3 overflow-hidden ${message.role === 'user'
+                ? 'bg-[#FEB64D] text-black max-w-[70%]'
+                : 'bg-[#2a2a2a] text-white w-full'
                 }`}
             >
               <div className="whitespace-pre-wrap text-sm break-all overflow-hidden" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>{message.content}</div>

@@ -10,6 +10,10 @@ export interface ApprovalSuggestionAction {
   type: 'approval_suggestion';
 }
 
+export interface HelpDecideEscrowsAction {
+  type: 'help_decide_escrows';
+}
+
 export interface BitcoinAddressSetAction {
   type: 'set_bitcoin_address';
   address: string;
@@ -17,7 +21,7 @@ export interface BitcoinAddressSetAction {
 
 export interface QueryAction {
   type: 'query';
-  query: 'principal' | 'icp_balance' | 'btc_balance' | 'btc_address' | 'all';
+  query: 'principal' | 'icp_balance' | 'btc_balance' | 'btc_address' | 'sei_address' | 'sei_balance' | 'nickname' | 'all';
 }
 
 export interface PositiveAcknowledgmentAction {
@@ -29,7 +33,7 @@ export interface NavigationAction {
   destination: 'dashboard' | 'escrow' | 'transactions' | 'integrations' | 'settings';
 }
 
-export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
+export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | HelpDecideEscrowsAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
 
 import { detectCurrencyAmount } from '../utils';
 
@@ -214,6 +218,7 @@ export function parseUserMessage(message: string): ParsedAction {
   
   for (const pattern of queryPatterns) {
     const match = message.match(pattern);
+    console.log('Testing pattern:', pattern, 'against message:', message, 'match:', match);
     if (match) {
       const lowerMessage = message.toLowerCase();
       
@@ -301,9 +306,12 @@ export function generateActionResponse(action: ParsedAction, userData?: {
   icpBalance?: string | null;
   ckbtcBalance?: string | null;
   ckbtcAddress?: string | null;
+  seiAddress?: string | null;
+  seiBalance?: string | null;
+  nickname?: string | null;
 }, adjustedAmount?: boolean): string {
   if (!action) {
-    return "I can only help with four specific actions:\n\n1. **Create Escrow**: Try saying:\n   - 'send 2 btc to [recipient-id]'\n   - 'send $50 to [recipient-id]'\n   - 'create escrow 1.5 btc for [recipient-ids]'\n   - 'transfer €100 to [recipient]'\n\n2. **Set Bitcoin Address**: Try saying:\n   - 'set my bitcoin address to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'\n   - 'my bitcoin address is 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'\n   - 'use bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh as my bitcoin address'\n\n3. **Account Queries**: Try saying:\n   - 'what is my principal?'\n   - 'show my ICP balance'\n   - 'what's my Bitcoin address?'\n   - 'tell me my account info'\n\n4. **Approval Suggestions**: Try saying:\n   - 'suggest approvals for my escrows'\n   - 'should I approve or decline?'\n   - 'give me approval recommendations'\n\nPlease rephrase your request using one of these formats.";
+    return "I can help with three specific actions:\n\n1. **Create Escrow**: Try saying:\n   - 'send 2 btc to [recipient-id]'\n   - 'send $50 to [recipient-id]'\n   - 'create escrow 1.5 btc for [recipient-ids]'\n   - 'transfer €100 to [recipient]'\n   - 'send 1.245 btc to kenan 60% and don 40%'\n\n2. **Account Queries**: Try saying:\n   - 'what is my principal ID?'\n   - 'show my ICP balance'\n   - 'show my BTC balance'\n   - 'what's my Bitcoin address?'\n  - 'what is my nickname?'\n   - 'tell me my account info'\n\n3. **Help with Escrow Decisions**: Try saying:\n   - 'help me decide on my escrows'\n   - 'should I approve or decline?'\n   - 'suggest approvals for my escrows'\n   - 'what should I do with my escrows?'\n   - 'advice on my escrows'\n   - 'give me approval recommendations'\n\nPlease rephrase your request using one of these formats.";
   }
   
   switch (action.type) {
@@ -354,6 +362,21 @@ export function generateActionResponse(action: ParsedAction, userData?: {
           return userData.ckbtcAddress 
             ? `Your Bitcoin address is: ${userData.ckbtcAddress}`
             : "You haven't set a Bitcoin address yet. You can set one in the Integrations page.";
+        
+        case 'sei_address':
+          return userData.seiAddress 
+            ? `Your SEI address is: ${userData.seiAddress}`
+            : "You haven't set a SEI address yet. You can set one in the Integrations page.";
+        
+        case 'sei_balance':
+          return userData.seiBalance 
+            ? `Your SEI balance is: ${userData.seiBalance} SEI`
+            : "I couldn't find your SEI balance. Please make sure you're logged in.";
+        
+        case 'nickname':
+          return userData.nickname 
+            ? `Your nickname is: ${userData.nickname}`
+            : "You haven't set a nickname yet. You can set one in the Settings page.";
         
         case 'all':
           const info = [];

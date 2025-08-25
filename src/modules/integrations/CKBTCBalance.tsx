@@ -25,7 +25,7 @@ const CKBTCBalance: React.FC = () => {
               cKBTC
             </span>
             <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">
-              Local Testnet
+              Testnet
             </span>
           </div>
           <Bitcoin color="#F97415" size={24} />

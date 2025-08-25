@@ -76,6 +76,7 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 
 ### National Round Demo  
 SafeSplit Demo - National Round  
+[![SafeSplit Demo - National Round](https://img.shields.io/badge/Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1KpHyDtBPuyweP59vSKcmehHkay5sF7H8/view?usp=drive_link)
 
 **Coming in National Round:**
 - ✅ SEI Layer 1 Network integration for fast transaction processing
@@ -103,6 +104,9 @@ SafeSplit Demo - Global Round
 ## Quick Start
 ```bash
 nvm use
+
+# These are IC network values
+cp .env.example .env
 
 # Install dependencies
 npm install

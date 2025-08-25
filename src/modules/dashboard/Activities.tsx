@@ -88,6 +88,7 @@ export default function RecentActivities() {
                 activity={activity}
                 category={category}
                 txUrl={txUrl}
+                principal={principal}
               />
             );
           })}
@@ -109,6 +110,7 @@ export default function RecentActivities() {
                   activity={activity}
                   category={category}
                   txUrl={txUrl}
+                  principal={principal}
                 />
               );
             })}
@@ -132,6 +134,7 @@ export default function RecentActivities() {
                   activity={activity}
                   category={category}
                   txUrl={txUrl}
+                  principal={principal}
                 />
               );
             })}

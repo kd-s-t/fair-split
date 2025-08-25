@@ -17,7 +17,7 @@ const ICPBalance: React.FC = () => {
           <div className="flex items-center gap-2">
             ICP Balance
             <Badge className="bg-blue-600 text-white">
-              Local
+              IC
             </Badge>
           </div>
           <Coins color='#007AFF' />

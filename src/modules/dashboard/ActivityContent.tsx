@@ -15,6 +15,7 @@ interface ActivityContentProps {
   activity: ActivityItem;
   category: string;
   txUrl?: string;
+  principal?: string;
 }
 
 const ActivityContent = ({
@@ -22,9 +23,32 @@ const ActivityContent = ({
   activity,
   category,
   txUrl,
+  principal,
 }: ActivityContentProps) => {
 
   const router = useRouter();
+
+  // Calculate user's specific share for received transactions
+  const getUserShare = () => {
+    if (!principal || !activity.to || !Array.isArray(activity.to)) {
+      return { amount: 0, percentage: 0 };
+    }
+
+    const userRecipient = activity.to.find(recipient => 
+      String(recipient.principal) === String(principal)
+    );
+
+    if (userRecipient) {
+      return {
+        amount: Number(userRecipient.amount), // Keep in satoshis, formatBTC will convert
+        percentage: Number(userRecipient.percentage) || 0
+      };
+    }
+
+    return { amount: 0, percentage: 0 };
+  };
+
+  const userShare = getUserShare();
 
   return (
     <Card key={idx} className="p-5">
@@ -186,16 +210,10 @@ const ActivityContent = ({
                         <div className="flex items-center gap-2">
                           <Bitcoin size={20} className="text-[#F9A214]" />
                           <span className="text-white font-medium">
-                            {formatBTC(
-                              (activity.to ? activity.to.reduce(
-                                (sum: number, recipient) =>
-                                  sum + Number(recipient.amount),
-                                0
-                              ) : 0)
-                            )}
+                            {formatBTC(userShare.amount)}
                           </span>
                           <span className="text-[#9F9F9F] text-sm">BTC</span>
-                          <span className="text-white text-sm">(100%)</span>
+                          <span className="text-white text-sm">({userShare.percentage}%)</span>
                         </div>
                       </div>
                     </div>
@@ -211,16 +229,10 @@ const ActivityContent = ({
                       <div className="flex items-center gap-2">
                         <Bitcoin size={20} className="text-[#F9A214]" />
                         <span className="text-white font-medium">
-                          {formatBTC(
-                            activity.to?.reduce(
-                              (sum: number, recipient) =>
-                                sum + Number(recipient.amount),
-                              0
-                            ) || 0
-                          )}
+                          {formatBTC(userShare.amount)}
                         </span>
                         <span className="text-[#9F9F9F] text-sm">BTC</span>
-                        <span className="text-[#9F9F9F] text-sm">(100%)</span>
+                        <span className="text-[#9F9F9F] text-sm">({userShare.percentage}%)</span>
                       </div>
                     </div>
                   </Fragment>

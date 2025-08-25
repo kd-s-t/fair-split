@@ -4,10 +4,15 @@ export interface EscrowCreateAction {
   recipients: string[];
   originalCurrency?: string; // Track original currency for conversion
   title?: string; // Custom title if provided
+  percentages?: number[]; // Percentage distribution for recipients
 }
 
 export interface ApprovalSuggestionAction {
   type: 'approval_suggestion';
+}
+
+export interface HelpDecideEscrowsAction {
+  type: 'help_decide_escrows';
 }
 
 export interface BitcoinAddressSetAction {
@@ -17,7 +22,7 @@ export interface BitcoinAddressSetAction {
 
 export interface QueryAction {
   type: 'query';
-  query: 'principal' | 'icp_balance' | 'btc_balance' | 'btc_address' | 'all';
+  query: 'principal' | 'icp_balance' | 'btc_balance' | 'btc_address' | 'sei_address' | 'sei_balance' | 'nickname' | 'all';
 }
 
 export interface PositiveAcknowledgmentAction {
@@ -29,10 +34,13 @@ export interface NavigationAction {
   destination: 'dashboard' | 'escrow' | 'transactions' | 'integrations' | 'settings';
 }
 
-export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
+export type ParsedAction = EscrowCreateAction | ApprovalSuggestionAction | HelpDecideEscrowsAction | BitcoinAddressSetAction | QueryAction | PositiveAcknowledgmentAction | NavigationAction | null;
 
 export async function parseUserMessageWithAI(message: string, apiKey?: string): Promise<ParsedAction> {
   try {
+    
+    console.log('DEBUG: AI Parser - Message:', message);
+    console.log('DEBUG: AI Parser - API Key valid:', !!(apiKey && apiKey.trim() !== '' && apiKey !== 'sk-proj-YOUR_OPENAI_API_KEY_HERE'));
     
     if (!apiKey || apiKey.trim() === '' || apiKey === 'sk-proj-YOUR_OPENAI_API_KEY_HERE') {
       console.warn('OpenAI API key is missing or invalid');
@@ -68,8 +76,11 @@ If the user wants to CREATE an escrow (any mention of sending, transferring, cre
   "amount": "0.000125",
   "recipients": ["id1", "id2", "id3"],
   "originalCurrency": "$5",
-  "title": "Custom title if provided"
+  "title": "Custom title if provided",
+  "percentages": [50, 30, 20]
 }
+
+For percentage-based splits, include the "percentages" field with an array of percentages that sum to 100.
 
 If the user wants to SET their Bitcoin address (any mention of setting, using, or providing a Bitcoin address), respond with JSON:
 {
@@ -83,11 +94,19 @@ For principal/identity queries: {"action": "query", "query": "principal"}
 For ICP balance queries: {"action": "query", "query": "icp_balance"}
 For Bitcoin balance queries: {"action": "query", "query": "btc_balance"}
 For Bitcoin address queries: {"action": "query", "query": "btc_address"}
+For SEI address queries: {"action": "query", "query": "sei_address"}
+For SEI balance queries: {"action": "query", "query": "sei_balance"}
+For nickname queries: {"action": "query", "query": "nickname"}
 For general account info: {"action": "query", "query": "all"}
 
 If the user wants APPROVAL SUGGESTIONS (any mention of approving, declining, suggestions, recommendations, or decisions about escrows), respond with JSON:
 {
   "action": "approval_suggestion"
+}
+
+If the user wants HELP DECIDING on escrows (any mention of "help me decide", "should I approve", "what should I do", "advice on escrows", "help with decisions"), respond with JSON:
+{
+  "action": "help_decide_escrows"
 }
 
 If the user wants POSITIVE ACKNOWLEDGMENTS (any mention of "thanks", "ok", "got it", "cool", "nice", "great", "awesome", "perfect", "sweet", "excellent", "brilliant", "sounds good", "looks good", "that works", "yeah", "yes", "yep", "yup", "👍", "✅", "🎉", "😊", "😄", "😎"), respond with JSON:
@@ -110,6 +129,9 @@ EXAMPLES:
 - "send $5 to user123" → {"action": "create_escrow", "amount": "0.000125", "recipients": ["user123"], "originalCurrency": "$5"}
 - "transfer €10 to alice and bob" → {"action": "create_escrow", "amount": "0.00027", "recipients": ["alice", "bob"], "originalCurrency": "€10"}
 - "send 0.5 btc to user456" → {"action": "create_escrow", "amount": "0.5", "recipients": ["user456"]}
+- "send 1.245 btc to kenan 60% and don 40%" → {"action": "create_escrow", "amount": "1.245", "recipients": ["kenan", "don"], "percentages": [60, 40]}
+- "send 0.5 btc to alice 30%, bob 40%, charlie 30%" → {"action": "create_escrow", "amount": "0.5", "recipients": ["alice", "bob", "charlie"], "percentages": [30, 40, 30]}
+- "send 1 btc to john 50% and jane 50%" → {"action": "create_escrow", "amount": "1", "recipients": ["john", "jane"], "percentages": [50, 50]}
 - "send $1 to user123, title nice" → {"action": "create_escrow", "amount": "0.000025", "recipients": ["user123"], "originalCurrency": "$1", "title": "nice"}
 - "send $1 to user123, random title" → {"action": "create_escrow", "amount": "0.000025", "recipients": ["user123"], "originalCurrency": "$1", "title": "Freelance Project Payment"}
 - "send $5 to user123, my custom title" → {"action": "create_escrow", "amount": "0.000125", "recipients": ["user123"], "originalCurrency": "$5", "title": "my custom title"}
@@ -118,6 +140,14 @@ EXAMPLES:
 - "send $5 to these people up3zk-t2nfl-ujojs-rvg3p-h pisk-7c666-3ns4x-i6knn- h5cg4-npfb4-gqe, veqll-x 4jo7-uozuj-u34fj-ttgfc-vx ez2-a5r3b-jqttg-dslgb-5fe 7z-3qe" → {"action": "create_escrow", "amount": "0.000125", "recipients": ["up3zk-t2nfl-ujojs-rvg3p-h pisk-7c666-3ns4x-i6knn- h5cg4-npfb4-gqe", "veqll-x 4jo7-uozuj-u34fj-ttgfc-vx ez2-a5r3b-jqttg-dslgb-5fe 7z-3qe"], "originalCurrency": "$5"}
 - "pay $20 to john, jane, and mike for dinner" → {"action": "create_escrow", "amount": "0.0005", "recipients": ["john", "jane", "mike"], "originalCurrency": "$20", "title": "dinner"}
 - "split $50 between alice, bob, and charlie" → {"action": "create_escrow", "amount": "0.00125", "recipients": ["alice", "bob", "charlie"], "originalCurrency": "$50"}
+- "what is my principal?" → {"action": "query", "query": "principal"}
+- "what is my principal ID?" → {"action": "query", "query": "principal"}
+- "show my ICP balance" → {"action": "query", "query": "icp_balance"}
+- "show my BTC balance" → {"action": "query", "query": "btc_balance"}
+- "what's my Bitcoin address?" → {"action": "query", "query": "btc_address"}
+- "what is my SEI address?" → {"action": "query", "query": "sei_address"}
+- "show my SEI balance" → {"action": "query", "query": "sei_balance"}
+- "what is my nickname?" → {"action": "query", "query": "nickname"}
 
 IMPORTANT: 
 - Be very flexible and understand natural language in any format, just like ChatGPT
@@ -125,6 +155,8 @@ IMPORTANT:
 - Extract ANY recipient IDs mentioned (ICP principals, usernames, addresses, long alphanumeric strings with spaces)
 - Extract ANY Bitcoin address mentioned (starts with 1, 3, or bc1)
 - Extract ANY title mentioned after "title" keyword, "for" keyword, or at the end of the message (e.g., "title nice" → "nice", "send $1 to user123, random title" → "Freelance Project Payment", "send $5 to user123, my custom title" → "my custom title", "pay $20 for dinner" → "dinner")
+- CRITICAL: For percentage-based splits like "send 1.245 btc to kenan 60% and don 40%", correctly identify "kenan" and "don" as the recipient names, not "and" as a recipient
+- When you see "to [name] [percentage]% and [name] [percentage]%", the "and" is a conjunction, not a recipient name
 - If the user asks for a "random title", generate a professional escrow title like "Freelance Project Payment", "Consulting Services Escrow", "Content Creation Payment", "Software Development Phase 1", "Design Project Milestone", etc.
 - IMPORTANT: When you see "random title" in the user's message, replace it with an actual professional title, don't just return "random title" as the title.
 - CRITICAL: Always generate a professional title when the user mentions "random title" - choose from: "Freelance Project Payment", "Design Project Milestone", "Consulting Services Escrow", "Content Creation Payment", "Software Development Phase 1", "Marketing Campaign Deposit", "Project Management Fee", "Technical Support Payment", "Creative Services Escrow", "Business Consulting Fee"
@@ -151,14 +183,19 @@ IMPORTANT:
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.warn(`OpenAI API request failed with status ${response.status}. Falling back to local parser.`);
+      return null;
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
 
+    console.log('DEBUG: AI Parser - OpenAI response:', data);
+    console.log('DEBUG: AI Parser - Content:', content);
+
     if (!content) {
-      throw new Error('No response content received from GPT');
+      console.warn('No response content received from GPT. Falling back to local parser.');
+      return null;
     }
 
     // Try to parse JSON response
@@ -171,7 +208,8 @@ IMPORTANT:
           amount: parsed.amount,
           recipients: parsed.recipients || [],
           originalCurrency: parsed.originalCurrency,
-          title: parsed.title
+          title: parsed.title,
+          percentages: parsed.percentages
         };
       } else if (parsed.action === 'set_bitcoin_address') {
         return {
@@ -181,6 +219,10 @@ IMPORTANT:
       } else if (parsed.action === 'approval_suggestion') {
         return {
           type: 'approval_suggestion'
+        };
+      } else if (parsed.action === 'help_decide_escrows') {
+        return {
+          type: 'help_decide_escrows'
         };
       } else if (parsed.action === 'query') {
         return {
@@ -198,13 +240,14 @@ IMPORTANT:
         };
       }
     } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
-      console.error('Raw AI response:', content);
+      console.warn('Failed to parse AI response as JSON. Falling back to local parser.');
+      console.debug('Raw AI response:', content);
     }
 
     return null;
   } catch (error) {
-    console.error('Error parsing message with AI:', error);
+    console.warn('Error parsing message with AI. Falling back to local parser.');
+    console.debug('Error details:', error);
     return null;
   }
 } 

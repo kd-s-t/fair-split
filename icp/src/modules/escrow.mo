@@ -9,6 +9,7 @@ import TransactionTypes "../schema";
 import Balance "../modules/balance";
 import Reputation "../modules/reputation";
 import TimeUtil "../utils/time";
+import SEI "../modules/sei";
 // import Bitcoin "mo:bitcoin"; // Uncomment when deploying to mainnet
 
 module {
@@ -18,6 +19,28 @@ module {
         // Current approximate rate: 1 BTC ≈ 15,000 ICP
         // In a real implementation, this would call an external API
         15_000
+    };
+
+    // SEI Network Configuration for Bitcoin Layer 2
+    private let seiNetworkConfig : SEI.SeiNetwork = {
+        name = "SEI Bitcoin Layer 2";
+        chainId = "sei-bitcoin-l2";
+        rpcUrl = "https://rpc.sei-bitcoin-l2.io";
+        explorerUrl = "https://explorer.sei-bitcoin-l2.io";
+        prefix = "sei";
+        isTestnet = false;
+    };
+
+    // Convert Bitcoin satoshis to SEI tokens for Layer 2 processing
+    private func bitcoinToSeiLayer2(satoshis : Nat) : Nat {
+        // 1 BTC = 100,000,000 satoshis
+        // Use SEI as Layer 2 for Bitcoin: 1 BTC ≈ 1 SEI (1:1 peg for simplicity)
+        satoshis / 100_000_000; // Convert satoshis to SEI tokens
+    };
+
+    // Convert SEI tokens back to Bitcoin satoshis
+    private func seiToBitcoinLayer2(seiTokens : Nat) : Nat {
+        seiTokens * 100_000_000; // Convert SEI tokens back to satoshis
     };
     // State type to reduce function arguments
     public type State = {
@@ -222,8 +245,9 @@ module {
         _balances : HashMap.HashMap<Principal, Nat>,
         bitcoinBalances : HashMap.HashMap<Principal, Nat>,
         reputation : HashMap.HashMap<Principal, Nat>,
-        logs : [Text]
-    ) : {
+        logs : [Text],
+        seiIntegration : SEI.SEIIntegration
+    ) : async {
         success : Bool;
         newLogs : [Text];
     } {
@@ -251,19 +275,36 @@ module {
                         return tx;
                     };
 
-                    // Perform the transfer
+                    // Perform the transfer using SEI Layer 2 for Bitcoin speed
                     for (toEntry in tx.to.vals()) {
                         if (toEntry.status == #approved) {
                             // Check if this is a Bitcoin recipient (has Bitcoin address)
                             switch (toEntry.bitcoinAddress) {
                                 case (?bitcoinAddress) {
-                                    if (bitcoinAddress != "" and not Text.startsWith(bitcoinAddress, #text "bc1q")) {
-                                        // This is a real Bitcoin transfer - call the Bitcoin transfer function
-                                        // Note: In a real implementation, you'd need to pass the bitcoinIntegration instance
-                                        // For now, we'll just log it and update internal balances
-                                        Debug.print("🔗 BITCOIN TRANSFER: " # Nat.toText(toEntry.amount) # " satoshis to " # bitcoinAddress);
-                                        // TODO: Call actual Bitcoin transfer here
-                                        // let result = await bitcoinIntegration.transferBitcoin(fromAccount, toAccount, toEntry.amount, 0);
+                                    if (bitcoinAddress != "" and Text.startsWith(bitcoinAddress, #text "bc1q")) {
+                                        // This is a real Bitcoin transfer - use SEI Layer 2 for speed
+                                        Debug.print("🚀 SEI LAYER 2: Converting " # Nat.toText(toEntry.amount) # " satoshis to SEI for fast transfer");
+                                        
+                                        // Convert Bitcoin satoshis to SEI tokens for Layer 2 processing
+                                        let seiAmount = bitcoinToSeiLayer2(toEntry.amount);
+                                        
+                                        // Generate SEI addresses for sender and recipient
+                                        let senderSeiAddress = seiIntegration.generateSeiAddress(caller);
+                                        let recipientSeiAddress = seiIntegration.generateSeiAddress(toEntry.principal);
+                                        
+                                        // Perform fast SEI Layer 2 transfer (simulated for now)
+                                        Debug.print("🚀 SEI LAYER 2: Simulated fast Bitcoin transfer via SEI");
+                                        Debug.print("💰 Amount: " # Nat.toText(seiAmount) # " SEI tokens");
+                                        Debug.print("📤 From: " # senderSeiAddress);
+                                        Debug.print("📥 To: " # recipientSeiAddress);
+                                        
+                                        // Step 4: Convert SEI back to Bitcoin for recipient
+                                        let convertedBitcoinAmount = seiToBitcoinLayer2(seiAmount);
+                                        Debug.print("🔄 SEI → BTC: Converting " # Nat.toText(seiAmount) # " SEI back to " # Nat.toText(convertedBitcoinAmount) # " satoshis");
+                                        Debug.print("📥 Recipient gets Bitcoin: " # bitcoinAddress);
+                                        
+                                        // Update recipient's Bitcoin balance (converted from SEI)
+                                        Balance.increaseBalance(bitcoinBalances, toEntry.principal, convertedBitcoinAmount);
                                     } else {
                                         // This is an ICP recipient, update internal balance
                                         Balance.increaseBalance(bitcoinBalances, toEntry.principal, toEntry.amount);
@@ -315,9 +356,9 @@ module {
                     "✅ Reputation bonus applied to " # Principal.toText(caller) # " for successful transaction"
                 ],
             );
-            { success = true; newLogs = newLogs };
+            return { success = true; newLogs = newLogs };
         } else {
-            { success = false; newLogs = logs };
+            return { success = false; newLogs = logs };
         };
     };
 

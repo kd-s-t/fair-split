@@ -9,7 +9,7 @@ import { generateActionResponse } from '@/lib/messaging/actionParser';
 import { parseUserMessageWithAI } from '@/lib/messaging/aiParser';
 import { convertCurrencyToBTC } from '@/lib/utils';
 
-import { handleEscrowCreation, handleApprovalSuggestion, handleBitcoinAddressSet, handleNavigation, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
+import { handleEscrowCreation, handleApprovalSuggestion, handleHelpDecideEscrows, handleBitcoinAddressSet, handleNavigation, executeNavigation, setRouter } from '@/lib/messaging/navigationService';
 import { getGlobalChatState } from '@/lib/messaging/chatState';
 import { useRouter } from 'next/navigation';
 import { ParsedAction } from '@/lib/messaging/actionParser';
@@ -24,7 +24,7 @@ interface RightSidebarProps {
 
 export default function RightSidebar({ onToggle }: RightSidebarProps) {
   const router = useRouter();
-  const { principal, icpBalance, ckbtcAddress, ckbtcBalance } = useUser();
+  const { principal, icpBalance, ckbtcAddress, ckbtcBalance, seiAddress, seiBalance, name } = useUser();
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -61,7 +61,7 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         if (savedMessages.length === 0) {
           const welcomeMessage: Message = {
             id: 'welcome',
-            content: "Hi, I'm your SplitSafe Assistant! I can help you with two things:\n\n1. Create an escrow. Just tell me who you're sending Bitcoin to and how much.\n\n2. Decide on received escrows. I can help you choose to approve or decline based on what's best.\n\nJust type what you need and I'll take care of the rest.",
+            content: "Hi, I'm your SplitSafe Assistant! I can help you with three things:\n\n1. **Create an escrow** - Just tell me who you're sending Bitcoin to and how much.\n2. **Check your account info** - Ask about your balance, principal, or address.\n3. **Help with escrow decisions** - I'll help you decide whether to approve or decline received escrows.\n\nJust type what you need and I'll take care of the rest!",
             role: 'assistant',
             timestamp: new Date(),
           };
@@ -292,6 +292,13 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           console.log('DEBUG: Fallback parser detected approval suggestion');
           parsedAction = { type: 'approval_suggestion' };
         }
+        
+        // Check for help decide on escrows
+        if (lowerContent.includes('help me decide') || lowerContent.includes('help decide') ||
+            lowerContent.includes('advice on') || lowerContent.includes('help with decision')) {
+          console.log('DEBUG: Fallback parser detected help decide escrows');
+          parsedAction = { type: 'help_decide_escrows' };
+        }
       }
 
       // Generate response based on parsed action
@@ -299,7 +306,10 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         principal,
         icpBalance,
         ckbtcAddress,
-        ckbtcBalance
+        ckbtcBalance,
+        seiAddress,
+        seiBalance,
+        nickname: name
       });
 
       const assistantMessage: Message = {
@@ -328,6 +338,13 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
             // Also set a timestamp to make it more persistent
             sessionStorage.setItem('splitsafe_approval_timestamp', Date.now().toString());
             navigation = handleApprovalSuggestion(parsedAction);
+            break;
+          case 'help_decide_escrows':
+            // Set the flag to show approval suggestions and help decide
+            console.log('DEBUG: Setting help decide escrows flag');
+            sessionStorage.setItem('splitsafe_show_approval_suggestions', 'true');
+            sessionStorage.setItem('splitsafe_help_decide', 'true');
+            navigation = handleHelpDecideEscrows(parsedAction);
             break;
           case 'navigate':
             navigation = handleNavigation(parsedAction);
@@ -434,10 +451,10 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
               </div>
             )}
             <div
-              className={`rounded-lg p-3 max-w-[70%] overflow-hidden ${
+              className={`rounded-lg p-3 overflow-hidden ${
                 message.role === 'user'
-                  ? 'bg-[#FEB64D] text-black'
-                  : 'bg-[#2a2a2a] text-white'
+                  ? 'bg-[#FEB64D] text-black max-w-[70%]'
+                  : 'bg-[#2a2a2a] text-white w-full'
               }`}
             >
               <div className="whitespace-pre-wrap text-sm break-all overflow-hidden">

@@ -139,7 +139,7 @@ export default function EscrowOverview({
                     {recipient.id}
                   </Typography>
                   <Typography variant="base" className="text-white">
-                    ${(recipient.amount / 1e8 * 50000).toFixed(2)}
+                    {(recipient.amount / 1e8).toFixed(8)} BTC
                   </Typography>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { EscrowCreateAction, ApprovalSuggestionAction, BitcoinAddressSetAction, NavigationAction as ParsedNavigationAction } from './actionParser';
+import { EscrowCreateAction, ApprovalSuggestionAction, HelpDecideEscrowsAction, BitcoinAddressSetAction, NavigationAction as ParsedNavigationAction } from './actionParser';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export interface NavigationAction {
@@ -50,6 +50,23 @@ export function handleApprovalSuggestion(_action: ApprovalSuggestionAction): Nav
   return {
     type: 'redirect',
     path: '/transactions'
+  };
+}
+
+export function handleHelpDecideEscrows(_action: HelpDecideEscrowsAction): NavigationAction { // eslint-disable-line @typescript-eslint/no-unused-vars
+  // Check if user is already on transactions page
+  if (typeof window !== 'undefined' && window.location.pathname === '/transactions') {
+    return {
+      type: 'populate_form',
+      path: '/transactions',
+      data: { show_approval_suggestions: true, help_decide: true }
+    };
+  }
+  
+  return {
+    type: 'redirect',
+    path: '/transactions',
+    data: { show_approval_suggestions: true, help_decide: true }
   };
 }
 

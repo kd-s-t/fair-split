@@ -32,7 +32,6 @@ if (typeof window !== 'undefined') {
     if (window.crypto && !window.crypto.subtle) {
       console.warn('SubtleCrypto not available, attempting to polyfill...');
       // Create a basic SubtleCrypto polyfill
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const subtleCrypto = {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         generateKey: async (_algorithm: unknown, _extractable: boolean, _keyUsages: string[]) => {

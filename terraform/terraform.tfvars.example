@@ -11,4 +11,10 @@ environment = "production"
 blockstream_url = "https://blockstream.info"
 
 icp_dashboard_url = "https://dashboard.internetcomputer.org"
-icscan_url = "https://icscan.io" 
+icscan_url = "https://icscan.io"
+
+# SSL Configuration (optional)
+# Set enable_ssl = true to automatically generate SSL certificates
+enable_ssl = false
+ssl_domains = ["thesplitsafe.com", "www.thesplitsafe.com"]
+ssl_email = "admin@thesplitsafe.com" 

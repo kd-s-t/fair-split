@@ -31,7 +31,7 @@ export default function Home() {
       maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000),
       derivationOrigin: process.env.NODE_ENV === 'development' 
         ? 'http://localhost:3000'  // Your local frontend URL
-        : 'https://staging.thesplitsafe.com',  // Staging environment URL
+        : 'https://thesplitsafe.com',  // Production environment URL
       onSuccess: async () => {
         // Wait a bit for the authentication to be established
         setTimeout(async () => {

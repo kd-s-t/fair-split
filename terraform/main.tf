@@ -57,6 +57,11 @@ module "ec2" {
   instance_profile_name = module.iam.ec2_instance_profile_name
   enable_dfx           = false
   dfx_domain           = "localhost"  # Not used for IC mainnet
+  
+  # SSL Configuration
+  enable_ssl           = var.enable_ssl
+  ssl_domains          = var.ssl_domains
+  ssl_email            = var.ssl_email
 }
 
 module "ecr" {

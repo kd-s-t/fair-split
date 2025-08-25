@@ -69,3 +69,22 @@ variable "dfx_domain" {
   description = "Public domain that will serve HTTPS and reverse-proxy to dfx (e.g., thesplitsafe.com)"
   type        = string
 }
+
+# SSL Configuration
+variable "ssl_domains" {
+  description = "List of domains for SSL certificates (e.g., ['thesplitsafe.com', 'www.thesplitsafe.com'])"
+  type        = list(string)
+  default     = []
+}
+
+variable "ssl_email" {
+  description = "Email address for Let's Encrypt SSL certificate notifications"
+  type        = string
+  default     = "admin@thesplitsafe.com"
+}
+
+variable "enable_ssl" {
+  description = "Whether to enable SSL certificate generation with Let's Encrypt"
+  type        = bool
+  default     = false
+}

@@ -7,6 +7,7 @@ Welcome to the SafeSplit guides directory! This folder contains comprehensive do
 ### 🚀 **Deployment & Infrastructure**
 - [EC2 Subdomain Setup](./EC2_SUBDOMAIN_SETUP.md) - Complete EC2 deployment with custom domain
 - [Terraform Deployment](./TERRAFORM_DEPLOYMENT.md) - Infrastructure as Code with Terraform
+- [SSL Setup Guide](./SSL_SETUP_GUIDE.md) - SSL certificate setup for EC2 instances
 
 ### 🔧 **Backend & Blockchain**
 - [ICP Backend](./ICP_BACKEND.md) - Internet Computer Backend Architecture
@@ -66,6 +67,22 @@ Welcome to the SafeSplit guides directory! This folder contains comprehensive do
 - Security group configuration
 - IAM roles and policies
 - Environment variable setup
+
+---
+
+#### [SSL_SETUP_GUIDE.md](./SSL_SETUP_GUIDE.md)
+**SSL Certificate Setup for EC2 Instances**
+- Manual and automated SSL setup with Let's Encrypt
+- Nginx configuration for SSL domains
+- Certificate renewal and monitoring
+- Terraform integration for automated SSL
+
+**Key Topics:**
+- Let's Encrypt certificate generation
+- Nginx SSL configuration
+- Automatic certificate renewal
+- Terraform SSL automation
+- SSL monitoring and troubleshooting
 
 ---
 

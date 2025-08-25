@@ -131,7 +131,9 @@ resource "aws_instance" "splitsafe_server" {
       "sudo systemctl start nginx",
       "echo '✅ Nginx installed for basic monitoring'",
       "echo '======================================================================================'",
-      "echo '✅ Nginx already installed for monitoring'",
+      "echo 'Installing SSL tools...'",
+      "sudo apt install -y certbot python3-certbot-nginx",
+      "echo '✅ SSL tools installed'",
       "echo '======================================================================================'",
       "echo 'All services will be managed by Docker containers'",
       "echo '======================================================================================'",
@@ -150,9 +152,87 @@ resource "aws_instance" "splitsafe_server" {
       "echo \"📦 PM2 process manager installed\"",
       "echo \"🔒 Fail2ban security installed\"",
       "echo \"📊 htop monitoring tool installed\"",
+      "echo \"🔒 SSL tools (certbot) installed\"",
       "echo \"🔗 All services will be managed by Docker containers\"",
       "echo '======================================================================================'"
     ]
+  }
+
+  # SSL Setup provisioner (runs after initial setup)
+  provisioner "remote-exec" {
+    on_failure = continue  # Don't fail the entire deployment if SSL setup fails
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = var.private_key_content
+      host        = self.public_ip
+      timeout     = "10m"
+    }
+
+    inline = concat([
+      "echo '======================================================================================'",
+      "echo '🔒 SSL Certificate Setup'",
+      "echo '======================================================================================'",
+      "echo 'Checking if SSL setup is enabled...'"
+    ], 
+    var.enable_ssl ? [
+      "echo 'SSL setup is enabled for domains: ${join(\", \", var.ssl_domains)}'",
+      "echo 'Creating Nginx configuration for SSL domains...'",
+      "sudo tee /etc/nginx/sites-available/ssl-domains > /dev/null << 'NGINX_EOF'",
+      "server {",
+      "    listen 80;",
+      "    server_name ${join(\" \", var.ssl_domains)};",
+      "    ",
+      "    location / {",
+      "        proxy_pass http://localhost:3000;",
+      "        proxy_http_version 1.1;",
+      "        proxy_set_header Upgrade \\$http_upgrade;",
+      "        proxy_set_header Connection \"upgrade\";",
+      "        proxy_set_header Host \\$host;",
+      "        proxy_set_header X-Real-IP \\$remote_addr;",
+      "        proxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for;",
+      "        proxy_set_header X-Forwarded-Proto \\$scheme;",
+      "        proxy_cache_bypass \\$http_upgrade;",
+      "    }",
+      "    ",
+      "    location /health {",
+      "        access_log off;",
+      "        return 200 \"healthy\\n\";",
+      "        add_header Content-Type text/plain;",
+      "    }",
+      "}",
+      "NGINX_EOF",
+      "sudo ln -sf /etc/nginx/sites-available/ssl-domains /etc/nginx/sites-enabled/",
+      "sudo nginx -t && sudo systemctl reload nginx",
+      "echo '✅ Nginx configuration created'",
+      "echo '======================================================================================'",
+      "echo 'Generating SSL certificates with Let\\'s Encrypt...'",
+      "sudo certbot --nginx -d ${join(\" -d \", var.ssl_domains)} --non-interactive --agree-tos --email ${var.ssl_email} || echo '⚠️ SSL certificate generation failed - this can be retried manually'",
+      "echo '✅ SSL setup completed'",
+      "echo '======================================================================================'",
+      "echo 'Creating SSL status check script...'",
+      "sudo tee /usr/local/bin/check-ssl-status.sh > /dev/null << 'SCRIPT_EOF'",
+      "#!/bin/bash",
+      "echo \"SSL Certificate Status:\"",
+      "sudo certbot certificates",
+      "echo \"\"",
+      "echo \"Next renewal check:\"",
+      "sudo systemctl list-timers certbot.timer",
+      "echo \"\"",
+      "echo \"Certificate expiry check:\"",
+      "sudo certbot certificates | grep \"Expiry Date\"",
+      "SCRIPT_EOF",
+      "sudo chmod +x /usr/local/bin/check-ssl-status.sh",
+      "echo '✅ SSL status check script created'"
+    ] : [
+      "echo 'SSL setup is disabled - skipping SSL configuration'",
+      "echo 'To enable SSL later, run: terraform apply with enable_ssl = true'"
+    ], [
+      "echo '======================================================================================'",
+      "echo '✅ SSL setup phase completed!'",
+      "echo '======================================================================================'"
+    ])
   }
 
   # Removed Dockerized dfx setup; we run dfx natively on the host now

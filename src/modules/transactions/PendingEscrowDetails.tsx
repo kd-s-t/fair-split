@@ -176,7 +176,25 @@ export default function PendingEscrowDetails({
                   disabled={isLoading === "approve"}
                 >
                   {isLoading === "approve" ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
+                    <svg
+                      className="animate-spin h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      />
+                    </svg>
                   ) : (
                     <CircleCheckBig size={16} className="mr-2" />
                   )}
@@ -191,7 +209,25 @@ export default function PendingEscrowDetails({
                   disabled={isLoading === "decline"}
                 >
                   {isLoading === "decline" ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2" />
+                    <svg
+                      className="animate-spin h-4 w-4 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      />
+                    </svg>
                   ) : (
                     <CircleX size={16} className="mr-2" />
                   )}
@@ -249,7 +285,25 @@ export default function PendingEscrowDetails({
                 disabled={isLoading === "cancel"}
               >
                 {isLoading === "cancel" ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2" />
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
+                  </svg>
                 ) : (
                   <motion.div
                     animate={{ rotate: [0, -10, 10, 0] }}

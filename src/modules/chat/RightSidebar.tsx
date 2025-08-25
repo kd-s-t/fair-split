@@ -156,8 +156,8 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
         if (lowerContent.includes('send') || lowerContent.includes('transfer') || lowerContent.includes('create') || 
             lowerContent.includes('pay') || lowerContent.includes('split') || lowerContent.includes('give')) {
           
-          // Enhanced amount matching - handle more currency formats
-          const amountMatch = content.match(/(?:(\d+(?:\.\d+)?)\s*(?:btc|bitcoin|usd|\$|€|£|¥)|(?:btc|bitcoin|usd|\$|€|£|¥)\s*(\d+(?:\.\d+)?))/i);
+          // Enhanced amount matching - handle more currency formats including $1, €10, etc.
+          const amountMatch = content.match(/(?:(\d+(?:\.\d+)?)\s*(?:btc|bitcoin|usd|\$|€|£|¥)|(?:btc|bitcoin|usd|\$|€|£|¥)\s*(\d+(?:\.\d+)?)|(\$|€|£|¥)(\d+(?:\.\d+)?))/i);
           
           // Enhanced recipient matching to handle multiple IDs with spaces and commas
           let recipients: string[] = [];
@@ -167,8 +167,8 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           const patterns = [
             // "to these people" followed by IDs (but not including "with" or "title" keywords)
             /(?:to\s+these\s+people?)\s*([a-zA-Z0-9\-\s,]+?)(?:\s+with\s+|\s+title\s+|\s+for\s+|\s*$)/i,
-            // "to" followed by IDs (but not including "with" or "title" keywords)
-            /(?:to|for)\s+([a-zA-Z0-9\-\s,]+?)(?:\s+with\s+|\s+title\s+|\s*$)/i,
+            // "to" followed by IDs - improved to handle comma-separated lists with trailing text
+            /(?:to|for)\s+([a-zA-Z0-9\-\s,]+?)(?:\s*,\s*random\s+title|\s+with\s+|\s+title\s+|\s*$)/i,
             // "between" followed by IDs
             /(?:between|among)\s+([a-zA-Z0-9\-\s,]+)/i,
             // "split between" followed by IDs
@@ -210,33 +210,51 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
               title = extractedTitle;
             }
           } else {
-            // Fallback to "for" or "title" keywords
-            const titleMatch = content.match(/(?:for|title)\s+([a-zA-Z0-9\s]+)(?:\s|$)/i);
-            if (titleMatch) {
-              const extractedTitle = titleMatch[1].trim();
-              if (extractedTitle.toLowerCase() === 'random title') {
-                const titles = [
-                  "Freelance Project Payment",
-                  "Design Project Milestone", 
-                  "Consulting Services Escrow",
-                  "Content Creation Payment",
-                  "Software Development Phase 1",
-                  "Marketing Campaign Deposit",
-                  "Project Management Fee",
-                  "Technical Support Payment",
-                  "Creative Services Escrow",
-                  "Business Consulting Fee"
-                ];
-                title = titles[Math.floor(Math.random() * titles.length)];
-              } else {
-                title = extractedTitle;
+            // Check for "random title" at the end of the message
+            const randomTitleMatch = content.match(/,\s*random\s+title\s*$/i);
+            if (randomTitleMatch) {
+              const titles = [
+                "Freelance Project Payment",
+                "Design Project Milestone", 
+                "Consulting Services Escrow",
+                "Content Creation Payment",
+                "Software Development Phase 1",
+                "Marketing Campaign Deposit",
+                "Project Management Fee",
+                "Technical Support Payment",
+                "Creative Services Escrow",
+                "Business Consulting Fee"
+              ];
+              title = titles[Math.floor(Math.random() * titles.length)];
+            } else {
+              // Fallback to "for" or "title" keywords
+              const titleMatch = content.match(/(?:for|title)\s+([a-zA-Z0-9\s]+)(?:\s|$)/i);
+              if (titleMatch) {
+                const extractedTitle = titleMatch[1].trim();
+                if (extractedTitle.toLowerCase() === 'random title') {
+                  const titles = [
+                    "Freelance Project Payment",
+                    "Design Project Milestone", 
+                    "Consulting Services Escrow",
+                    "Content Creation Payment",
+                    "Software Development Phase 1",
+                    "Marketing Campaign Deposit",
+                    "Project Management Fee",
+                    "Technical Support Payment",
+                    "Creative Services Escrow",
+                    "Business Consulting Fee"
+                  ];
+                  title = titles[Math.floor(Math.random() * titles.length)];
+                } else {
+                  title = extractedTitle;
+                }
               }
             }
           }
           
           if (amountMatch && recipients.length > 0) {
             // Handle both number-first and currency-first formats
-            const amount = amountMatch[1] || amountMatch[2];
+            const amount = amountMatch[1] || amountMatch[2] || amountMatch[5];
             
             // Extract currency symbol from the full match
             const fullMatch = amountMatch[0];
@@ -281,6 +299,8 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
             console.log('DEBUG: Fallback parser created action:', parsedAction);
           } else {
             console.log('Fallback parser could not parse:', { amountMatch, recipients, content });
+            console.log('DEBUG: Amount match groups:', amountMatch ? Array.from(amountMatch) : null);
+            console.log('DEBUG: Recipients found:', recipients);
           }
         }
         
@@ -300,44 +320,52 @@ export default function RightSidebar({ onToggle }: RightSidebarProps) {
           parsedAction = { type: 'help_decide_escrows' };
         }
         
-        // Check for query patterns
-        if (lowerContent.includes('principal') || lowerContent.includes('id') || lowerContent.includes('identity')) {
-          console.log('DEBUG: Fallback parser detected principal query');
-          parsedAction = { type: 'query', query: 'principal' };
-        } else if (lowerContent.includes('icp') && lowerContent.includes('balance')) {
-          console.log('DEBUG: Fallback parser detected ICP balance query');
-          parsedAction = { type: 'query', query: 'icp_balance' };
-        } else if ((lowerContent.includes('btc') || lowerContent.includes('bitcoin')) && lowerContent.includes('balance')) {
-          console.log('DEBUG: Fallback parser detected BTC balance query');
-          parsedAction = { type: 'query', query: 'btc_balance' };
-        } else if ((lowerContent.includes('btc') || lowerContent.includes('bitcoin')) && lowerContent.includes('address')) {
-          console.log('DEBUG: Fallback parser detected BTC address query');
-          parsedAction = { type: 'query', query: 'btc_address' };
-        } else if (lowerContent.includes('sei') && lowerContent.includes('address')) {
-          console.log('DEBUG: Fallback parser detected SEI address query');
-          parsedAction = { type: 'query', query: 'sei_address' };
-        } else if (lowerContent.includes('sei') && lowerContent.includes('balance')) {
-          console.log('DEBUG: Fallback parser detected SEI balance query');
-          parsedAction = { type: 'query', query: 'sei_balance' };
-        } else if (lowerContent.includes('nickname')) {
-          console.log('DEBUG: Fallback parser detected nickname query');
-          parsedAction = { type: 'query', query: 'nickname' };
-        } else if (lowerContent.includes('account') || lowerContent.includes('info') || lowerContent.includes('information')) {
-          console.log('DEBUG: Fallback parser detected general account query');
-          parsedAction = { type: 'query', query: 'all' };
+        // Check for query patterns - only if no escrow action was detected
+        if (!parsedAction) {
+          if (lowerContent.includes('what is my principal') || lowerContent.includes('show my principal') || lowerContent.includes('tell me my principal') || lowerContent.includes('my principal id')) {
+            console.log('DEBUG: Fallback parser detected principal query');
+            parsedAction = { type: 'query', query: 'principal' };
+          } else if (lowerContent.includes('what is my icp balance') || lowerContent.includes('show my icp balance') || lowerContent.includes('my icp balance')) {
+            console.log('DEBUG: Fallback parser detected ICP balance query');
+            parsedAction = { type: 'query', query: 'icp_balance' };
+          } else if ((lowerContent.includes('btc') || lowerContent.includes('bitcoin')) && lowerContent.includes('balance') && (lowerContent.includes('what') || lowerContent.includes('show') || lowerContent.includes('my'))) {
+            console.log('DEBUG: Fallback parser detected BTC balance query');
+            parsedAction = { type: 'query', query: 'btc_balance' };
+          } else if ((lowerContent.includes('btc') || lowerContent.includes('bitcoin')) && lowerContent.includes('address') && (lowerContent.includes('what') || lowerContent.includes('show') || lowerContent.includes('my'))) {
+            console.log('DEBUG: Fallback parser detected BTC address query');
+            parsedAction = { type: 'query', query: 'btc_address' };
+          } else if (lowerContent.includes('sei') && lowerContent.includes('address') && (lowerContent.includes('what') || lowerContent.includes('show') || lowerContent.includes('my'))) {
+            console.log('DEBUG: Fallback parser detected SEI address query');
+            parsedAction = { type: 'query', query: 'sei_address' };
+          } else if (lowerContent.includes('sei') && lowerContent.includes('balance') && (lowerContent.includes('what') || lowerContent.includes('show') || lowerContent.includes('my'))) {
+            console.log('DEBUG: Fallback parser detected SEI balance query');
+            parsedAction = { type: 'query', query: 'sei_balance' };
+          } else if (lowerContent.includes('nickname') && (lowerContent.includes('what') || lowerContent.includes('show') || lowerContent.includes('my'))) {
+            console.log('DEBUG: Fallback parser detected nickname query');
+            parsedAction = { type: 'query', query: 'nickname' };
+          } else if ((lowerContent.includes('account') || lowerContent.includes('info') || lowerContent.includes('information')) && (lowerContent.includes('what') || lowerContent.includes('show') || lowerContent.includes('my'))) {
+            console.log('DEBUG: Fallback parser detected general account query');
+            parsedAction = { type: 'query', query: 'all' };
+          }
         }
       }
 
       // Generate response based on parsed action
-      const response = await generateActionResponse(parsedAction, {
-        principal,
-        icpBalance,
-        ckbtcAddress,
-        ckbtcBalance,
-        seiAddress,
-        seiBalance,
-        nickname: name
-      });
+      let response: string;
+      if (!parsedAction) {
+        // If no action was detected, provide a helpful response
+        response = "I can help you with escrow creation! Try saying something like:\n\n• 'send $5 to [recipient-id]'\n• 'create escrow 0.1 btc for [recipient-id]'\n• 'transfer €10 to [recipient-id], random title'\n\nOr ask about your account:\n• 'what is my principal ID?'\n• 'show my Bitcoin balance'\n\nWhat would you like to do?";
+      } else {
+        response = await generateActionResponse(parsedAction, {
+          principal,
+          icpBalance,
+          ckbtcAddress,
+          ckbtcBalance,
+          seiAddress,
+          seiBalance,
+          nickname: name
+        });
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

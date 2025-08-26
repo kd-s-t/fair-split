@@ -7,13 +7,18 @@ import TransactionStatusBadge from '@/components/TransactionStatusBadge'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/lib/redux/store'
 import { useUser } from '@/hooks/useUser'
+import { usePathname } from 'next/navigation'
 
 export default function Header() {
 
   const { principal } = useUser()
+  const pathname = usePathname()
   const title = useSelector((state: RootState) => state.layout.title)
   const subtitle = useSelector((state: RootState) => state.layout.subtitle)
   const transactionStatus = useSelector((state: RootState) => state.layout.transactionStatus)
+
+  // Only show transaction status badge on transaction detail pages
+  const isTransactionDetailPage = pathname?.startsWith('/transactions/') && pathname !== '/transactions'
 
   return (
     <header className="h-[55px] pl-[16px] pr-[16px] mt-[28px] flex items-center justify-between text-foreground min-w-0 overflow-hidden">
@@ -23,7 +28,7 @@ export default function Header() {
           <Typography variant="h3" className="text-white text-[30px] leading-[30px] font-normal">
             {title}
           </Typography>
-          {transactionStatus && <TransactionStatusBadge status={transactionStatus} />}
+          {transactionStatus && isTransactionDetailPage && <TransactionStatusBadge status={transactionStatus} />}
         </div>
         {subtitle && (
           <Typography variant="muted" className="text-[#BCBCBC] text-[17px] leading-[17px] font-normal">

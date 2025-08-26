@@ -56,6 +56,7 @@ Use cases for SplitSafe include freelance payments, DAO treasuries, milestone-ba
 	<img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white" /> 
 	<img src="https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white" /> 
+	<img src="https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white" />
 </div>
 
 ## 🎥 Demo Videos
@@ -75,9 +76,9 @@ Watch our complete demo showcasing SafeSplit's trustless Bitcoin escrow function
 
 ### National Round Demo  
 Watch our complete demo showcasing SafeSplit's Sei Layer 1 and AI agent assistant:  
-[![SafeSplit Demo - National Round](https://img.shields.io/badge/Watch_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1uhuCOAVezNf5MFgVY0UEy0QfvF8Ks1Mo/view?usp=sharing)  
-[![SafeSplit Pitch Deck Slides](https://img.shields.io/badge/Pitch_Deck_Slides-DC143C?style=for-the-badge&logo=adobeacrobat&logoColor=white)](https://drive.google.com/file/d/19HV9HuVgMjm61hgenbMmNaoqTtC8AjRm/view?usp=sharing)   
-[![SafeSplit Pitch Deck Video](https://img.shields.io/badge/Pitch_Deck_Video-DC143C?style=for-the-badge&logo=adobeacrobat&logoColor=white)](https://drive.google.com/file/d/1jynykFmSx_Hnw3mN9X_mN7SHzMgudN8j/view?usp=sharing)  
+[![SafeSplit Demo - National Round](https://img.shields.io/badge/National_Round_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1uhuCOAVezNf5MFgVY0UEy0QfvF8Ks1Mo/view?usp=sharing)  
+[![SafeSplit Pitch Deck Slides](https://img.shields.io/badge/Pitch_Deck_Slides-DC143C?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/19HV9HuVgMjm61hgenbMmNaoqTtC8AjRm/view?usp=sharing)   
+[![SafeSplit Pitch Deck Video](https://img.shields.io/badge/Pitch_Deck_Video-DC143C?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1jynykFmSx_Hnw3mN9X_mN7SHzMgudN8j/view?usp=sharing)  
 **Features demonstrated:**
 - ✅ SEI Layer 1 Network integration for fast transaction processing
 - ✅ Real-time balance management
